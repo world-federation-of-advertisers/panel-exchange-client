@@ -1,0 +1,16 @@
+package(
+    default_visibility = [
+        "//src/test/cc:__subpackages__",
+    ],
+)
+
+cc_library(
+    name = "matchers",
+    testonly = True,
+    hdrs = ["matchers.h"],
+    deps = [
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/status:statusor",
+        "@googletest//:gtest",
+    ],
+)
