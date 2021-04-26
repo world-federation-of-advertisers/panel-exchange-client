@@ -17,6 +17,7 @@
 
 #include <memory>
 #include <string>
+#include <vector>
 
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
@@ -55,8 +56,9 @@ class Cryptor {
 
 // Create a Cryptor.
 absl::StatusOr<std::unique_ptr<Cryptor>> CreateCryptorWithNewKey(void);
-absl::StatusOr<std::unique_ptr<Cryptor>> CreateCryptorFromKey(absl::string_view key_bytes);
+absl::StatusOr<std::unique_ptr<Cryptor>> CreateCryptorFromKey(
+    absl::string_view key_bytes);
 
 }  // namespace wfanet::panelmatch::common::crypto
 
-#endif // SRC_MAIN_CC_WFANET_PANELMATCH_COMMON_CRYPTO_PROTOCOL_CRYPTOR_H_
+#endif  // SRC_MAIN_CC_WFANET_PANELMATCH_COMMON_CRYPTO_CRYPTOR_H_

@@ -50,11 +50,12 @@ class CryptorImpl : public Cryptor {
       const Action action) override;
 
  private:
-  const std::unique_ptr<ECCommutativeCipher> local_ec_cipher_ GUARDED_BY(mutex_);
+  const std::unique_ptr<ECCommutativeCipher>
+    local_ec_cipher_ GUARDED_BY(mutex_);
 
   // Since the underlying private-join-and-computer::ECCommuativeCipher is NOT
   // thread safe, we use mutex to enforce thread safety in this class.
-  absl::Mutex mutex_; //protects local_ec_cipher_
+  absl::Mutex mutex_;  // protects local_ec_cipher_
 };
 
 CryptorImpl::CryptorImpl(
@@ -113,7 +114,8 @@ absl::StatusOr<std::vector<std::string>> CryptorImpl::BatchProcess(
 
 }  // namespace
 
-//We probably want to pass in a crypto key in the future. This is just a placeholder.
+// We probably want to pass in a crypto key in the future.
+// This is just a placeholder.
 absl::StatusOr<std::unique_ptr<Cryptor>> CreateCryptorWithNewKey(void) {
   ASSIGN_OR_RETURN(
       auto local_ec_cipher,
@@ -123,11 +125,14 @@ absl::StatusOr<std::unique_ptr<Cryptor>> CreateCryptorWithNewKey(void) {
           std::move(local_ec_cipher));
 }
 
-absl::StatusOr<std::unique_ptr<Cryptor>> CreateCryptorFromKey(absl::string_view key_bytes) {
+absl::StatusOr<std::unique_ptr<Cryptor>> CreateCryptorFromKey(
+    absl::string_view key_bytes) {
   ASSIGN_OR_RETURN(
       auto local_ec_cipher,
       ECCommutativeCipher::CreateFromKey(
-          NID_X9_62_prime256v1, key_bytes, ECCommutativeCipher::HashType::SHA256));
+          NID_X9_62_prime256v1,
+          key_bytes,
+          ECCommutativeCipher::HashType::SHA256));
   return absl::make_unique<CryptorImpl>(
           std::move(local_ec_cipher));
 }

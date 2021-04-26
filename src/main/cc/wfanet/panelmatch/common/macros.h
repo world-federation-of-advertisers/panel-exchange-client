@@ -12,8 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef WFANET_PANELMATCH_COMMON_MACROS_H_
-#define WFANET_PANELMATCH_COMMON_MACROS_H_
+#ifndef SRC_MAIN_CC_WFANET_PANELMATCH_COMMON_MACROS_H_
+#define SRC_MAIN_CC_WFANET_PANELMATCH_COMMON_MACROS_H_
+
+#include <utility>
 
 #ifndef ASSIGN_OR_RETURN_ERROR
 #define ASSIGN_OR_RETURN_ERROR(lhs, rexpr, message)                          \
@@ -36,4 +38,4 @@
 #define WFANET_PANELMATCH_COMMON_MACROS_IMPL_CONCAT_(x, y) \
   WFANET_PANELMATCH_COMMON_MACROS_IMPL_CONCAT_INNER_(x, y)
 
-#endif  // WFANET_PANELMATCH_COMMON_MACROS_H_
+#endif  // SRC_MAIN_CC_WFANET_PANELMATCH_COMMON_MACROS_H_"
