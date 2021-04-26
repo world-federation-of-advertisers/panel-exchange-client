@@ -45,13 +45,16 @@ class CryptorImpl : public Cryptor {
       absl::string_view plaintext) override;
   absl::StatusOr<std::string> ReEncrypt(
       absl::string_view encrypted_string) override;
+  absl::StatusOr<std::vector<std::string>> BatchProcess(
+      std::vector<std::string> plaintexts_or_ciphertexts,
+      const Action action) override;
 
  private:
-  const std::unique_ptr<ECCommutativeCipher> local_ec_cipher_;
+  const std::unique_ptr<ECCommutativeCipher> local_ec_cipher_ GUARDED_BY(mutex_);
 
   // Since the underlying private-join-and-computer::ECCommuativeCipher is NOT
   // thread safe, we use mutex to enforce thread safety in this class.
-  absl::Mutex mutex_;
+  absl::Mutex mutex_; //protects local_ec_cipher_
 };
 
 CryptorImpl::CryptorImpl(
@@ -59,30 +62,53 @@ CryptorImpl::CryptorImpl(
     : local_ec_cipher_(std::move(local_ec_cipher)) {}
 
 absl::StatusOr<std::string> CryptorImpl::Decrypt(
-    absl::string_view encrypted_string) {
+    absl::string_view encrypted_string) LOCKS_EXCLUDED(mutex_) {
   absl::WriterMutexLock l(&mutex_);
-  ASSIGN_OR_RETURN(std::string decrypted_string,
-                   local_ec_cipher_->Decrypt(
-                       encrypted_string));
-  return decrypted_string;
+  return local_ec_cipher_->Decrypt(encrypted_string);
 }
 
 absl::StatusOr<std::string> CryptorImpl::Encrypt(
-    absl::string_view plaintext) {
+    absl::string_view plaintext) LOCKS_EXCLUDED(mutex_) {
   absl::WriterMutexLock l(&mutex_);
-  ASSIGN_OR_RETURN(std::string encrypted_string,
-                   local_ec_cipher_->Encrypt(
-                       plaintext));
-  return encrypted_string;
+  return local_ec_cipher_->Encrypt(plaintext);
 }
 
 absl::StatusOr<std::string> CryptorImpl::ReEncrypt(
-    absl::string_view encrypted_string) {
+    absl::string_view encrypted_string) LOCKS_EXCLUDED(mutex_) {
   absl::WriterMutexLock l(&mutex_);
-  ASSIGN_OR_RETURN(std::string re_encrypted_string,
-                   local_ec_cipher_->ReEncrypt(
-                       encrypted_string));
-  return re_encrypted_string;
+  return local_ec_cipher_->ReEncrypt(encrypted_string);
+}
+
+absl::StatusOr<std::vector<std::string>> CryptorImpl::BatchProcess(
+    std::vector<std::string> plaintexts_or_ciphertexts,
+    const Action action) {
+  std::vector<std::string> results;
+
+  for (auto &text : plaintexts_or_ciphertexts) {
+    switch (action) {
+      case Action::Encrypt: {
+        ASSIGN_OR_RETURN(auto encrypted_string,
+                         Encrypt(text));
+        results.push_back(encrypted_string);
+        break;
+      }
+      case Action::ReEncrypt: {
+        ASSIGN_OR_RETURN(auto reencrypted_string,
+                         ReEncrypt(text));
+        results.push_back(reencrypted_string);
+        break;
+      }
+      case Action::Decrypt: {
+        ASSIGN_OR_RETURN(auto decrypted_string,
+                         Decrypt(text));
+        results.push_back(decrypted_string);
+        break;
+      }
+      default:
+        return absl::InvalidArgumentError("Unknown action.");
+    }
+  }
+  return std::move(results);
 }
 
 }  // namespace
@@ -93,10 +119,8 @@ absl::StatusOr<std::unique_ptr<Cryptor>> CreateCryptorWithNewKey(void) {
       auto local_ec_cipher,
       ECCommutativeCipher::CreateWithNewKey(
           NID_X9_62_prime256v1, ECCommutativeCipher::HashType::SHA256));
-  std::unique_ptr<Cryptor> result =
-      absl::make_unique<CryptorImpl>(
+  return absl::make_unique<CryptorImpl>(
           std::move(local_ec_cipher));
-  return {std::move(result)};
 }
 
 absl::StatusOr<std::unique_ptr<Cryptor>> CreateCryptorFromKey(absl::string_view key_bytes) {
@@ -104,10 +128,8 @@ absl::StatusOr<std::unique_ptr<Cryptor>> CreateCryptorFromKey(absl::string_view 
       auto local_ec_cipher,
       ECCommutativeCipher::CreateFromKey(
           NID_X9_62_prime256v1, key_bytes, ECCommutativeCipher::HashType::SHA256));
-  std::unique_ptr<Cryptor> result =
-      absl::make_unique<CryptorImpl>(
+  return absl::make_unique<CryptorImpl>(
           std::move(local_ec_cipher));
-  return {std::move(result)};
 }
 
 }  // namespace wfanet::panelmatch::common::crypto

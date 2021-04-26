@@ -23,10 +23,12 @@
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
 
-#include "crypto/ec_commutative_cipher.h"
-
 namespace wfanet::panelmatch::common::crypto {
-using ::private_join_and_compute::ECCommutativeCipher;
+enum Action {
+  Encrypt,
+  ReEncrypt,
+  Decrypt
+};
 // A cryptor dealing with basic operations needed for panel match
 class Cryptor {
  public:
@@ -38,11 +40,14 @@ class Cryptor {
   Cryptor& operator=(const Cryptor&) = delete;
 
   virtual absl::StatusOr<std::string> Decrypt(
-      absl::string_view encrypted_string) = 0;
+        absl::string_view encrypted_string) = 0;
   virtual absl::StatusOr<std::string> Encrypt(
-      absl::string_view plaintext) = 0;
+        absl::string_view plaintext) = 0;
   virtual absl::StatusOr<std::string> ReEncrypt(
-      absl::string_view encrypted_string) = 0;
+        absl::string_view encrypted_string) = 0;
+  virtual absl::StatusOr<std::vector<std::string>> BatchProcess(
+        std::vector<std::string> plaintexts_or_ciphertexts,
+        const Action action) = 0;
 
  protected:
   Cryptor() = default;
