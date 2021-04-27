@@ -37,16 +37,11 @@ class Cryptor {
   Cryptor& operator=(const Cryptor&) = delete;
 
   virtual absl::StatusOr<std::vector<std::string>> BatchProcess(
-      std::vector<std::string> plaintexts_or_ciphertexts,
-      const Action action) = 0;
+      const std::vector<std::string>& plaintexts_or_ciphertexts,
+      Action action) = 0;
 
  protected:
   Cryptor() = default;
-
- private:
-  absl::StatusOr<std::string> Decrypt(absl::string_view encrypted_string);
-  absl::StatusOr<std::string> Encrypt(absl::string_view plaintext);
-  absl::StatusOr<std::string> ReEncrypt(absl::string_view encrypted_string);
 };
 
 // Create a Cryptor.
