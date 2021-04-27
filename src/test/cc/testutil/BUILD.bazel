@@ -5,6 +5,12 @@ package(
 )
 
 cc_library(
+    name = "status_macros",
+    testonly = True,
+    hdrs = ["status_macros.h"],
+)
+
+cc_library(
     name = "matchers",
     testonly = True,
     hdrs = ["matchers.h"],

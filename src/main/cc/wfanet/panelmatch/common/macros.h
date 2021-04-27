@@ -18,7 +18,7 @@
 #include <utility>
 
 #ifndef ASSIGN_OR_RETURN_ERROR
-#define ASSIGN_OR_RETURN_ERROR(lhs, rexpr, message)                          \
+#define ASSIGN_OR_RETURN_ERROR(lhs, rexpr, message)                            \
   WFANET_PANELMATCH_COMMON__ASSIGN_OR_RETURN_IMPL_(                            \
       WFANET_PANELMATCH_COMMON_MACROS_IMPL_CONCAT_(status_or_value, __LINE__), \
       lhs, rexpr, message)
@@ -26,11 +26,11 @@
 
 // Internal helper.
 #define WFANET_PANELMATCH_COMMON__ASSIGN_OR_RETURN_IMPL_(statusor, lhs, rexpr, \
-                                                       message)              \
-  auto statusor = (rexpr);                                                   \
-  if (ABSL_PREDICT_FALSE(!statusor.ok())) {                                  \
-    return absl::InvalidArgumentError(message);                              \
-  }                                                                          \
+                                                         message)              \
+  auto statusor = (rexpr);                                                     \
+  if (ABSL_PREDICT_FALSE(!statusor.ok())) {                                    \
+    return absl::InvalidArgumentError(message);                                \
+  }                                                                            \
   lhs = std::move(statusor).value()
 
 // Internal helper for concatenating macro values.

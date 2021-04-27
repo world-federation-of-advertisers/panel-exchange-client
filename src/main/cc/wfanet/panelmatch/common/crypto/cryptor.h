@@ -25,11 +25,7 @@
 #include "absl/types/span.h"
 
 namespace wfanet::panelmatch::common::crypto {
-enum Action {
-  Encrypt,
-  ReEncrypt,
-  Decrypt
-};
+enum class Action { kEncrypt, kReEncrypt, kDecrypt };
 // A cryptor dealing with basic operations needed for panel match
 class Cryptor {
  public:
@@ -40,18 +36,17 @@ class Cryptor {
   Cryptor(const Cryptor&) = delete;
   Cryptor& operator=(const Cryptor&) = delete;
 
-  virtual absl::StatusOr<std::string> Decrypt(
-        absl::string_view encrypted_string) = 0;
-  virtual absl::StatusOr<std::string> Encrypt(
-        absl::string_view plaintext) = 0;
-  virtual absl::StatusOr<std::string> ReEncrypt(
-        absl::string_view encrypted_string) = 0;
   virtual absl::StatusOr<std::vector<std::string>> BatchProcess(
-        std::vector<std::string> plaintexts_or_ciphertexts,
-        const Action action) = 0;
+      std::vector<std::string> plaintexts_or_ciphertexts,
+      const Action action) = 0;
 
  protected:
   Cryptor() = default;
+
+ private:
+  absl::StatusOr<std::string> Decrypt(absl::string_view encrypted_string);
+  absl::StatusOr<std::string> Encrypt(absl::string_view plaintext);
+  absl::StatusOr<std::string> ReEncrypt(absl::string_view encrypted_string);
 };
 
 // Create a Cryptor.

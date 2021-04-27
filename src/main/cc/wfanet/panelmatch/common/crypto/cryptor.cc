@@ -21,6 +21,7 @@
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/synchronization/mutex.h"
+#include "absl/types/span.h"
 #include "crypto/context.h"
 #include "crypto/ec_commutative_cipher.h"
 
@@ -31,77 +32,66 @@ using ::private_join_and_compute::ECCommutativeCipher;
 
 class CryptorImpl : public Cryptor {
  public:
-  CryptorImpl(
-    std::unique_ptr<ECCommutativeCipher> local_ec_cipher);
+  explicit CryptorImpl(std::unique_ptr<ECCommutativeCipher> local_ec_cipher);
   ~CryptorImpl() override = default;
   CryptorImpl(CryptorImpl&& other) = delete;
   CryptorImpl& operator=(CryptorImpl&& other) = delete;
   CryptorImpl(const CryptorImpl&) = delete;
   CryptorImpl& operator=(const CryptorImpl&) = delete;
 
-  absl::StatusOr<std::string> Decrypt(
-      absl::string_view encrypted_string) override;
-  absl::StatusOr<std::string> Encrypt(
-      absl::string_view plaintext) override;
-  absl::StatusOr<std::string> ReEncrypt(
-      absl::string_view encrypted_string) override;
   absl::StatusOr<std::vector<std::string>> BatchProcess(
       std::vector<std::string> plaintexts_or_ciphertexts,
       const Action action) override;
 
  private:
-  const std::unique_ptr<ECCommutativeCipher>
-    local_ec_cipher_ GUARDED_BY(mutex_);
+  absl::StatusOr<std::string> Decrypt(absl::string_view encrypted_string)
+      EXCLUSIVE_LOCKS_REQUIRED(mutex_) {
+    return local_ec_cipher_->Decrypt(encrypted_string);
+  }
+
+  absl::StatusOr<std::string> Encrypt(absl::string_view plaintext)
+      EXCLUSIVE_LOCKS_REQUIRED(mutex_) {
+    return local_ec_cipher_->Encrypt(plaintext);
+  }
+
+  absl::StatusOr<std::string> ReEncrypt(absl::string_view encrypted_string)
+      EXCLUSIVE_LOCKS_REQUIRED(mutex_) {
+    return local_ec_cipher_->ReEncrypt(encrypted_string);
+  }
+
+  const std::unique_ptr<ECCommutativeCipher> local_ec_cipher_
+      GUARDED_BY(mutex_);
 
   // Since the underlying private-join-and-computer::ECCommuativeCipher is NOT
   // thread safe, we use mutex to enforce thread safety in this class.
   absl::Mutex mutex_;  // protects local_ec_cipher_
 };
 
-CryptorImpl::CryptorImpl(
-    std::unique_ptr<ECCommutativeCipher> local_ec_cipher)
+CryptorImpl::CryptorImpl(std::unique_ptr<ECCommutativeCipher> local_ec_cipher)
     : local_ec_cipher_(std::move(local_ec_cipher)) {}
 
-absl::StatusOr<std::string> CryptorImpl::Decrypt(
-    absl::string_view encrypted_string) LOCKS_EXCLUDED(mutex_) {
-  absl::WriterMutexLock l(&mutex_);
-  return local_ec_cipher_->Decrypt(encrypted_string);
-}
-
-absl::StatusOr<std::string> CryptorImpl::Encrypt(
-    absl::string_view plaintext) LOCKS_EXCLUDED(mutex_) {
-  absl::WriterMutexLock l(&mutex_);
-  return local_ec_cipher_->Encrypt(plaintext);
-}
-
-absl::StatusOr<std::string> CryptorImpl::ReEncrypt(
-    absl::string_view encrypted_string) LOCKS_EXCLUDED(mutex_) {
-  absl::WriterMutexLock l(&mutex_);
-  return local_ec_cipher_->ReEncrypt(encrypted_string);
-}
-
 absl::StatusOr<std::vector<std::string>> CryptorImpl::BatchProcess(
-    std::vector<std::string> plaintexts_or_ciphertexts,
-    const Action action) {
+    std::vector<std::string> plaintexts_or_ciphertexts, const Action action)
+    LOCKS_EXCLUDED(mutex_) {
+  absl::WriterMutexLock l(&mutex_);
   std::vector<std::string> results;
+  const int num_texts = plaintexts_or_ciphertexts.size();
+  results.reserve(num_texts);
 
-  for (auto &text : plaintexts_or_ciphertexts) {
+  for (auto& text : plaintexts_or_ciphertexts) {
     switch (action) {
-      case Action::Encrypt: {
-        ASSIGN_OR_RETURN(auto encrypted_string,
-                         Encrypt(text));
+      case Action::kEncrypt: {
+        ASSIGN_OR_RETURN(auto encrypted_string, Encrypt(text));
         results.push_back(encrypted_string);
         break;
       }
-      case Action::ReEncrypt: {
-        ASSIGN_OR_RETURN(auto reencrypted_string,
-                         ReEncrypt(text));
+      case Action::kReEncrypt: {
+        ASSIGN_OR_RETURN(auto reencrypted_string, ReEncrypt(text));
         results.push_back(reencrypted_string);
         break;
       }
-      case Action::Decrypt: {
-        ASSIGN_OR_RETURN(auto decrypted_string,
-                         Decrypt(text));
+      case Action::kDecrypt: {
+        ASSIGN_OR_RETURN(auto decrypted_string, Decrypt(text));
         results.push_back(decrypted_string);
         break;
       }
@@ -121,20 +111,16 @@ absl::StatusOr<std::unique_ptr<Cryptor>> CreateCryptorWithNewKey(void) {
       auto local_ec_cipher,
       ECCommutativeCipher::CreateWithNewKey(
           NID_X9_62_prime256v1, ECCommutativeCipher::HashType::SHA256));
-  return absl::make_unique<CryptorImpl>(
-          std::move(local_ec_cipher));
+  return absl::make_unique<CryptorImpl>(std::move(local_ec_cipher));
 }
 
 absl::StatusOr<std::unique_ptr<Cryptor>> CreateCryptorFromKey(
     absl::string_view key_bytes) {
-  ASSIGN_OR_RETURN(
-      auto local_ec_cipher,
-      ECCommutativeCipher::CreateFromKey(
-          NID_X9_62_prime256v1,
-          key_bytes,
-          ECCommutativeCipher::HashType::SHA256));
-  return absl::make_unique<CryptorImpl>(
-          std::move(local_ec_cipher));
+  ASSIGN_OR_RETURN(auto local_ec_cipher,
+                   ECCommutativeCipher::CreateFromKey(
+                       NID_X9_62_prime256v1, key_bytes,
+                       ECCommutativeCipher::HashType::SHA256));
+  return absl::make_unique<CryptorImpl>(std::move(local_ec_cipher));
 }
 
 }  // namespace wfanet::panelmatch::common::crypto

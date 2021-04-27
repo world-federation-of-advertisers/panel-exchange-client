@@ -4,9 +4,10 @@ cc_test(
     name = "cryptor_test",
     srcs = ["cryptor_test.cc"],
     deps = [
-        "@com_google_absl//absl/memory",
         "//src/main/cc/wfanet/panelmatch/common/crypto:cryptor",
-        "@googletest//:gtest_main",
         "//src/test/cc/testutil:matchers",
-    ]
+        "//src/test/cc/testutil:status_macros",
+        "@com_google_absl//absl/memory",
+        "@googletest//:gtest_main",
+    ],
 )
