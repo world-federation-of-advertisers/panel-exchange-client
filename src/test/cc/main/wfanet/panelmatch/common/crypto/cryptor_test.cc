@@ -40,13 +40,9 @@ TEST(PrivateJoinAndComputeTest, EncryptReEncryptDecrypt) {
   ASSERT_OK_AND_ASSIGN(auto cryptor1, CreateCryptorFromKey("9ias9fi0s"));
   ASSERT_OK_AND_ASSIGN(auto cryptor2, CreateCryptorFromKey("asdfasdfs"));
 
-  std::string plaintext0 = "some plaintext0";
-  std::string plaintext1 = "some plaintext1";
-  std::string plaintext2 = "some plaintext2";
-  std::string plaintext3 = "some plaintext3";
-  std::string plaintext4 = "some plaintext4";
-  std::vector<std::string> plaintext_batch{plaintext0, plaintext1, plaintext2,
-                                           plaintext3, plaintext4};
+  std::vector<std::string> plaintext_batch{"some plaintext0", "some plaintext1",
+                                           "some plaintext2", "some plaintext3",
+                                           "some plaintext4"};
   absl::StatusOr<std::vector<std::string>> encrypted_batch1 =
       cryptor1->BatchProcess(plaintext_batch, Action::kEncrypt);
   ASSERT_THAT(encrypted_batch1, IsOk());
