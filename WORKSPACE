@@ -14,6 +14,15 @@ http_archive(
 )
 
 http_archive(
+    name = "com_google_protobuf",
+    sha256 = "65e020a42bdab44a66664d34421995829e9e79c60e5adaa08282fd14ca552f57",
+    strip_prefix = "protobuf-3.15.6",
+    urls = [
+        "https://github.com/protocolbuffers/protobuf/archive/refs/tags/v3.15.6.tar.gz",
+    ],
+)
+
+http_archive(
     name = "googletest",
     sha256 = "94c634d499558a76fa649edb13721dce6e98fb1e7018dfaeba3cd7a083945e91",
     strip_prefix = "googletest-release-1.10.0",
@@ -29,6 +38,111 @@ http_archive(
         "https://github.com/abseil/abseil-cpp/archive/refs/tags/20210324.0.tar.gz",
     ],
 )
+
+# @com_google_truth_truth
+load("//build/com_google_truth:repo.bzl", "com_google_truth_artifact_dict")
+
+# @io_bazel_rules_kotlin
+
+load("//build/io_bazel_rules_kotlin:repo.bzl", "kotlinc_release", "rules_kotlin_repo")
+
+rules_kotlin_repo(
+    sha256 = "9cc0e4031bcb7e8508fd9569a81e7042bbf380604a0157f796d06d511cff2769",
+    version = "legacy-1.4.0-rc4",
+)
+
+load("//build/io_bazel_rules_kotlin:deps.bzl", "rules_kotlin_deps")
+
+rules_kotlin_deps(compiler_release = kotlinc_release(
+    sha256 = "ccd0db87981f1c0e3f209a1a4acb6778f14e63fe3e561a98948b5317e526cc6c",
+    version = "1.3.72",
+))
+
+# kotlinx.coroutines
+load("//build/kotlinx_coroutines:repo.bzl", "kotlinx_coroutines_artifact_dict")
+
+# @com_github_grpc_grpc_kotlin
+
+http_archive(
+    name = "com_github_grpc_grpc_kotlin",
+    sha256 = "08f06a797ec806d68e8811018cefd1d5a6b8bf1782b63937f2618a6be86a9e2d",
+    strip_prefix = "grpc-kotlin-0.2.1",
+    url = "https://github.com/grpc/grpc-kotlin/archive/v0.2.1.zip",
+)
+
+load(
+    "@com_github_grpc_grpc_kotlin//:repositories.bzl",
+    "IO_GRPC_GRPC_KOTLIN_ARTIFACTS",
+    "IO_GRPC_GRPC_KOTLIN_OVERRIDE_TARGETS",
+    "grpc_kt_repositories",
+    "io_grpc_grpc_java",
+)
+
+io_grpc_grpc_java()
+
+load(
+    "@io_grpc_grpc_java//:repositories.bzl",
+    "IO_GRPC_GRPC_JAVA_ARTIFACTS",
+    "IO_GRPC_GRPC_JAVA_OVERRIDE_TARGETS",
+    "grpc_java_repositories",
+)
+
+# Maven
+
+http_archive(
+    name = "rules_jvm_external",
+    sha256 = "82262ff4223c5fda6fb7ff8bd63db8131b51b413d26eb49e3131037e79e324af",
+    strip_prefix = "rules_jvm_external-3.2",
+    url = "https://github.com/bazelbuild/rules_jvm_external/archive/3.2.zip",
+)
+
+load("@rules_jvm_external//:defs.bzl", "maven_install")
+load("//build/maven:artifacts.bzl", "artifacts")
+
+MAVEN_ARTIFACTS = artifacts.list_to_dict(
+    IO_GRPC_GRPC_JAVA_ARTIFACTS +
+    IO_GRPC_GRPC_KOTLIN_ARTIFACTS,
+)
+
+MAVEN_ARTIFACTS.update(com_google_truth_artifact_dict(version = "1.0.1"))
+
+MAVEN_ARTIFACTS.update(kotlinx_coroutines_artifact_dict(version = "1.3.6"))
+
+# Add Maven artifacts or override versions (e.g. those pulled in by gRPC Kotlin
+# or default dependency versions).
+MAVEN_ARTIFACTS.update({
+    "com.google.api.grpc:grpc-google-cloud-pubsub-v1": "0.1.24",
+    "com.google.cloud:google-cloud-nio": "0.122.0",
+    "com.google.cloud:google-cloud-spanner": "3.0.3",
+    "com.google.code.gson:gson": "2.8.6",
+    "com.google.guava:guava": "30.0-jre",
+    "com.nhaarman.mockitokotlin2:mockito-kotlin": "2.2.0",
+    "info.picocli:picocli": "4.4.0",
+    "junit:junit": "4.13",
+})
+
+maven_install(
+    artifacts = artifacts.dict_to_list(MAVEN_ARTIFACTS),
+    fetch_sources = True,
+    generate_compat_repositories = True,
+    override_targets = dict(
+        IO_GRPC_GRPC_JAVA_OVERRIDE_TARGETS.items() +
+        IO_GRPC_GRPC_KOTLIN_OVERRIDE_TARGETS.items(),
+    ),
+    repositories = [
+        "https://repo.maven.apache.org/maven2/",
+    ],
+)
+
+load("@maven//:compat.bzl", "compat_repositories")
+
+compat_repositories()
+
+# Run after compat_repositories to ensure the maven_install-selected
+# dependencies are used.
+grpc_kt_repositories()
+
+grpc_java_repositories()  # For gRPC Kotlin.
 
 # gRPC
 http_archive(
@@ -67,3 +181,12 @@ rules_kotlin_deps(compiler_release = kotlinc_release(
     sha256 = "ccd0db87981f1c0e3f209a1a4acb6778f14e63fe3e561a98948b5317e526cc6c",
     version = "1.3.72",
 ))
+
+load("//build/wfa:repositories.bzl", "wfa_repo_archive")
+
+wfa_repo_archive(
+    name = "wfa_rules_swig",
+    commit = "653d1bdcec85a9373df69920f35961150cf4b1b6",
+    repo = "rules_swig",
+    sha256 = "34c15134d7293fc38df6ed254b55ee912c7479c396178b7f6499b7e5351aeeec",
+)

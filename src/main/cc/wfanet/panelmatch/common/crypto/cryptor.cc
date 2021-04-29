@@ -42,6 +42,9 @@ class CryptorImpl : public Cryptor {
   absl::StatusOr<std::vector<std::string>> BatchProcess(
       std::vector<std::string> plaintexts_or_ciphertexts,
       const Action action) override;
+  absl::StatusOr<RepeatedPtrField<std::string>> BatchProcess(
+      RepeatedPtrField<std::string> plaintexts_or_ciphertexts,
+      const Action action) override;
 
  private:
   absl::StatusOr<std::string> Decrypt(absl::string_view encrypted_string)
@@ -100,6 +103,39 @@ absl::StatusOr<std::vector<std::string>> CryptorImpl::BatchProcess(
     }
   }
   return std::move(results);
+}
+
+absl::StatusOr<RepeatedPtrField<std::string>> CryptorImpl::BatchProcess(
+    RepeatedPtrField<std::string> plaintexts_or_ciphertexts,
+    const Action action) LOCKS_EXCLUDED(mutex_) {
+  absl::WriterMutexLock l(&mutex_);
+  std::vector<std::string> results;
+  const int num_texts = plaintexts_or_ciphertexts.size();
+  results.reserve(num_texts);
+
+  for (auto& text : plaintexts_or_ciphertexts) {
+    switch (action) {
+      case Action::kEncrypt: {
+        ASSIGN_OR_RETURN(auto encrypted_string, Encrypt(text));
+        results.push_back(encrypted_string);
+        break;
+      }
+      case Action::kReEncrypt: {
+        ASSIGN_OR_RETURN(auto reencrypted_string, ReEncrypt(text));
+        results.push_back(reencrypted_string);
+        break;
+      }
+      case Action::kDecrypt: {
+        ASSIGN_OR_RETURN(auto decrypted_string, Decrypt(text));
+        results.push_back(decrypted_string);
+        break;
+      }
+      default:
+        return absl::InvalidArgumentError("Unknown action.");
+    }
+  }
+  RepeatedPtrField<std::string> data(results.begin(), results.end());
+  return std::move(data);
 }
 
 }  // namespace

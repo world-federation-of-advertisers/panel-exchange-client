@@ -15,6 +15,8 @@
 #ifndef SRC_MAIN_CC_WFANET_PANELMATCH_COMMON_CRYPTO_CRYPTOR_H_
 #define SRC_MAIN_CC_WFANET_PANELMATCH_COMMON_CRYPTO_CRYPTOR_H_
 
+#include <google/protobuf/repeated_field.h>
+
 #include <memory>
 #include <string>
 #include <vector>
@@ -25,6 +27,7 @@
 #include "absl/types/span.h"
 
 namespace wfanet::panelmatch::common::crypto {
+using google::protobuf::RepeatedPtrField;
 enum class Action { kEncrypt, kReEncrypt, kDecrypt };
 // A cryptor dealing with basic operations needed for panel match
 class Cryptor {
@@ -38,6 +41,10 @@ class Cryptor {
 
   virtual absl::StatusOr<std::vector<std::string>> BatchProcess(
       std::vector<std::string> plaintexts_or_ciphertexts,
+      const Action action) = 0;
+
+  virtual absl::StatusOr<RepeatedPtrField<std::string>> BatchProcess(
+      RepeatedPtrField<std::string> plaintexts_or_ciphertexts,
       const Action action) = 0;
 
  protected:

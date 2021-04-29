@@ -1,0 +1,14 @@
+load("@io_bazel_rules_kotlin//kotlin:kotlin.bzl", "kt_jvm_library")
+
+package(default_visibility = ["//visibility:public"])
+
+kt_jvm_library(
+    name = "commutativeencryption",
+    srcs = glob(["*.kt"]),
+    deps = [
+        "//imports/java/com/google/protobuf",
+        "//src/main/kotlin/wfanet/panelmatch/common",
+        "//src/main/proto/wfanet/panelmatch/protocol/crypto:cryptor_java_proto",
+        "//src/main/swig/wfanet/panelmatch/protocol/crypto:commutative_encryption_utility",
+    ],
+)

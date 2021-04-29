@@ -1,0 +1,28 @@
+load("@io_bazel_rules_kotlin//kotlin:kotlin.bzl", "kt_jvm_test")
+
+kt_jvm_test(
+    name = "CommutativeEncryptionUtilityTest",
+    srcs = ["CommutativeEncryptionUtilityTest.kt"],
+    test_class = "wfanet.panelmatch.crypto.CommutativeEncryptionUtilityTest",
+    deps = [
+        "//imports/java/com/google/common/truth",
+        "//imports/java/com/google/protobuf",
+        "//imports/java/org/junit",
+        "//imports/kotlin/kotlin/test",
+        "//src/main/kotlin/wfanet/panelmatch/common",
+        "//src/main/proto/wfanet/panelmatch/protocol/crypto:cryptor_java_proto",
+        "//src/main/swig/wfanet/panelmatch/protocol/crypto:commutative_encryption_utility",
+    ],
+)
+
+kt_jvm_test(
+    name = "JniCommutativeEncryptionUtilityTest",
+    srcs = ["JniCommutativeEncryptionUtilityTest.kt"],
+    test_class = "wfanet.panelmatch.crypto.JniCommutativeEncryptionUtilityTest",
+    deps = [
+        "//imports/java/com/google/common/truth",
+        "//imports/kotlin/kotlin/test",
+        "//src/main/kotlin/wfanet/panelmatch/protocol/common:commutativeencryption",
+        "//src/main/proto/wfanet/panelmatch/protocol/crypto:cryptor_java_proto",
+    ],
+)
