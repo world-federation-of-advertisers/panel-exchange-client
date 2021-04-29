@@ -26,10 +26,11 @@
 #include "src/test/cc/testutil/matchers.h"
 #include "src/test/cc/testutil/status_macros.h"
 
-using ::private_join_and_compute::ECCommutativeCipher;
-
 namespace wfa::panelmatch {
 namespace {
+using ::private_join_and_compute::ECCommutativeCipher;
+using ::testing::ContainerEq;
+using ::testing::Not;
 using ::wfanet::IsOk;
 using ::wfanet::IsOkAndHolds;
 using ::wfanet::panelmatch::common::crypto::Action;
@@ -37,8 +38,8 @@ using ::wfanet::panelmatch::common::crypto::CreateCryptorFromKey;
 using ::wfanet::panelmatch::common::crypto::CreateCryptorWithNewKey;
 using ::wfanet::panelmatch::common::crypto::Cryptor;
 TEST(PrivateJoinAndComputeTest, EncryptReEncryptDecrypt) {
-  ASSERT_OK_AND_ASSIGN(auto cryptor1, CreateCryptorFromKey("9ias9fi0s"));
-  ASSERT_OK_AND_ASSIGN(auto cryptor2, CreateCryptorFromKey("asdfasdfs"));
+  ASSERT_OK_AND_ASSIGN(auto cryptor1, CreateCryptorFromKey("random-key-1"));
+  ASSERT_OK_AND_ASSIGN(auto cryptor2, CreateCryptorFromKey("random-key-2"));
 
   std::vector<std::string> plaintext_batch{"some plaintext0", "some plaintext1",
                                            "some plaintext2", "some plaintext3",
@@ -46,13 +47,16 @@ TEST(PrivateJoinAndComputeTest, EncryptReEncryptDecrypt) {
   absl::StatusOr<std::vector<std::string>> encrypted_batch1 =
       cryptor1->BatchProcess(plaintext_batch, Action::kEncrypt);
   ASSERT_THAT(encrypted_batch1, IsOk());
+  ASSERT_THAT(plaintext_batch, Not(ContainerEq(*encrypted_batch1)));
   absl::StatusOr<std::vector<std::string>> encrypted_batch2 =
       cryptor2->BatchProcess(plaintext_batch, Action::kEncrypt);
   ASSERT_THAT(encrypted_batch2, IsOk());
+  ASSERT_THAT(*encrypted_batch1, Not(ContainerEq(*encrypted_batch2)));
 
   absl::StatusOr<std::vector<std::string>> double_encrypted_batch1 =
       cryptor1->BatchProcess(*encrypted_batch2, Action::kReEncrypt);
   ASSERT_THAT(double_encrypted_batch1, IsOk());
+  ASSERT_THAT(*encrypted_batch2, Not(ContainerEq(*double_encrypted_batch1)));
   absl::StatusOr<std::vector<std::string>> double_encrypted_batch2 =
       cryptor2->BatchProcess(*encrypted_batch1, Action::kReEncrypt);
   ASSERT_THAT(double_encrypted_batch2, IsOk());
@@ -60,6 +64,9 @@ TEST(PrivateJoinAndComputeTest, EncryptReEncryptDecrypt) {
   EXPECT_THAT(
       cryptor1->BatchProcess(*double_encrypted_batch1, Action::kDecrypt),
       IsOkAndHolds(*encrypted_batch2));
+  ASSERT_THAT(
+      *cryptor1->BatchProcess(*double_encrypted_batch1, Action::kDecrypt),
+      ContainerEq(*encrypted_batch2));
   EXPECT_THAT(
       cryptor1->BatchProcess(*double_encrypted_batch2, Action::kDecrypt),
       IsOkAndHolds(*encrypted_batch2));

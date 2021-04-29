@@ -40,12 +40,12 @@ class Cryptor {
   Cryptor& operator=(const Cryptor&) = delete;
 
   virtual absl::StatusOr<std::vector<std::string>> BatchProcess(
-      std::vector<std::string> plaintexts_or_ciphertexts,
-      const Action action) = 0;
+      const std::vector<std::string>& plaintexts_or_ciphertexts,
+      Action action) = 0;
 
   virtual absl::StatusOr<RepeatedPtrField<std::string>> BatchProcess(
-      RepeatedPtrField<std::string> plaintexts_or_ciphertexts,
-      const Action action) = 0;
+      const RepeatedPtrField<std::string>& plaintexts_or_ciphertexts,
+      Action action) = 0;
 
  protected:
   Cryptor() = default;
