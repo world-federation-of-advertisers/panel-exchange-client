@@ -14,11 +14,11 @@ cc_library(
     ],
     strip_include_prefix = _INCLUDE_PREFIX,
     deps = [
+        "//src/main/cc/wfanet/panelmatch/common:macros",
         "//src/main/cc/wfanet/panelmatch/common/crypto:cryptor",
         "//src/main/cc/wfanet/panelmatch/common/crypto:encryption_utility_helper",
         "//src/main/cc/wfanet/panelmatch/common/crypto:started_thread_cpu_timer",
         "//src/main/proto/wfanet/panelmatch/protocol/crypto:cryptor_cc_proto",
-        "//src/main/cc/wfanet/panelmatch/common:macros",
     ],
 )
 

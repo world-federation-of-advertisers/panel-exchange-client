@@ -131,7 +131,6 @@ absl::StatusOr<RepeatedPtrField<std::string>> CryptorImpl::BatchProcess(
         return absl::InvalidArgumentError("Unknown action.");
     }
     results.Add(std::move(result));
-
   }
   return std::move(results);
 }

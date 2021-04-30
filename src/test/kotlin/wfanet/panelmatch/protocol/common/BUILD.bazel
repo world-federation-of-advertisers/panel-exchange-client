@@ -10,9 +10,9 @@ kt_jvm_test(
         "//imports/java/org/junit",
         "//imports/kotlin/kotlin/test",
         "//src/main/kotlin/wfanet/panelmatch/common",
+        "//src/main/kotlin/wfanet/panelmatch/protocol/common:commutativeencryption",
         "//src/main/proto/wfanet/panelmatch/protocol/crypto:cryptor_java_proto",
         "//src/main/swig/wfanet/panelmatch/protocol/crypto:commutative_encryption_utility",
-        "//src/main/kotlin/wfanet/panelmatch/protocol/common:commutativeencryption",
     ],
 )
 
@@ -24,7 +24,7 @@ kt_jvm_test(
         "//imports/java/com/google/common/truth",
         "//imports/java/org/junit",
         "//imports/kotlin/kotlin/test",
-        "//src/main/proto/wfanet/panelmatch/protocol/crypto:cryptor_java_proto",
         "//src/main/kotlin/wfanet/panelmatch/protocol/common:commutativeencryption",
+        "//src/main/proto/wfanet/panelmatch/protocol/crypto:cryptor_java_proto",
     ],
 )
