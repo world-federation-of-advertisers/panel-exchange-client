@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package wfanet.panelmatch.protocol.crypto
+package wfanet.panelmatch.protocol.common
 
 import java.nio.file.Paths
 import wfanet.panelmatch.protocol.protobuf.ApplyCommutativeEncryptionRequest
@@ -24,7 +24,7 @@ import wfanet.panelmatch.protocol.protobuf.ApplyCommutativeDecryptionResponse
 
 /**
  * Crypto operations for Commutative Encryption. check
- * src/main/cc/wfanet/panelmatch/common/crypto/commutatieve_encryption_utilty.h for more
+ * src/main/cc/wfanet/panelmatch/common/crypto/commutative_encryption_utilty.h for more
  * descriptions.
  */
 interface CommutativeEncryption {

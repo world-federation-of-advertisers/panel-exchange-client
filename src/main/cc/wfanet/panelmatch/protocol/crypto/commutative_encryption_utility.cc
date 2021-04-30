@@ -44,11 +44,11 @@ absl::StatusOr<ApplyCommutativeEncryptionResponse> ApplyCommutativeEncryption(
     const ApplyCommutativeEncryptionRequest& request) {
   StartedThreadCpuTimer timer;
   ApplyCommutativeEncryptionResponse response;
-  ASSIGN_OR_RETURN(auto cryptor,
-      CreateCryptorFromKey(request.encryption_key()));
-  ASSIGN_OR_RETURN_ERROR(auto
+  ASSIGN_OR_RETURN_ERROR(auto cryptor,
+      CreateCryptorFromKey(request.encryption_key()), "Failed to create the protocol cipher");
+  ASSIGN_OR_RETURN(auto
       encrypted_texts, cryptor->BatchProcess(request.plaintexts(),
-      Action::kEncrypt), "Failed to create the protocol cipher");
+      Action::kEncrypt));
   response.mutable_encrypted_texts()->Swap(&encrypted_texts);
   response.set_elapsed_cpu_time_millis(timer.ElapsedMillis());
   return response;
@@ -58,8 +58,8 @@ absl::StatusOr<ApplyCommutativeDecryptionResponse> ApplyCommutativeDecryption(
     const ApplyCommutativeDecryptionRequest& request) {
   StartedThreadCpuTimer timer;
   ApplyCommutativeDecryptionResponse response;
-  ASSIGN_OR_RETURN(auto cryptor,
-                   CreateCryptorFromKey(request.encryption_key()));
+  ASSIGN_OR_RETURN_ERROR(auto cryptor,
+                   CreateCryptorFromKey(request.encryption_key()), "Failed to create the protocol cipher");
   ASSIGN_OR_RETURN(
       auto decrypted_texts,
       cryptor->BatchProcess(request.encrypted_texts(), Action::kDecrypt));
@@ -73,8 +73,8 @@ ReApplyCommutativeEncryption(
     const ReApplyCommutativeEncryptionRequest& request) {
   StartedThreadCpuTimer timer;
   ReApplyCommutativeEncryptionResponse response;
-  ASSIGN_OR_RETURN(auto cryptor,
-                   CreateCryptorFromKey(request.encryption_key()));
+  ASSIGN_OR_RETURN_ERROR(auto cryptor,
+                   CreateCryptorFromKey(request.encryption_key()), "Failed to create the protocol cipher");
   ASSIGN_OR_RETURN(
       auto reencrypted_texts,
       cryptor->BatchProcess(request.encrypted_texts(), Action::kReEncrypt));

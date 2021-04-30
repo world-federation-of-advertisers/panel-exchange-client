@@ -12,12 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package wfanet.panelmatch.protocol.crypto
+package wfanet.panelmatch.protocol.common
 
 import com.google.common.truth.Truth.assertThat
 import kotlin.test.assertFailsWith
 import org.junit.Test
-import wfanet.panelmatch.protocol.crypto.ApplyCommutativeEncryptionRequest
+import wfanet.panelmatch.protocol.protobuf.ApplyCommutativeEncryptionRequest
 
 class JniCommutativeEncryptionUtilityTest {
 

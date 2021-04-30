@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package wfanet.panelmatch.protocol.crypto
+package wfanet.panelmatch.protocol.common
 
 import java.nio.file.Paths
 import wfanet.panelmatch.common.loadLibrary
@@ -55,7 +55,7 @@ class JniCommutativeEncryption : CommutativeEncryption {
       loadLibrary(
         name = "commutative_encryption_utility",
         directoryPath = Paths.get(
-          "wfa_panelmatch_system/src/main/swig/wfanet/panelmatch/protocol/crypto"
+          "panel_exchange_client/src/main/swig/wfanet/panelmatch/protocol/crypto"
         )
       )
     }
