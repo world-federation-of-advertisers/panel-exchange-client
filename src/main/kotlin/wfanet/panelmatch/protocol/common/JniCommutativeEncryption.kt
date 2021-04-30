@@ -29,35 +29,35 @@ import wfanet.panelmatch.protocol.crypto.CommutativeEncryptionUtility
  */
 class JniCommutativeEncryption : CommutativeEncryption {
 
-  override fun applyCommutativeEncryption(request: ApplyCommutativeEncryptionRequest):
-    ApplyCommutativeEncryptionResponse {
-      return ApplyCommutativeEncryptionResponse.parseFrom(
-        CommutativeEncryptionUtility.applyCommutativeEncryptionWrapper(request.toByteArray())
-      )
-    }
-
-  override fun reApplyCommutativeEncryption(request: ReApplyCommutativeEncryptionRequest):
-    ReApplyCommutativeEncryptionResponse {
-      return ReApplyCommutativeEncryptionResponse.parseFrom(
-        CommutativeEncryptionUtility.reApplyCommutativeEncryptionWrapper(request.toByteArray())
-      )
-    }
-
-  override fun applyCommutativeDecryption(request: ApplyCommutativeDecryptionRequest):
-    ApplyCommutativeDecryptionResponse {
-      return ApplyCommutativeDecryptionResponse.parseFrom(
-        CommutativeEncryptionUtility.applyCommutativeDecryptionWrapper(request.toByteArray())
-      )
-    }
-
-  companion object {
-    init {
-      loadLibrary(
-        name = "commutative_encryption_utility",
-        directoryPath = Paths.get(
-          "panel_exchange_client/src/main/swig/wfanet/panelmatch/protocol/crypto"
+    override fun applyCommutativeEncryption(request: ApplyCommutativeEncryptionRequest):
+            ApplyCommutativeEncryptionResponse {
+        return ApplyCommutativeEncryptionResponse.parseFrom(
+                CommutativeEncryptionUtility.applyCommutativeEncryptionWrapper(request.toByteArray())
         )
-      )
     }
-  }
+
+    override fun reApplyCommutativeEncryption(request: ReApplyCommutativeEncryptionRequest):
+            ReApplyCommutativeEncryptionResponse {
+        return ReApplyCommutativeEncryptionResponse.parseFrom(
+                CommutativeEncryptionUtility.reApplyCommutativeEncryptionWrapper(request.toByteArray())
+        )
+    }
+
+    override fun applyCommutativeDecryption(request: ApplyCommutativeDecryptionRequest):
+            ApplyCommutativeDecryptionResponse {
+        return ApplyCommutativeDecryptionResponse.parseFrom(
+                CommutativeEncryptionUtility.applyCommutativeDecryptionWrapper(request.toByteArray())
+        )
+    }
+
+    companion object {
+        init {
+            loadLibrary(
+                    name = "commutative_encryption_utility",
+                    directoryPath = Paths.get(
+                            "panel_exchange_client/src/main/swig/wfanet/panelmatch/protocol/crypto"
+                    )
+            )
+        }
+    }
 }

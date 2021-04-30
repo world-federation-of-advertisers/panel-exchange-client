@@ -29,16 +29,16 @@ import wfanet.panelmatch.protocol.protobuf.ApplyCommutativeDecryptionResponse
  */
 interface CommutativeEncryption {
 
-  fun applyCommutativeEncryption(
-    request: ApplyCommutativeEncryptionRequest
-  ): ApplyCommutativeEncryptionResponse
+    fun applyCommutativeEncryption(
+            request: ApplyCommutativeEncryptionRequest
+    ): ApplyCommutativeEncryptionResponse
 
-  fun reApplyCommutativeEncryption(
-    request: ReApplyCommutativeEncryptionRequest
-  ): ReApplyCommutativeEncryptionResponse
+    fun reApplyCommutativeEncryption(
+            request: ReApplyCommutativeEncryptionRequest
+    ): ReApplyCommutativeEncryptionResponse
 
-  fun applyCommutativeDecryption(
-    request: ApplyCommutativeDecryptionRequest
-  ): ApplyCommutativeDecryptionResponse
+    fun applyCommutativeDecryption(
+            request: ApplyCommutativeDecryptionRequest
+    ): ApplyCommutativeDecryptionResponse
 
 }
