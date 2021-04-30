@@ -29,7 +29,7 @@ private val runfiles: Runfiles by lazy { Runfiles.create() }
  * @param runfilesRelativePath path relative to the Bazel runfiles root
  */
 fun getRuntimePath(runfilesRelativePath: Path): Path? {
-  return runfiles.rlocation(runfilesRelativePath.normalize().toString())?.let { Paths.get(it) }
+    return runfiles.rlocation(runfilesRelativePath.normalize().toString())?.let { Paths.get(it) }
 }
 
 /**
@@ -40,8 +40,8 @@ fun getRuntimePath(runfilesRelativePath: Path): Path? {
  * runfiles root
  */
 fun loadLibrary(name: String, directoryPath: Path) {
-  val relativePath = directoryPath.resolve(System.mapLibraryName(name))
-  val runtimePath = requireNotNull(getRuntimePath(relativePath))
+    val relativePath = directoryPath.resolve(System.mapLibraryName(name))
+    val runtimePath = requireNotNull(getRuntimePath(relativePath))
 
-  System.load(runtimePath.toAbsolutePath().toString())
+    System.load(runtimePath.toAbsolutePath().toString())
 }

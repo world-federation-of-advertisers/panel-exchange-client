@@ -14,13 +14,12 @@
 
 package wfanet.panelmatch.protocol.common
 
-import java.nio.file.Paths
+import wfanet.panelmatch.protocol.protobuf.ApplyCommutativeDecryptionRequest
+import wfanet.panelmatch.protocol.protobuf.ApplyCommutativeDecryptionResponse
 import wfanet.panelmatch.protocol.protobuf.ApplyCommutativeEncryptionRequest
 import wfanet.panelmatch.protocol.protobuf.ApplyCommutativeEncryptionResponse
 import wfanet.panelmatch.protocol.protobuf.ReApplyCommutativeEncryptionRequest
 import wfanet.panelmatch.protocol.protobuf.ReApplyCommutativeEncryptionResponse
-import wfanet.panelmatch.protocol.protobuf.ApplyCommutativeDecryptionRequest
-import wfanet.panelmatch.protocol.protobuf.ApplyCommutativeDecryptionResponse
 
 /**
  * Crypto operations for Commutative Encryption. check
@@ -30,15 +29,14 @@ import wfanet.panelmatch.protocol.protobuf.ApplyCommutativeDecryptionResponse
 interface CommutativeEncryption {
 
     fun applyCommutativeEncryption(
-            request: ApplyCommutativeEncryptionRequest
+        request: ApplyCommutativeEncryptionRequest
     ): ApplyCommutativeEncryptionResponse
 
     fun reApplyCommutativeEncryption(
-            request: ReApplyCommutativeEncryptionRequest
+        request: ReApplyCommutativeEncryptionRequest
     ): ReApplyCommutativeEncryptionResponse
 
     fun applyCommutativeDecryption(
-            request: ApplyCommutativeDecryptionRequest
+        request: ApplyCommutativeDecryptionRequest
     ): ApplyCommutativeDecryptionResponse
-
 }

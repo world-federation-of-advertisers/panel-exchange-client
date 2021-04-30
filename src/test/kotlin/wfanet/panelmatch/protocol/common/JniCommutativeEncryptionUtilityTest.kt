@@ -15,9 +15,9 @@
 package wfanet.panelmatch.protocol.common
 
 import com.google.common.truth.Truth.assertThat
-import kotlin.test.assertFailsWith
 import org.junit.Test
 import wfanet.panelmatch.protocol.protobuf.ApplyCommutativeEncryptionRequest
+import kotlin.test.assertFailsWith
 
 class JniCommutativeEncryptionUtilityTest {
 
@@ -25,10 +25,10 @@ class JniCommutativeEncryptionUtilityTest {
     fun `check JNI lib is loaded successfully`() {
         // Send an invalid request and check if we can get the error thrown inside JNI.
         val e =
-                assertFailsWith(RuntimeException::class) {
-                    JniCommutativeEncryption()
-                            .applyCommutativeEncryption(ApplyCommutativeEncryptionRequest.getDefaultInstance())
-                }
+            assertFailsWith(RuntimeException::class) {
+                JniCommutativeEncryption()
+                    .applyCommutativeEncryption(ApplyCommutativeEncryptionRequest.getDefaultInstance())
+            }
         assertThat(e.message).contains("Failed to create the protocol cipher")
     }
 }

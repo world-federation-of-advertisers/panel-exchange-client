@@ -14,15 +14,15 @@
 
 package wfanet.panelmatch.protocol.common
 
-import java.nio.file.Paths
 import wfanet.panelmatch.common.loadLibrary
+import wfanet.panelmatch.protocol.crypto.CommutativeEncryptionUtility
+import wfanet.panelmatch.protocol.protobuf.ApplyCommutativeDecryptionRequest
+import wfanet.panelmatch.protocol.protobuf.ApplyCommutativeDecryptionResponse
 import wfanet.panelmatch.protocol.protobuf.ApplyCommutativeEncryptionRequest
 import wfanet.panelmatch.protocol.protobuf.ApplyCommutativeEncryptionResponse
 import wfanet.panelmatch.protocol.protobuf.ReApplyCommutativeEncryptionRequest
 import wfanet.panelmatch.protocol.protobuf.ReApplyCommutativeEncryptionResponse
-import wfanet.panelmatch.protocol.protobuf.ApplyCommutativeDecryptionRequest
-import wfanet.panelmatch.protocol.protobuf.ApplyCommutativeDecryptionResponse
-import wfanet.panelmatch.protocol.crypto.CommutativeEncryptionUtility
+import java.nio.file.Paths
 
 /**
  * A [CommutativeEncryption] implementation using the JNI [CommutativeEncryptionUtility].
@@ -30,33 +30,33 @@ import wfanet.panelmatch.protocol.crypto.CommutativeEncryptionUtility
 class JniCommutativeEncryption : CommutativeEncryption {
 
     override fun applyCommutativeEncryption(request: ApplyCommutativeEncryptionRequest):
-            ApplyCommutativeEncryptionResponse {
+        ApplyCommutativeEncryptionResponse {
         return ApplyCommutativeEncryptionResponse.parseFrom(
-                CommutativeEncryptionUtility.applyCommutativeEncryptionWrapper(request.toByteArray())
+            CommutativeEncryptionUtility.applyCommutativeEncryptionWrapper(request.toByteArray())
         )
     }
 
     override fun reApplyCommutativeEncryption(request: ReApplyCommutativeEncryptionRequest):
-            ReApplyCommutativeEncryptionResponse {
+        ReApplyCommutativeEncryptionResponse {
         return ReApplyCommutativeEncryptionResponse.parseFrom(
-                CommutativeEncryptionUtility.reApplyCommutativeEncryptionWrapper(request.toByteArray())
+            CommutativeEncryptionUtility.reApplyCommutativeEncryptionWrapper(request.toByteArray())
         )
     }
 
     override fun applyCommutativeDecryption(request: ApplyCommutativeDecryptionRequest):
-            ApplyCommutativeDecryptionResponse {
+        ApplyCommutativeDecryptionResponse {
         return ApplyCommutativeDecryptionResponse.parseFrom(
-                CommutativeEncryptionUtility.applyCommutativeDecryptionWrapper(request.toByteArray())
+            CommutativeEncryptionUtility.applyCommutativeDecryptionWrapper(request.toByteArray())
         )
     }
 
     companion object {
         init {
             loadLibrary(
-                    name = "commutative_encryption_utility",
-                    directoryPath = Paths.get(
-                            "panel_exchange_client/src/main/swig/wfanet/panelmatch/protocol/crypto"
-                    )
+                name = "commutative_encryption_utility",
+                directoryPath = Paths.get(
+                    "panel_exchange_client/src/main/swig/wfanet/panelmatch/protocol/crypto"
+                )
             )
         }
     }
