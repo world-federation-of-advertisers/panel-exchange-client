@@ -21,14 +21,14 @@ import wfanet.panelmatch.protocol.protobuf.ApplyCommutativeEncryptionRequest
 
 class JniCommutativeEncryptionUtilityTest {
 
-    @Test
-    fun `check JNI lib is loaded successfully`() {
-        // Send an invalid request and check if we can get the error thrown inside JNI.
-        val e =
-                assertFailsWith(RuntimeException::class) {
-                    JniCommutativeEncryption()
-                            .applyCommutativeEncryption(ApplyCommutativeEncryptionRequest.getDefaultInstance())
-                }
-        assertThat(e.message).contains("Failed to create the protocol cipher")
-    }
+  @Test
+  fun `check JNI lib is loaded successfully`() {
+    // Send an invalid request and check if we can get the error thrown inside JNI.
+    val e =
+      assertFailsWith(RuntimeException::class) {
+        JniCommutativeEncryption()
+          .applyCommutativeEncryption(ApplyCommutativeEncryptionRequest.getDefaultInstance())
+      }
+    assertThat(e.message).contains("Failed to create the protocol cipher")
+  }
 }
