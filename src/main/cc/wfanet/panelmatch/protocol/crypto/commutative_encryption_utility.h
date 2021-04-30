@@ -36,7 +36,8 @@ using ::wfanet::panelmatch::protocol::protobuf::
 absl::StatusOr<ApplyCommutativeEncryptionResponse> ApplyCommutativeEncryption(
     const ApplyCommutativeEncryptionRequest& request);
 
-absl::StatusOr<ReApplyCommutativeEncryptionResponse> ReApplyCommutativeEncryption(
+absl::StatusOr<ReApplyCommutativeEncryptionResponse>
+ReApplyCommutativeEncryption(
     const ReApplyCommutativeEncryptionRequest& request);
 
 absl::StatusOr<ApplyCommutativeDecryptionResponse> ApplyCommutativeDecryption(

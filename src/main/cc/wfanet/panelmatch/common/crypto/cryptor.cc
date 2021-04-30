@@ -108,33 +108,32 @@ absl::StatusOr<RepeatedPtrField<std::string>> CryptorImpl::BatchProcess(
     const RepeatedPtrField<std::string>& plaintexts_or_ciphertexts,
     Action action) LOCKS_EXCLUDED(mutex_) {
   absl::WriterMutexLock l(&mutex_);
-  std::vector<std::string> results;
+  RepeatedPtrField<std::string> results;
   const int num_texts = plaintexts_or_ciphertexts.size();
-  results.reserve(num_texts);
+  results.Reserve(num_texts);
 
   for (auto& text : plaintexts_or_ciphertexts) {
+    std::string result;
     switch (action) {
       case Action::kEncrypt: {
-        ASSIGN_OR_RETURN(auto encrypted_string, Encrypt(text));
-        results.push_back(encrypted_string);
+        ASSIGN_OR_RETURN(result, Encrypt(text));
         break;
       }
       case Action::kReEncrypt: {
-        ASSIGN_OR_RETURN(auto reencrypted_string, ReEncrypt(text));
-        results.push_back(reencrypted_string);
+        ASSIGN_OR_RETURN(result, ReEncrypt(text));
         break;
       }
       case Action::kDecrypt: {
-        ASSIGN_OR_RETURN(auto decrypted_string, Decrypt(text));
-        results.push_back(decrypted_string);
+        ASSIGN_OR_RETURN(result, Decrypt(text));
         break;
       }
       default:
         return absl::InvalidArgumentError("Unknown action.");
     }
+    results.Add(std::move(result));
+
   }
-  RepeatedPtrField<std::string> data(results.begin(), results.end());
-  return std::move(data);
+  return std::move(results);
 }
 
 }  // namespace

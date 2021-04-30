@@ -14,8 +14,9 @@
 
 #include "wfanet/panelmatch/protocol/crypto/commutative_encryption_utility.h"
 
-#include <string>
 #include <google/protobuf/repeated_field.h>
+
+#include <string>
 
 #include "absl/base/port.h"
 #include "absl/memory/memory.h"
@@ -30,10 +31,10 @@
 namespace wfa::panelmatch {
 namespace {
 using google::protobuf::RepeatedPtrField;
-using ::wfanet::IsOk;
-using ::wfanet::IsOkAndHolds;
 using ::testing::ContainerEq;
 using ::testing::Not;
+using ::wfanet::IsOk;
+using ::wfanet::IsOkAndHolds;
 using ::wfanet::panelmatch::protocol::crypto::ApplyCommutativeDecryption;
 using ::wfanet::panelmatch::protocol::crypto::ApplyCommutativeEncryption;
 using ::wfanet::panelmatch::protocol::crypto::ReApplyCommutativeEncryption;
@@ -51,17 +52,22 @@ using ::wfanet::panelmatch::protocol::protobuf::
 using ::wfanet::panelmatch::protocol::protobuf::
     ReApplyCommutativeEncryptionResponse;
 
-std::vector<std::string> convert_repeatedPtrField_to_vector(RepeatedPtrField<std::string> f) {
-    std::vector<std::string> v(f.begin(), f.end());
-    return v;
+std::vector<std::string> convert_repeatedPtrField_to_vector(
+    RepeatedPtrField<std::string> f) {
+  std::vector<std::string> v(f.begin(), f.end());
+  return v;
 }
 
-void assert_rpf_equal(RepeatedPtrField<std::string> a, RepeatedPtrField<std::string> b) {
-    ASSERT_THAT(convert_repeatedPtrField_to_vector(a), ContainerEq(convert_repeatedPtrField_to_vector(b)));
+void assert_rpf_equal(RepeatedPtrField<std::string> a,
+                      RepeatedPtrField<std::string> b) {
+  ASSERT_THAT(convert_repeatedPtrField_to_vector(a),
+              ContainerEq(convert_repeatedPtrField_to_vector(b)));
 }
 
-void assert_rpf_not_equal(RepeatedPtrField<std::string> a, RepeatedPtrField<std::string> b) {
-    ASSERT_THAT(convert_repeatedPtrField_to_vector(a), Not(ContainerEq(convert_repeatedPtrField_to_vector(b))));
+void assert_rpf_not_equal(RepeatedPtrField<std::string> a,
+                          RepeatedPtrField<std::string> b) {
+  ASSERT_THAT(convert_repeatedPtrField_to_vector(a),
+              Not(ContainerEq(convert_repeatedPtrField_to_vector(b))));
 }
 
 TEST(PrivateJoinAndComputeTest, EncryptReEncryptDecryptUtility) {
@@ -92,18 +98,22 @@ TEST(PrivateJoinAndComputeTest, EncryptReEncryptDecryptUtility) {
   ReApplyCommutativeEncryptionRequest reencrypt_request1;
   reencrypt_request1.set_encryption_key(random_key_1);
   reencrypt_request1.mutable_encrypted_texts()->CopyFrom(encrypted_texts2);
-  auto double_encrypted_response1 = ReApplyCommutativeEncryption(reencrypt_request1);
+  auto double_encrypted_response1 =
+      ReApplyCommutativeEncryption(reencrypt_request1);
   ASSERT_THAT(double_encrypted_response1, IsOk());
-  auto double_encrypted_texts1 = (*double_encrypted_response1).reencrypted_texts();
+  auto double_encrypted_texts1 =
+      (*double_encrypted_response1).reencrypted_texts();
 
   assert_rpf_not_equal(encrypted_texts2, double_encrypted_texts1);
 
   ReApplyCommutativeEncryptionRequest reencrypt_request2;
   reencrypt_request2.set_encryption_key(random_key_2);
   reencrypt_request2.mutable_encrypted_texts()->CopyFrom(encrypted_texts1);
-  auto double_encrypted_response2 = ReApplyCommutativeEncryption(reencrypt_request2);
+  auto double_encrypted_response2 =
+      ReApplyCommutativeEncryption(reencrypt_request2);
   ASSERT_THAT(double_encrypted_response2, IsOk());
-  auto double_encrypted_texts2 = (*double_encrypted_response2).reencrypted_texts();
+  auto double_encrypted_texts2 =
+      (*double_encrypted_response2).reencrypted_texts();
   assert_rpf_not_equal(encrypted_texts1, double_encrypted_texts2);
 
   ApplyCommutativeDecryptionRequest decrypt_request1;
@@ -137,7 +147,6 @@ TEST(PrivateJoinAndComputeTest, EncryptReEncryptDecryptUtility) {
   ASSERT_THAT(decrypted_response4, IsOk());
   auto decrypted_texts4 = (*decrypted_response4).decrypted_texts();
   assert_rpf_equal(decrypted_texts3, encrypted_texts1);
-
 }
 
 }  // namespace
