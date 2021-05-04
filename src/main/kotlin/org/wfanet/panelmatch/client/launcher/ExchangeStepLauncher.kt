@@ -27,9 +27,8 @@ class ExchangeStepLauncher(
 ) {
 
   /**
-   * Finds a single ready Exchange Step and starts executing.
-   * If an Exchange Step is found, validates it, and starts executing.
-   * If not found simply returns.
+   * Finds a single ready Exchange Step and starts executing. If an Exchange Step is found,
+   * validates it, and starts executing. If not found simply returns.
    *
    * @throws InvalidExchangeStepException if Exchange Step is not valid.
    */

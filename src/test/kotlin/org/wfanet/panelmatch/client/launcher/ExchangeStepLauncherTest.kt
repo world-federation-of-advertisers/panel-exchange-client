@@ -44,15 +44,11 @@ private val EXCHANGE_STEP =
     .build()
 private val REQUEST_WITH_DATA_PROVIDER =
   FindReadyExchangeStepRequest.newBuilder()
-    .apply {
-      dataProviderBuilder.dataProviderId = DATA_PROVIDER_ID
-    }
+    .apply { dataProviderBuilder.dataProviderId = DATA_PROVIDER_ID }
     .build()
 private val REQUEST_WITH_MODEL_PROVIDER =
   FindReadyExchangeStepRequest.newBuilder()
-    .apply {
-      modelProviderBuilder.modelProviderId = MODEL_PROVIDER_ID
-    }
+    .apply { modelProviderBuilder.modelProviderId = MODEL_PROVIDER_ID }
     .build()
 private val RESPONSE =
   FindReadyExchangeStepResponse.newBuilder().setExchangeStep(EXCHANGE_STEP).build()
@@ -77,8 +73,7 @@ class ExchangeStepLauncherTest {
       whenever(exchangeStepsServiceMock.findReadyExchangeStep(any())).thenReturn(RESPONSE)
       val exchangeStep = launcher.findExchangeStep()
       assertThat(exchangeStep).isEqualTo(EXCHANGE_STEP)
-      verify(exchangeStepsServiceMock, times(1))
-        .findReadyExchangeStep(REQUEST_WITH_DATA_PROVIDER)
+      verify(exchangeStepsServiceMock, times(1)).findReadyExchangeStep(REQUEST_WITH_DATA_PROVIDER)
     }
   }
 
@@ -90,8 +85,7 @@ class ExchangeStepLauncherTest {
       whenever(exchangeStepsServiceMock.findReadyExchangeStep(any())).thenReturn(RESPONSE)
       val exchangeStep = launcher.findExchangeStep()
       assertThat(exchangeStep).isEqualTo(EXCHANGE_STEP)
-      verify(exchangeStepsServiceMock, times(1))
-        .findReadyExchangeStep(REQUEST_WITH_MODEL_PROVIDER)
+      verify(exchangeStepsServiceMock, times(1)).findReadyExchangeStep(REQUEST_WITH_MODEL_PROVIDER)
     }
   }
 
