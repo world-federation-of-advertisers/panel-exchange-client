@@ -20,30 +20,29 @@ import org.wfanet.measurement.api.v2alpha.ExchangeStepsGrpcKt.ExchangeStepsCorou
 import org.wfanet.measurement.api.v2alpha.FindReadyExchangeStepRequest
 import org.wfanet.measurement.api.v2alpha.FindReadyExchangeStepResponse
 
-class ExchangeStepLauncher(private val exchangeStepsClient: ExchangeStepsCoroutineStub) {
+/** Finds an [ExchangeStep], validates it, and starts executing the work. */
+class ExchangeStepLauncher(
+  private val exchangeStepsClient: ExchangeStepsCoroutineStub,
+  private val dataProviderId: String
+) {
 
   /**
-   * Finds a single ExchangeTask and starts executing.
+   * Finds a single Exchange Step and starts executing.
    *
-   * @param dataProviderId Data Provider id.
-   * @throws NoSuchElementException If no ExchangeTask exists.
-   * @throws IllegalArgumentException if ExchangeTask is not valid.
+   * @throws IllegalArgumentException if Exchange Step is not valid.
    */
-  suspend fun findAndRunExchangeTask(dataProviderId: String) {
-    val exchangeStep = validateExchangeTask(findExchangeTask(dataProviderId))
-    if (exchangeStep != null) {
-      runExchangeTask(exchangeStep)
-    }
+  suspend fun findAndRunExchangeStep() {
+    val exchangeStep = findExchangeStep() ?: return
+    validateExchangeStep(exchangeStep)
+    runExchangeStep(exchangeStep)
   }
 
   /**
-   * Finds a single ExchangeTask from ExchangeSteps service.
+   * Finds a single Exchange Step from ExchangeSteps service.
    *
-   * @param dataProviderId Data Provider id.
    * @return single [ExchangeStep].
-   * @throws NoSuchElementException If no ExchangeTask exists.
    */
-  suspend fun findExchangeTask(dataProviderId: String): ExchangeStep? {
+  suspend fun findExchangeStep(): ExchangeStep? {
     val key = DataProvider.Key.newBuilder().setDataProviderId(dataProviderId).build()
     val request: FindReadyExchangeStepRequest =
       FindReadyExchangeStepRequest.newBuilder().setDataProvider(key).build()
@@ -52,28 +51,26 @@ class ExchangeStepLauncher(private val exchangeStepsClient: ExchangeStepsCorouti
     if (response.hasExchangeStep()) {
       return response.exchangeStep
     }
-    throw NoSuchElementException("There is not any Exchange Step in Ready state.")
+    return null
   }
 
   /**
-   * Starts executing the given ExchangeTask.
+   * Starts executing the given Exchange Step.
    *
    * @param exchangeStep [ExchangeStep].
    */
-  fun runExchangeTask(exchangeStep: ExchangeStep) {
+  fun runExchangeStep(exchangeStep: ExchangeStep) {
     // TODO(@yunyeng): Start JobStarter with the exchangeStep.
   }
 
   /**
-   * Validates the given ExchangeTask.
+   * Validates the given Exchange Step.
    *
    * @param exchangeStep [ExchangeStep].
-   * @return validated [ExchangeStep] or null.
-   * @throws IllegalArgumentException if ExchangeTask is not valid.
+   * @throws IllegalArgumentException if the Exchange Step is not valid.
    */
-  fun validateExchangeTask(exchangeStep: ExchangeStep?): ExchangeStep? {
-    // Validate that this exchange step is legal.
+  fun validateExchangeStep(exchangeStep: ExchangeStep) {
+    // Validate that this exchange step is legal, otherwise throw an error.
     // TODO(@yunyeng): Add validation logic.
-    return null
   }
 }
