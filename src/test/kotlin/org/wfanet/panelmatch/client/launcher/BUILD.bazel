@@ -16,6 +16,7 @@ kt_jvm_grpc_and_java_proto_library(
 kt_jvm_test(
     name = "ExchangeStepLauncherTest",
     srcs = ["ExchangeStepLauncherTest.kt"],
+    friends = ["//src/main/kotlin/org/wfanet/panelmatch/client/launcher"],
     test_class = "org.wfanet.panelmatch.client.launcher.ExchangeStepLauncherTest",
     deps = [
         ":exchange_step_java_proto",

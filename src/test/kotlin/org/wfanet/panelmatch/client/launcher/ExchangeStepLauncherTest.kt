@@ -26,7 +26,6 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
-import org.wfanet.measurement.api.v2alpha.DataProvider
 import org.wfanet.measurement.api.v2alpha.ExchangeStep
 import org.wfanet.measurement.api.v2alpha.ExchangeStepsGrpcKt.ExchangeStepsCoroutineStub
 import org.wfanet.measurement.api.v2alpha.FindReadyExchangeStepRequest
@@ -35,6 +34,7 @@ import org.wfanet.measurement.common.grpc.testing.GrpcTestServerRule
 import org.wfanet.measurement.api.v2alpha.ExchangeStepsGrpcKt.ExchangeStepsCoroutineImplBase as ExchangeStepsCoroutineService
 
 private const val DATA_PROVIDER_ID = "1"
+private const val MODEL_PROVIDER_ID = "2"
 private const val EXCHANGE_ID = "1"
 
 private val EXCHANGE_STEP =
@@ -42,12 +42,18 @@ private val EXCHANGE_STEP =
     .setState(ExchangeStep.State.READY)
     .setKey(ExchangeStep.Key.newBuilder().setExchangeId(EXCHANGE_ID))
     .build()
-private val REQUEST =
-  FindReadyExchangeStepRequest.newBuilder().setDataProvider(
-    DataProvider.Key.newBuilder().setDataProviderId(
-      DATA_PROVIDER_ID
-    )
-  ).build()
+private val REQUEST_WITH_DATA_PROVIDER =
+  FindReadyExchangeStepRequest.newBuilder()
+    .apply {
+      dataProviderBuilder.dataProviderId = DATA_PROVIDER_ID
+    }
+    .build()
+private val REQUEST_WITH_MODEL_PROVIDER =
+  FindReadyExchangeStepRequest.newBuilder()
+    .apply {
+      modelProviderBuilder.modelProviderId = MODEL_PROVIDER_ID
+    }
+    .build()
 private val RESPONSE =
   FindReadyExchangeStepResponse.newBuilder().setExchangeStep(EXCHANGE_STEP).build()
 private val EMPTY_RESPONSE = FindReadyExchangeStepResponse.newBuilder().build()
@@ -64,20 +70,35 @@ class ExchangeStepLauncherTest {
   }
 
   @Test
-  fun findExchangeStep() {
-    val launcher = ExchangeStepLauncher(exchangeStepsStub, DATA_PROVIDER_ID)
+  fun `findExchangeStep with dataProvider`() {
+    val launcher =
+      ExchangeStepLauncher(exchangeStepsStub, DATA_PROVIDER_ID, PartyType.DATA_PROVIDER)
     runBlocking {
       whenever(exchangeStepsServiceMock.findReadyExchangeStep(any())).thenReturn(RESPONSE)
       val exchangeStep = launcher.findExchangeStep()
       assertThat(exchangeStep).isEqualTo(EXCHANGE_STEP)
       verify(exchangeStepsServiceMock, times(1))
-        .findReadyExchangeStep(REQUEST)
+        .findReadyExchangeStep(REQUEST_WITH_DATA_PROVIDER)
+    }
+  }
+
+  @Test
+  fun `findExchangeStep with modelProvider`() {
+    val launcher =
+      ExchangeStepLauncher(exchangeStepsStub, MODEL_PROVIDER_ID, PartyType.MODEL_PROVIDER)
+    runBlocking {
+      whenever(exchangeStepsServiceMock.findReadyExchangeStep(any())).thenReturn(RESPONSE)
+      val exchangeStep = launcher.findExchangeStep()
+      assertThat(exchangeStep).isEqualTo(EXCHANGE_STEP)
+      verify(exchangeStepsServiceMock, times(1))
+        .findReadyExchangeStep(REQUEST_WITH_MODEL_PROVIDER)
     }
   }
 
   @Test
   fun `findExchangeStep without exchangeStep`() = runBlocking {
-    val launcher = ExchangeStepLauncher(exchangeStepsStub, DATA_PROVIDER_ID)
+    val launcher =
+      ExchangeStepLauncher(exchangeStepsStub, DATA_PROVIDER_ID, PartyType.DATA_PROVIDER)
     whenever(exchangeStepsServiceMock.findReadyExchangeStep(any())).thenReturn(EMPTY_RESPONSE)
     val exchangeStep = launcher.findExchangeStep()
     assertThat(exchangeStep).isNull()

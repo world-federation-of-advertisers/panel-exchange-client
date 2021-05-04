@@ -8,6 +8,13 @@ package(default_visibility = [
 ])
 
 java_proto_library(
+    name = "model_provider_java_proto",
+    deps = [
+        "@wfa_measurement_proto//src/main/proto/wfa/measurement/api/v2alpha:model_provider_proto",
+    ],
+)
+
+java_proto_library(
     name = "data_provider_java_proto",
     deps = [
         "@wfa_measurement_proto//src/main/proto/wfa/measurement/api/v2alpha:data_provider_proto",

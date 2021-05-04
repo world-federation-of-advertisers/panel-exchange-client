@@ -14,7 +14,6 @@
 
 package org.wfanet.panelmatch.client.launcher
 
-import org.wfanet.measurement.api.v2alpha.DataProvider
 import org.wfanet.measurement.api.v2alpha.ExchangeStep
 import org.wfanet.measurement.api.v2alpha.ExchangeStepsGrpcKt.ExchangeStepsCoroutineStub
 import org.wfanet.measurement.api.v2alpha.FindReadyExchangeStepRequest
@@ -23,13 +22,16 @@ import org.wfanet.measurement.api.v2alpha.FindReadyExchangeStepResponse
 /** Finds an [ExchangeStep], validates it, and starts executing the work. */
 class ExchangeStepLauncher(
   private val exchangeStepsClient: ExchangeStepsCoroutineStub,
-  private val dataProviderId: String
+  private val id: String,
+  private val partyType: PartyType
 ) {
 
   /**
-   * Finds a single Exchange Step and starts executing.
+   * Finds a single ready Exchange Step and starts executing.
+   * If an Exchange Step is found, validates it, and starts executing.
+   * If not found simply returns.
    *
-   * @throws IllegalArgumentException if Exchange Step is not valid.
+   * @throws InvalidExchangeStepException if Exchange Step is not valid.
    */
   suspend fun findAndRunExchangeStep() {
     val exchangeStep = findExchangeStep() ?: return
@@ -40,12 +42,18 @@ class ExchangeStepLauncher(
   /**
    * Finds a single Exchange Step from ExchangeSteps service.
    *
-   * @return single [ExchangeStep].
+   * @return an [ExchangeStep] or null.
    */
-  suspend fun findExchangeStep(): ExchangeStep? {
-    val key = DataProvider.Key.newBuilder().setDataProviderId(dataProviderId).build()
+  internal suspend fun findExchangeStep(): ExchangeStep? {
     val request: FindReadyExchangeStepRequest =
-      FindReadyExchangeStepRequest.newBuilder().setDataProvider(key).build()
+      FindReadyExchangeStepRequest.newBuilder()
+        .apply {
+          when (partyType) {
+            PartyType.DATA_PROVIDER -> dataProviderBuilder.dataProviderId = id
+            PartyType.MODEL_PROVIDER -> modelProviderBuilder.modelProviderId = id
+          }
+        }
+        .build()
     // Call /ExchangeSteps.findReadyExchangeStep to a find work to do.
     val response: FindReadyExchangeStepResponse = exchangeStepsClient.findReadyExchangeStep(request)
     if (response.hasExchangeStep()) {
@@ -59,7 +67,7 @@ class ExchangeStepLauncher(
    *
    * @param exchangeStep [ExchangeStep].
    */
-  fun runExchangeStep(exchangeStep: ExchangeStep) {
+  internal fun runExchangeStep(exchangeStep: ExchangeStep) {
     // TODO(@yunyeng): Start JobStarter with the exchangeStep.
   }
 
@@ -67,10 +75,22 @@ class ExchangeStepLauncher(
    * Validates the given Exchange Step.
    *
    * @param exchangeStep [ExchangeStep].
-   * @throws IllegalArgumentException if the Exchange Step is not valid.
+   * @throws InvalidExchangeStepException if the Exchange Step is not valid.
    */
-  fun validateExchangeStep(exchangeStep: ExchangeStep) {
+  internal fun validateExchangeStep(exchangeStep: ExchangeStep) {
     // Validate that this exchange step is legal, otherwise throw an error.
     // TODO(@yunyeng): Add validation logic.
   }
 }
+
+/** Specifies the party type of the input id for [ExchangeStepLauncher]. */
+enum class PartyType {
+  /** Id belongs to a Data Provider. */
+  DATA_PROVIDER,
+
+  /** Id belongs to a Model Provider. */
+  MODEL_PROVIDER,
+}
+
+/** Indicates that given Exchange Step is not valid to execute. */
+class InvalidExchangeStepException(cause: Throwable) : Exception(cause)
