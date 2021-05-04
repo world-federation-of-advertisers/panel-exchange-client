@@ -30,7 +30,7 @@ class ExchangeStepLauncher(private val exchangeStepsClient: ExchangeStepsCorouti
    * @throws IllegalArgumentException if ExchangeTask is not valid.
    */
   suspend fun findAndRunExchangeTask(dataProviderId: String) {
-    val exchangeStep  = validateExchangeTask(findExchangeTask(dataProviderId))
+    val exchangeStep = validateExchangeTask(findExchangeTask(dataProviderId))
     if (exchangeStep != null) {
       runExchangeTask(exchangeStep)
     }
@@ -61,7 +61,7 @@ class ExchangeStepLauncher(private val exchangeStepsClient: ExchangeStepsCorouti
    * @param exchangeStep [ExchangeStep].
    */
   fun runExchangeTask(exchangeStep: ExchangeStep) {
-    //TODO(@yunyeng): Start JobStarter with the exchangeStep.
+    // TODO(@yunyeng): Start JobStarter with the exchangeStep.
   }
 
   /**
@@ -73,7 +73,7 @@ class ExchangeStepLauncher(private val exchangeStepsClient: ExchangeStepsCorouti
    */
   fun validateExchangeTask(exchangeStep: ExchangeStep?): ExchangeStep? {
     // Validate that this exchange step is legal.
-    //TODO(@yunyeng): Add validation logic.
+    // TODO(@yunyeng): Add validation logic.
     return null
   }
 }

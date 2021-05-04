@@ -26,18 +26,19 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
 import org.wfanet.measurement.api.v2alpha.ExchangeStep
+import org.wfanet.measurement.api.v2alpha.ExchangeStepsGrpcKt.ExchangeStepsCoroutineImplBase as ExchangeStepsCoroutineService
 import org.wfanet.measurement.api.v2alpha.ExchangeStepsGrpcKt.ExchangeStepsCoroutineStub
 import org.wfanet.measurement.api.v2alpha.FindReadyExchangeStepResponse
 import org.wfanet.measurement.common.grpc.testing.GrpcTestServerRule
-import org.wfanet.measurement.api.v2alpha.ExchangeStepsGrpcKt.ExchangeStepsCoroutineImplBase as ExchangeStepsCoroutineService
 
 private const val DATA_PROVIDER_ID = "1"
 private const val EXCHANGE_ID = "1"
 
-val EXCHANGE_STEP = ExchangeStep.newBuilder()
-  .setState(ExchangeStep.State.READY)
-  .setKey(ExchangeStep.Key.newBuilder().setExchangeId(EXCHANGE_ID))
-  .build()
+val EXCHANGE_STEP =
+  ExchangeStep.newBuilder()
+    .setState(ExchangeStep.State.READY)
+    .setKey(ExchangeStep.Key.newBuilder().setExchangeId(EXCHANGE_ID))
+    .build()
 private val RESPONSE =
   FindReadyExchangeStepResponse.newBuilder().setExchangeStep(EXCHANGE_STEP).build()
 private val EMPTY_RESPONSE = FindReadyExchangeStepResponse.newBuilder().build()
@@ -56,8 +57,7 @@ class ExchangeStepLauncherTest {
   @Test
   fun findExchangeTask() = runBlocking {
     val launcher = ExchangeStepLauncher(exchangeStepsStub)
-    whenever(exchangeStepsServiceMock.findReadyExchangeStep(any()))
-      .thenReturn(RESPONSE)
+    whenever(exchangeStepsServiceMock.findReadyExchangeStep(any())).thenReturn(RESPONSE)
     val task = launcher.findExchangeTask(DATA_PROVIDER_ID)
     assertThat(task).isEqualTo(EXCHANGE_STEP)
   }
@@ -67,8 +67,7 @@ class ExchangeStepLauncherTest {
     val launcher = ExchangeStepLauncher(exchangeStepsStub)
     Assert.assertThrows(NoSuchElementException::class.java) {
       runBlocking {
-        whenever(exchangeStepsServiceMock.findReadyExchangeStep(any()))
-          .thenReturn(EMPTY_RESPONSE)
+        whenever(exchangeStepsServiceMock.findReadyExchangeStep(any())).thenReturn(EMPTY_RESPONSE)
         launcher.findExchangeTask(DATA_PROVIDER_ID)
       }
     }
