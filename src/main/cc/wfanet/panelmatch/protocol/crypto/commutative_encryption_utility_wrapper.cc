@@ -25,23 +25,24 @@ namespace wfanet::panelmatch::protocol::crypto {
 
 absl::StatusOr<std::string> ApplyCommutativeEncryptionWrapper(
     const std::string& serialized_request) {
-  ::wfanet::panelmatch::protocol::protobuf::ApplyCommutativeEncryptionRequest
+  wfanet::panelmatch::protocol::protobuf::ApplyCommutativeEncryptionRequest
       request_proto;
-  RETURN_IF_ERROR(::wfanet::panelmatch::common::crypto::ParseRequestFromString(
+  RETURN_IF_ERROR(wfanet::panelmatch::common::crypto::ParseRequestFromString(
       serialized_request, request_proto));
-  ASSIGN_OR_RETURN(::wfanet::panelmatch::protocol::protobuf::
-                       ApplyCommutativeEncryptionResponse result,
-                   ApplyCommutativeEncryption(request_proto));
+  ASSIGN_OR_RETURN(
+      wfanet::panelmatch::protocol::protobuf::ApplyCommutativeEncryptionResponse
+          result,
+      ApplyCommutativeEncryption(request_proto));
   return result.SerializeAsString();
 }
 
 absl::StatusOr<std::string> ReApplyCommutativeEncryptionWrapper(
     const std::string& serialized_request) {
-  ::wfanet::panelmatch::protocol::protobuf::ReApplyCommutativeEncryptionRequest
+  wfanet::panelmatch::protocol::protobuf::ReApplyCommutativeEncryptionRequest
       request_proto;
-  RETURN_IF_ERROR(::wfanet::panelmatch::common::crypto::ParseRequestFromString(
+  RETURN_IF_ERROR(wfanet::panelmatch::common::crypto::ParseRequestFromString(
       serialized_request, request_proto));
-  ASSIGN_OR_RETURN(::wfanet::panelmatch::protocol::protobuf::
+  ASSIGN_OR_RETURN(wfanet::panelmatch::protocol::protobuf::
                        ReApplyCommutativeEncryptionResponse result,
                    ReApplyCommutativeEncryption(request_proto));
   return result.SerializeAsString();
@@ -49,13 +50,14 @@ absl::StatusOr<std::string> ReApplyCommutativeEncryptionWrapper(
 
 absl::StatusOr<std::string> ApplyCommutativeDecryptionWrapper(
     const std::string& serialized_request) {
-  ::wfanet::panelmatch::protocol::protobuf::ApplyCommutativeDecryptionRequest
+  wfanet::panelmatch::protocol::protobuf::ApplyCommutativeDecryptionRequest
       request_proto;
-  RETURN_IF_ERROR(::wfanet::panelmatch::common::crypto::ParseRequestFromString(
+  RETURN_IF_ERROR(wfanet::panelmatch::common::crypto::ParseRequestFromString(
       serialized_request, request_proto));
-  ASSIGN_OR_RETURN(::wfanet::panelmatch::protocol::protobuf::
-                       ApplyCommutativeDecryptionResponse result,
-                   ApplyCommutativeDecryption(request_proto));
+  ASSIGN_OR_RETURN(
+      wfanet::panelmatch::protocol::protobuf::ApplyCommutativeDecryptionResponse
+          result,
+      ApplyCommutativeDecryption(request_proto));
   return result.SerializeAsString();
 }
 

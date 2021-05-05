@@ -20,19 +20,19 @@
 
 namespace wfanet::panelmatch::protocol::crypto {
 
-absl::StatusOr<::wfanet::panelmatch::protocol::protobuf::
-                   ApplyCommutativeEncryptionResponse>
-ApplyCommutativeEncryption(const ::wfanet::panelmatch::protocol::protobuf::
+absl::StatusOr<
+    wfanet::panelmatch::protocol::protobuf::ApplyCommutativeEncryptionResponse>
+ApplyCommutativeEncryption(const wfanet::panelmatch::protocol::protobuf::
                                ApplyCommutativeEncryptionRequest& request);
 
-absl::StatusOr<::wfanet::panelmatch::protocol::protobuf::
+absl::StatusOr<wfanet::panelmatch::protocol::protobuf::
                    ReApplyCommutativeEncryptionResponse>
-ReApplyCommutativeEncryption(const ::wfanet::panelmatch::protocol::protobuf::
+ReApplyCommutativeEncryption(const wfanet::panelmatch::protocol::protobuf::
                                  ReApplyCommutativeEncryptionRequest& request);
 
-absl::StatusOr<::wfanet::panelmatch::protocol::protobuf::
-                   ApplyCommutativeDecryptionResponse>
-ApplyCommutativeDecryption(const ::wfanet::panelmatch::protocol::protobuf::
+absl::StatusOr<
+    wfanet::panelmatch::protocol::protobuf::ApplyCommutativeDecryptionResponse>
+ApplyCommutativeDecryption(const wfanet::panelmatch::protocol::protobuf::
                                ApplyCommutativeDecryptionRequest& request);
 
 }  // namespace wfanet::panelmatch::protocol::crypto

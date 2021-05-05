@@ -41,12 +41,12 @@ using ::wfanet::panelmatch::common::crypto::CreateCryptorFromKey;
 
 }  // namespace
 
-absl::StatusOr<::wfanet::panelmatch::protocol::protobuf::
-                   ApplyCommutativeEncryptionResponse>
-ApplyCommutativeEncryption(const ::wfanet::panelmatch::protocol::protobuf::
+absl::StatusOr<
+    wfanet::panelmatch::protocol::protobuf::ApplyCommutativeEncryptionResponse>
+ApplyCommutativeEncryption(const wfanet::panelmatch::protocol::protobuf::
                                ApplyCommutativeEncryptionRequest& request) {
-  ::wfa::measurement::common::crypto::StartedThreadCpuTimer timer;
-  ::wfanet::panelmatch::protocol::protobuf::ApplyCommutativeEncryptionResponse
+  wfa::measurement::common::crypto::StartedThreadCpuTimer timer;
+  wfanet::panelmatch::protocol::protobuf::ApplyCommutativeEncryptionResponse
       response;
   ASSIGN_OR_RETURN_ERROR(auto cryptor,
                          CreateCryptorFromKey(request.encryption_key()),
@@ -58,12 +58,12 @@ ApplyCommutativeEncryption(const ::wfanet::panelmatch::protocol::protobuf::
   return response;
 }
 
-absl::StatusOr<::wfanet::panelmatch::protocol::protobuf::
-                   ApplyCommutativeDecryptionResponse>
-ApplyCommutativeDecryption(const ::wfanet::panelmatch::protocol::protobuf::
+absl::StatusOr<
+    wfanet::panelmatch::protocol::protobuf::ApplyCommutativeDecryptionResponse>
+ApplyCommutativeDecryption(const wfanet::panelmatch::protocol::protobuf::
                                ApplyCommutativeDecryptionRequest& request) {
-  ::wfa::measurement::common::crypto::StartedThreadCpuTimer timer;
-  ::wfanet::panelmatch::protocol::protobuf::ApplyCommutativeDecryptionResponse
+  wfa::measurement::common::crypto::StartedThreadCpuTimer timer;
+  wfanet::panelmatch::protocol::protobuf::ApplyCommutativeDecryptionResponse
       response;
   ASSIGN_OR_RETURN_ERROR(auto cryptor,
                          CreateCryptorFromKey(request.encryption_key()),
@@ -79,8 +79,8 @@ absl::StatusOr<wfanet::panelmatch::protocol::protobuf::
                    ReApplyCommutativeEncryptionResponse>
 ReApplyCommutativeEncryption(const wfanet::panelmatch::protocol::protobuf::
                                  ReApplyCommutativeEncryptionRequest& request) {
-  ::wfa::measurement::common::crypto::StartedThreadCpuTimer timer;
-  ::wfanet::panelmatch::protocol::protobuf::ReApplyCommutativeEncryptionResponse
+  wfa::measurement::common::crypto::StartedThreadCpuTimer timer;
+  wfanet::panelmatch::protocol::protobuf::ReApplyCommutativeEncryptionResponse
       response;
   ASSIGN_OR_RETURN_ERROR(auto cryptor,
                          CreateCryptorFromKey(request.encryption_key()),
