@@ -17,8 +17,8 @@ cc_library(
         "//src/main/cc/wfanet/panelmatch/common:macros",
         "//src/main/cc/wfanet/panelmatch/common/crypto:cryptor",
         "//src/main/cc/wfanet/panelmatch/common/crypto:encryption_utility_helper",
-        "@wfa_measurement_system//src/main/cc/wfa/measurement/common/crypto:started_thread_cpu_timer",
         "//src/main/proto/wfanet/panelmatch/protocol/crypto:cryptor_cc_proto",
+        "@wfa_measurement_system//src/main/cc/wfa/measurement/common/crypto:started_thread_cpu_timer",
     ],
 )
 

@@ -5,14 +5,14 @@ kt_jvm_test(
     srcs = ["CommutativeEncryptionUtilityTest.kt"],
     test_class = "wfanet.panelmatch.protocol.common.CommutativeEncryptionUtilityTest",
     deps = [
-        "@wfa_measurement_system//imports/java/com/google/common/truth",
-        "@wfa_measurement_system//imports/java/com/google/protobuf",
-        "@wfa_measurement_system//imports/java/org/junit",
-        "@wfa_measurement_system//imports/kotlin/kotlin/test",
         "//src/main/kotlin/wfanet/panelmatch/common",
         "//src/main/kotlin/wfanet/panelmatch/protocol/common:commutativeencryption",
         "//src/main/proto/wfanet/panelmatch/protocol/crypto:cryptor_java_proto",
         "//src/main/swig/wfanet/panelmatch/protocol/crypto:commutative_encryption_utility",
+        "@wfa_measurement_system//imports/java/com/google/common/truth",
+        "@wfa_measurement_system//imports/java/com/google/protobuf",
+        "@wfa_measurement_system//imports/java/org/junit",
+        "@wfa_measurement_system//imports/kotlin/kotlin/test",
     ],
 )
 
@@ -21,10 +21,10 @@ kt_jvm_test(
     srcs = ["JniCommutativeEncryptionUtilityTest.kt"],
     test_class = "wfanet.panelmatch.protocol.common.JniCommutativeEncryptionUtilityTest",
     deps = [
+        "//src/main/kotlin/wfanet/panelmatch/protocol/common:commutativeencryption",
+        "//src/main/proto/wfanet/panelmatch/protocol/crypto:cryptor_java_proto",
         "@wfa_measurement_system//imports/java/com/google/common/truth",
         "@wfa_measurement_system//imports/java/org/junit",
         "@wfa_measurement_system//imports/kotlin/kotlin/test",
-        "//src/main/kotlin/wfanet/panelmatch/protocol/common:commutativeencryption",
-        "//src/main/proto/wfanet/panelmatch/protocol/crypto:cryptor_java_proto",
     ],
 )
