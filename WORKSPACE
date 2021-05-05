@@ -169,10 +169,40 @@ load("@com_github_grpc_grpc//bazel:grpc_extra_deps.bzl", "grpc_extra_deps")
 grpc_extra_deps()
 
 load("//build/com_google_private_join_and_compute:repo.bzl", "private_join_and_compute_repo")
+
 private_join_and_compute_repo(
     commit = "89c8d0aae070b9c282043af419e47d7ef897f460",
     sha256 = "13e0414220a2709b0dbeefafe5a4d1b3f3261a541d0405c844857521d5f25f32",
 )
+
+# @platforms
+
+http_archive(
+    name = "com_google_protobuf",
+    strip_prefix = "protobuf-3.15.6",
+    urls = [
+        "https://github.com/protocolbuffers/protobuf/archive/refs/tags/v3.15.6.tar.gz",
+    ],
+)
+
+# Measurement system.
+http_archive(
+    name = "wfa_measurement_system",
+    sha256 = "d0200afef07d5a2c81adbe6c0c319a663e058195ad563401bfc4813bc4de6cb9",
+    strip_prefix = "cross-media-measurement-933284c02cff0be89991c31178bb9538de70f01b",
+    url = "https://github.com/world-federation-of-advertisers/cross-media-measurement/archive/933284c02cff0be89991c31178bb9538de70f01b.tar.gz",
+)
+
+# Measurement proto.
+http_archive(
+    name = "wfa_measurement_proto",
+    sha256 = "a6dbe65abcdc25c78fa92725df4a4e3d25bf63cdfe9b66bc009cfa74252f2955",
+    strip_prefix = "cross-media-measurement-api-f056bffb50e0ff4383d49b2570978aae92682895",
+    url = "https://github.com/world-federation-of-advertisers/cross-media-measurement-api/archive/f056bffb50e0ff4383d49b2570978aae92682895.tar.gz",
+)
+
+# @com_google_truth_truth
+load("@wfa_measurement_system//build/com_google_truth:repo.bzl", "com_google_truth_artifact_dict")
 
 # @io_bazel_rules_kotlin
 
@@ -189,6 +219,24 @@ rules_kotlin_deps(compiler_release = kotlinc_release(
     sha256 = "ccd0db87981f1c0e3f209a1a4acb6778f14e63fe3e561a98948b5317e526cc6c",
     version = "1.3.72",
 ))
+
+load("@com_google_protobuf//:protobuf_deps.bzl", "protobuf_deps")  # From gRPC.
+
+# Google API protos
+http_archive(
+    name = "com_google_googleapis",
+    sha256 = "65b3c3c4040ba3fc767c4b49714b839fe21dbe8467451892403ba90432bb5851",
+    strip_prefix = "googleapis-a1af63efb82f54428ab35ea76869d9cd57ca52b8",
+    urls = ["https://github.com/googleapis/googleapis/archive/a1af63efb82f54428ab35ea76869d9cd57ca52b8.tar.gz"],
+)
+
+# Google APIs imports. Required to build googleapis.
+load("@com_google_googleapis//:repository_rules.bzl", "switched_rules_by_language")
+
+switched_rules_by_language(
+    name = "com_google_googleapis_imports",
+    java = True,
+)
 
 load("@wfa_measurement_system//build/wfa:repositories.bzl", "wfa_repo_archive")
 
