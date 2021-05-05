@@ -42,8 +42,8 @@ class Cryptor {
       const std::vector<std::string>& plaintexts_or_ciphertexts,
       Action action) = 0;
 
-  virtual absl::StatusOr<::google::protobuf::RepeatedPtrField<std::string>>
-  BatchProcess(const ::google::protobuf::RepeatedPtrField<std::string>&
+  virtual absl::StatusOr<google::protobuf::RepeatedPtrField<std::string>>
+  BatchProcess(const google::protobuf::RepeatedPtrField<std::string>&
                    plaintexts_or_ciphertexts,
                Action action) = 0;
 

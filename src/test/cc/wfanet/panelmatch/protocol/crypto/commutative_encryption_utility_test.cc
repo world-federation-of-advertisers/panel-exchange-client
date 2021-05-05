@@ -31,10 +31,12 @@
 
 namespace wfa::panelmatch {
 namespace {
-using ::google::protobuf::RepeatedPtrField;
+using google::protobuf::RepeatedPtrField;
 using ::testing::ContainerEq;
+using ::testing::Eq;
+using ::testing::Ne;
 using ::testing::Not;
-using ::wfanet::HasEqualRepeatedFields;
+using ::testing::Pointwise;
 using ::wfanet::IsOk;
 using ::wfanet::IsOkAndHolds;
 using ::wfanet::panelmatch::protocol::crypto::ApplyCommutativeDecryption;
@@ -76,7 +78,7 @@ TEST(PrivateJoinAndComputeTest, EncryptReEncryptDecryptUtility) {
   auto encrypted_response2 = ApplyCommutativeEncryption(encrypt_request2);
   ASSERT_THAT(encrypted_response2, IsOk());
   auto encrypted_texts2 = (*encrypted_response2).encrypted_texts();
-  ASSERT_THAT(encrypted_texts2, Not(HasEqualRepeatedFields(encrypted_texts1)));
+  EXPECT_THAT(encrypted_texts2, Pointwise(Ne(), encrypted_texts1));
 
   ReApplyCommutativeEncryptionRequest reencrypt_request1;
   reencrypt_request1.set_encryption_key(random_key_1);
@@ -86,8 +88,7 @@ TEST(PrivateJoinAndComputeTest, EncryptReEncryptDecryptUtility) {
   ASSERT_THAT(double_encrypted_response1, IsOk());
   auto double_encrypted_texts1 =
       (*double_encrypted_response1).reencrypted_texts();
-  ASSERT_THAT(encrypted_texts2,
-              Not(HasEqualRepeatedFields(double_encrypted_texts1)));
+  EXPECT_THAT(encrypted_texts2, Pointwise(Ne(), double_encrypted_texts1));
 
   ReApplyCommutativeEncryptionRequest reencrypt_request2;
   reencrypt_request2.set_encryption_key(random_key_2);
@@ -97,8 +98,7 @@ TEST(PrivateJoinAndComputeTest, EncryptReEncryptDecryptUtility) {
   ASSERT_THAT(double_encrypted_response2, IsOk());
   auto double_encrypted_texts2 =
       (*double_encrypted_response2).reencrypted_texts();
-  ASSERT_THAT(encrypted_texts1,
-              Not(HasEqualRepeatedFields(double_encrypted_texts2)));
+  EXPECT_THAT(encrypted_texts1, Pointwise(Ne(), double_encrypted_texts2));
 
   ApplyCommutativeDecryptionRequest decrypt_request1;
   decrypt_request1.set_encryption_key(random_key_1);
@@ -106,7 +106,7 @@ TEST(PrivateJoinAndComputeTest, EncryptReEncryptDecryptUtility) {
   auto decrypted_response1 = ApplyCommutativeDecryption(decrypt_request1);
   ASSERT_THAT(decrypted_response1, IsOk());
   auto decrypted_texts1 = (*decrypted_response1).decrypted_texts();
-  ASSERT_THAT(decrypted_texts1, HasEqualRepeatedFields(encrypted_texts2));
+  EXPECT_THAT(decrypted_texts1, Pointwise(Eq(), encrypted_texts2));
 
   ApplyCommutativeDecryptionRequest decrypt_request2;
   decrypt_request2.set_encryption_key(random_key_1);
@@ -114,7 +114,7 @@ TEST(PrivateJoinAndComputeTest, EncryptReEncryptDecryptUtility) {
   auto decrypted_response2 = ApplyCommutativeDecryption(decrypt_request2);
   ASSERT_THAT(decrypted_response2, IsOk());
   auto decrypted_texts2 = (*decrypted_response2).decrypted_texts();
-  ASSERT_THAT(decrypted_texts2, HasEqualRepeatedFields(encrypted_texts2));
+  EXPECT_THAT(decrypted_texts2, Pointwise(Eq(), encrypted_texts2));
 
   ApplyCommutativeDecryptionRequest decrypt_request3;
   decrypt_request3.set_encryption_key(random_key_2);
@@ -122,7 +122,7 @@ TEST(PrivateJoinAndComputeTest, EncryptReEncryptDecryptUtility) {
   auto decrypted_response3 = ApplyCommutativeDecryption(decrypt_request3);
   ASSERT_THAT(decrypted_response3, IsOk());
   auto decrypted_texts3 = (*decrypted_response3).decrypted_texts();
-  ASSERT_THAT(decrypted_texts3, HasEqualRepeatedFields(encrypted_texts1));
+  EXPECT_THAT(decrypted_texts3, Pointwise(Eq(), encrypted_texts1));
 
   ApplyCommutativeDecryptionRequest decrypt_request4;
   decrypt_request4.set_encryption_key(random_key_2);
@@ -130,7 +130,7 @@ TEST(PrivateJoinAndComputeTest, EncryptReEncryptDecryptUtility) {
   auto decrypted_response4 = ApplyCommutativeDecryption(decrypt_request4);
   ASSERT_THAT(decrypted_response4, IsOk());
   auto decrypted_texts4 = (*decrypted_response4).decrypted_texts();
-  ASSERT_THAT(decrypted_texts4, HasEqualRepeatedFields(encrypted_texts1));
+  EXPECT_THAT(decrypted_texts4, Pointwise(Eq(), encrypted_texts1));
 }
 
 }  // namespace

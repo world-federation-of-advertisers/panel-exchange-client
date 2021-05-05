@@ -52,9 +52,8 @@ ApplyCommutativeEncryption(const ::wfanet::panelmatch::protocol::protobuf::
                          CreateCryptorFromKey(request.encryption_key()),
                          "Failed to create the protocol cipher");
   ASSIGN_OR_RETURN(
-      auto encrypted_texts,
+      *response.mutable_encrypted_texts(),
       cryptor->BatchProcess(request.plaintexts(), Action::kEncrypt));
-  response.mutable_encrypted_texts()->Swap(&encrypted_texts);
   response.set_elapsed_cpu_time_millis(timer.ElapsedMillis());
   return response;
 }
@@ -70,9 +69,8 @@ ApplyCommutativeDecryption(const ::wfanet::panelmatch::protocol::protobuf::
                          CreateCryptorFromKey(request.encryption_key()),
                          "Failed to create the protocol cipher");
   ASSIGN_OR_RETURN(
-      auto decrypted_texts,
+      *response.mutable_decrypted_texts(),
       cryptor->BatchProcess(request.encrypted_texts(), Action::kDecrypt));
-  response.mutable_decrypted_texts()->Swap(&decrypted_texts);
   response.set_elapsed_cpu_time_millis(timer.ElapsedMillis());
   return response;
 }
@@ -88,9 +86,8 @@ ReApplyCommutativeEncryption(const wfanet::panelmatch::protocol::protobuf::
                          CreateCryptorFromKey(request.encryption_key()),
                          "Failed to create the protocol cipher");
   ASSIGN_OR_RETURN(
-      auto reencrypted_texts,
+      *response.mutable_reencrypted_texts(),
       cryptor->BatchProcess(request.encrypted_texts(), Action::kReEncrypt));
-  response.mutable_reencrypted_texts()->Swap(&reencrypted_texts);
   response.set_elapsed_cpu_time_millis(timer.ElapsedMillis());
   return response;
 }
