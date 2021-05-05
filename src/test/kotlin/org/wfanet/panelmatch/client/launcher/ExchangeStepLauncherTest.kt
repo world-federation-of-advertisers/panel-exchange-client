@@ -87,7 +87,7 @@ class ExchangeStepLauncherTest {
   fun `findExchangeStep with modelProvider`() {
     val launcher =
       ExchangeStepLauncher(
-        exchangeStepsClient =  exchangeStepsStub,
+        exchangeStepsClient = exchangeStepsStub,
         id = MODEL_PROVIDER_ID,
         partyType = PartyType.MODEL_PROVIDER,
         clock = Clock.systemUTC()
@@ -104,7 +104,7 @@ class ExchangeStepLauncherTest {
   fun `findExchangeStep without exchangeStep`() = runBlocking {
     val launcher =
       ExchangeStepLauncher(
-        exchangeStepsClient =  exchangeStepsStub,
+        exchangeStepsClient = exchangeStepsStub,
         id = DATA_PROVIDER_ID,
         partyType = PartyType.DATA_PROVIDER,
         clock = Clock.systemUTC()
