@@ -14,16 +14,22 @@
 
 package org.wfanet.panelmatch.client.launcher
 
+import com.google.protobuf.Timestamp
 import org.wfanet.measurement.api.v2alpha.ExchangeStep
+import org.wfanet.measurement.api.v2alpha.ExchangeStepAttempt
 import org.wfanet.measurement.api.v2alpha.ExchangeStepsGrpcKt.ExchangeStepsCoroutineStub
 import org.wfanet.measurement.api.v2alpha.FindReadyExchangeStepRequest
 import org.wfanet.measurement.api.v2alpha.FindReadyExchangeStepResponse
+import org.wfanet.measurement.api.v2alpha.FinishExchangeStepAttemptRequest
+import java.time.Clock
+import java.time.Instant
 
 /** Finds an [ExchangeStep], validates it, and starts executing the work. */
 class ExchangeStepLauncher(
   private val exchangeStepsClient: ExchangeStepsCoroutineStub,
   private val id: String,
-  private val partyType: PartyType
+  private val partyType: PartyType,
+  private val clock: Clock
 ) {
 
   /**
@@ -34,7 +40,23 @@ class ExchangeStepLauncher(
    */
   suspend fun findAndRunExchangeStep() {
     val exchangeStep = findExchangeStep() ?: return
-    validateExchangeStep(exchangeStep)
+    try {
+      validateExchangeStep(exchangeStep)
+    } catch (e: InvalidExchangeStepException) {
+      val attempt = createExchangeStepAttempt(exchangeStep)
+      finishExchangeStepAttempt(
+        FinishExchangeStepAttemptRequest.newBuilder()
+          .apply {
+            key = attempt.key
+            finalState = ExchangeStepAttempt.State.FAILED_STEP
+            addLogEntriesBuilder().apply {
+              time = clock.instant().toProtoTime()
+              message = e.message
+            }
+          }
+          .build()
+      )
+    }
     runExchangeStep(exchangeStep)
   }
 
@@ -80,6 +102,26 @@ class ExchangeStepLauncher(
     // Validate that this exchange step is legal, otherwise throw an error.
     // TODO(@yunyeng): Add validation logic.
   }
+
+  /**
+   * Creates an Exchange Step Attempt for the Exchange Step given.
+   *
+   * @param exchangeStep [ExchangeStep].
+   * @return an [ExchangeStepAttempt] or null.
+   */
+  internal fun createExchangeStepAttempt(exchangeStep: ExchangeStep): ExchangeStepAttempt {
+    // TODO(@yunyeng): Set ExchangeStepAttempt and call /ExchangeStepAttempts.createExchangeStepAttempt.
+    return ExchangeStepAttempt.getDefaultInstance()
+  }
+
+  /**
+   * Finishes the Exchange Step Attempt with the given request.
+   *
+   * @param request [FinishExchangeStepAttemptRequest].
+   */
+  internal fun finishExchangeStepAttempt(request: FinishExchangeStepAttemptRequest) {
+    // TODO(@yunyeng): Call /ExchangeStepAttempts.finishExchangeStepAttempt.
+  }
 }
 
 /** Specifies the party type of the input id for [ExchangeStepLauncher]. */
@@ -93,3 +135,8 @@ enum class PartyType {
 
 /** Indicates that given Exchange Step is not valid to execute. */
 class InvalidExchangeStepException(cause: Throwable) : Exception(cause)
+
+// TODO(@yunyeng): Move to Utils.
+/** Converts Instant to Timestamp. */
+fun Instant.toProtoTime(): Timestamp =
+  Timestamp.newBuilder().setSeconds(epochSecond).setNanos(nano).build()

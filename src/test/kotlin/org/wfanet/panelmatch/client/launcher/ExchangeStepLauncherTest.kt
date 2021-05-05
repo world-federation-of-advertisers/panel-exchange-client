@@ -32,6 +32,7 @@ import org.wfanet.measurement.api.v2alpha.ExchangeStepsGrpcKt.ExchangeStepsCorou
 import org.wfanet.measurement.api.v2alpha.FindReadyExchangeStepRequest
 import org.wfanet.measurement.api.v2alpha.FindReadyExchangeStepResponse
 import org.wfanet.measurement.common.grpc.testing.GrpcTestServerRule
+import java.time.Clock
 
 private const val DATA_PROVIDER_ID = "1"
 private const val MODEL_PROVIDER_ID = "2"
@@ -68,7 +69,12 @@ class ExchangeStepLauncherTest {
   @Test
   fun `findExchangeStep with dataProvider`() {
     val launcher =
-      ExchangeStepLauncher(exchangeStepsStub, DATA_PROVIDER_ID, PartyType.DATA_PROVIDER)
+      ExchangeStepLauncher(
+        exchangeStepsStub,
+        DATA_PROVIDER_ID,
+        PartyType.DATA_PROVIDER,
+        Clock.systemUTC()
+      )
     runBlocking {
       whenever(exchangeStepsServiceMock.findReadyExchangeStep(any())).thenReturn(RESPONSE)
       val exchangeStep = launcher.findExchangeStep()
@@ -80,7 +86,12 @@ class ExchangeStepLauncherTest {
   @Test
   fun `findExchangeStep with modelProvider`() {
     val launcher =
-      ExchangeStepLauncher(exchangeStepsStub, MODEL_PROVIDER_ID, PartyType.MODEL_PROVIDER)
+      ExchangeStepLauncher(
+        exchangeStepsStub,
+        MODEL_PROVIDER_ID,
+        PartyType.MODEL_PROVIDER,
+        Clock.systemUTC()
+      )
     runBlocking {
       whenever(exchangeStepsServiceMock.findReadyExchangeStep(any())).thenReturn(RESPONSE)
       val exchangeStep = launcher.findExchangeStep()
@@ -92,7 +103,12 @@ class ExchangeStepLauncherTest {
   @Test
   fun `findExchangeStep without exchangeStep`() = runBlocking {
     val launcher =
-      ExchangeStepLauncher(exchangeStepsStub, DATA_PROVIDER_ID, PartyType.DATA_PROVIDER)
+      ExchangeStepLauncher(
+        exchangeStepsStub,
+        DATA_PROVIDER_ID,
+        PartyType.DATA_PROVIDER,
+        Clock.systemUTC()
+      )
     whenever(exchangeStepsServiceMock.findReadyExchangeStep(any())).thenReturn(EMPTY_RESPONSE)
     val exchangeStep = launcher.findExchangeStep()
     assertThat(exchangeStep).isNull()

@@ -24,7 +24,19 @@ java_proto_library(
     ],
 )
 
+java_proto_library(
+    name = "exchange_step_attempt_java_proto",
+    deps = [
+        "@wfa_measurement_proto//src/main/proto/wfa/measurement/api/v2alpha:exchange_step_attempt_proto",
+    ],
+)
+
 kt_jvm_grpc_and_java_proto_library(
     name = "exchange_steps_service_kt_jvm_grpc",
     srcs = ["@wfa_measurement_proto//src/main/proto/wfa/measurement/api/v2alpha:exchange_steps_service_proto"],
+)
+
+kt_jvm_grpc_and_java_proto_library(
+    name = "exchange_step_attempts_service_kt_jvm_grpc",
+    srcs = ["@wfa_measurement_proto//src/main/proto/wfa/measurement/api/v2alpha:exchange_step_attempts_service_proto"],
 )
