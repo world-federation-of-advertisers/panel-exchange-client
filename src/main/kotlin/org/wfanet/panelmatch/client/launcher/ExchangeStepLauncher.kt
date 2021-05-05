@@ -35,15 +35,15 @@ class ExchangeStepLauncher(
   /**
    * Finds a single ready Exchange Step and starts executing. If an Exchange Step is found,
    * validates it, and starts executing. If not found simply returns.
-   *
-   * @throws InvalidExchangeStepException if Exchange Step is not valid.
    */
   suspend fun findAndRunExchangeStep() {
     val exchangeStep = findExchangeStep() ?: return
     try {
       validateExchangeStep(exchangeStep)
     } catch (e: InvalidExchangeStepException) {
+      // TODO(@yunyeng): Catch exceptions while creating the attempt.
       val attempt = createExchangeStepAttempt(exchangeStep)
+      // TODO(@yunyeng): Catch exceptions while finishing the attempt.
       finishExchangeStepAttempt(
         FinishExchangeStepAttemptRequest.newBuilder()
           .apply {
@@ -136,7 +136,7 @@ enum class PartyType {
 /** Indicates that given Exchange Step is not valid to execute. */
 class InvalidExchangeStepException(cause: Throwable) : Exception(cause)
 
-// TODO(@yunyeng): Move to Utils.
+// TODO(@yunyeng): Import from cross-media-measurement/ProtoUtils.
 /** Converts Instant to Timestamp. */
 fun Instant.toProtoTime(): Timestamp =
   Timestamp.newBuilder().setSeconds(epochSecond).setNanos(nano).build()
