@@ -42,16 +42,24 @@ http_archive(
 # @com_google_truth_truth
 load("//build/com_google_truth:repo.bzl", "com_google_truth_artifact_dict")
 
+# Measurement system.
+http_archive(
+    name = "wfa_measurement_system",
+    sha256 = "d0200afef07d5a2c81adbe6c0c319a663e058195ad563401bfc4813bc4de6cb9",
+    strip_prefix = "cross-media-measurement-933284c02cff0be89991c31178bb9538de70f01b",
+    url = "https://github.com/world-federation-of-advertisers/cross-media-measurement/archive/933284c02cff0be89991c31178bb9538de70f01b.tar.gz",
+)
+
 # @io_bazel_rules_kotlin
 
-load("//build/io_bazel_rules_kotlin:repo.bzl", "kotlinc_release", "rules_kotlin_repo")
+load("@wfa_measurement_system//build/io_bazel_rules_kotlin:repo.bzl", "kotlinc_release", "rules_kotlin_repo")
 
 rules_kotlin_repo(
     sha256 = "9cc0e4031bcb7e8508fd9569a81e7042bbf380604a0157f796d06d511cff2769",
     version = "legacy-1.4.0-rc4",
 )
 
-load("//build/io_bazel_rules_kotlin:deps.bzl", "rules_kotlin_deps")
+load("@wfa_measurement_system//build/io_bazel_rules_kotlin:deps.bzl", "rules_kotlin_deps")
 
 rules_kotlin_deps(compiler_release = kotlinc_release(
     sha256 = "ccd0db87981f1c0e3f209a1a4acb6778f14e63fe3e561a98948b5317e526cc6c",
@@ -59,7 +67,7 @@ rules_kotlin_deps(compiler_release = kotlinc_release(
 ))
 
 # kotlinx.coroutines
-load("//build/kotlinx_coroutines:repo.bzl", "kotlinx_coroutines_artifact_dict")
+load("@wfa_measurement_system//build/kotlinx_coroutines:repo.bzl", "kotlinx_coroutines_artifact_dict")
 
 # @com_github_grpc_grpc_kotlin
 
@@ -97,7 +105,7 @@ http_archive(
 )
 
 load("@rules_jvm_external//:defs.bzl", "maven_install")
-load("//build/maven:artifacts.bzl", "artifacts")
+load("@wfa_measurement_system//build/maven:artifacts.bzl", "artifacts")
 
 MAVEN_ARTIFACTS = artifacts.list_to_dict(
     IO_GRPC_GRPC_JAVA_ARTIFACTS +
@@ -168,21 +176,21 @@ private_join_and_compute_repo(
 
 # @io_bazel_rules_kotlin
 
-load("//build/io_bazel_rules_kotlin:repo.bzl", "kotlinc_release", "rules_kotlin_repo")
+load("@wfa_measurement_system//build/io_bazel_rules_kotlin:repo.bzl", "kotlinc_release", "rules_kotlin_repo")
 
 rules_kotlin_repo(
     sha256 = "9cc0e4031bcb7e8508fd9569a81e7042bbf380604a0157f796d06d511cff2769",
     version = "legacy-1.4.0-rc4",
 )
 
-load("//build/io_bazel_rules_kotlin:deps.bzl", "rules_kotlin_deps")
+load("@wfa_measurement_system//build/io_bazel_rules_kotlin:deps.bzl", "rules_kotlin_deps")
 
 rules_kotlin_deps(compiler_release = kotlinc_release(
     sha256 = "ccd0db87981f1c0e3f209a1a4acb6778f14e63fe3e561a98948b5317e526cc6c",
     version = "1.3.72",
 ))
 
-load("//build/wfa:repositories.bzl", "wfa_repo_archive")
+load("@wfa_measurement_system//build/wfa:repositories.bzl", "wfa_repo_archive")
 
 wfa_repo_archive(
     name = "wfa_rules_swig",

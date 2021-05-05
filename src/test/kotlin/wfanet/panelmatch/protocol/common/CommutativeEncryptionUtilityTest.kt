@@ -20,14 +20,49 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
 import wfanet.panelmatch.protocol.protobuf.ApplyCommutativeDecryptionRequest
-import wfanet.panelmatch.protocol.protobuf.ApplyCommutativeDecryptionResponse
 import wfanet.panelmatch.protocol.protobuf.ApplyCommutativeEncryptionRequest
-import wfanet.panelmatch.protocol.protobuf.ApplyCommutativeEncryptionResponse
 import wfanet.panelmatch.protocol.protobuf.ReApplyCommutativeEncryptionRequest
-import wfanet.panelmatch.protocol.protobuf.ReApplyCommutativeEncryptionResponse
 
 @RunWith(JUnit4::class)
 class CommutativeEncryptionUtilityTest {
+
+  private fun applyCommutativeEncryption(
+    key: ByteString,
+    plaintexts: List<ByteString>
+  ): List<ByteString> {
+    val request =
+      ApplyCommutativeEncryptionRequest.newBuilder()
+        .setEncryptionKey(key)
+        .addAllPlaintexts(plaintexts)
+        .build()
+    return JniCommutativeEncryption().applyCommutativeEncryption(request).getEncryptedTextsList()
+  }
+
+  private fun reApplyCommutativeEncryption(
+    key: ByteString,
+    encryptedTexts: List<ByteString>
+  ): List<ByteString> {
+    val request =
+      ReApplyCommutativeEncryptionRequest.newBuilder()
+        .setEncryptionKey(key)
+        .addAllEncryptedTexts(encryptedTexts)
+        .build()
+    return JniCommutativeEncryption()
+      .reApplyCommutativeEncryption(request)
+      .getReencryptedTextsList()
+  }
+
+  private fun applyCommutativeDecryption(
+    key: ByteString,
+    encryptedTexts: List<ByteString>
+  ): List<ByteString> {
+    val request =
+      ApplyCommutativeDecryptionRequest.newBuilder()
+        .setEncryptionKey(key)
+        .addAllEncryptedTexts(encryptedTexts)
+        .build()
+    return JniCommutativeEncryption().applyCommutativeDecryption(request).getDecryptedTextsList()
+  }
 
   @Test
   fun testCommutativeEncryption() {
@@ -40,91 +75,35 @@ class CommutativeEncryptionUtilityTest {
         ByteString.copyFromUtf8("some plaintext4")
       )
     val randomKey1: ByteString = ByteString.copyFromUtf8("random-key-00")
-    val randomKey2: ByteString = ByteString.copyFromUtf8("asdfrasdfandom-key-222")
+    val randomKey2: ByteString = ByteString.copyFromUtf8("random-key-222")
 
-    val encryptRequest1 =
-      ApplyCommutativeEncryptionRequest.newBuilder()
-        .setEncryptionKey(randomKey1)
-        .addAllPlaintexts(plaintexts)
-        .build()
-    val encryptedResponse1: ApplyCommutativeEncryptionResponse =
-      JniCommutativeEncryption().applyCommutativeEncryption(encryptRequest1)
-    val encryptedTexts1 = encryptedResponse1.getEncryptedTextsList()
+    val encryptedTexts1 = applyCommutativeEncryption(randomKey1, plaintexts)
 
-    val encryptRequest2 =
-      ApplyCommutativeEncryptionRequest.newBuilder()
-        .setEncryptionKey(randomKey2)
-        .addAllPlaintexts(plaintexts)
-        .build()
-    val encryptedResponse2: ApplyCommutativeEncryptionResponse =
-      JniCommutativeEncryption().applyCommutativeEncryption(encryptRequest2)
-    val encryptedTexts2 = encryptedResponse2.getEncryptedTextsList()
+    val encryptedTexts2 = applyCommutativeEncryption(randomKey2, plaintexts)
 
     assertThat(encryptedTexts1).isNotEqualTo(encryptedTexts2)
 
-    val reEncryptRequest1 =
-      ReApplyCommutativeEncryptionRequest.newBuilder()
-        .setEncryptionKey(randomKey1)
-        .addAllEncryptedTexts(encryptedTexts2)
-        .build()
-    val reEncryptedResponse1: ReApplyCommutativeEncryptionResponse =
-      JniCommutativeEncryption().reApplyCommutativeEncryption(reEncryptRequest1)
-    val reEncryptedTexts1 = reEncryptedResponse1.getReencryptedTextsList()
+    val reEncryptedTexts1 = reApplyCommutativeEncryption(randomKey1, encryptedTexts2)
 
     assertThat(reEncryptedTexts1).isNotEqualTo(encryptedTexts2)
 
-    val reEncryptRequest2 =
-      ReApplyCommutativeEncryptionRequest.newBuilder()
-        .setEncryptionKey(randomKey2)
-        .addAllEncryptedTexts(encryptedTexts1)
-        .build()
-    val reEncryptedResponse2: ReApplyCommutativeEncryptionResponse =
-      JniCommutativeEncryption().reApplyCommutativeEncryption(reEncryptRequest2)
-    val reEncryptedTexts2 = reEncryptedResponse2.getReencryptedTextsList()
+    val reEncryptedTexts2 = reApplyCommutativeEncryption(randomKey2, encryptedTexts1)
 
     assertThat(reEncryptedTexts2).isNotEqualTo(encryptedTexts1)
 
-    val decryptRequest1 =
-      ApplyCommutativeDecryptionRequest.newBuilder()
-        .setEncryptionKey(randomKey1)
-        .addAllEncryptedTexts(reEncryptedTexts1)
-        .build()
-    val decryptedResponse1: ApplyCommutativeDecryptionResponse =
-      JniCommutativeEncryption().applyCommutativeDecryption(decryptRequest1)
-    val decryptedTexts1 = decryptedResponse1.getDecryptedTextsList()
+    val decryptedTexts1 = applyCommutativeDecryption(randomKey1, reEncryptedTexts1)
 
     assertThat(decryptedTexts1).isEqualTo(encryptedTexts2)
 
-    val decryptRequest2 =
-      ApplyCommutativeDecryptionRequest.newBuilder()
-        .setEncryptionKey(randomKey1)
-        .addAllEncryptedTexts(reEncryptedTexts2)
-        .build()
-    val decryptedResponse2: ApplyCommutativeDecryptionResponse =
-      JniCommutativeEncryption().applyCommutativeDecryption(decryptRequest2)
-    val decryptedTexts2 = decryptedResponse2.getDecryptedTextsList()
+    val decryptedTexts2 = applyCommutativeDecryption(randomKey1, reEncryptedTexts2)
 
     assertThat(decryptedTexts2).isEqualTo(encryptedTexts2)
 
-    val decryptRequest3 =
-      ApplyCommutativeDecryptionRequest.newBuilder()
-        .setEncryptionKey(randomKey2)
-        .addAllEncryptedTexts(reEncryptedTexts1)
-        .build()
-    val decryptedResponse3: ApplyCommutativeDecryptionResponse =
-      JniCommutativeEncryption().applyCommutativeDecryption(decryptRequest3)
-    val decryptedTexts3 = decryptedResponse3.getDecryptedTextsList()
+    val decryptedTexts3 = applyCommutativeDecryption(randomKey2, reEncryptedTexts1)
 
     assertThat(decryptedTexts3).isEqualTo(encryptedTexts1)
 
-    val decryptRequest4 =
-      ApplyCommutativeDecryptionRequest.newBuilder()
-        .setEncryptionKey(randomKey2)
-        .addAllEncryptedTexts(reEncryptedTexts2)
-        .build()
-    val decryptedResponse4: ApplyCommutativeDecryptionResponse =
-      JniCommutativeEncryption().applyCommutativeDecryption(decryptRequest4)
-    val decryptedTexts4 = decryptedResponse4.getDecryptedTextsList()
+    val decryptedTexts4 = applyCommutativeDecryption(randomKey2, reEncryptedTexts2)
 
     assertThat(decryptedTexts4).isEqualTo(encryptedTexts1)
   }

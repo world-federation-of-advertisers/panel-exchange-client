@@ -23,8 +23,8 @@
 namespace wfanet::panelmatch::common::crypto {
 
 template <typename T>
-absl::Status ParseRequestFromString(T& request_proto,
-                                    const std::string& serialized_request) {
+absl::Status ParseRequestFromString(const std::string& serialized_request,
+                                    T& request_proto) {
   return request_proto.ParseFromString(serialized_request)
              ? absl::OkStatus()
              : absl::InternalError(

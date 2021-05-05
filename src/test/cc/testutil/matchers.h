@@ -53,6 +53,11 @@ MATCHER_P2(StatusIs, code, message, "") {
   return testing::ExplainMatchResult(
       testing::HasSubstr(message), std::string(arg.message()), result_listener);
 }
+
+MATCHER_P(HasEqualRepeatedFields, expected, "") {
+  return std::equal(arg.begin(), arg.end(), expected.begin(), expected.end());
+}
+
 }  // namespace wfanet
 
 #endif  // SRC_TEST_CC_TESTUTIL_MATCHERS_H_

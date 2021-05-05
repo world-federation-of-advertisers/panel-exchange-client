@@ -11,13 +11,3 @@ cc_test(
         "@googletest//:gtest_main",
     ],
 )
-
-cc_test(
-    name = "commutative_encryption_utility_wrapper",
-    srcs = [
-        "commutative_encryption_utility_wrapper.cc",
-    ],
-    deps = [
-        "//src/main/proto/wfanet/panelmatch/protocol/crypto:cryptor_cc_proto",
-    ],
-)

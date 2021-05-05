@@ -27,7 +27,6 @@
 #include "absl/types/span.h"
 
 namespace wfanet::panelmatch::common::crypto {
-using google::protobuf::RepeatedPtrField;
 enum class Action { kEncrypt, kReEncrypt, kDecrypt };
 // A cryptor dealing with basic operations needed for panel match
 class Cryptor {
@@ -43,17 +42,13 @@ class Cryptor {
       const std::vector<std::string>& plaintexts_or_ciphertexts,
       Action action) = 0;
 
-  virtual absl::StatusOr<RepeatedPtrField<std::string>> BatchProcess(
-      const RepeatedPtrField<std::string>& plaintexts_or_ciphertexts,
-      Action action) = 0;
+  virtual absl::StatusOr<::google::protobuf::RepeatedPtrField<std::string>>
+  BatchProcess(const ::google::protobuf::RepeatedPtrField<std::string>&
+                   plaintexts_or_ciphertexts,
+               Action action) = 0;
 
  protected:
   Cryptor() = default;
-
- private:
-  absl::StatusOr<std::string> Decrypt(absl::string_view encrypted_string);
-  absl::StatusOr<std::string> Encrypt(absl::string_view plaintext);
-  absl::StatusOr<std::string> ReEncrypt(absl::string_view encrypted_string);
 };
 
 // Create a Cryptor.

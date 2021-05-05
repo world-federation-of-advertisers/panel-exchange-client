@@ -23,6 +23,7 @@
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/types/span.h"
+#include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "src/test/cc/testutil/matchers.h"
 #include "src/test/cc/testutil/status_macros.h"
@@ -30,9 +31,10 @@
 
 namespace wfa::panelmatch {
 namespace {
-using google::protobuf::RepeatedPtrField;
+using ::google::protobuf::RepeatedPtrField;
 using ::testing::ContainerEq;
 using ::testing::Not;
+using ::wfanet::HasEqualRepeatedFields;
 using ::wfanet::IsOk;
 using ::wfanet::IsOkAndHolds;
 using ::wfanet::panelmatch::protocol::crypto::ApplyCommutativeDecryption;
@@ -51,24 +53,6 @@ using ::wfanet::panelmatch::protocol::protobuf::
     ReApplyCommutativeEncryptionRequest;
 using ::wfanet::panelmatch::protocol::protobuf::
     ReApplyCommutativeEncryptionResponse;
-
-std::vector<std::string> convert_repeatedPtrField_to_vector(
-    RepeatedPtrField<std::string> f) {
-  std::vector<std::string> v(f.begin(), f.end());
-  return v;
-}
-
-void assert_rpf_equal(RepeatedPtrField<std::string> a,
-                      RepeatedPtrField<std::string> b) {
-  ASSERT_THAT(convert_repeatedPtrField_to_vector(a),
-              ContainerEq(convert_repeatedPtrField_to_vector(b)));
-}
-
-void assert_rpf_not_equal(RepeatedPtrField<std::string> a,
-                          RepeatedPtrField<std::string> b) {
-  ASSERT_THAT(convert_repeatedPtrField_to_vector(a),
-              Not(ContainerEq(convert_repeatedPtrField_to_vector(b))));
-}
 
 TEST(PrivateJoinAndComputeTest, EncryptReEncryptDecryptUtility) {
   std::vector<std::string> plaintexts{"some plaintext0", "some plaintext1",
@@ -92,8 +76,7 @@ TEST(PrivateJoinAndComputeTest, EncryptReEncryptDecryptUtility) {
   auto encrypted_response2 = ApplyCommutativeEncryption(encrypt_request2);
   ASSERT_THAT(encrypted_response2, IsOk());
   auto encrypted_texts2 = (*encrypted_response2).encrypted_texts();
-
-  assert_rpf_not_equal(encrypted_texts2, encrypted_texts1);
+  ASSERT_THAT(encrypted_texts2, Not(HasEqualRepeatedFields(encrypted_texts1)));
 
   ReApplyCommutativeEncryptionRequest reencrypt_request1;
   reencrypt_request1.set_encryption_key(random_key_1);
@@ -103,8 +86,8 @@ TEST(PrivateJoinAndComputeTest, EncryptReEncryptDecryptUtility) {
   ASSERT_THAT(double_encrypted_response1, IsOk());
   auto double_encrypted_texts1 =
       (*double_encrypted_response1).reencrypted_texts();
-
-  assert_rpf_not_equal(encrypted_texts2, double_encrypted_texts1);
+  ASSERT_THAT(encrypted_texts2,
+              Not(HasEqualRepeatedFields(double_encrypted_texts1)));
 
   ReApplyCommutativeEncryptionRequest reencrypt_request2;
   reencrypt_request2.set_encryption_key(random_key_2);
@@ -114,7 +97,8 @@ TEST(PrivateJoinAndComputeTest, EncryptReEncryptDecryptUtility) {
   ASSERT_THAT(double_encrypted_response2, IsOk());
   auto double_encrypted_texts2 =
       (*double_encrypted_response2).reencrypted_texts();
-  assert_rpf_not_equal(encrypted_texts1, double_encrypted_texts2);
+  ASSERT_THAT(encrypted_texts1,
+              Not(HasEqualRepeatedFields(double_encrypted_texts2)));
 
   ApplyCommutativeDecryptionRequest decrypt_request1;
   decrypt_request1.set_encryption_key(random_key_1);
@@ -122,7 +106,7 @@ TEST(PrivateJoinAndComputeTest, EncryptReEncryptDecryptUtility) {
   auto decrypted_response1 = ApplyCommutativeDecryption(decrypt_request1);
   ASSERT_THAT(decrypted_response1, IsOk());
   auto decrypted_texts1 = (*decrypted_response1).decrypted_texts();
-  assert_rpf_equal(decrypted_texts1, encrypted_texts2);
+  ASSERT_THAT(decrypted_texts1, HasEqualRepeatedFields(encrypted_texts2));
 
   ApplyCommutativeDecryptionRequest decrypt_request2;
   decrypt_request2.set_encryption_key(random_key_1);
@@ -130,7 +114,7 @@ TEST(PrivateJoinAndComputeTest, EncryptReEncryptDecryptUtility) {
   auto decrypted_response2 = ApplyCommutativeDecryption(decrypt_request2);
   ASSERT_THAT(decrypted_response2, IsOk());
   auto decrypted_texts2 = (*decrypted_response2).decrypted_texts();
-  assert_rpf_equal(decrypted_texts2, encrypted_texts2);
+  ASSERT_THAT(decrypted_texts2, HasEqualRepeatedFields(encrypted_texts2));
 
   ApplyCommutativeDecryptionRequest decrypt_request3;
   decrypt_request3.set_encryption_key(random_key_2);
@@ -138,7 +122,7 @@ TEST(PrivateJoinAndComputeTest, EncryptReEncryptDecryptUtility) {
   auto decrypted_response3 = ApplyCommutativeDecryption(decrypt_request3);
   ASSERT_THAT(decrypted_response3, IsOk());
   auto decrypted_texts3 = (*decrypted_response3).decrypted_texts();
-  assert_rpf_equal(decrypted_texts3, encrypted_texts1);
+  ASSERT_THAT(decrypted_texts3, HasEqualRepeatedFields(encrypted_texts1));
 
   ApplyCommutativeDecryptionRequest decrypt_request4;
   decrypt_request4.set_encryption_key(random_key_2);
@@ -146,7 +130,7 @@ TEST(PrivateJoinAndComputeTest, EncryptReEncryptDecryptUtility) {
   auto decrypted_response4 = ApplyCommutativeDecryption(decrypt_request4);
   ASSERT_THAT(decrypted_response4, IsOk());
   auto decrypted_texts4 = (*decrypted_response4).decrypted_texts();
-  assert_rpf_equal(decrypted_texts3, encrypted_texts1);
+  ASSERT_THAT(decrypted_texts4, HasEqualRepeatedFields(encrypted_texts1));
 }
 
 }  // namespace

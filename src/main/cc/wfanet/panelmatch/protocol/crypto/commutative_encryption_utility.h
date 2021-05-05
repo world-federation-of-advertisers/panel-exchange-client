@@ -20,28 +20,20 @@
 
 namespace wfanet::panelmatch::protocol::crypto {
 
-using ::wfanet::panelmatch::protocol::protobuf::
-    ApplyCommutativeDecryptionRequest;
-using ::wfanet::panelmatch::protocol::protobuf::
-    ApplyCommutativeDecryptionResponse;
-using ::wfanet::panelmatch::protocol::protobuf::
-    ApplyCommutativeEncryptionRequest;
-using ::wfanet::panelmatch::protocol::protobuf::
-    ApplyCommutativeEncryptionResponse;
-using ::wfanet::panelmatch::protocol::protobuf::
-    ReApplyCommutativeEncryptionRequest;
-using ::wfanet::panelmatch::protocol::protobuf::
-    ReApplyCommutativeEncryptionResponse;
+absl::StatusOr<::wfanet::panelmatch::protocol::protobuf::
+                   ApplyCommutativeEncryptionResponse>
+ApplyCommutativeEncryption(const ::wfanet::panelmatch::protocol::protobuf::
+                               ApplyCommutativeEncryptionRequest& request);
 
-absl::StatusOr<ApplyCommutativeEncryptionResponse> ApplyCommutativeEncryption(
-    const ApplyCommutativeEncryptionRequest& request);
+absl::StatusOr<::wfanet::panelmatch::protocol::protobuf::
+                   ReApplyCommutativeEncryptionResponse>
+ReApplyCommutativeEncryption(const ::wfanet::panelmatch::protocol::protobuf::
+                                 ReApplyCommutativeEncryptionRequest& request);
 
-absl::StatusOr<ReApplyCommutativeEncryptionResponse>
-ReApplyCommutativeEncryption(
-    const ReApplyCommutativeEncryptionRequest& request);
-
-absl::StatusOr<ApplyCommutativeDecryptionResponse> ApplyCommutativeDecryption(
-    const ApplyCommutativeDecryptionRequest& request);
+absl::StatusOr<::wfanet::panelmatch::protocol::protobuf::
+                   ApplyCommutativeDecryptionResponse>
+ApplyCommutativeDecryption(const ::wfanet::panelmatch::protocol::protobuf::
+                               ApplyCommutativeDecryptionRequest& request);
 
 }  // namespace wfanet::panelmatch::protocol::crypto
 
