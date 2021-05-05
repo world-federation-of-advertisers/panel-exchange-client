@@ -70,10 +70,10 @@ class ExchangeStepLauncherTest {
   fun `findExchangeStep with dataProvider`() {
     val launcher =
       ExchangeStepLauncher(
-        exchangeStepsStub,
-        DATA_PROVIDER_ID,
-        PartyType.DATA_PROVIDER,
-        Clock.systemUTC()
+        exchangeStepsClient = exchangeStepsStub,
+        id = DATA_PROVIDER_ID,
+        partyType = PartyType.DATA_PROVIDER,
+        clock = Clock.systemUTC()
       )
     runBlocking {
       whenever(exchangeStepsServiceMock.findReadyExchangeStep(any())).thenReturn(RESPONSE)
@@ -87,10 +87,10 @@ class ExchangeStepLauncherTest {
   fun `findExchangeStep with modelProvider`() {
     val launcher =
       ExchangeStepLauncher(
-        exchangeStepsStub,
-        MODEL_PROVIDER_ID,
-        PartyType.MODEL_PROVIDER,
-        Clock.systemUTC()
+        exchangeStepsClient =  exchangeStepsStub,
+        id = MODEL_PROVIDER_ID,
+        partyType = PartyType.MODEL_PROVIDER,
+        clock = Clock.systemUTC()
       )
     runBlocking {
       whenever(exchangeStepsServiceMock.findReadyExchangeStep(any())).thenReturn(RESPONSE)
@@ -104,10 +104,10 @@ class ExchangeStepLauncherTest {
   fun `findExchangeStep without exchangeStep`() = runBlocking {
     val launcher =
       ExchangeStepLauncher(
-        exchangeStepsStub,
-        DATA_PROVIDER_ID,
-        PartyType.DATA_PROVIDER,
-        Clock.systemUTC()
+        exchangeStepsClient =  exchangeStepsStub,
+        id = DATA_PROVIDER_ID,
+        partyType = PartyType.DATA_PROVIDER,
+        clock = Clock.systemUTC()
       )
     whenever(exchangeStepsServiceMock.findReadyExchangeStep(any())).thenReturn(EMPTY_RESPONSE)
     val exchangeStep = launcher.findExchangeStep()

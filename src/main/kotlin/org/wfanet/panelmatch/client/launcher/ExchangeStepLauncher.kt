@@ -29,7 +29,7 @@ class ExchangeStepLauncher(
   private val exchangeStepsClient: ExchangeStepsCoroutineStub,
   private val id: String,
   private val partyType: PartyType,
-  private val clock: Clock
+  private val clock: Clock = Clock.systemUTC()
 ) {
 
   /**
