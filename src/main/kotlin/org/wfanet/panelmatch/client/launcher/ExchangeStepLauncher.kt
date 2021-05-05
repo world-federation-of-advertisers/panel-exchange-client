@@ -15,14 +15,14 @@
 package org.wfanet.panelmatch.client.launcher
 
 import com.google.protobuf.Timestamp
+import java.time.Clock
+import java.time.Instant
 import org.wfanet.measurement.api.v2alpha.ExchangeStep
 import org.wfanet.measurement.api.v2alpha.ExchangeStepAttempt
 import org.wfanet.measurement.api.v2alpha.ExchangeStepsGrpcKt.ExchangeStepsCoroutineStub
 import org.wfanet.measurement.api.v2alpha.FindReadyExchangeStepRequest
 import org.wfanet.measurement.api.v2alpha.FindReadyExchangeStepResponse
 import org.wfanet.measurement.api.v2alpha.FinishExchangeStepAttemptRequest
-import java.time.Clock
-import java.time.Instant
 
 /** Finds an [ExchangeStep], validates it, and starts executing the work. */
 class ExchangeStepLauncher(
@@ -110,7 +110,7 @@ class ExchangeStepLauncher(
    * @return an [ExchangeStepAttempt] or null.
    */
   internal fun createExchangeStepAttempt(exchangeStep: ExchangeStep): ExchangeStepAttempt {
-    // TODO(@yunyeng): Set ExchangeStepAttempt and call /ExchangeStepAttempts.createExchangeStepAttempt.
+    // TODO(@yunyeng): Set ExchangeStepAttempt, call /ExchangeStepAttempts.createExchangeStepAttempt
     return ExchangeStepAttempt.getDefaultInstance()
   }
 

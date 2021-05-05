@@ -21,6 +21,7 @@ import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.times
 import com.nhaarman.mockitokotlin2.verify
 import com.nhaarman.mockitokotlin2.whenever
+import java.time.Clock
 import kotlinx.coroutines.runBlocking
 import org.junit.Rule
 import org.junit.Test
@@ -32,7 +33,6 @@ import org.wfanet.measurement.api.v2alpha.ExchangeStepsGrpcKt.ExchangeStepsCorou
 import org.wfanet.measurement.api.v2alpha.FindReadyExchangeStepRequest
 import org.wfanet.measurement.api.v2alpha.FindReadyExchangeStepResponse
 import org.wfanet.measurement.common.grpc.testing.GrpcTestServerRule
-import java.time.Clock
 
 private const val DATA_PROVIDER_ID = "1"
 private const val MODEL_PROVIDER_ID = "2"
