@@ -12,11 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Repository rules/macros for rules_kotlin dependencies."""
+"""Repository defs for Truth library."""
 
-load("@io_bazel_rules_kotlin//kotlin:kotlin.bzl", "kotlin_repositories", "kt_register_toolchains")
+_ARTIFACT_NAMES = [
+    "com.google.truth.extensions:truth-java8-extension",
+    "com.google.truth.extensions:truth-proto-extension",
+    "com.google.truth:truth",
+]
 
-def rules_kotlin_deps(compiler_release):
-    kotlin_repositories(compiler_release = compiler_release)
-
-    kt_register_toolchains()
+def com_google_truth_artifact_dict(version):
+    return {name: version for name in _ARTIFACT_NAMES}
