@@ -35,12 +35,4 @@ interface ExchangeTask {
     attempt: ExchangeStepAttempt,
     stub: ExchangeStepAttemptsCoroutineStub
   ): Map<String, ByteString>
-
-  /**
-   * Executes given input data and returns the output.
-   *
-   * @param inputs This is a map from the step-specific name to a label for the input.
-   * @return executed output.
-   */
-  suspend fun execute(inputs: Map<String, ByteString>): Map<String, ByteString>
 }

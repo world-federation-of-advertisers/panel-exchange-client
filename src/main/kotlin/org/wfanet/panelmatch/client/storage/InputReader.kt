@@ -16,14 +16,15 @@ package org.wfanet.panelmatch.client.storage
 
 import com.google.protobuf.ByteString
 
-/** Interface for DataWriter adapter. */
-interface DataWriter {
+/** Interface for InputReader adapter. */
+interface InputReader {
 
   /**
-   * Writes output data into given path.
+   * Reads input data from given path.
    *
-   * @param path String location of data to write to.
+   * @param path String location of input data to read from.
+   * @return Input data.
    * @throws IOException
    */
-  suspend fun write(path: String, data: ByteString)
+  suspend fun read(path: String): ByteString
 }
