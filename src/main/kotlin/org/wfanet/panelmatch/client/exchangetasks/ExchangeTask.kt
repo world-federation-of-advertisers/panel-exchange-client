@@ -24,12 +24,14 @@ interface ExchangeTask {
    * Executes given [ExchangeWorkflow.Step] and returns the output.
    *
    * @param step a [ExchangeWorkflow.Step] to be executed.
-   * @param input Inputs specified by [step].
+   * @param input inputs specified by [step].
+   * @param sendDebugLog function which writes logs happened during execution.
    * @return Executed output. It is a map from the labels to the payload associated with the label.
    * @throws ExchangeTaskRumtimeException if any failures during the execution.
    */
   suspend fun execute(
     step: ExchangeWorkflow.Step,
-    input: Map<String, ByteString>
+    input: Map<String, ByteString>,
+    sendDebugLog: suspend (String) -> Unit
   ): Map<String, ByteString>
 }
