@@ -1,0 +1,24 @@
+load("@io_bazel_rules_kotlin//kotlin:kotlin.bzl", "kt_jvm_library")
+load("@wfa_measurement_system//build:defs.bzl", "test_target")
+
+package(default_visibility = ["//visibility:public"])
+
+kt_jvm_library(
+    name = "dataprovider",
+    srcs = [
+        "DataProvider.kt",
+    ],
+    deps = [
+        "//src/main/kotlin/org/wfanet/panelmatch/protocol/common:commutativeencryption",
+    ],
+)
+
+kt_jvm_library(
+    name = "panelprovider",
+    srcs = [
+        "PanelProvider.kt",
+    ],
+    deps = [
+        "//src/main/kotlin/org/wfanet/panelmatch/protocol/common:commutativeencryption",
+    ],
+)
