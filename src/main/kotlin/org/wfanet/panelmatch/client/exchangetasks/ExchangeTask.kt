@@ -15,8 +15,6 @@
 package org.wfanet.panelmatch.client.exchangetasks
 
 import com.google.protobuf.ByteString
-import org.wfanet.measurement.api.v2alpha.ExchangeStepAttempt
-import org.wfanet.measurement.api.v2alpha.ExchangeStepAttemptsGrpcKt.ExchangeStepAttemptsCoroutineStub
 import org.wfanet.measurement.api.v2alpha.ExchangeWorkflow
 
 /** Interface for ExchangeTask. */
@@ -25,14 +23,13 @@ interface ExchangeTask {
   /**
    * Executes given [ExchangeWorkflow.Step] and returns the output.
    *
-   * @param step a [ExchangeWorkflow.Step] contains input to be executed.
-   * @param attempt current [ExchangeStepAttempt] of the step.
-   * @param stub instance of [ExchangeStepAttempts] service.
+   * @param input Input data to be executed.
+   * @param step a [ExchangeWorkflow.Step] contains task details.
    * @return executed output.
+   * @throws ExchangeTaskRumtimeException if any failures during the execution.
    */
   suspend fun execute(
-    step: ExchangeWorkflow.Step,
-    attempt: ExchangeStepAttempt,
-    stub: ExchangeStepAttemptsCoroutineStub
+    input: Map<String, String>,
+    step: ExchangeWorkflow.Step
   ): Map<String, ByteString>
 }
