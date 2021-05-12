@@ -23,13 +23,13 @@ interface ExchangeTask {
   /**
    * Executes given [ExchangeWorkflow.Step] and returns the output.
    *
-   * @param input Input data to be executed.
-   * @param step a [ExchangeWorkflow.Step] contains task details.
-   * @return executed output.
+   * @param step a [ExchangeWorkflow.Step] to be executed.
+   * @param input Inputs specified by [step].
+   * @return Executed output. It is a map from the labels to the payload associated with the label.
    * @throws ExchangeTaskRumtimeException if any failures during the execution.
    */
   suspend fun execute(
-    input: Map<String, String>,
-    step: ExchangeWorkflow.Step
+    step: ExchangeWorkflow.Step,
+    input: Map<String, ByteString>
   ): Map<String, ByteString>
 }
