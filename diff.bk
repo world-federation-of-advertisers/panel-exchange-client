@@ -1,0 +1,972 @@
+diff --git a/WORKSPACE b/WORKSPACE
+index 2547a1c..42d690d 100644
+--- a/WORKSPACE
++++ b/WORKSPACE
+@@ -185,20 +185,12 @@ http_archive(
+     ],
+ )
+ 
+-# Measurement system.
+-http_archive(
+-    name = "wfa_measurement_system",
+-    sha256 = "d0200afef07d5a2c81adbe6c0c319a663e058195ad563401bfc4813bc4de6cb9",
+-    strip_prefix = "cross-media-measurement-933284c02cff0be89991c31178bb9538de70f01b",
+-    url = "https://github.com/world-federation-of-advertisers/cross-media-measurement/archive/933284c02cff0be89991c31178bb9538de70f01b.tar.gz",
+-)
+-
+ # Measurement proto.
+ http_archive(
+     name = "wfa_measurement_proto",
+-    sha256 = "a6dbe65abcdc25c78fa92725df4a4e3d25bf63cdfe9b66bc009cfa74252f2955",
+-    strip_prefix = "cross-media-measurement-api-f056bffb50e0ff4383d49b2570978aae92682895",
+-    url = "https://github.com/world-federation-of-advertisers/cross-media-measurement-api/archive/f056bffb50e0ff4383d49b2570978aae92682895.tar.gz",
++    sha256 = "c7d87a438a446ebeacdcae8bcfed270c513ae5c5d26bccd36fb179d47e7d3365",
++    strip_prefix = "cross-media-measurement-api-ab647fffd78f29769611f05ef131ec1f1feed820",
++    url = "https://github.com/world-federation-of-advertisers/cross-media-measurement-api/archive/ab647fffd78f29769611f05ef131ec1f1feed820.tar.gz",
+ )
+ 
+ # @com_google_truth_truth
+diff --git a/BUILD b/diff
+similarity index 100%
+rename from BUILD
+rename to diff
+diff --git a/src/main/kotlin/org/wfanet/panelmatch/client/exchangetasks/BUILD.bazel b/src/main/kotlin/org/wfanet/panelmatch/client/exchangetasks/BUILD.bazel
+index e69de29..47c6e30 100644
+--- a/src/main/kotlin/org/wfanet/panelmatch/client/exchangetasks/BUILD.bazel
++++ b/src/main/kotlin/org/wfanet/panelmatch/client/exchangetasks/BUILD.bazel
+@@ -0,0 +1,37 @@
++load("@io_bazel_rules_kotlin//kotlin:kotlin.bzl", "kt_jvm_library")
++load("@wfa_measurement_system//build:defs.bzl", "test_target")
++
++package(default_visibility = ["//visibility:public"])
++
++kt_jvm_library(
++    name = "dataprovidertasks",
++    srcs = [
++        "DataProviderTasks.kt",
++    ],
++    deps = [
++        "//src/main/kotlin/org/wfanet/panelmatch/client/exchangetasks",
++        "//src/main/kotlin/org/wfanet/panelmatch/protocol/common:commutativeencryption",
++    ],
++)
++
++kt_jvm_library(
++    name = "modelprovidertasks",
++    srcs = [
++        "ModelProviderTasks.kt",
++    ],
++    deps = [
++        "//src/main/kotlin/org/wfanet/panelmatch/client/exchangetasks",
++        "//src/main/kotlin/org/wfanet/panelmatch/protocol/common:commutativeencryption",
++    ],
++)
++
++kt_jvm_library(
++    name = "exchangetasks",
++    srcs = [
++        "ExchangeTask.kt",
++    ],
++    deps = [
++        "//src/main/proto/wfa/measurement/api/v2alpha:exchange_step_attempts_service_kt_jvm_grpc",
++        "//src/main/proto/wfa/measurement/api/v2alpha:exchange_steps_service_kt_jvm_grpc",
++    ],
++)
+diff --git a/src/main/kotlin/org/wfanet/panelmatch/client/exchangetasks/DataProviderTasks.kt b/src/main/kotlin/org/wfanet/panelmatch/client/exchangetasks/DataProviderTasks.kt
+new file mode 100644
+index 0000000..c4398b7
+--- /dev/null
++++ b/src/main/kotlin/org/wfanet/panelmatch/client/exchangetasks/DataProviderTasks.kt
+@@ -0,0 +1,67 @@
++// Copyright 2020 The Cross-Media Measurement Authors
++//
++// Licensed under the Apache License, Version 2.0 (the "License");
++// you may not use this file except in compliance with the License.
++// You may obtain a copy of the License at
++//
++//      http://www.apache.org/licenses/LICENSE-2.0
++//
++// Unless required by applicable law or agreed to in writing, software
++// distributed under the License is distributed on an "AS IS" BASIS,
++// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++// See the License for the specific language governing permissions and
++// limitations under the License.
++
++package org.wfanet.panelmatch.client.exchangetasks
++
++import com.google.protobuf.ByteString
++import org.wfanet.measurement.api.v2alpha.ExchangeWorkflow
++import org.wfanet.panelmatch.protocol.common.JniCommutativeEncryption
++import wfanet.panelmatch.protocol.protobuf.ReApplyCommutativeEncryptionRequest
++import wfanet.panelmatch.protocol.protobuf.SharedInputs
++
++class DataProviderTasks : ExchangeTask {
++
++  private fun reEncryptJoinKeys(
++    dataProviderPrivateKey: ByteString,
++    encryptedTexts: List<ByteString>
++  ): List<ByteString> {
++    val request =
++      ReApplyCommutativeEncryptionRequest.newBuilder()
++        .setEncryptionKey(dataProviderPrivateKey)
++        .addAllEncryptedTexts(encryptedTexts)
++        .build()
++    return JniCommutativeEncryption()
++      .reApplyCommutativeEncryption(request)
++      .getReencryptedTextsList()
++  }
++
++  private fun intersectAndValidate(encryptedTexts: List<ByteString>): List<ByteString> {
++    // TODO
++    error("Not implemented")
++  }
++
++  override suspend fun execute(
++    step: ExchangeWorkflow.Step,
++    input: Map<String, ByteString>
++  ): Map<String, ByteString> {
++    when (step.getStepCase()) {
++      ExchangeWorkflow.Step.StepCase.ENCRYPT_AND_SHARE ->
++        return mapOf(
++          "result" to
++            SharedInputs.newBuilder()
++              .addAllData(
++                reEncryptJoinKeys(
++                  input["crypto-key"]!!,
++                  SharedInputs.parseFrom(input["data"]).getDataList()
++                )
++              )
++              .build()
++              .toByteString()
++        )
++      else -> {
++        error("Unsupported Step for Data Provider")
++      }
++    }
++  }
++}
+diff --git a/src/main/kotlin/org/wfanet/panelmatch/client/exchangetasks/ExchangeTask.kt b/src/main/kotlin/org/wfanet/panelmatch/client/exchangetasks/ExchangeTask.kt
+new file mode 100644
+index 0000000..743ab46
+--- /dev/null
++++ b/src/main/kotlin/org/wfanet/panelmatch/client/exchangetasks/ExchangeTask.kt
+@@ -0,0 +1,37 @@
++// Copyright 2021 The Cross-Media Measurement Authors
++//
++// Licensed under the Apache License, Version 2.0 (the "License");
++// you may not use this file except in compliance with the License.
++// You may obtain a copy of the License at
++//
++//      http://www.apache.org/licenses/LICENSE-2.0
++//
++// Unless required by applicable law or agreed to in writing, software
++// distributed under the License is distributed on an "AS IS" BASIS,
++// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++// See the License for the specific language governing permissions and
++// limitations under the License.
++
++package org.wfanet.panelmatch.client.exchangetasks
++
++import com.google.protobuf.ByteString
++import org.wfanet.measurement.api.v2alpha.ExchangeWorkflow
++
++/** Interface for ExchangeTask. */
++interface ExchangeTask {
++
++  /**
++   * Executes given [ExchangeWorkflow.Step] and returns the output.
++   *
++   * @param step a [ExchangeWorkflow.Step] to be executed.
++   * @param input inputs specified by [step].
++   * @param sendDebugLog function which writes logs happened during execution.
++   * @return Executed output. It is a map from the labels to the payload associated with the label.
++   * @throws ExchangeTaskRumtimeException if any failures during the execution.
++   */
++  suspend fun execute(
++    step: ExchangeWorkflow.Step,
++    input: Map<String, ByteString>
++    // TODO sendDebugLog: suspend (String) -> Unit
++    ): Map<String, ByteString>
++}
+diff --git a/src/main/kotlin/org/wfanet/panelmatch/client/exchangetasks/ModelProviderTasks.kt b/src/main/kotlin/org/wfanet/panelmatch/client/exchangetasks/ModelProviderTasks.kt
+new file mode 100644
+index 0000000..be6f5e3
+--- /dev/null
++++ b/src/main/kotlin/org/wfanet/panelmatch/client/exchangetasks/ModelProviderTasks.kt
+@@ -0,0 +1,80 @@
++// Copyright 2020 The Cross-Media Measurement Authors
++//
++// Licensed under the Apache License, Version 2.0 (the "License");
++// you may not use this file except in compliance with the License.
++// You may obtain a copy of the License at
++//
++//      http://www.apache.org/licenses/LICENSE-2.0
++//
++// Unless required by applicable law or agreed to in writing, software
++// distributed under the License is distributed on an "AS IS" BASIS,
++// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++// See the License for the specific language governing permissions and
++// limitations under the License.
++
++package org.wfanet.panelmatch.client.exchangetasks
++
++import com.google.protobuf.ByteString
++import org.wfanet.measurement.api.v2alpha.ExchangeWorkflow
++import org.wfanet.panelmatch.protocol.common.JniCommutativeEncryption
++import wfanet.panelmatch.protocol.protobuf.ApplyCommutativeDecryptionRequest
++import wfanet.panelmatch.protocol.protobuf.ApplyCommutativeEncryptionRequest
++import wfanet.panelmatch.protocol.protobuf.SharedInputs
++
++class ModelProviderTasks : ExchangeTask {
++
++  private fun encryptJoinKeys(key: ByteString, plaintexts: List<ByteString>): List<ByteString> {
++    val request =
++      ApplyCommutativeEncryptionRequest.newBuilder()
++        .setEncryptionKey(key)
++        .addAllPlaintexts(plaintexts)
++        .build()
++    return JniCommutativeEncryption().applyCommutativeEncryption(request).getEncryptedTextsList()
++  }
++
++  private fun decryptJoinKeys(key: ByteString, encryptedTexts: List<ByteString>): List<ByteString> {
++    val request =
++      ApplyCommutativeDecryptionRequest.newBuilder()
++        .setEncryptionKey(key)
++        .addAllEncryptedTexts(encryptedTexts)
++        .build()
++    return JniCommutativeEncryption().applyCommutativeDecryption(request).getDecryptedTextsList()
++  }
++
++  override suspend fun execute(
++    step: ExchangeWorkflow.Step,
++    input: Map<String, ByteString>
++  ): Map<String, ByteString> {
++    when (step.getStepCase()) {
++      ExchangeWorkflow.Step.StepCase.ENCRYPT_AND_SHARE ->
++        return mapOf(
++          "result" to
++            SharedInputs.newBuilder()
++              .addAllData(
++                encryptJoinKeys(
++                  input["crypto-key"]!!,
++                  SharedInputs.parseFrom(input["data"]).getDataList()
++                )
++              )
++              .build()
++              .toByteString()
++        )
++      ExchangeWorkflow.Step.StepCase.DECRYPT ->
++        return mapOf(
++          "result" to
++            SharedInputs.newBuilder()
++              .addAllData(
++                decryptJoinKeys(
++                  input["crypto-key"]!!,
++                  SharedInputs.parseFrom(input["data"]).getDataList()
++                )
++              )
++              .build()
++              .toByteString()
++        )
++      else -> {
++        error("Unsupported step for Model Provider")
++      }
++    }
++  }
++}
+diff --git a/src/main/kotlin/org/wfanet/panelmatch/client/launcher/BUILD.bazel b/src/main/kotlin/org/wfanet/panelmatch/client/launcher/BUILD.bazel
+index 9af538c..a1f0afb 100644
+--- a/src/main/kotlin/org/wfanet/panelmatch/client/launcher/BUILD.bazel
++++ b/src/main/kotlin/org/wfanet/panelmatch/client/launcher/BUILD.bazel
+@@ -11,6 +11,8 @@ kt_jvm_library(
+         "ExchangeStepLauncher.kt",
+     ],
+     deps = [
++        "//src/main/kotlin/org/wfanet/panelmatch/client/exchangetasks:dataprovidertasks",
++        "//src/main/kotlin/org/wfanet/panelmatch/client/exchangetasks:modelprovidertasks",
+         "//src/main/proto/wfa/measurement/api/v2alpha:data_provider_java_proto",
+         "//src/main/proto/wfa/measurement/api/v2alpha:exchange_step_attempt_java_proto",
+         "//src/main/proto/wfa/measurement/api/v2alpha:exchange_step_attempts_service_kt_jvm_grpc",
+diff --git a/src/main/kotlin/org/wfanet/panelmatch/client/launcher/ExchangeStepLauncher.kt b/src/main/kotlin/org/wfanet/panelmatch/client/launcher/ExchangeStepLauncher.kt
+index bbecd8e..1475606 100644
+--- a/src/main/kotlin/org/wfanet/panelmatch/client/launcher/ExchangeStepLauncher.kt
++++ b/src/main/kotlin/org/wfanet/panelmatch/client/launcher/ExchangeStepLauncher.kt
+@@ -14,15 +14,21 @@
+ 
+ package org.wfanet.panelmatch.client.launcher
+ 
++import com.google.protobuf.ByteString
+ import com.google.protobuf.Timestamp
+ import java.time.Clock
+ import java.time.Instant
++import kotlinx.coroutines.async
++import kotlinx.coroutines.runBlocking
++import org.wfanet.measurement.api.v2alpha.ClaimReadyExchangeStepRequest
++import org.wfanet.measurement.api.v2alpha.ClaimReadyExchangeStepResponse
+ import org.wfanet.measurement.api.v2alpha.ExchangeStep
+ import org.wfanet.measurement.api.v2alpha.ExchangeStepAttempt
+ import org.wfanet.measurement.api.v2alpha.ExchangeStepsGrpcKt.ExchangeStepsCoroutineStub
+-import org.wfanet.measurement.api.v2alpha.FindReadyExchangeStepRequest
+-import org.wfanet.measurement.api.v2alpha.FindReadyExchangeStepResponse
++import org.wfanet.measurement.api.v2alpha.ExchangeWorkflow.Party as PartyType
+ import org.wfanet.measurement.api.v2alpha.FinishExchangeStepAttemptRequest
++import org.wfanet.panelmatch.client.exchangetasks.DataProviderTasks
++import org.wfanet.panelmatch.client.exchangetasks.ModelProviderTasks
+ 
+ /** Finds an [ExchangeStep], validates it, and starts executing the work. */
+ class ExchangeStepLauncher(
+@@ -36,8 +42,8 @@ class ExchangeStepLauncher(
+    * Finds a single ready Exchange Step and starts executing. If an Exchange Step is found,
+    * validates it, and starts executing. If not found simply returns.
+    */
+-  suspend fun findAndRunExchangeStep() {
+-    val exchangeStep = findExchangeStep() ?: return
++  suspend fun findAndRunExchangeStep(): Map<String, ByteString> {
++    val exchangeStep = findExchangeStep() ?: error("No available exchange step")
+     try {
+       validateExchangeStep(exchangeStep)
+     } catch (e: InvalidExchangeStepException) {
+@@ -57,7 +63,7 @@ class ExchangeStepLauncher(
+           .build()
+       )
+     }
+-    runExchangeStep(exchangeStep)
++    return runExchangeStep(exchangeStep)
+   }
+ 
+   /**
+@@ -66,17 +72,19 @@ class ExchangeStepLauncher(
+    * @return an [ExchangeStep] or null.
+    */
+   internal suspend fun findExchangeStep(): ExchangeStep? {
+-    val request: FindReadyExchangeStepRequest =
+-      FindReadyExchangeStepRequest.newBuilder()
++    val request: ClaimReadyExchangeStepRequest =
++      ClaimReadyExchangeStepRequest.newBuilder()
+         .apply {
+           when (partyType) {
+             PartyType.DATA_PROVIDER -> dataProviderBuilder.dataProviderId = id
+             PartyType.MODEL_PROVIDER -> modelProviderBuilder.modelProviderId = id
++            else -> {}
+           }
+         }
+         .build()
+-    // Call /ExchangeSteps.findReadyExchangeStep to a find work to do.
+-    val response: FindReadyExchangeStepResponse = exchangeStepsClient.findReadyExchangeStep(request)
++    // Call /ExchangeSteps.claimReadyExchangeStep to a find work to do.
++    val response: ClaimReadyExchangeStepResponse =
++      exchangeStepsClient.claimReadyExchangeStep(request)
+     if (response.hasExchangeStep()) {
+       return response.exchangeStep
+     }
+@@ -88,8 +96,32 @@ class ExchangeStepLauncher(
+    *
+    * @param exchangeStep [ExchangeStep].
+    */
+-  internal fun runExchangeStep(exchangeStep: ExchangeStep) {
+-    // TODO(@yunyeng): Start JobStarter with the exchangeStep.
++  internal fun runExchangeStep(exchangeStep: ExchangeStep): Map<String, ByteString> = runBlocking {
++    val attempt = createExchangeStepAttempt(exchangeStep)
++    // TODO: Catch exceptions while executing the attempt.
++    var result =
++      when (exchangeStep.step.party) {
++        PartyType.DATA_PROVIDER ->
++          async {
++            DataProviderTasks().execute(exchangeStep.step, exchangeStep.getSharedInputsMap())
++          }
++        PartyType.MODEL_PROVIDER ->
++          async {
++            ModelProviderTasks().execute(exchangeStep.step, exchangeStep.getSharedInputsMap())
++          }
++        else -> {
++          error("Not implemented")
++        }
++      }
++    finishExchangeStepAttempt(
++      FinishExchangeStepAttemptRequest.newBuilder()
++        .apply {
++          key = attempt.key
++          finalState = ExchangeStepAttempt.State.SUCCEEDED
++        }
++        .build()
++    )
++    result.await()
+   }
+ 
+   /**
+@@ -110,7 +142,8 @@ class ExchangeStepLauncher(
+    * @return an [ExchangeStepAttempt] or null.
+    */
+   internal fun createExchangeStepAttempt(exchangeStep: ExchangeStep): ExchangeStepAttempt {
+-    // TODO(@yunyeng): Set ExchangeStepAttempt, call /ExchangeStepAttempts.createExchangeStepAttempt
++    // TODO(@yunyeng): Set ExchangeStepAttempt, call
++    // /ExchangeStepAttempts.createExchangeStepAttempt
+     return ExchangeStepAttempt.getDefaultInstance()
+   }
+ 
+@@ -124,15 +157,6 @@ class ExchangeStepLauncher(
+   }
+ }
+ 
+-/** Specifies the party type of the input id for [ExchangeStepLauncher]. */
+-enum class PartyType {
+-  /** Id belongs to a Data Provider. */
+-  DATA_PROVIDER,
+-
+-  /** Id belongs to a Model Provider. */
+-  MODEL_PROVIDER,
+-}
+-
+ /** Indicates that given Exchange Step is not valid to execute. */
+ class InvalidExchangeStepException(cause: Throwable) : Exception(cause)
+ 
+diff --git a/src/main/kotlin/org/wfanet/panelmatch/client/storage/BUILD.bazel b/src/main/kotlin/org/wfanet/panelmatch/client/storage/BUILD.bazel
+new file mode 100644
+index 0000000..a6efc37
+--- /dev/null
++++ b/src/main/kotlin/org/wfanet/panelmatch/client/storage/BUILD.bazel
+@@ -0,0 +1,14 @@
++load("@io_bazel_rules_kotlin//kotlin:kotlin.bzl", "kt_jvm_library")
++load("@wfa_measurement_system//build:defs.bzl", "test_target")
++
++package(default_visibility = [
++    test_target(":__subpackages__"),
++])
++
++kt_jvm_library(
++    name = "storage",
++    srcs = glob(["*.kt"]),
++    deps = [
++        "@wfa_measurement_system//imports/java/com/google/protobuf",
++    ],
++)
+diff --git a/src/main/kotlin/org/wfanet/panelmatch/client/storage/InputReader.kt b/src/main/kotlin/org/wfanet/panelmatch/client/storage/InputReader.kt
+new file mode 100644
+index 0000000..7a86391
+--- /dev/null
++++ b/src/main/kotlin/org/wfanet/panelmatch/client/storage/InputReader.kt
+@@ -0,0 +1,30 @@
++// Copyright 2021 The Cross-Media Measurement Authors
++//
++// Licensed under the Apache License, Version 2.0 (the "License");
++// you may not use this file except in compliance with the License.
++// You may obtain a copy of the License at
++//
++//      http://www.apache.org/licenses/LICENSE-2.0
++//
++// Unless required by applicable law or agreed to in writing, software
++// distributed under the License is distributed on an "AS IS" BASIS,
++// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++// See the License for the specific language governing permissions and
++// limitations under the License.
++
++package org.wfanet.panelmatch.client.storage
++
++import com.google.protobuf.ByteString
++
++/** Interface for InputReader adapter. */
++interface InputReader {
++
++  /**
++   * Reads input data from given path.
++   *
++   * @param path String location of input data to read from.
++   * @return Input data.
++   * @throws IOException
++   */
++  suspend fun read(path: String): ByteString
++}
+diff --git a/src/main/kotlin/org/wfanet/panelmatch/client/storage/OutputWriter.kt b/src/main/kotlin/org/wfanet/panelmatch/client/storage/OutputWriter.kt
+new file mode 100644
+index 0000000..a47bb06
+--- /dev/null
++++ b/src/main/kotlin/org/wfanet/panelmatch/client/storage/OutputWriter.kt
+@@ -0,0 +1,29 @@
++// Copyright 2021 The Cross-Media Measurement Authors
++//
++// Licensed under the Apache License, Version 2.0 (the "License");
++// you may not use this file except in compliance with the License.
++// You may obtain a copy of the License at
++//
++//      http://www.apache.org/licenses/LICENSE-2.0
++//
++// Unless required by applicable law or agreed to in writing, software
++// distributed under the License is distributed on an "AS IS" BASIS,
++// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++// See the License for the specific language governing permissions and
++// limitations under the License.
++
++package org.wfanet.panelmatch.client.storage
++
++import com.google.protobuf.ByteString
++
++/** Interface for OutputWriter adapter. */
++interface OutputWriter {
++
++  /**
++   * Writes output data into given path.
++   *
++   * @param path String location of data to write to.
++   * @throws IOException
++   */
++  suspend fun write(path: String, data: ByteString)
++}
+diff --git a/src/main/kotlin/org/wfanet/panelmatch/protocol/common/JniCommutativeEncryption.kt b/src/main/kotlin/org/wfanet/panelmatch/protocol/common/JniCommutativeEncryption.kt
+index 29af8da..62a9d02 100644
+--- a/src/main/kotlin/org/wfanet/panelmatch/protocol/common/JniCommutativeEncryption.kt
++++ b/src/main/kotlin/org/wfanet/panelmatch/protocol/common/JniCommutativeEncryption.kt
+@@ -14,6 +14,7 @@
+ 
+ package org.wfanet.panelmatch.protocol.common
+ 
++import com.google.protobuf.ByteString
+ import java.nio.file.Paths
+ import org.wfanet.panelmatch.common.loadLibrary
+ import wfanet.panelmatch.protocol.crypto.CommutativeEncryptionUtility
+@@ -61,3 +62,39 @@ class JniCommutativeEncryption : CommutativeEncryption {
+     }
+   }
+ }
++
++fun applyCommutativeEncryptionHelper(
++  key: ByteString,
++  plaintexts: List<ByteString>
++): List<ByteString> {
++  val request =
++    ApplyCommutativeEncryptionRequest.newBuilder()
++      .setEncryptionKey(key)
++      .addAllPlaintexts(plaintexts)
++      .build()
++  return JniCommutativeEncryption().applyCommutativeEncryption(request).getEncryptedTextsList()
++}
++
++fun reApplyCommutativeEncryptionHelper(
++  key: ByteString,
++  encryptedTexts: List<ByteString>
++): List<ByteString> {
++  val request =
++    ReApplyCommutativeEncryptionRequest.newBuilder()
++      .setEncryptionKey(key)
++      .addAllEncryptedTexts(encryptedTexts)
++      .build()
++  return JniCommutativeEncryption().reApplyCommutativeEncryption(request).getReencryptedTextsList()
++}
++
++fun applyCommutativeDecryptionHelper(
++  key: ByteString,
++  encryptedTexts: List<ByteString>
++): List<ByteString> {
++  val request =
++    ApplyCommutativeDecryptionRequest.newBuilder()
++      .setEncryptionKey(key)
++      .addAllEncryptedTexts(encryptedTexts)
++      .build()
++  return JniCommutativeEncryption().applyCommutativeDecryption(request).getDecryptedTextsList()
++}
+diff --git a/src/main/proto/wfanet/panelmatch/protocol/crypto/cryptor.proto b/src/main/proto/wfanet/panelmatch/protocol/crypto/cryptor.proto
+index b715376..c6011c6 100644
+--- a/src/main/proto/wfanet/panelmatch/protocol/crypto/cryptor.proto
++++ b/src/main/proto/wfanet/panelmatch/protocol/crypto/cryptor.proto
+@@ -19,6 +19,13 @@ package wfanet.panelmatch.protocol.protobuf;
+ option java_package = "wfanet.panelmatch.protocol.protobuf";
+ option java_multiple_files = true;
+ 
++// TODO: Replace this in the measurement api with something to support signed
++// shared inputs
++message SharedInputs {
++  repeated bytes data = 1;
++  map<string, bytes> shared_inputs = 4;
++}
++
+ // The request to apply commutative encryption.
+ message ApplyCommutativeEncryptionRequest {
+   repeated bytes plaintexts = 1;
+diff --git a/src/test/kotlin/org/wfanet/panelmatch/client/launcher/BUILD.bazel b/src/test/kotlin/org/wfanet/panelmatch/client/launcher/BUILD.bazel
+index 69b17ef..da70992 100644
+--- a/src/test/kotlin/org/wfanet/panelmatch/client/launcher/BUILD.bazel
++++ b/src/test/kotlin/org/wfanet/panelmatch/client/launcher/BUILD.bazel
+@@ -16,3 +16,24 @@ kt_jvm_test(
+         "@wfa_measurement_system//src/main/kotlin/org/wfanet/measurement/common/grpc/testing",
+     ],
+ )
++
++kt_jvm_test(
++    name = "ExchangeStepTasksTest",
++    srcs = ["ExchangeStepTasksTest.kt"],
++    friends = ["//src/main/kotlin/org/wfanet/panelmatch/client/launcher"],
++    test_class = "org.wfanet.panelmatch.client.exchangetasks.ExchangeTasksTest",
++    deps = [
++        "//src/main/kotlin/org/wfanet/panelmatch/client/exchangetasks:dataprovidertasks",
++        "//src/main/kotlin/org/wfanet/panelmatch/client/exchangetasks:modelprovidertasks",
++        "//src/main/kotlin/org/wfanet/panelmatch/client/launcher",
++        "//src/main/kotlin/org/wfanet/panelmatch/protocol/common:commutativeencryption",
++        "//src/main/proto/wfa/measurement/api/v2alpha:exchange_step_java_proto",
++        "//src/main/proto/wfa/measurement/api/v2alpha:exchange_steps_service_kt_jvm_grpc",
++        "//src/main/proto/wfanet/panelmatch/protocol/crypto:cryptor_java_proto",
++        "@wfa_measurement_system//imports/java/com/google/common/truth",
++        "@wfa_measurement_system//imports/java/com/google/common/truth/extensions/proto",
++        "@wfa_measurement_system//imports/java/org/junit",
++        "@wfa_measurement_system//imports/kotlin/com/nhaarman/mockitokotlin2",
++        "@wfa_measurement_system//src/main/kotlin/org/wfanet/measurement/common/grpc/testing",
++    ],
++)
+diff --git a/src/test/kotlin/org/wfanet/panelmatch/client/launcher/ExchangeStepLauncherTest.kt b/src/test/kotlin/org/wfanet/panelmatch/client/launcher/ExchangeStepLauncherTest.kt
+index b8028c6..e34c273 100644
+--- a/src/test/kotlin/org/wfanet/panelmatch/client/launcher/ExchangeStepLauncherTest.kt
++++ b/src/test/kotlin/org/wfanet/panelmatch/client/launcher/ExchangeStepLauncherTest.kt
+@@ -27,11 +27,12 @@ import org.junit.Rule
+ import org.junit.Test
+ import org.junit.runner.RunWith
+ import org.junit.runners.JUnit4
++import org.wfanet.measurement.api.v2alpha.ClaimReadyExchangeStepRequest
++import org.wfanet.measurement.api.v2alpha.ClaimReadyExchangeStepResponse
+ import org.wfanet.measurement.api.v2alpha.ExchangeStep
+ import org.wfanet.measurement.api.v2alpha.ExchangeStepsGrpcKt.ExchangeStepsCoroutineImplBase as ExchangeStepsCoroutineService
+ import org.wfanet.measurement.api.v2alpha.ExchangeStepsGrpcKt.ExchangeStepsCoroutineStub
+-import org.wfanet.measurement.api.v2alpha.FindReadyExchangeStepRequest
+-import org.wfanet.measurement.api.v2alpha.FindReadyExchangeStepResponse
++import org.wfanet.measurement.api.v2alpha.ExchangeWorkflow.Party as PartyType
+ import org.wfanet.measurement.common.grpc.testing.GrpcTestServerRule
+ 
+ private const val DATA_PROVIDER_ID = "1"
+@@ -44,16 +45,16 @@ private val EXCHANGE_STEP =
+     .setKey(ExchangeStep.Key.newBuilder().setExchangeId(EXCHANGE_ID))
+     .build()
+ private val REQUEST_WITH_DATA_PROVIDER =
+-  FindReadyExchangeStepRequest.newBuilder()
++  ClaimReadyExchangeStepRequest.newBuilder()
+     .apply { dataProviderBuilder.dataProviderId = DATA_PROVIDER_ID }
+     .build()
+ private val REQUEST_WITH_MODEL_PROVIDER =
+-  FindReadyExchangeStepRequest.newBuilder()
++  ClaimReadyExchangeStepRequest.newBuilder()
+     .apply { modelProviderBuilder.modelProviderId = MODEL_PROVIDER_ID }
+     .build()
+ private val RESPONSE =
+-  FindReadyExchangeStepResponse.newBuilder().setExchangeStep(EXCHANGE_STEP).build()
+-private val EMPTY_RESPONSE = FindReadyExchangeStepResponse.newBuilder().build()
++  ClaimReadyExchangeStepResponse.newBuilder().setExchangeStep(EXCHANGE_STEP).build()
++private val EMPTY_RESPONSE = ClaimReadyExchangeStepResponse.newBuilder().build()
+ 
+ @RunWith(JUnit4::class)
+ class ExchangeStepLauncherTest {
+@@ -76,10 +77,10 @@ class ExchangeStepLauncherTest {
+         clock = Clock.systemUTC()
+       )
+     runBlocking {
+-      whenever(exchangeStepsServiceMock.findReadyExchangeStep(any())).thenReturn(RESPONSE)
++      whenever(exchangeStepsServiceMock.claimReadyExchangeStep(any())).thenReturn(RESPONSE)
+       val exchangeStep = launcher.findExchangeStep()
+       assertThat(exchangeStep).isEqualTo(EXCHANGE_STEP)
+-      verify(exchangeStepsServiceMock, times(1)).findReadyExchangeStep(REQUEST_WITH_DATA_PROVIDER)
++      verify(exchangeStepsServiceMock, times(1)).claimReadyExchangeStep(REQUEST_WITH_DATA_PROVIDER)
+     }
+   }
+ 
+@@ -93,10 +94,10 @@ class ExchangeStepLauncherTest {
+         clock = Clock.systemUTC()
+       )
+     runBlocking {
+-      whenever(exchangeStepsServiceMock.findReadyExchangeStep(any())).thenReturn(RESPONSE)
++      whenever(exchangeStepsServiceMock.claimReadyExchangeStep(any())).thenReturn(RESPONSE)
+       val exchangeStep = launcher.findExchangeStep()
+       assertThat(exchangeStep).isEqualTo(EXCHANGE_STEP)
+-      verify(exchangeStepsServiceMock, times(1)).findReadyExchangeStep(REQUEST_WITH_MODEL_PROVIDER)
++      verify(exchangeStepsServiceMock, times(1)).claimReadyExchangeStep(REQUEST_WITH_MODEL_PROVIDER)
+     }
+   }
+ 
+@@ -109,7 +110,7 @@ class ExchangeStepLauncherTest {
+         partyType = PartyType.DATA_PROVIDER,
+         clock = Clock.systemUTC()
+       )
+-    whenever(exchangeStepsServiceMock.findReadyExchangeStep(any())).thenReturn(EMPTY_RESPONSE)
++    whenever(exchangeStepsServiceMock.claimReadyExchangeStep(any())).thenReturn(EMPTY_RESPONSE)
+     val exchangeStep = launcher.findExchangeStep()
+     assertThat(exchangeStep).isNull()
+   }
+diff --git a/src/test/kotlin/org/wfanet/panelmatch/client/launcher/ExchangeStepTasksTest.kt b/src/test/kotlin/org/wfanet/panelmatch/client/launcher/ExchangeStepTasksTest.kt
+new file mode 100644
+index 0000000..72c2304
+--- /dev/null
++++ b/src/test/kotlin/org/wfanet/panelmatch/client/launcher/ExchangeStepTasksTest.kt
+@@ -0,0 +1,177 @@
++// Copyright 2020 The Cross-Media Measurement Authors
++//
++// Licensed under the Apache License, Version 2.0 (the "License");
++// you may not use this file except in compliance with the License.
++// You may obtain a copy of the License at
++//
++//      http://www.apache.org/licenses/LICENSE-2.0
++//
++// Unless required by applicable law or agreed to in writing, software
++// distributed under the License is distributed on an "AS IS" BASIS,
++// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++// See the License for the specific language governing permissions and
++// limitations under the License.
++
++package org.wfanet.panelmatch.client.exchangetasks
++
++import com.google.common.truth.Truth.assertThat
++import com.google.protobuf.ByteString
++import com.nhaarman.mockitokotlin2.UseConstructor
++import com.nhaarman.mockitokotlin2.any
++import com.nhaarman.mockitokotlin2.mock
++import com.nhaarman.mockitokotlin2.times
++import com.nhaarman.mockitokotlin2.whenever
++import java.time.Clock
++import kotlinx.coroutines.runBlocking
++import org.junit.Rule
++import org.junit.Test
++import org.junit.runner.RunWith
++import org.junit.runners.JUnit4
++import org.wfanet.measurement.api.v2alpha.ClaimReadyExchangeStepResponse
++import org.wfanet.measurement.api.v2alpha.ExchangeStep
++import org.wfanet.measurement.api.v2alpha.ExchangeStepsGrpcKt.ExchangeStepsCoroutineImplBase as ExchangeStepsCoroutineService
++import org.wfanet.measurement.api.v2alpha.ExchangeStepsGrpcKt.ExchangeStepsCoroutineStub
++import org.wfanet.measurement.api.v2alpha.ExchangeWorkflow
++import org.wfanet.measurement.api.v2alpha.ExchangeWorkflow.Party as PartyType
++import org.wfanet.measurement.common.grpc.testing.GrpcTestServerRule
++import org.wfanet.panelmatch.client.launcher.ExchangeStepLauncher
++import org.wfanet.panelmatch.protocol.common.applyCommutativeDecryptionHelper
++import org.wfanet.panelmatch.protocol.common.applyCommutativeEncryptionHelper
++import org.wfanet.panelmatch.protocol.common.reApplyCommutativeEncryptionHelper
++import wfanet.panelmatch.protocol.protobuf.SharedInputs
++
++/** Test the double-blinded key exchange between Model Provider and Data Provider. */
++private const val DATA_PROVIDER_ID = "1"
++private const val MODEL_PROVIDER_ID = "2"
++private const val EXCHANGE_ID = "1"
++
++@RunWith(JUnit4::class)
++class ExchangeTasksTest {
++  private val DP_0_SECRET_KEY = ByteString.copyFromUtf8("random-edp-string-0")
++  private val MP_0_SECRET_KEY = ByteString.copyFromUtf8("random-mp-string-0")
++  private val joinkeys =
++    listOf<ByteString>(
++      ByteString.copyFromUtf8("some joinkey0"),
++      ByteString.copyFromUtf8("some joinkey1"),
++      ByteString.copyFromUtf8("some joinkey2"),
++      ByteString.copyFromUtf8("some joinkey3"),
++      ByteString.copyFromUtf8("some joinkey4")
++    )
++  private val exchangeStepsServiceMock: ExchangeStepsCoroutineService =
++    mock(useConstructor = UseConstructor.parameterless())
++  @get:Rule val grpcTestServerRule = GrpcTestServerRule { addService(exchangeStepsServiceMock) }
++
++  private val exchangeStepsStub: ExchangeStepsCoroutineStub by lazy {
++    ExchangeStepsCoroutineStub(grpcTestServerRule.channel)
++  }
++
++  @Test
++  // TODO Currently this test manually sets up each response. Rewrite as polling service.
++  fun `Double Blind Key Exchange For One DP and one PP`() = runBlocking {
++    // Init the participating parties
++    val dataProviderLauncher0 =
++      ExchangeStepLauncher(
++        exchangeStepsClient = exchangeStepsStub,
++        id = DATA_PROVIDER_ID,
++        partyType = PartyType.DATA_PROVIDER,
++        clock = Clock.systemUTC()
++      )
++    val modelProviderLauncher0 =
++      ExchangeStepLauncher(
++        exchangeStepsClient = exchangeStepsStub,
++        id = MODEL_PROVIDER_ID,
++        partyType = PartyType.MODEL_PROVIDER,
++        clock = Clock.systemUTC()
++      )
++
++    // Mock up encrypt response for MP
++    val EXCHANGE_STEP_ENCRYPT_INPUT =
++      mapOf(
++        "crypto-key" to MP_0_SECRET_KEY,
++        "data" to SharedInputs.newBuilder().addAllData(joinkeys).build().toByteString()
++      )
++    val EXCHANGE_STEP_ENCRYPT =
++      ExchangeStep.newBuilder()
++        .apply {
++          step =
++            ExchangeWorkflow.Step.newBuilder()
++              .apply {
++                stepId = "mp-blind"
++                party = PartyType.MODEL_PROVIDER
++                encryptAndShare = ExchangeWorkflow.Step.EncryptAndShareStep.newBuilder().build()
++              }
++              .build()
++          state = ExchangeStep.State.READY
++        }
++        .putAllSharedInputs(EXCHANGE_STEP_ENCRYPT_INPUT)
++        .build()
++    val ENCRYPT_AND_SHARE_STEP_RESPONSE =
++      ClaimReadyExchangeStepResponse.newBuilder()
++        .apply { exchangeStep = EXCHANGE_STEP_ENCRYPT }
++        .build()
++    whenever(exchangeStepsServiceMock.claimReadyExchangeStep(any()))
++      .thenReturn(ENCRYPT_AND_SHARE_STEP_RESPONSE)
++    val exchangeStepResults0 = modelProviderLauncher0.findAndRunExchangeStep()["result"]
++    val encryptedJoinKeys = applyCommutativeEncryptionHelper(MP_0_SECRET_KEY, joinkeys)
++    assertThat(encryptedJoinKeys)
++      .isEqualTo(SharedInputs.parseFrom(exchangeStepResults0).getDataList())
++
++    // Mock up reEncrypt response for DP
++    val EXCHANGE_STEP_REENCRYPT_INPUT =
++      mapOf("crypto-key" to DP_0_SECRET_KEY, "data" to exchangeStepResults0)
++    val EXCHANGE_STEP_REENCRYPT =
++      ExchangeStep.newBuilder()
++        .apply {
++          step =
++            ExchangeWorkflow.Step.newBuilder()
++              .apply {
++                stepId = "dp-double-blind"
++                party = PartyType.DATA_PROVIDER
++                encryptAndShare = ExchangeWorkflow.Step.EncryptAndShareStep.newBuilder().build()
++              }
++              .build()
++          state = ExchangeStep.State.READY
++        }
++        .putAllSharedInputs(EXCHANGE_STEP_REENCRYPT_INPUT)
++        .build()
++    val REENCRYPT_AND_SHARE_STEP_RESPONSE =
++      ClaimReadyExchangeStepResponse.newBuilder()
++        .apply { exchangeStep = EXCHANGE_STEP_REENCRYPT }
++        .build()
++    whenever(exchangeStepsServiceMock.claimReadyExchangeStep(any()))
++      .thenReturn(REENCRYPT_AND_SHARE_STEP_RESPONSE)
++    val exchangeStepResults1 = dataProviderLauncher0.findAndRunExchangeStep()["result"]
++    val reEncryptedJoinKeys = reApplyCommutativeEncryptionHelper(DP_0_SECRET_KEY, encryptedJoinKeys)
++    assertThat(reEncryptedJoinKeys)
++      .isEqualTo(SharedInputs.parseFrom(exchangeStepResults1).getDataList())
++
++    // Mock up decrypt response for DP
++    val EXCHANGE_STEP_DECRYPT_INPUT =
++      mapOf("crypto-key" to MP_0_SECRET_KEY, "data" to exchangeStepResults1)
++    val EXCHANGE_STEP_DECRYPT =
++      ExchangeStep.newBuilder()
++        .apply {
++          step =
++            ExchangeWorkflow.Step.newBuilder()
++              .apply {
++                stepId = "mp-decrypt"
++                party = PartyType.MODEL_PROVIDER
++                decrypt = ExchangeWorkflow.Step.DecryptStep.newBuilder().build()
++              }
++              .build()
++          state = ExchangeStep.State.READY
++        }
++        .putAllSharedInputs(EXCHANGE_STEP_DECRYPT_INPUT)
++        .build()
++    val DECRYPT_STEP_RESPONSE =
++      ClaimReadyExchangeStepResponse.newBuilder()
++        .apply { exchangeStep = EXCHANGE_STEP_DECRYPT }
++        .build()
++    whenever(exchangeStepsServiceMock.claimReadyExchangeStep(any()))
++      .thenReturn(DECRYPT_STEP_RESPONSE)
++    val exchangeStepResults2 = dataProviderLauncher0.findAndRunExchangeStep()["result"]
++    val decryptedJoinKeys = applyCommutativeDecryptionHelper(MP_0_SECRET_KEY, reEncryptedJoinKeys)
++    assertThat(decryptedJoinKeys)
++      .isEqualTo(SharedInputs.parseFrom(exchangeStepResults2).getDataList())
++  }
++}
+diff --git a/src/test/kotlin/org/wfanet/panelmatch/protocol/common/CommutativeEncryptionUtilityTest.kt b/src/test/kotlin/org/wfanet/panelmatch/protocol/common/CommutativeEncryptionUtilityTest.kt
+index 81a76e1..27dc96f 100644
+--- a/src/test/kotlin/org/wfanet/panelmatch/protocol/common/CommutativeEncryptionUtilityTest.kt
++++ b/src/test/kotlin/org/wfanet/panelmatch/protocol/common/CommutativeEncryptionUtilityTest.kt
+@@ -19,51 +19,10 @@ import com.google.protobuf.ByteString
+ import org.junit.Test
+ import org.junit.runner.RunWith
+ import org.junit.runners.JUnit4
+-import wfanet.panelmatch.protocol.protobuf.ApplyCommutativeDecryptionRequest
+-import wfanet.panelmatch.protocol.protobuf.ApplyCommutativeEncryptionRequest
+-import wfanet.panelmatch.protocol.protobuf.ReApplyCommutativeEncryptionRequest
+ 
+ @RunWith(JUnit4::class)
+ class CommutativeEncryptionUtilityTest {
+ 
+-  private fun applyCommutativeEncryption(
+-    key: ByteString,
+-    plaintexts: List<ByteString>
+-  ): List<ByteString> {
+-    val request =
+-      ApplyCommutativeEncryptionRequest.newBuilder()
+-        .setEncryptionKey(key)
+-        .addAllPlaintexts(plaintexts)
+-        .build()
+-    return JniCommutativeEncryption().applyCommutativeEncryption(request).getEncryptedTextsList()
+-  }
+-
+-  private fun reApplyCommutativeEncryption(
+-    key: ByteString,
+-    encryptedTexts: List<ByteString>
+-  ): List<ByteString> {
+-    val request =
+-      ReApplyCommutativeEncryptionRequest.newBuilder()
+-        .setEncryptionKey(key)
+-        .addAllEncryptedTexts(encryptedTexts)
+-        .build()
+-    return JniCommutativeEncryption()
+-      .reApplyCommutativeEncryption(request)
+-      .getReencryptedTextsList()
+-  }
+-
+-  private fun applyCommutativeDecryption(
+-    key: ByteString,
+-    encryptedTexts: List<ByteString>
+-  ): List<ByteString> {
+-    val request =
+-      ApplyCommutativeDecryptionRequest.newBuilder()
+-        .setEncryptionKey(key)
+-        .addAllEncryptedTexts(encryptedTexts)
+-        .build()
+-    return JniCommutativeEncryption().applyCommutativeDecryption(request).getDecryptedTextsList()
+-  }
+-
+   @Test
+   fun testCommutativeEncryption() {
+     val plaintexts =
+@@ -74,36 +33,36 @@ class CommutativeEncryptionUtilityTest {
+         ByteString.copyFromUtf8("some plaintext3"),
+         ByteString.copyFromUtf8("some plaintext4")
+       )
+-    val randomKey1: ByteString = ByteString.copyFromUtf8("random-key-00")
++    val randomKey1: ByteString = ByteString.copyFromUtf8("random-key-000")
+     val randomKey2: ByteString = ByteString.copyFromUtf8("random-key-222")
+ 
+-    val encryptedTexts1 = applyCommutativeEncryption(randomKey1, plaintexts)
++    val encryptedTexts1 = applyCommutativeEncryptionHelper(randomKey1, plaintexts)
+ 
+-    val encryptedTexts2 = applyCommutativeEncryption(randomKey2, plaintexts)
++    val encryptedTexts2 = applyCommutativeEncryptionHelper(randomKey2, plaintexts)
+ 
+     assertThat(encryptedTexts1).isNotEqualTo(encryptedTexts2)
+ 
+-    val reEncryptedTexts1 = reApplyCommutativeEncryption(randomKey1, encryptedTexts2)
++    val reEncryptedTexts1 = reApplyCommutativeEncryptionHelper(randomKey1, encryptedTexts2)
+ 
+     assertThat(reEncryptedTexts1).isNotEqualTo(encryptedTexts2)
+ 
+-    val reEncryptedTexts2 = reApplyCommutativeEncryption(randomKey2, encryptedTexts1)
++    val reEncryptedTexts2 = reApplyCommutativeEncryptionHelper(randomKey2, encryptedTexts1)
+ 
+     assertThat(reEncryptedTexts2).isNotEqualTo(encryptedTexts1)
+ 
+-    val decryptedTexts1 = applyCommutativeDecryption(randomKey1, reEncryptedTexts1)
++    val decryptedTexts1 = applyCommutativeDecryptionHelper(randomKey1, reEncryptedTexts1)
+ 
+     assertThat(decryptedTexts1).isEqualTo(encryptedTexts2)
+ 
+-    val decryptedTexts2 = applyCommutativeDecryption(randomKey1, reEncryptedTexts2)
++    val decryptedTexts2 = applyCommutativeDecryptionHelper(randomKey1, reEncryptedTexts2)
+ 
+     assertThat(decryptedTexts2).isEqualTo(encryptedTexts2)
+ 
+-    val decryptedTexts3 = applyCommutativeDecryption(randomKey2, reEncryptedTexts1)
++    val decryptedTexts3 = applyCommutativeDecryptionHelper(randomKey2, reEncryptedTexts1)
+ 
+     assertThat(decryptedTexts3).isEqualTo(encryptedTexts1)
+ 
+-    val decryptedTexts4 = applyCommutativeDecryption(randomKey2, reEncryptedTexts2)
++    val decryptedTexts4 = applyCommutativeDecryptionHelper(randomKey2, reEncryptedTexts2)
+ 
+     assertThat(decryptedTexts4).isEqualTo(encryptedTexts1)
+   }
