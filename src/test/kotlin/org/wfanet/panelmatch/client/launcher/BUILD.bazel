@@ -18,16 +18,18 @@ kt_jvm_test(
 )
 
 kt_jvm_test(
-    name = "PanelClientExchangeStepsTest",
-    srcs = ["PanelClientExchangeStepsTest.kt"],
+    name = "ExchangeStepTasksTest",
+    srcs = ["ExchangeStepTasksTest.kt"],
     friends = ["//src/main/kotlin/org/wfanet/panelmatch/client/launcher"],
-    test_class = "org.wfanet.panelmatch.client.launcher.PanelClientExchangeStepsTest",
+    test_class = "org.wfanet.panelmatch.client.exchangetasks.ExchangeTasksTest",
     deps = [
-        "//src/main/kotlin/org/wfanet/panelmatch/client/exchangetasks:dataprovider",
-        "//src/main/kotlin/org/wfanet/panelmatch/client/exchangetasks:panelprovider",
+        "//src/main/kotlin/org/wfanet/panelmatch/client/exchangetasks:dataprovidertasks",
+        "//src/main/kotlin/org/wfanet/panelmatch/client/exchangetasks:modelprovidertasks",
         "//src/main/kotlin/org/wfanet/panelmatch/client/launcher",
-        #"//src/main/proto/wfa/measurement/api/v2alpha:exchange_step_java_proto",
-        #"//src/main/proto/wfa/measurement/api/v2alpha:exchange_steps_service_kt_jvm_grpc",
+        "//src/main/kotlin/org/wfanet/panelmatch/protocol/common:commutativeencryption",
+        "//src/main/proto/wfa/measurement/api/v2alpha:exchange_step_java_proto",
+        "//src/main/proto/wfa/measurement/api/v2alpha:exchange_steps_service_kt_jvm_grpc",
+        "//src/main/proto/wfanet/panelmatch/protocol/crypto:cryptor_java_proto",
         "@wfa_measurement_system//imports/java/com/google/common/truth",
         "@wfa_measurement_system//imports/java/com/google/common/truth/extensions/proto",
         "@wfa_measurement_system//imports/java/org/junit",

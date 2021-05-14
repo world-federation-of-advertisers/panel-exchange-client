@@ -15,19 +15,14 @@
 package org.wfanet.panelmatch.client.exchangetasks
 
 import com.google.protobuf.ByteString
+import org.wfanet.measurement.api.v2alpha.ExchangeWorkflow
 import org.wfanet.panelmatch.protocol.common.JniCommutativeEncryption
-import wfanet.panelmatch.protocol.protobuf.ApplyCommutativeDecryptionRequest
-import wfanet.panelmatch.protocol.protobuf.ApplyCommutativeEncryptionRequest
 import wfanet.panelmatch.protocol.protobuf.ReApplyCommutativeEncryptionRequest
+import wfanet.panelmatch.protocol.protobuf.SharedInputs
 
-class DataProvider {
+class DataProviderTasks : ExchangeTask {
 
-  enum class PanelProviderAction {
-    INTERSECT_AND_VALIDATE,
-    ENCRYPT_AND_SHARE,
-  }
-
-  fun reApplyCommutativeEncryption(
+  private fun reEncryptJoinKeys(
     dataProviderPrivateKey: ByteString,
     encryptedTexts: List<ByteString>
   ): List<ByteString> {
@@ -41,10 +36,32 @@ class DataProvider {
       .getReencryptedTextsList()
   }
 
-  fun intersectAndValidate(
-    encryptedTexts: List<ByteString>
-  ): List<ByteString> {
-    return error("Not implemented")
+  private fun intersectAndValidate(encryptedTexts: List<ByteString>): List<ByteString> {
+    // TODO
+    error("Not implemented")
   }
 
+  override suspend fun execute(
+    step: ExchangeWorkflow.Step,
+    input: Map<String, ByteString>
+  ): Map<String, ByteString> {
+    when (step.getStepCase()) {
+      ExchangeWorkflow.Step.StepCase.ENCRYPT_AND_SHARE ->
+        return mapOf(
+          "result" to
+            SharedInputs.newBuilder()
+              .addAllData(
+                reEncryptJoinKeys(
+                  input["crypto-key"]!!,
+                  SharedInputs.parseFrom(input["data"]).getDataList()
+                )
+              )
+              .build()
+              .toByteString()
+        )
+      else -> {
+        error("Unsupported Step for Data Provider")
+      }
+    }
+  }
 }

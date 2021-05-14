@@ -185,20 +185,12 @@ http_archive(
     ],
 )
 
-# Measurement system.
-http_archive(
-    name = "wfa_measurement_system",
-    sha256 = "d0200afef07d5a2c81adbe6c0c319a663e058195ad563401bfc4813bc4de6cb9",
-    strip_prefix = "cross-media-measurement-933284c02cff0be89991c31178bb9538de70f01b",
-    url = "https://github.com/world-federation-of-advertisers/cross-media-measurement/archive/933284c02cff0be89991c31178bb9538de70f01b.tar.gz",
-)
-
 # Measurement proto.
 http_archive(
     name = "wfa_measurement_proto",
-    sha256 = "a6dbe65abcdc25c78fa92725df4a4e3d25bf63cdfe9b66bc009cfa74252f2955",
-    strip_prefix = "cross-media-measurement-api-f056bffb50e0ff4383d49b2570978aae92682895",
-    url = "https://github.com/world-federation-of-advertisers/cross-media-measurement-api/archive/f056bffb50e0ff4383d49b2570978aae92682895.tar.gz",
+    sha256 = "c7d87a438a446ebeacdcae8bcfed270c513ae5c5d26bccd36fb179d47e7d3365",
+    strip_prefix = "cross-media-measurement-api-ab647fffd78f29769611f05ef131ec1f1feed820",
+    url = "https://github.com/world-federation-of-advertisers/cross-media-measurement-api/archive/ab647fffd78f29769611f05ef131ec1f1feed820.tar.gz",
 )
 
 # @com_google_truth_truth

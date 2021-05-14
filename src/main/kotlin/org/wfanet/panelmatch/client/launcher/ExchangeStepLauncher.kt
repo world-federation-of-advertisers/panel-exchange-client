@@ -14,142 +14,147 @@
 
 package org.wfanet.panelmatch.client.launcher
 
+import com.google.protobuf.ByteString
 import com.google.protobuf.Timestamp
 import java.time.Clock
 import java.time.Instant
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
+import org.wfanet.measurement.api.v2alpha.ClaimReadyExchangeStepRequest
+import org.wfanet.measurement.api.v2alpha.ClaimReadyExchangeStepResponse
 import org.wfanet.measurement.api.v2alpha.ExchangeStep
 import org.wfanet.measurement.api.v2alpha.ExchangeStepAttempt
 import org.wfanet.measurement.api.v2alpha.ExchangeStepsGrpcKt.ExchangeStepsCoroutineStub
-import org.wfanet.measurement.api.v2alpha.FindReadyExchangeStepRequest
-import org.wfanet.measurement.api.v2alpha.FindReadyExchangeStepResponse
+import org.wfanet.measurement.api.v2alpha.ExchangeWorkflow.Party as PartyType
 import org.wfanet.measurement.api.v2alpha.FinishExchangeStepAttemptRequest
+import org.wfanet.panelmatch.client.exchangetasks.DataProviderTasks
+import org.wfanet.panelmatch.client.exchangetasks.ModelProviderTasks
 
 /** Finds an [ExchangeStep], validates it, and starts executing the work. */
 class ExchangeStepLauncher(
-    private val exchangeStepsClient: ExchangeStepsCoroutineStub,
-    private val id: String,
-    private val partyType: PartyType,
-    private val clock: Clock = Clock.systemUTC()
+  private val exchangeStepsClient: ExchangeStepsCoroutineStub,
+  private val id: String,
+  private val partyType: PartyType,
+  private val clock: Clock = Clock.systemUTC()
 ) {
 
-    /**
-     * Finds a single ready Exchange Step and starts executing. If an Exchange Step is found,
-     * validates it, and starts executing. If not found simply returns.
-     */
-    suspend fun findAndRunExchangeStep() {
-        val exchangeStep = findExchangeStep() ?: return
-        try {
-            validateExchangeStep(exchangeStep)
-        } catch (e: InvalidExchangeStepException) {
-            // TODO(@yunyeng): Catch exceptions while creating the attempt.
-            val attempt = createExchangeStepAttempt(exchangeStep)
-            // TODO(@yunyeng): Catch exceptions while finishing the attempt.
-            finishExchangeStepAttempt(
-                FinishExchangeStepAttemptRequest.newBuilder()
-                    .apply {
-                        key = attempt.key
-                        finalState = ExchangeStepAttempt.State.FAILED_STEP
-                        addLogEntriesBuilder().apply {
-                            time = clock.instant().toProtoTime()
-                            message = e.message
-                        }
-                    }
-                    .build()
-            )
+  /**
+   * Finds a single ready Exchange Step and starts executing. If an Exchange Step is found,
+   * validates it, and starts executing. If not found simply returns.
+   */
+  suspend fun findAndRunExchangeStep(): Map<String, ByteString> {
+    val exchangeStep = findExchangeStep() ?: error("No available exchange step")
+    try {
+      validateExchangeStep(exchangeStep)
+    } catch (e: InvalidExchangeStepException) {
+      // TODO(@yunyeng): Catch exceptions while creating the attempt.
+      val attempt = createExchangeStepAttempt(exchangeStep)
+      // TODO(@yunyeng): Catch exceptions while finishing the attempt.
+      finishExchangeStepAttempt(
+        FinishExchangeStepAttemptRequest.newBuilder()
+          .apply {
+            key = attempt.key
+            finalState = ExchangeStepAttempt.State.FAILED_STEP
+            addLogEntriesBuilder().apply {
+              time = clock.instant().toProtoTime()
+              message = e.message
+            }
+          }
+          .build()
+      )
+    }
+    return runExchangeStep(exchangeStep)
+  }
+
+  /**
+   * Finds a single Exchange Step from ExchangeSteps service.
+   *
+   * @return an [ExchangeStep] or null.
+   */
+  internal suspend fun findExchangeStep(): ExchangeStep? {
+    val request: ClaimReadyExchangeStepRequest =
+      ClaimReadyExchangeStepRequest.newBuilder()
+        .apply {
+          when (partyType) {
+            PartyType.DATA_PROVIDER -> dataProviderBuilder.dataProviderId = id
+            PartyType.MODEL_PROVIDER -> modelProviderBuilder.modelProviderId = id
+            else -> error("Invalid Party Type")
+          }
         }
-        runExchangeStep(exchangeStep)
+        .build()
+    // Call /ExchangeSteps.claimReadyExchangeStep to a find work to do.
+    val response: ClaimReadyExchangeStepResponse =
+      exchangeStepsClient.claimReadyExchangeStep(request)
+    if (response.hasExchangeStep()) {
+      return response.exchangeStep
     }
+    return null
+  }
 
-    /**
-     * Finds a single Exchange Step from ExchangeSteps service.
-     *
-     * @return an [ExchangeStep] or null.
-     */
-    internal suspend fun findExchangeStep(): ExchangeStep? {
-        val request: FindReadyExchangeStepRequest =
-            FindReadyExchangeStepRequest.newBuilder()
-                .apply {
-                    when (partyType) {
-                        PartyType.DATA_PROVIDER -> dataProviderBuilder.dataProviderId = id
-                        PartyType.MODEL_PROVIDER -> modelProviderBuilder.modelProviderId = id
-                    }
-                }
-                .build()
-        // Call /ExchangeSteps.findReadyExchangeStep to a find work to do.
-        val response: FindReadyExchangeStepResponse =
-            exchangeStepsClient.findReadyExchangeStep(request)
-        if (response.hasExchangeStep()) {
-            return response.exchangeStep
+  /**
+   * Starts executing the given Exchange Step.
+   *
+   * @param exchangeStep [ExchangeStep].
+   */
+  internal fun runExchangeStep(exchangeStep: ExchangeStep): Map<String, ByteString> = runBlocking {
+    val attempt = createExchangeStepAttempt(exchangeStep)
+    // TODO: Catch exceptions while executing the attempt.
+    var result =
+      when (exchangeStep.step.party) {
+        PartyType.DATA_PROVIDER ->
+          async {
+            DataProviderTasks().execute(exchangeStep.step, exchangeStep.getSharedInputsMap())
+          }
+        PartyType.MODEL_PROVIDER ->
+          async {
+            ModelProviderTasks().execute(exchangeStep.step, exchangeStep.getSharedInputsMap())
+          }
+        else -> {
+          error("Not implemented")
         }
-        return null
-    }
+      }
+    finishExchangeStepAttempt(
+      FinishExchangeStepAttemptRequest.newBuilder()
+        .apply {
+          key = attempt.key
+          finalState = ExchangeStepAttempt.State.SUCCEEDED
+        }
+        .build()
+    )
+    result.await()
+  }
 
-    /**
-     * Starts executing the given Exchange Step.
-     *
-     * @param exchangeStep [ExchangeStep].
-     */
-    internal fun runExchangeStep(exchangeStep: ExchangeStep) {
-      println("Hello1\n\n")
-        // TODO(@yunyeng): Start JobStarter with the exchangeStep.
-        val attempt = createExchangeStepAttempt(exchangeStep)
-        // TODO(@yunyeng): Catch exceptions while finishing the attempt.
-        runBlocking { launch {
-          println("Hello\n\n")
-        } }
+  /**
+   * Validates the given Exchange Step.
+   *
+   * @param exchangeStep [ExchangeStep].
+   * @throws InvalidExchangeStepException if the Exchange Step is not valid.
+   */
+  internal fun validateExchangeStep(exchangeStep: ExchangeStep) {
+    // Validate that this exchange step is legal, otherwise throw an error.
+    // TODO(@yunyeng): Add validation logic.
+  }
 
-        finishExchangeStepAttempt(
-            FinishExchangeStepAttemptRequest.newBuilder()
-                .apply {
-                    key = attempt.key
-                    finalState = ExchangeStepAttempt.State.SUCCEEDED
-                }
-                .build()
-        )
-    }
+  /**
+   * Creates an Exchange Step Attempt for the Exchange Step given.
+   *
+   * @param exchangeStep [ExchangeStep].
+   * @return an [ExchangeStepAttempt] or null.
+   */
+  internal fun createExchangeStepAttempt(exchangeStep: ExchangeStep): ExchangeStepAttempt {
+    // TODO(@yunyeng): Set ExchangeStepAttempt, call
+    // /ExchangeStepAttempts.createExchangeStepAttempt
+    return ExchangeStepAttempt.getDefaultInstance()
+  }
 
-    /**
-     * Validates the given Exchange Step.
-     *
-     * @param exchangeStep [ExchangeStep].
-     * @throws InvalidExchangeStepException if the Exchange Step is not valid.
-     */
-    internal fun validateExchangeStep(exchangeStep: ExchangeStep) {
-        // Validate that this exchange step is legal, otherwise throw an error.
-        // TODO(@yunyeng): Add validation logic.
-    }
-
-    /**
-     * Creates an Exchange Step Attempt for the Exchange Step given.
-     *
-     * @param exchangeStep [ExchangeStep].
-     * @return an [ExchangeStepAttempt] or null.
-     */
-    internal fun createExchangeStepAttempt(exchangeStep: ExchangeStep): ExchangeStepAttempt {
-        // TODO(@yunyeng): Set ExchangeStepAttempt, call
-        // /ExchangeStepAttempts.createExchangeStepAttempt
-        return ExchangeStepAttempt.getDefaultInstance()
-    }
-
-    /**
-     * Finishes the Exchange Step Attempt with the given request.
-     *
-     * @param request [FinishExchangeStepAttemptRequest].
-     */
-    internal fun finishExchangeStepAttempt(request: FinishExchangeStepAttemptRequest) {
-        // TODO(@yunyeng): Call /ExchangeStepAttempts.finishExchangeStepAttempt.
-    }
-}
-
-/** Specifies the party type of the input id for [ExchangeStepLauncher]. */
-enum class PartyType {
-    /** Id belongs to a Data Provider. */
-    DATA_PROVIDER,
-
-    /** Id belongs to a Model Provider. */
-    MODEL_PROVIDER,
+  /**
+   * Finishes the Exchange Step Attempt with the given request.
+   *
+   * @param request [FinishExchangeStepAttemptRequest].
+   */
+  internal fun finishExchangeStepAttempt(request: FinishExchangeStepAttemptRequest) {
+    // TODO(@yunyeng): Call /ExchangeStepAttempts.finishExchangeStepAttempt.
+  }
 }
 
 /** Indicates that given Exchange Step is not valid to execute. */
@@ -158,4 +163,4 @@ class InvalidExchangeStepException(cause: Throwable) : Exception(cause)
 // TODO(@yunyeng): Import from cross-media-measurement/ProtoUtils.
 /** Converts Instant to Timestamp. */
 fun Instant.toProtoTime(): Timestamp =
-    Timestamp.newBuilder().setSeconds(epochSecond).setNanos(nano).build()
+  Timestamp.newBuilder().setSeconds(epochSecond).setNanos(nano).build()

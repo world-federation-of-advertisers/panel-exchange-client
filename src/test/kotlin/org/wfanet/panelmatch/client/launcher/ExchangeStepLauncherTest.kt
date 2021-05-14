@@ -27,11 +27,12 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
+import org.wfanet.measurement.api.v2alpha.ClaimReadyExchangeStepRequest
+import org.wfanet.measurement.api.v2alpha.ClaimReadyExchangeStepResponse
 import org.wfanet.measurement.api.v2alpha.ExchangeStep
 import org.wfanet.measurement.api.v2alpha.ExchangeStepsGrpcKt.ExchangeStepsCoroutineImplBase as ExchangeStepsCoroutineService
 import org.wfanet.measurement.api.v2alpha.ExchangeStepsGrpcKt.ExchangeStepsCoroutineStub
-import org.wfanet.measurement.api.v2alpha.FindReadyExchangeStepRequest
-import org.wfanet.measurement.api.v2alpha.FindReadyExchangeStepResponse
+import org.wfanet.measurement.api.v2alpha.ExchangeWorkflow.Party as PartyType
 import org.wfanet.measurement.common.grpc.testing.GrpcTestServerRule
 
 private const val DATA_PROVIDER_ID = "1"
@@ -44,16 +45,16 @@ private val EXCHANGE_STEP =
     .setKey(ExchangeStep.Key.newBuilder().setExchangeId(EXCHANGE_ID))
     .build()
 private val REQUEST_WITH_DATA_PROVIDER =
-  FindReadyExchangeStepRequest.newBuilder()
+  ClaimReadyExchangeStepRequest.newBuilder()
     .apply { dataProviderBuilder.dataProviderId = DATA_PROVIDER_ID }
     .build()
 private val REQUEST_WITH_MODEL_PROVIDER =
-  FindReadyExchangeStepRequest.newBuilder()
+  ClaimReadyExchangeStepRequest.newBuilder()
     .apply { modelProviderBuilder.modelProviderId = MODEL_PROVIDER_ID }
     .build()
 private val RESPONSE =
-  FindReadyExchangeStepResponse.newBuilder().setExchangeStep(EXCHANGE_STEP).build()
-private val EMPTY_RESPONSE = FindReadyExchangeStepResponse.newBuilder().build()
+  ClaimReadyExchangeStepResponse.newBuilder().setExchangeStep(EXCHANGE_STEP).build()
+private val EMPTY_RESPONSE = ClaimReadyExchangeStepResponse.newBuilder().build()
 
 @RunWith(JUnit4::class)
 class ExchangeStepLauncherTest {
@@ -76,10 +77,10 @@ class ExchangeStepLauncherTest {
         clock = Clock.systemUTC()
       )
     runBlocking {
-      whenever(exchangeStepsServiceMock.findReadyExchangeStep(any())).thenReturn(RESPONSE)
+      whenever(exchangeStepsServiceMock.claimReadyExchangeStep(any())).thenReturn(RESPONSE)
       val exchangeStep = launcher.findExchangeStep()
       assertThat(exchangeStep).isEqualTo(EXCHANGE_STEP)
-      verify(exchangeStepsServiceMock, times(1)).findReadyExchangeStep(REQUEST_WITH_DATA_PROVIDER)
+      verify(exchangeStepsServiceMock, times(1)).claimReadyExchangeStep(REQUEST_WITH_DATA_PROVIDER)
     }
   }
 
@@ -93,10 +94,10 @@ class ExchangeStepLauncherTest {
         clock = Clock.systemUTC()
       )
     runBlocking {
-      whenever(exchangeStepsServiceMock.findReadyExchangeStep(any())).thenReturn(RESPONSE)
+      whenever(exchangeStepsServiceMock.claimReadyExchangeStep(any())).thenReturn(RESPONSE)
       val exchangeStep = launcher.findExchangeStep()
       assertThat(exchangeStep).isEqualTo(EXCHANGE_STEP)
-      verify(exchangeStepsServiceMock, times(1)).findReadyExchangeStep(REQUEST_WITH_MODEL_PROVIDER)
+      verify(exchangeStepsServiceMock, times(1)).claimReadyExchangeStep(REQUEST_WITH_MODEL_PROVIDER)
     }
   }
 
@@ -109,7 +110,7 @@ class ExchangeStepLauncherTest {
         partyType = PartyType.DATA_PROVIDER,
         clock = Clock.systemUTC()
       )
-    whenever(exchangeStepsServiceMock.findReadyExchangeStep(any())).thenReturn(EMPTY_RESPONSE)
+    whenever(exchangeStepsServiceMock.claimReadyExchangeStep(any())).thenReturn(EMPTY_RESPONSE)
     val exchangeStep = launcher.findExchangeStep()
     assertThat(exchangeStep).isNull()
   }

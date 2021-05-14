@@ -4,21 +4,34 @@ load("@wfa_measurement_system//build:defs.bzl", "test_target")
 package(default_visibility = ["//visibility:public"])
 
 kt_jvm_library(
-    name = "dataprovider",
+    name = "dataprovidertasks",
     srcs = [
-        "DataProvider.kt",
+        "DataProviderTasks.kt",
     ],
     deps = [
+        "//src/main/kotlin/org/wfanet/panelmatch/client/exchangetasks",
         "//src/main/kotlin/org/wfanet/panelmatch/protocol/common:commutativeencryption",
     ],
 )
 
 kt_jvm_library(
-    name = "panelprovider",
+    name = "modelprovidertasks",
     srcs = [
-        "PanelProvider.kt",
+        "ModelProviderTasks.kt",
     ],
     deps = [
+        "//src/main/kotlin/org/wfanet/panelmatch/client/exchangetasks",
         "//src/main/kotlin/org/wfanet/panelmatch/protocol/common:commutativeencryption",
+    ],
+)
+
+kt_jvm_library(
+    name = "exchangetasks",
+    srcs = [
+        "ExchangeTask.kt",
+    ],
+    deps = [
+        "//src/main/proto/wfa/measurement/api/v2alpha:exchange_step_attempts_service_kt_jvm_grpc",
+        "//src/main/proto/wfa/measurement/api/v2alpha:exchange_steps_service_kt_jvm_grpc",
     ],
 )

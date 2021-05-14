@@ -15,17 +15,15 @@
 package org.wfanet.panelmatch.client.exchangetasks
 
 import com.google.protobuf.ByteString
+import org.wfanet.measurement.api.v2alpha.ExchangeWorkflow
 import org.wfanet.panelmatch.protocol.common.JniCommutativeEncryption
 import wfanet.panelmatch.protocol.protobuf.ApplyCommutativeDecryptionRequest
 import wfanet.panelmatch.protocol.protobuf.ApplyCommutativeEncryptionRequest
-import wfanet.panelmatch.protocol.protobuf.ReApplyCommutativeEncryptionRequest
+import wfanet.panelmatch.protocol.protobuf.SharedInputs
 
-class PanelProvider {
+class ModelProviderTasks : ExchangeTask {
 
-  fun encryptAndShare(
-    key: ByteString,
-    plaintexts: List<ByteString>
-  ): List<ByteString> {
+  private fun encryptJoinKeys(key: ByteString, plaintexts: List<ByteString>): List<ByteString> {
     val request =
       ApplyCommutativeEncryptionRequest.newBuilder()
         .setEncryptionKey(key)
@@ -34,10 +32,7 @@ class PanelProvider {
     return JniCommutativeEncryption().applyCommutativeEncryption(request).getEncryptedTextsList()
   }
 
-  fun applyCommutativeDecryption(
-    key: ByteString,
-    encryptedTexts: List<ByteString>
-  ): List<ByteString> {
+  private fun decryptJoinKeys(key: ByteString, encryptedTexts: List<ByteString>): List<ByteString> {
     val request =
       ApplyCommutativeDecryptionRequest.newBuilder()
         .setEncryptionKey(key)
@@ -46,4 +41,40 @@ class PanelProvider {
     return JniCommutativeEncryption().applyCommutativeDecryption(request).getDecryptedTextsList()
   }
 
+  override suspend fun execute(
+    step: ExchangeWorkflow.Step,
+    input: Map<String, ByteString>
+  ): Map<String, ByteString> {
+    when (step.getStepCase()) {
+      ExchangeWorkflow.Step.StepCase.ENCRYPT_AND_SHARE ->
+        return mapOf(
+          "result" to
+            SharedInputs.newBuilder()
+              .addAllData(
+                encryptJoinKeys(
+                  input["crypto-key"]!!,
+                  SharedInputs.parseFrom(input["data"]).getDataList()
+                )
+              )
+              .build()
+              .toByteString()
+        )
+      ExchangeWorkflow.Step.StepCase.DECRYPT ->
+        return mapOf(
+          "result" to
+            SharedInputs.newBuilder()
+              .addAllData(
+                decryptJoinKeys(
+                  input["crypto-key"]!!,
+                  SharedInputs.parseFrom(input["data"]).getDataList()
+                )
+              )
+              .build()
+              .toByteString()
+        )
+      else -> {
+        error("Unsupported step for Model Provider")
+      }
+    }
+  }
 }
