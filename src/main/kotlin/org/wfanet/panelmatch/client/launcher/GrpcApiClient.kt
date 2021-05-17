@@ -90,5 +90,5 @@ class GrpcApiClient(
 
 // TODO(@yunyeng): Import from cross-media-measurement/ProtoUtils.
 /** Converts Instant to Timestamp. */
-private fun Instant.toProtoTime(): Timestamp =
+fun Instant.toProtoTime(): Timestamp =
   Timestamp.newBuilder().setSeconds(epochSecond).setNanos(nano).build()
