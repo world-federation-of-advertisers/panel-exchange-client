@@ -15,22 +15,22 @@
 package org.wfanet.panelmatch.client.exchangetasks
 
 import com.google.protobuf.ByteString
-import org.wfanet.panelmatch.protocol.common.applyCommutativeDecryption
+import org.wfanet.panelmatch.protocol.common.applyCommutativeEncryption
 import wfanet.panelmatch.protocol.protobuf.SharedInputs
 
-class PrepareLookupKeysTask : ExchangeTask {
+class EncryptTask : ExchangeTask {
 
   override suspend fun execute(
     input: Map<String, ByteString>,
     sendDebugLog: suspend (String) -> Unit
   ): Map<String, ByteString> {
     return mapOf(
-      "lookup-keys" to
+      "encrypted-data" to
         SharedInputs.newBuilder()
           .addAllData(
-            applyCommutativeDecryption(
-              input["commutative-deterministic-key"]!!,
-              SharedInputs.parseFrom(input["double-blinded-joinkeys"]).getDataList()
+            applyCommutativeEncryption(
+              input["encryption-key"]!!,
+              SharedInputs.parseFrom(input["unencrypted-data"]).getDataList()
             )
           )
           .build()

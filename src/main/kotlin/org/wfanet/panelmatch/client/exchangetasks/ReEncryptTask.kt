@@ -18,19 +18,19 @@ import com.google.protobuf.ByteString
 import org.wfanet.panelmatch.protocol.common.reApplyCommutativeEncryption
 import wfanet.panelmatch.protocol.protobuf.SharedInputs
 
-class DoubleBlindJoinKeysTask : ExchangeTask {
+class ReEncryptTask : ExchangeTask {
 
   override suspend fun execute(
     input: Map<String, ByteString>,
     sendDebugLog: suspend (String) -> Unit
   ): Map<String, ByteString> {
     return mapOf(
-      "double-blinded-joinkeys" to
+      "reencrypted-data" to
         SharedInputs.newBuilder()
           .addAllData(
             reApplyCommutativeEncryption(
-              input["commutative-deterministic-key"]!!,
-              SharedInputs.parseFrom(input["single-blinded-joinkeys"]).getDataList()
+              input["encryption-key"]!!,
+              SharedInputs.parseFrom(input["encrypted-data"]).getDataList()
             )
           )
           .build()

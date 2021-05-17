@@ -15,13 +15,26 @@
 package org.wfanet.panelmatch.client.exchangetasks
 
 import com.google.protobuf.ByteString
+import org.wfanet.panelmatch.protocol.common.applyCommutativeDecryption
+import wfanet.panelmatch.protocol.protobuf.SharedInputs
 
-class ValidateJoinKeys : ExchangeTask {
+class DecryptTask : ExchangeTask {
 
   override suspend fun execute(
     input: Map<String, ByteString>,
     sendDebugLog: suspend (String) -> Unit
   ): Map<String, ByteString> {
-    TODO("Unimplemented")
+    return mapOf(
+      "decrypted-data" to
+        SharedInputs.newBuilder()
+          .addAllData(
+            applyCommutativeDecryption(
+              input["encryption-key"]!!,
+              SharedInputs.parseFrom(input["encrypted-data"]).getDataList()
+            )
+          )
+          .build()
+          .toByteString()
+    )
   }
 }

@@ -17,7 +17,7 @@ package org.wfanet.panelmatch.client.storage
 import com.google.protobuf.ByteString
 
 /** Interface for OutputWriter adapter. */
-interface OutputWriter {
+interfaOutputWriter {
 
   /**
    * Writes output data into given path.

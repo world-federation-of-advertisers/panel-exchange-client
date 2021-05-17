@@ -42,32 +42,31 @@ class ExchangeTasksTest {
     val randomCommutativeDeterministicKey2: ByteString = ByteString.copyFromUtf8("random-key-222")
     val fakeSendDebugLog: suspend (String) -> Unit = {}
 
-    val singleBlindedOutputs: Map<String, ByteString> =
-      SingleBlindJoinKeysTask()
+    val encryptedOutputs: Map<String, ByteString> =
+      EncryptTask()
         .execute(
           mapOf(
-            "commutative-deterministic-key" to randomCommutativeDeterministicKey1,
-            "raw-joinkeys" to SharedInputs.newBuilder().addAllData(joinKeys).build().toByteString()
+            "encryption-key" to randomCommutativeDeterministicKey1,
+            "unencrypted-data" to SharedInputs.newBuilder().addAllData(joinKeys).build().toByteString()
           ),
           fakeSendDebugLog
         )
-    println(singleBlindedOutputs)
     assertThat(
-        SharedInputs.parseFrom(singleBlindedOutputs["single-blinded-joinkeys"]).getDataList()
+        SharedInputs.parseFrom(encryptedOutputs["encrypted-data"]).getDataList()
       )
       .isEqualTo(applyCommutativeEncryption(randomCommutativeDeterministicKey1, joinKeys))
 
-    val doubleBlindedOutputs: Map<String, ByteString> =
-      DoubleBlindJoinKeysTask()
+    val reEncryptedOutputs: Map<String, ByteString> =
+      ReEncryptTask()
         .execute(
           mapOf(
-            "commutative-deterministic-key" to randomCommutativeDeterministicKey2,
-            "single-blinded-joinkeys" to singleBlindedOutputs["single-blinded-joinkeys"]!!
+            "encryption-key" to randomCommutativeDeterministicKey2,
+            "encrypted-data" to encryptedOutputs["encrypted-data"]!!
           ),
           fakeSendDebugLog
         )
     assertThat(
-        SharedInputs.parseFrom(doubleBlindedOutputs["double-blinded-joinkeys"]).getDataList()
+        SharedInputs.parseFrom(reEncryptedOutputs["reencrypted-data"]).getDataList()
       )
       .isEqualTo(
         reApplyCommutativeEncryption(
@@ -76,16 +75,16 @@ class ExchangeTasksTest {
         )
       )
 
-    val lookupKeysOutputs: Map<String, ByteString> =
-      PrepareLookupKeysTask()
+    val decryptedOutputs: Map<String, ByteString> =
+      DecryptTask()
         .execute(
           mapOf(
-            "commutative-deterministic-key" to randomCommutativeDeterministicKey1,
-            "double-blinded-joinkeys" to doubleBlindedOutputs["double-blinded-joinkeys"]!!
+            "encryption-key" to randomCommutativeDeterministicKey1,
+            "encrypted-data" to reEncryptedOutputs["reencrypted-data"]!!
           ),
           fakeSendDebugLog
         )
-    assertThat(SharedInputs.parseFrom(lookupKeysOutputs["lookup-keys"]).getDataList())
+    assertThat(SharedInputs.parseFrom(decryptedOutputs["decrypted-data"]).getDataList())
       .isEqualTo(
         applyCommutativeDecryption(
           randomCommutativeDeterministicKey1,
