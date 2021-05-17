@@ -1,4 +1,4 @@
-// Copyright 2021 The Cross-Media Measurement Authors
+// Copyright 2020 The Cross-Media Measurement Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,21 +15,26 @@
 package org.wfanet.panelmatch.client.exchangetasks
 
 import com.google.protobuf.ByteString
+import org.wfanet.panelmatch.protocol.common.applyCommutativeEncryption
+import wfanet.panelmatch.protocol.protobuf.SharedInputs
 
-/** Interface for ExchangeTask. */
-interface ExchangeTask {
+class SingleBlindJoinKeysTask : ExchangeTask {
 
-  /**
-   * Executes given [ExchangeWorkflow.Step] and returns the output.
-   *
-   * @param step a [ExchangeWorkflow.Step] to be executed.
-   * @param input inputs specified by [step].
-   * @param sendDebugLog function which writes logs happened during execution.
-   * @return Executed output. It is a map from the labels to the payload associated with the label.
-   * @throws ExchangeTaskRumtimeException if any failures during the execution.
-   */
-  suspend fun execute(
+  override suspend fun execute(
     input: Map<String, ByteString>,
     sendDebugLog: suspend (String) -> Unit
-  ): Map<String, ByteString>
+  ): Map<String, ByteString> {
+    return mapOf(
+      "single-blinded-joinkeys" to
+        SharedInputs.newBuilder()
+          .addAllData(
+            applyCommutativeEncryption(
+              input["commutative-deterministic-key"]!!,
+              SharedInputs.parseFrom(input["raw-joinkeys"]).getDataList()
+            )
+          )
+          .build()
+          .toByteString()
+    )
+  }
 }
