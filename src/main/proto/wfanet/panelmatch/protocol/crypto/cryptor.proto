@@ -19,8 +19,6 @@ package wfanet.panelmatch.protocol.protobuf;
 option java_package = "wfanet.panelmatch.protocol.protobuf";
 option java_multiple_files = true;
 
-// TODO: Replace this in the measurement api with something to support signed
-// shared inputs
 message SharedInputs123 {
   repeated bytes data = 1;
 }
