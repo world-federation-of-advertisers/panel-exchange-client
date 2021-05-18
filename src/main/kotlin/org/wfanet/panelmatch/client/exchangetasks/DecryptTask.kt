@@ -25,15 +25,13 @@ class DecryptTask : ExchangeTask {
     input: Map<String, ByteString>,
     sendDebugLog: suspend (String) -> Unit
   ): Map<String, ByteString> {
-    requireNotNull(input["encryption-key"])
+    val encryptionKey = requireNotNull(input["encryption-key"])
+    val encryptedData = requireNotNull(input["encrypted-data"])
     requireNotNull(input["encrypted-data"])
     return mapOf(
       "decrypted-data" to
         makeSerializedSharedInputs(
-          applyCommutativeDecryption(
-            input["encryption-key"]!!,
-            parseSerializedSharedInputs(input["encrypted-data"]!!)
-          )
+          applyCommutativeDecryption(encryptionKey, parseSerializedSharedInputs(encryptedData))
         )
     )
   }
