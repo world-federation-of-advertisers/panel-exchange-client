@@ -16,7 +16,8 @@ package org.wfanet.panelmatch.client.exchangetasks
 
 import com.google.protobuf.ByteString
 import org.wfanet.panelmatch.protocol.common.applyCommutativeDecryption
-import wfanet.panelmatch.protocol.protobuf.SharedInputs
+import org.wfanet.panelmatch.protocol.common.makeSerializedSharedInputs
+import org.wfanet.panelmatch.protocol.common.parseSerializedSharedInputs
 
 class DecryptTask : ExchangeTask {
 
@@ -24,17 +25,16 @@ class DecryptTask : ExchangeTask {
     input: Map<String, ByteString>,
     sendDebugLog: suspend (String) -> Unit
   ): Map<String, ByteString> {
+    requireNotNull(input["encryption-key"])
+    requireNotNull(input["encrypted-data"])
     return mapOf(
       "decrypted-data" to
-        SharedInputs.newBuilder()
-          .addAllData(
-            applyCommutativeDecryption(
-              input["encryption-key"]!!,
-              SharedInputs.parseFrom(input["encrypted-data"]).getDataList()
-            )
+        makeSerializedSharedInputs(
+          applyCommutativeDecryption(
+            input["encryption-key"]!!,
+            parseSerializedSharedInputs(input["encrypted-data"])
           )
-          .build()
-          .toByteString()
+        )
     )
   }
 }

@@ -1,4 +1,4 @@
-// Copyright 2021 The Cross-Media Measurement Authors
+// Copyright 2020 The Cross-Media Measurement Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,18 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package org.wfanet.panelmatch.client.storage
+package org.wfanet.panelmatch.protocol.common
 
 import com.google.protobuf.ByteString
+import wfanet.panelmatch.protocol.protobuf.SharedInputs
 
-/** Interface for OutputWriter adapter. */
-interface OutputWriter {
+fun makeSerializedSharedInputs(data: List<ByteString>): ByteString {
+  return SharedInputs.newBuilder().addAllData(data).build().toByteString()
+}
 
-  /**
-   * Writes output data into given path.
-   *
-   * @param path String location of data to write to.
-   * @throws IOException
-   */
-  suspend fun write(path: String, data: ByteString)
+fun parseSerializedSharedInputs(data: ByteString?): List<ByteString> {
+  return SharedInputs.parseFrom(data).getDataList()
 }

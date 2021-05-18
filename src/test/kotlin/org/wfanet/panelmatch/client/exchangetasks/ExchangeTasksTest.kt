@@ -27,19 +27,21 @@ import wfanet.panelmatch.protocol.protobuf.SharedInputs
 
 @RunWith(JUnit4::class)
 class ExchangeTasksTest {
+  private val joinKeys =
+    listOf<ByteString>(
+      ByteString.copyFromUtf8("some key0"),
+      ByteString.copyFromUtf8("some key1"),
+      ByteString.copyFromUtf8("some key2"),
+      ByteString.copyFromUtf8("some key3"),
+      ByteString.copyFromUtf8("some key4")
+    )
+  private val randomCommutativeDeterministicKey1: ByteString =
+    ByteString.copyFromUtf8("random-key-000")
+  private val randomCommutativeDeterministicKey2: ByteString =
+    ByteString.copyFromUtf8("random-key-222")
 
   @Test
   fun `test encrypt reencrypt and decrypt tasks`() = runBlocking {
-    val joinKeys =
-      listOf<ByteString>(
-        ByteString.copyFromUtf8("some key0"),
-        ByteString.copyFromUtf8("some key1"),
-        ByteString.copyFromUtf8("some key2"),
-        ByteString.copyFromUtf8("some key3"),
-        ByteString.copyFromUtf8("some key4")
-      )
-    val randomCommutativeDeterministicKey1: ByteString = ByteString.copyFromUtf8("random-key-000")
-    val randomCommutativeDeterministicKey2: ByteString = ByteString.copyFromUtf8("random-key-222")
     val fakeSendDebugLog: suspend (String) -> Unit = {}
 
     val encryptedOutputs: Map<String, ByteString> =
@@ -47,13 +49,12 @@ class ExchangeTasksTest {
         .execute(
           mapOf(
             "encryption-key" to randomCommutativeDeterministicKey1,
-            "unencrypted-data" to SharedInputs.newBuilder().addAllData(joinKeys).build().toByteString()
+            "unencrypted-data" to
+              SharedInputs.newBuilder().addAllData(joinKeys).build().toByteString()
           ),
           fakeSendDebugLog
         )
-    assertThat(
-        SharedInputs.parseFrom(encryptedOutputs["encrypted-data"]).getDataList()
-      )
+    assertThat(SharedInputs.parseFrom(encryptedOutputs["encrypted-data"]).getDataList())
       .isEqualTo(applyCommutativeEncryption(randomCommutativeDeterministicKey1, joinKeys))
 
     val reEncryptedOutputs: Map<String, ByteString> =
@@ -65,9 +66,7 @@ class ExchangeTasksTest {
           ),
           fakeSendDebugLog
         )
-    assertThat(
-        SharedInputs.parseFrom(reEncryptedOutputs["reencrypted-data"]).getDataList()
-      )
+    assertThat(SharedInputs.parseFrom(reEncryptedOutputs["reencrypted-data"]).getDataList())
       .isEqualTo(
         reApplyCommutativeEncryption(
           randomCommutativeDeterministicKey2,
