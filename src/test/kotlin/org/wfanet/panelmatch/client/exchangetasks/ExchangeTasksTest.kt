@@ -35,10 +35,8 @@ class ExchangeTasksTest {
       ByteString.copyFromUtf8("some key3"),
       ByteString.copyFromUtf8("some key4")
     )
-  private val randomCommutativeDeterministicKey1: ByteString =
-    ByteString.copyFromUtf8("random-key-000")
-  private val randomCommutativeDeterministicKey2: ByteString =
-    ByteString.copyFromUtf8("random-key-222")
+  private val randomCommutativeDeterministicKey1: ByteString = ByteString.copyFromUtf8("random-key-000")
+  private val randomCommutativeDeterministicKey2: ByteString = ByteString.copyFromUtf8("random-key-222")
 
   @Test
   fun `test encrypt reencrypt and decrypt tasks`() = runBlocking {
@@ -49,12 +47,13 @@ class ExchangeTasksTest {
         .execute(
           mapOf(
             "encryption-key" to randomCommutativeDeterministicKey1,
-            "unencrypted-data" to
-              SharedInputs.newBuilder().addAllData(joinKeys).build().toByteString()
+            "unencrypted-data" to SharedInputs.newBuilder().addAllData(joinKeys).build().toByteString()
           ),
           fakeSendDebugLog
         )
-    assertThat(SharedInputs.parseFrom(encryptedOutputs["encrypted-data"]).getDataList())
+    assertThat(
+        SharedInputs.parseFrom(encryptedOutputs["encrypted-data"]).getDataList()
+      )
       .isEqualTo(applyCommutativeEncryption(randomCommutativeDeterministicKey1, joinKeys))
 
     val reEncryptedOutputs: Map<String, ByteString> =
@@ -66,7 +65,9 @@ class ExchangeTasksTest {
           ),
           fakeSendDebugLog
         )
-    assertThat(SharedInputs.parseFrom(reEncryptedOutputs["reencrypted-data"]).getDataList())
+    assertThat(
+        SharedInputs.parseFrom(reEncryptedOutputs["reencrypted-data"]).getDataList()
+      )
       .isEqualTo(
         reApplyCommutativeEncryption(
           randomCommutativeDeterministicKey2,
@@ -93,5 +94,25 @@ class ExchangeTasksTest {
           )
         )
       )
+  }
+
+  @Test
+  fun `test task debug log`() = runBlocking {
+    val debugLog = mutableListOf<String>()
+    val fakeSendDebugLog: suspend (String) -> Unit = { debugLog.add(it) }
+    val encryptedOutputs: Map<String, ByteString> =
+      EncryptTask()
+        .execute(
+          mapOf(
+            "encryption-key" to ByteString.copyFromUtf8(""),
+            "unencrypted-data" to SharedInputs.newBuilder().addAllData(joinKeys).build().toByteString()
+          ),
+          fakeSendDebugLog
+        )
+    println(debugLog)
+    assertThat(
+      SharedInputs.parseFrom(encryptedOutputs["encrypted-data"]).getDataList()
+    )
+      .isEqualTo(applyCommutativeEncryption(randomCommutativeDeterministicKey1, joinKeys))
   }
 }
