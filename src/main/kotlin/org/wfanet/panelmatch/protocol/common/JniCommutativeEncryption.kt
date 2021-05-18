@@ -31,8 +31,6 @@ class JniCommutativeEncryption : CommutativeEncryption {
   override fun applyCommutativeEncryption(
     request: ApplyCommutativeEncryptionRequest
   ): ApplyCommutativeEncryptionResponse {
-      logger.log(Level.INFO, "$nameForLogging started, listening on $port")
-
     return ApplyCommutativeEncryptionResponse.parseFrom(
       CommutativeEncryptionUtility.applyCommutativeEncryptionWrapper(request.toByteArray())
     )
