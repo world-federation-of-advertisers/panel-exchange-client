@@ -32,7 +32,7 @@ class ReEncryptTask : ExchangeTask {
         makeSerializedSharedInputs(
           reApplyCommutativeEncryption(
             input["encryption-key"]!!,
-            parseSerializedSharedInputs(input["encrypted-data"])
+            parseSerializedSharedInputs(input["encrypted-data"]!!)
           )
         )
     )

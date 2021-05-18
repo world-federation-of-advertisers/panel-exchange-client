@@ -22,7 +22,7 @@ kt_jvm_library(
         "Utils.kt",
     ],
     deps = [
-        "//src/main/proto/wfanet/panelmatch/protocol/crypto:cryptor_java_proto",
+        "//src/main/proto/wfanet/panelmatch/protocol/exchangesteps:exchangesteps_java_proto",
         "@wfa_measurement_system//imports/java/com/google/protobuf",
     ],
 )

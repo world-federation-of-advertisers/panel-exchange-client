@@ -32,7 +32,7 @@ class DecryptTask : ExchangeTask {
         makeSerializedSharedInputs(
           applyCommutativeDecryption(
             input["encryption-key"]!!,
-            parseSerializedSharedInputs(input["encrypted-data"])
+            parseSerializedSharedInputs(input["encrypted-data"]!!)
           )
         )
     )

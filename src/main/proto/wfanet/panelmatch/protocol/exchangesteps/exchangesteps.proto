@@ -12,15 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package org.wfanet.panelmatch.protocol.common
+syntax = "proto3";
 
-import com.google.protobuf.ByteString
-import wfanet.panelmatch.protocol.protobuf.SharedInputs
+package wfanet.panelmatch.protocol.protobuf;
 
-fun makeSerializedSharedInputs(data: List<ByteString>): ByteString {
-  return SharedInputs.newBuilder().addAllData(data).build().toByteString()
-}
+option java_package = "wfanet.panelmatch.protocol.protobuf";
+option java_multiple_files = true;
 
-fun parseSerializedSharedInputs(data: ByteString): List<ByteString> {
-  return SharedInputs.parseFrom(data).getDataList()
+// TODO: Replace this in the measurement api with something to support signed
+// shared inputs
+message SharedInputs {
+  repeated bytes data = 1;
 }
