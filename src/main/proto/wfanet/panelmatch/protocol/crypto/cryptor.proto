@@ -20,7 +20,7 @@ option java_package = "wfanet.panelmatch.protocol.protobuf";
 option java_multiple_files = true;
 
 message SharedInputs123 {
-  repeated bytes data = 1;
+  repeated bytes data123 = 1;
 }
 
 // The request to apply commutative encryption.
