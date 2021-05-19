@@ -16,8 +16,12 @@ package org.wfanet.panelmatch.client.launcher
 
 import org.wfanet.measurement.api.v2alpha.ExchangeWorkflow.Party
 
+/** Set of valid parties -- to allow excluding unknown or unspecified proto enum values. */
+private val VALID_PARTIES = setOf(Party.DATA_PROVIDER, Party.MODEL_PROVIDER)
+
+/** Compact representation of one of the two parties along with its id. */
 data class Identity(val id: String, val party: Party) {
   init {
-    require(party == Party.DATA_PROVIDER || party == Party.MODEL_PROVIDER)
+    require(party in VALID_PARTIES)
   }
 }
