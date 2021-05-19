@@ -51,7 +51,7 @@ class GrpcApiClient(
     return null
   }
 
-  override suspend fun appendLogEntry(key: ExchangeStepAttempt.Key, vararg messages: String) {
+  override suspend fun appendLogEntry(key: ExchangeStepAttempt.Key, messages: Iterable<String>) {
     val request =
       AppendLogEntryRequest.newBuilder()
         .also {
@@ -65,7 +65,7 @@ class GrpcApiClient(
   override suspend fun finishExchangeStepAttempt(
     key: ExchangeStepAttempt.Key,
     finalState: ExchangeStepAttempt.State,
-    vararg logEntryMessages: String
+    logEntryMessages: Iterable<String>
   ) {
     val request =
       FinishExchangeStepAttemptRequest.newBuilder()

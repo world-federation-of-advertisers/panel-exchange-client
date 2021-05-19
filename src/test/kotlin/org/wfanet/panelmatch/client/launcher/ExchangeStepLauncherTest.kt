@@ -14,7 +14,9 @@
 
 package org.wfanet.panelmatch.client.launcher
 
+import com.google.common.truth.Truth.assertThat
 import com.google.common.truth.extensions.proto.ProtoTruth.assertThat
+import com.nhaarman.mockitokotlin2.any
 import com.nhaarman.mockitokotlin2.argumentCaptor
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.stub
@@ -22,6 +24,7 @@ import com.nhaarman.mockitokotlin2.times
 import com.nhaarman.mockitokotlin2.verify
 import com.nhaarman.mockitokotlin2.verifyBlocking
 import com.nhaarman.mockitokotlin2.verifyZeroInteractions
+import com.nhaarman.mockitokotlin2.whenever
 import kotlinx.coroutines.runBlocking
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -65,7 +68,7 @@ class ExchangeStepLauncherTest {
     val launcher = ExchangeStepLauncher(apiClient, validator, jobLauncher)
     runBlocking { launcher.findAndRunExchangeStep() }
 
-    verifyBlocking(apiClient, times(1)) { claimExchangeStep() }
+    verifyBlocking(apiClient) { claimExchangeStep() }
     verifyZeroInteractions(validator, jobLauncher)
   }
 
@@ -79,19 +82,56 @@ class ExchangeStepLauncherTest {
     val launcher = ExchangeStepLauncher(apiClient, validator, jobLauncher)
     runBlocking { launcher.findAndRunExchangeStep() }
 
-    verifyBlocking(apiClient, times(1)) { claimExchangeStep() }
+    verifyBlocking(apiClient) { claimExchangeStep() }
 
     argumentCaptor<ExchangeStep> {
-      verify(validator, times(1)).validate(capture())
+      verify(validator).validate(capture())
       assertThat(firstValue).isEqualTo(EXCHANGE_STEP)
     }
 
     val (exchangeStepCaptor, attemptCaptor) =
       argumentCaptor(ExchangeStep::class, ExchangeStepAttempt.Key::class)
-    verifyBlocking(jobLauncher, times(1)) {
-      execute(exchangeStepCaptor.capture(), attemptCaptor.capture())
-    }
+    verifyBlocking(jobLauncher) { execute(exchangeStepCaptor.capture(), attemptCaptor.capture()) }
     assertThat(exchangeStepCaptor.firstValue).isEqualTo(EXCHANGE_STEP)
     assertThat(attemptCaptor.firstValue).isEqualTo(EXCHANGE_STEP_ATTEMPT_KEY)
+  }
+
+  @Test
+  fun `findAndRunExchangeStep with invalid ExchangeTask`() {
+    apiClient.stub {
+      onBlocking { claimExchangeStep() }
+        .thenReturn(ClaimedExchangeStep(EXCHANGE_STEP, EXCHANGE_STEP_ATTEMPT_KEY))
+    }
+
+    whenever(validator.validate(any()))
+      .thenThrow(InvalidExchangeStepException("Something went wrong"))
+
+    val launcher = ExchangeStepLauncher(apiClient, validator, jobLauncher)
+    runBlocking { launcher.findAndRunExchangeStep() }
+
+    verifyBlocking(apiClient) { claimExchangeStep() }
+
+    verifyBlocking(apiClient) {
+      val keyCaptor = argumentCaptor<ExchangeStepAttempt.Key>()
+      val stateCaptor = argumentCaptor<ExchangeStepAttempt.State>()
+      val messagesCaptor = argumentCaptor<Iterable<String>>()
+
+      finishExchangeStepAttempt(
+        keyCaptor.capture(),
+        stateCaptor.capture(),
+        messagesCaptor.capture()
+      )
+
+      assertThat(keyCaptor.firstValue).isEqualTo(EXCHANGE_STEP_ATTEMPT_KEY)
+      assertThat(stateCaptor.firstValue).isEqualTo(ExchangeStepAttempt.State.FAILED_STEP)
+      assertThat(messagesCaptor.firstValue).containsExactly("Something went wrong")
+    }
+
+    argumentCaptor<ExchangeStep> {
+      verify(validator).validate(capture())
+      assertThat(firstValue).isEqualTo(EXCHANGE_STEP)
+    }
+
+    verifyZeroInteractions(jobLauncher)
   }
 }

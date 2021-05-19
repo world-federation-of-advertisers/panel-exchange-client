@@ -22,5 +22,5 @@ class InvalidExchangeStepException(message: String) : Exception(message)
 /** Determines whether an ExchangeStep is valid and can be safely executed. */
 interface ExchangeStepValidator {
   /** Throws [InvalidExchangeStepException] if [exchangeStep] is invalid. */
-  fun validate(exchangeStep: ExchangeStep)
+  @Throws(InvalidExchangeStepException::class) fun validate(exchangeStep: ExchangeStep)
 }

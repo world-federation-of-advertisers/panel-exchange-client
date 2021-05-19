@@ -32,12 +32,12 @@ interface ApiClient {
   suspend fun claimExchangeStep(): ClaimedExchangeStep?
 
   /** Attaches debug log entries to an [ExchangeStepAttempt]. */
-  suspend fun appendLogEntry(key: ExchangeStepAttempt.Key, vararg messages: String)
+  suspend fun appendLogEntry(key: ExchangeStepAttempt.Key, messages: Iterable<String>)
 
   /** Marks an ExchangeStepAttempt as complete (successfully or otherwise). */
   suspend fun finishExchangeStepAttempt(
     key: ExchangeStepAttempt.Key,
     finalState: ExchangeStepAttempt.State,
-    vararg logEntryMessages: String
+    logEntryMessages: Iterable<String> = emptyList()
   )
 }

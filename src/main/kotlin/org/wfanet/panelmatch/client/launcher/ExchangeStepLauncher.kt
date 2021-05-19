@@ -46,7 +46,7 @@ class ExchangeStepLauncher(
     apiClient.finishExchangeStepAttempt(
       attemptKey,
       ExchangeStepAttempt.State.FAILED_STEP,
-      cause.message!!
+      listOf(cause.message!!)
     )
   }
 }

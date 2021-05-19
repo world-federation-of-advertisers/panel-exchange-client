@@ -189,7 +189,9 @@ class GrpcApiClientTest {
       onBlocking { appendLogEntry(any()) }.thenReturn(ExchangeStepAttempt.getDefaultInstance())
     }
 
-    runBlocking { makeClient().appendLogEntry(EXCHANGE_STEP_ATTEMPT_KEY, "message-1", "message-2") }
+    runBlocking {
+      makeClient().appendLogEntry(EXCHANGE_STEP_ATTEMPT_KEY, listOf("message-1", "message-2"))
+    }
 
     argumentCaptor<AppendLogEntryRequest> {
       verifyBlocking(exchangeStepsAttemptsServiceMock) { appendLogEntry(capture()) }
@@ -219,8 +221,7 @@ class GrpcApiClientTest {
         .finishExchangeStepAttempt(
           EXCHANGE_STEP_ATTEMPT_KEY,
           ExchangeStepAttempt.State.SUCCEEDED,
-          "message-1",
-          "message-2"
+          listOf("message-1", "message-2")
         )
       makeClient()
         .finishExchangeStepAttempt(EXCHANGE_STEP_ATTEMPT_KEY, ExchangeStepAttempt.State.FAILED_STEP)
