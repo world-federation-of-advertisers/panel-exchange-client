@@ -43,6 +43,7 @@ class ExchangeStepLauncher(
 
   private suspend fun invalidateAttempt(attemptKey: ExchangeStepAttempt.Key, cause: Throwable) {
     // TODO: log an error or retry a few times if this fails.
+    // TODO: add API-level support for some type of justification about what went wrong.
     apiClient.finishExchangeStepAttempt(
       attemptKey,
       ExchangeStepAttempt.State.FAILED_STEP,
