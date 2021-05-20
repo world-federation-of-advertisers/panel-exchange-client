@@ -12,22 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package org.wfanet.panelmatch.client.exchangetasks
+syntax = "proto3";
 
-import com.google.protobuf.ByteString
+package wfanet.panelmatch.protocol.protobuf;
 
-/** Interface for ExchangeTask. */
-interface ExchangeTask {
+option java_package = "wfanet.panelmatch.protocol.protobuf";
+option java_multiple_files = true;
 
-  /**
-   * Executes subclass on input map and returns the output.
-   *
-   * @param input inputs specified by [task].
-   * @param sendDebugLog function which writes logs happened during execution.
-   * @return Executed output. It is a map from the labels to the payload associated with the label.
-   */
-  suspend fun execute(
-    input: Map<String, ByteString>,
-    sendDebugLog: suspend (String) -> Unit
-  ): Map<String, ByteString>
+// TODO: Replace this in the measurement api with something to support signed
+// shared inputs
+message SharedInputs {
+  repeated bytes data = 1;
 }
