@@ -94,4 +94,69 @@ class ExchangeTasksTest {
         )
       )
   }
+
+  @Test
+  fun detectInvalidKey() = runBlocking {
+    val randomCommutativeDeterministicKeyInvalid: ByteString = ByteString.copyFromUtf8("")
+    val fakeSendDebugLog: suspend (String) -> Unit = {}
+    val decryptException =
+      try {
+        DecryptTask()
+          .execute(
+            mapOf(
+              "encryption-key" to randomCommutativeDeterministicKeyInvalid,
+              "encrypted-data" to
+                SharedInputs.newBuilder().addAllData(joinKeys).build().toByteString()
+            ),
+            fakeSendDebugLog
+          )
+        null
+      } catch (exception: ExchangeTaskRuntimeException) {
+        exception
+      }
+    assertThat(decryptException?.message)
+      .isEqualTo(
+        "java.lang.RuntimeException: INVALID_ARGUMENT: Failed to create the protocol cipher"
+      )
+
+    val encryptException =
+      try {
+        EncryptTask()
+          .execute(
+            mapOf(
+              "encryption-key" to randomCommutativeDeterministicKeyInvalid,
+              "unencrypted-data" to
+                SharedInputs.newBuilder().addAllData(joinKeys).build().toByteString()
+            ),
+            fakeSendDebugLog
+          )
+        null
+      } catch (exception: ExchangeTaskRuntimeException) {
+        exception
+      }
+    assertThat(encryptException?.message)
+      .isEqualTo(
+        "java.lang.RuntimeException: INVALID_ARGUMENT: Failed to create the protocol cipher"
+      )
+
+    val reencryptException =
+      try {
+        ReEncryptTask()
+          .execute(
+            mapOf(
+              "encryption-key" to randomCommutativeDeterministicKeyInvalid,
+              "encrypted-data" to
+                SharedInputs.newBuilder().addAllData(joinKeys).build().toByteString()
+            ),
+            fakeSendDebugLog
+          )
+        null
+      } catch (exception: ExchangeTaskRuntimeException) {
+        exception
+      }
+    assertThat(reencryptException?.message)
+      .isEqualTo(
+        "java.lang.RuntimeException: INVALID_ARGUMENT: Failed to create the protocol cipher"
+      )
+  }
 }
