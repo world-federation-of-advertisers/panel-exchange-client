@@ -14,12 +14,12 @@
 
 package org.wfanet.panelmatch.protocol.common
 
-import wfanet.panelmatch.protocol.protobuf.ApplyCommutativeDecryptionRequest
-import wfanet.panelmatch.protocol.protobuf.ApplyCommutativeDecryptionResponse
-import wfanet.panelmatch.protocol.protobuf.ApplyCommutativeEncryptionRequest
-import wfanet.panelmatch.protocol.protobuf.ApplyCommutativeEncryptionResponse
-import wfanet.panelmatch.protocol.protobuf.ReApplyCommutativeEncryptionRequest
-import wfanet.panelmatch.protocol.protobuf.ReApplyCommutativeEncryptionResponse
+import org.wfanet.panelmatch.crypto.ApplyCommutativeDecryptionRequest
+import org.wfanet.panelmatch.crypto.ApplyCommutativeDecryptionResponse
+import org.wfanet.panelmatch.crypto.ApplyCommutativeEncryptionRequest
+import org.wfanet.panelmatch.crypto.ApplyCommutativeEncryptionResponse
+import org.wfanet.panelmatch.crypto.ReApplyCommutativeEncryptionRequest
+import org.wfanet.panelmatch.crypto.ReApplyCommutativeEncryptionResponse
 
 /**
  * Crypto operations for Commutative Encryption. check

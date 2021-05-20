@@ -20,7 +20,7 @@ import kotlin.test.assertFailsWith
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
-import wfanet.panelmatch.protocol.protobuf.ApplyCommutativeEncryptionRequest
+import org.wfanet.panelmatch.crypto.ApplyCommutativeEncryptionRequest
 
 @RunWith(JUnit4::class)
 class JniCommutativeEncryptionTest {

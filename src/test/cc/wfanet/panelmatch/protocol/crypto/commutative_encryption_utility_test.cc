@@ -27,7 +27,7 @@
 #include "gtest/gtest.h"
 #include "src/test/cc/testutil/matchers.h"
 #include "src/test/cc/testutil/status_macros.h"
-#include "wfanet/panelmatch/protocol/crypto/cryptor.pb.h"
+#include "wfa/panelmatch/crypto/cryptor.pb.h"
 
 namespace wfa::panelmatch {
 namespace {
@@ -43,18 +43,12 @@ using ::wfanet::panelmatch::protocol::crypto::ApplyCommutativeDecryption;
 using ::wfanet::panelmatch::protocol::crypto::ApplyCommutativeEncryption;
 using ::wfanet::panelmatch::protocol::crypto::ReApplyCommutativeEncryption;
 
-using ::wfanet::panelmatch::protocol::protobuf::
-    ApplyCommutativeDecryptionRequest;
-using ::wfanet::panelmatch::protocol::protobuf::
-    ApplyCommutativeDecryptionResponse;
-using ::wfanet::panelmatch::protocol::protobuf::
-    ApplyCommutativeEncryptionRequest;
-using ::wfanet::panelmatch::protocol::protobuf::
-    ApplyCommutativeEncryptionResponse;
-using ::wfanet::panelmatch::protocol::protobuf::
-    ReApplyCommutativeEncryptionRequest;
-using ::wfanet::panelmatch::protocol::protobuf::
-    ReApplyCommutativeEncryptionResponse;
+using ::wfa::panelmatch::crypto::ApplyCommutativeDecryptionRequest;
+using ::wfa::panelmatch::crypto::ApplyCommutativeDecryptionResponse;
+using ::wfa::panelmatch::crypto::ApplyCommutativeEncryptionRequest;
+using ::wfa::panelmatch::crypto::ApplyCommutativeEncryptionResponse;
+using ::wfa::panelmatch::crypto::ReApplyCommutativeEncryptionRequest;
+using ::wfa::panelmatch::crypto::ReApplyCommutativeEncryptionResponse;
 
 TEST(PrivateJoinAndComputeTest, EncryptReEncryptDecryptUtility) {
   std::vector<std::string> plaintexts{"some plaintext0", "some plaintext1",

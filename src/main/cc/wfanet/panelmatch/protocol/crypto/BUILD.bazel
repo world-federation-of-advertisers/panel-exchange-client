@@ -17,7 +17,7 @@ cc_library(
         "//src/main/cc/wfanet/panelmatch/common:macros",
         "//src/main/cc/wfanet/panelmatch/common/crypto:cryptor",
         "//src/main/cc/wfanet/panelmatch/common/crypto:encryption_utility_helper",
-        "//src/main/proto/wfanet/panelmatch/protocol/crypto:cryptor_cc_proto",
+        "//src/main/proto/wfa/panelmatch/crypto:cryptor_cc_proto",
         "@wfa_measurement_system//src/main/cc/wfa/measurement/common/crypto:started_thread_cpu_timer",
     ],
 )
@@ -33,6 +33,6 @@ cc_library(
     strip_include_prefix = _INCLUDE_PREFIX,
     deps = [
         ":commutative_encryption_utility",
-        "//src/main/proto/wfanet/panelmatch/protocol/crypto:cryptor_cc_proto",
+        "//src/main/proto/wfa/panelmatch/crypto:cryptor_cc_proto",
     ],
 )

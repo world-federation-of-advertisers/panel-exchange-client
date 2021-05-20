@@ -20,10 +20,10 @@ import kotlinx.coroutines.runBlocking
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
+import org.wfanet.panelmatch.exchangesteps.SharedInputs
 import org.wfanet.panelmatch.protocol.common.applyCommutativeDecryption
 import org.wfanet.panelmatch.protocol.common.applyCommutativeEncryption
 import org.wfanet.panelmatch.protocol.common.reApplyCommutativeEncryption
-import wfanet.panelmatch.protocol.protobuf.SharedInputs
 
 @RunWith(JUnit4::class)
 class ExchangeTasksTest {

@@ -18,8 +18,8 @@
 #include <string>
 
 #include "absl/status/statusor.h"
+#include "wfa/panelmatch/crypto/cryptor.pb.h"
 #include "wfanet/panelmatch/common/crypto/encryption_utility_helper.h"
-#include "wfanet/panelmatch/protocol/crypto/cryptor.pb.h"
 
 // Wrapper methods used to generate the swig/JNI Java classes.
 // The only functionality of these methods are converting between proto messages

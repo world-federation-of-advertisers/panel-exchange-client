@@ -16,24 +16,22 @@
 #define SRC_MAIN_CC_WFANET_PANELMATCH_PROTOCOL_CRYPTO_COMMUTATIVE_ENCRYPTION_UTILITY_H_
 
 #include "absl/status/statusor.h"
-#include "wfanet/panelmatch/protocol/crypto/cryptor.pb.h"
+#include "wfa/panelmatch/crypto/cryptor.pb.h"
 
 namespace wfanet::panelmatch::protocol::crypto {
 
-absl::StatusOr<
-    wfanet::panelmatch::protocol::protobuf::ApplyCommutativeEncryptionResponse>
-ApplyCommutativeEncryption(const wfanet::panelmatch::protocol::protobuf::
-                               ApplyCommutativeEncryptionRequest& request);
+absl::StatusOr<wfa::panelmatch::crypto::ApplyCommutativeEncryptionResponse>
+ApplyCommutativeEncryption(
+    const wfa::panelmatch::crypto::ApplyCommutativeEncryptionRequest& request);
 
-absl::StatusOr<wfanet::panelmatch::protocol::protobuf::
-                   ReApplyCommutativeEncryptionResponse>
-ReApplyCommutativeEncryption(const wfanet::panelmatch::protocol::protobuf::
-                                 ReApplyCommutativeEncryptionRequest& request);
+absl::StatusOr<wfa::panelmatch::crypto::ReApplyCommutativeEncryptionResponse>
+ReApplyCommutativeEncryption(
+    const wfa::panelmatch::crypto::ReApplyCommutativeEncryptionRequest&
+        request);
 
-absl::StatusOr<
-    wfanet::panelmatch::protocol::protobuf::ApplyCommutativeDecryptionResponse>
-ApplyCommutativeDecryption(const wfanet::panelmatch::protocol::protobuf::
-                               ApplyCommutativeDecryptionRequest& request);
+absl::StatusOr<wfa::panelmatch::crypto::ApplyCommutativeDecryptionResponse>
+ApplyCommutativeDecryption(
+    const wfa::panelmatch::crypto::ApplyCommutativeDecryptionRequest& request);
 
 }  // namespace wfanet::panelmatch::protocol::crypto
 

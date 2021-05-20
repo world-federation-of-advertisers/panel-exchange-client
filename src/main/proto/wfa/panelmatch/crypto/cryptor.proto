@@ -14,9 +14,9 @@
 
 syntax = "proto3";
 
-package wfanet.panelmatch.protocol.protobuf;
+package wfa.panelmatch.crypto;
 
-option java_package = "wfanet.panelmatch.protocol.protobuf";
+option java_package = "org.wfanet.panelmatch.crypto";
 option java_multiple_files = true;
 
 // The request to apply commutative encryption.
