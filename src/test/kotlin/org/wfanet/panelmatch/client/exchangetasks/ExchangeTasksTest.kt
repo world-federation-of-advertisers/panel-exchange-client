@@ -16,6 +16,7 @@ package org.wfanet.panelmatch.client.exchangetasks
 
 import com.google.common.truth.Truth.assertThat
 import com.google.protobuf.ByteString
+import kotlin.test.assertFailsWith
 import kotlinx.coroutines.runBlocking
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -96,11 +97,11 @@ class ExchangeTasksTest {
   }
 
   @Test
-  fun detectInvalidKey() = runBlocking {
+  fun detectErrorsfromJni() = runBlocking {
     val randomCommutativeDeterministicKeyInvalid: ByteString = ByteString.copyFromUtf8("")
     val fakeSendDebugLog: suspend (String) -> Unit = {}
     val decryptException =
-      try {
+      assertFailsWith(RuntimeException::class) {
         DecryptTask()
           .execute(
             mapOf(
@@ -110,15 +111,12 @@ class ExchangeTasksTest {
             ),
             fakeSendDebugLog
           )
-        null
-      } catch (exception: RuntimeException) {
-        exception
       }
-    assertThat(decryptException?.message)
+    assertThat(decryptException.message)
       .contains("INVALID_ARGUMENT: Failed to create the protocol cipher")
 
     val encryptException =
-      try {
+      assertFailsWith(RuntimeException::class) {
         EncryptTask()
           .execute(
             mapOf(
@@ -128,15 +126,12 @@ class ExchangeTasksTest {
             ),
             fakeSendDebugLog
           )
-        null
-      } catch (exception: RuntimeException) {
-        exception
       }
-    assertThat(encryptException?.message)
+    assertThat(encryptException.message)
       .contains("INVALID_ARGUMENT: Failed to create the protocol cipher")
 
     val reencryptException =
-      try {
+      assertFailsWith(RuntimeException::class) {
         ReEncryptTask()
           .execute(
             mapOf(
@@ -146,11 +141,45 @@ class ExchangeTasksTest {
             ),
             fakeSendDebugLog
           )
-        null
-      } catch (exception: RuntimeException) {
-        exception
       }
-    assertThat(reencryptException?.message)
+    assertThat(reencryptException.message)
       .contains("INVALID_ARGUMENT: Failed to create the protocol cipher")
+  }
+
+  @Test
+  fun detectMissingTaskFields() = runBlocking {
+    val fakeSendDebugLog: suspend (String) -> Unit = {}
+    assertFailsWith<IllegalArgumentException> {
+      DecryptTask()
+        .execute(
+          mapOf(
+            "encrypted-data" to
+              SharedInputs.newBuilder().addAllData(joinKeys).build().toByteString()
+          ),
+          fakeSendDebugLog
+        )
+    }
+    val encryptException =
+      assertFailsWith(IllegalArgumentException::class) {
+        EncryptTask()
+          .execute(
+            mapOf(
+              "unencrypted-data" to
+                SharedInputs.newBuilder().addAllData(joinKeys).build().toByteString()
+            ),
+            fakeSendDebugLog
+          )
+      }
+    val reencryptException =
+      assertFailsWith(IllegalArgumentException::class) {
+        ReEncryptTask()
+          .execute(
+            mapOf(
+              "encrypted-data" to
+                SharedInputs.newBuilder().addAllData(joinKeys).build().toByteString()
+            ),
+            fakeSendDebugLog
+          )
+      }
   }
 }
