@@ -20,12 +20,11 @@ import org.wfanet.panelmatch.protocol.common.makeSerializedSharedInputs
 import org.wfanet.panelmatch.protocol.common.parseSerializedSharedInputs
 
 /**
- * Encrypts a plaintext using commutative encryption
+ * Encrypts many plaintexts using commutative encryption
  *
  * @param input inputs specified by [task].
  * @param sendDebugLog function which writes logs happened during execution.
  * @return Executed output. It is a map from the labels to the payload associated with the label.
- * @throws ExchangeTaskRuntimeException if any failures during the execution.
  */
 class EncryptTask : ExchangeTask {
 
@@ -33,17 +32,13 @@ class EncryptTask : ExchangeTask {
     input: Map<String, ByteString>,
     sendDebugLog: suspend (String) -> Unit
   ): Map<String, ByteString> {
-    try {
-      val encryptionKey = requireNotNull(input["encryption-key"])
-      val unEncryptedData = requireNotNull(input["unencrypted-data"])
-      return mapOf(
-        "encrypted-data" to
-          makeSerializedSharedInputs(
-            applyCommutativeEncryption(encryptionKey, parseSerializedSharedInputs(unEncryptedData))
-          )
-      )
-    } catch (e: Exception) {
-      throw ExchangeTaskRuntimeException(e.toString())
-    }
+    val encryptionKey = requireNotNull(input["encryption-key"])
+    val unEncryptedData = requireNotNull(input["unencrypted-data"])
+    return mapOf(
+      "encrypted-data" to
+        makeSerializedSharedInputs(
+          applyCommutativeEncryption(encryptionKey, parseSerializedSharedInputs(unEncryptedData))
+        )
+    )
   }
 }

@@ -111,13 +111,11 @@ class ExchangeTasksTest {
             fakeSendDebugLog
           )
         null
-      } catch (exception: ExchangeTaskRuntimeException) {
+      } catch (exception: RuntimeException) {
         exception
       }
     assertThat(decryptException?.message)
-      .isEqualTo(
-        "java.lang.RuntimeException: INVALID_ARGUMENT: Failed to create the protocol cipher"
-      )
+      .contains("INVALID_ARGUMENT: Failed to create the protocol cipher")
 
     val encryptException =
       try {
@@ -131,13 +129,11 @@ class ExchangeTasksTest {
             fakeSendDebugLog
           )
         null
-      } catch (exception: ExchangeTaskRuntimeException) {
+      } catch (exception: RuntimeException) {
         exception
       }
     assertThat(encryptException?.message)
-      .isEqualTo(
-        "java.lang.RuntimeException: INVALID_ARGUMENT: Failed to create the protocol cipher"
-      )
+      .contains("INVALID_ARGUMENT: Failed to create the protocol cipher")
 
     val reencryptException =
       try {
@@ -151,12 +147,10 @@ class ExchangeTasksTest {
             fakeSendDebugLog
           )
         null
-      } catch (exception: ExchangeTaskRuntimeException) {
+      } catch (exception: RuntimeException) {
         exception
       }
     assertThat(reencryptException?.message)
-      .isEqualTo(
-        "java.lang.RuntimeException: INVALID_ARGUMENT: Failed to create the protocol cipher"
-      )
+      .contains("INVALID_ARGUMENT: Failed to create the protocol cipher")
   }
 }
