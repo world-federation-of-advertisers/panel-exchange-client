@@ -15,12 +15,24 @@
 package org.wfanet.panelmatch.client.exchangetasks
 
 import com.google.protobuf.ByteString
+import org.wfanet.panelmatch.protocol.common.applyCommutativeEncryption
+import org.wfanet.panelmatch.protocol.common.makeSerializedSharedInputs
+import org.wfanet.panelmatch.protocol.common.parseSerializedSharedInputs
 
-/** TODO: document this. */
-interface ExchangeTask {
-  /** TODO: document this. */
-  suspend fun execute(
+// Encrypts a plaintext using commutative encryption
+class EncryptTask : ExchangeTask {
+
+  override suspend fun execute(
     input: Map<String, ByteString>,
     sendDebugLog: suspend (String) -> Unit
-  ): Map<String, ByteString>
+  ): Map<String, ByteString> {
+    val encryptionKey = requireNotNull(input["encryption-key"])
+    val unEncryptedData = requireNotNull(input["unencrypted-data"])
+    return mapOf(
+      "encrypted-data" to
+        makeSerializedSharedInputs(
+          applyCommutativeEncryption(encryptionKey, parseSerializedSharedInputs(unEncryptedData))
+        )
+    )
+  }
 }
