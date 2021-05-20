@@ -14,31 +14,12 @@
 
 package org.wfanet.panelmatch.client.exchangetasks
 
-import com.google.protobuf.ByteString
-import org.wfanet.panelmatch.protocol.common.makeSerializedSharedInputs
-import org.wfanet.panelmatch.protocol.common.parseSerializedSharedInputs
-import org.wfanet.panelmatch.protocol.common.reApplyCommutativeEncryption
+import org.wfanet.panelmatch.protocol.common.CommutativeEncryption
 
-/**
- * Encrypts many already encrypted texts using commutative encryption
- *
- * @param input inputs specified by [step].
- * @param sendDebugLog function which writes logs happened during execution.
- * @return Executed output. It is a map from the labels to the payload associated with the label.
- */
-class ReEncryptTask : ExchangeTask {
-
-  override suspend fun execute(
-    input: Map<String, ByteString>,
-    sendDebugLog: suspend (String) -> Unit
-  ): Map<String, ByteString> {
-    val encryptionKey = requireNotNull(input["encryption-key"])
-    val encryptedData = requireNotNull(input["encrypted-data"])
-    return mapOf(
-      "reencrypted-data" to
-        makeSerializedSharedInputs(
-          reApplyCommutativeEncryption(encryptionKey, parseSerializedSharedInputs(encryptedData))
-        )
-    )
-  }
+/** Encrypts many already encrypted texts using commutative encryption. */
+class ReEncryptTask(commutativeEncryption: CommutativeEncryption) :
+  CommutativeEncryptionExchangeTask(commutativeEncryption) {
+  override val inputLabel = "encrypted-data"
+  override val outputLabel = "reencrypted-data"
+  override val operation = CommutativeEncryption::reencrypt
 }

@@ -14,31 +14,12 @@
 
 package org.wfanet.panelmatch.client.exchangetasks
 
-import com.google.protobuf.ByteString
-import org.wfanet.panelmatch.protocol.common.applyCommutativeDecryption
-import org.wfanet.panelmatch.protocol.common.makeSerializedSharedInputs
-import org.wfanet.panelmatch.protocol.common.parseSerializedSharedInputs
+import org.wfanet.panelmatch.protocol.common.CommutativeEncryption
 
-/**
- * Decrypts many encrypted data using commutative encryption
- *
- * @param input inputs specified by [task].
- * @param sendDebugLog function which writes logs happened during execution.
- * @return Executed output. It is a map from the labels to the payload associated with the label.
- */
-class DecryptTask : ExchangeTask {
-
-  override suspend fun execute(
-    input: Map<String, ByteString>,
-    sendDebugLog: suspend (String) -> Unit
-  ): Map<String, ByteString> {
-    val encryptionKey = requireNotNull(input["encryption-key"])
-    val encryptedData = requireNotNull(input["encrypted-data"])
-    return mapOf(
-      "decrypted-data" to
-        makeSerializedSharedInputs(
-          applyCommutativeDecryption(encryptionKey, parseSerializedSharedInputs(encryptedData))
-        )
-    )
-  }
+/** Decrypts many encrypted data using commutative encryption. */
+class DecryptTask(commutativeEncryption: CommutativeEncryption) :
+  CommutativeEncryptionExchangeTask(commutativeEncryption) {
+  override val inputLabel = "encrypted-data"
+  override val outputLabel = "decrypted-data"
+  override val operation = CommutativeEncryption::decrypt
 }

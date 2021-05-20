@@ -12,16 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package org.wfanet.panelmatch.protocol.common
+package org.wfanet.panelmatch.protocol.common.testing
 
 import com.google.common.truth.Truth.assertThat
 import com.google.protobuf.ByteString
 import org.junit.Test
-import org.junit.runner.RunWith
-import org.junit.runners.JUnit4
+import org.wfanet.panelmatch.protocol.common.CommutativeEncryption
 
-@RunWith(JUnit4::class)
-class CommutativeEncryptionUtilityTest {
+/** Abstract base class for testing implementations of [CommutativeEncryption]. */
+abstract class AbstractCommutativeEncryptionTest {
+  abstract val commutativeEncryption: CommutativeEncryption
 
   @Test
   fun testCommutativeEncryption() {
@@ -36,34 +36,23 @@ class CommutativeEncryptionUtilityTest {
     val randomKey1: ByteString = ByteString.copyFromUtf8("random-key-00")
     val randomKey2: ByteString = ByteString.copyFromUtf8("random-key-222")
 
-    val encryptedTexts1 = applyCommutativeEncryption(randomKey1, plaintexts)
-
-    val encryptedTexts2 = applyCommutativeEncryption(randomKey2, plaintexts)
-
+    val encryptedTexts1 = commutativeEncryption.encrypt(randomKey1, plaintexts)
+    val encryptedTexts2 = commutativeEncryption.encrypt(randomKey2, plaintexts)
     assertThat(encryptedTexts1).isNotEqualTo(encryptedTexts2)
 
-    val reEncryptedTexts1 = reApplyCommutativeEncryption(randomKey1, encryptedTexts2)
-
+    val reEncryptedTexts1 = commutativeEncryption.reencrypt(randomKey1, encryptedTexts2)
+    val reEncryptedTexts2 = commutativeEncryption.reencrypt(randomKey2, encryptedTexts1)
     assertThat(reEncryptedTexts1).isNotEqualTo(encryptedTexts2)
-
-    val reEncryptedTexts2 = reApplyCommutativeEncryption(randomKey2, encryptedTexts1)
-
     assertThat(reEncryptedTexts2).isNotEqualTo(encryptedTexts1)
 
-    val decryptedTexts1 = applyCommutativeDecryption(randomKey1, reEncryptedTexts1)
-
+    val decryptedTexts1 = commutativeEncryption.decrypt(randomKey1, reEncryptedTexts1)
+    val decryptedTexts2 = commutativeEncryption.decrypt(randomKey1, reEncryptedTexts2)
     assertThat(decryptedTexts1).isEqualTo(encryptedTexts2)
-
-    val decryptedTexts2 = applyCommutativeDecryption(randomKey1, reEncryptedTexts2)
-
     assertThat(decryptedTexts2).isEqualTo(encryptedTexts2)
 
-    val decryptedTexts3 = applyCommutativeDecryption(randomKey2, reEncryptedTexts1)
-
+    val decryptedTexts3 = commutativeEncryption.decrypt(randomKey2, reEncryptedTexts1)
+    val decryptedTexts4 = commutativeEncryption.decrypt(randomKey2, reEncryptedTexts2)
     assertThat(decryptedTexts3).isEqualTo(encryptedTexts1)
-
-    val decryptedTexts4 = applyCommutativeDecryption(randomKey2, reEncryptedTexts2)
-
     assertThat(decryptedTexts4).isEqualTo(encryptedTexts1)
   }
 }

@@ -14,6 +14,7 @@
 
 package org.wfanet.panelmatch.protocol.common
 
+import com.google.protobuf.ByteString
 import wfanet.panelmatch.protocol.protobuf.ApplyCommutativeDecryptionRequest
 import wfanet.panelmatch.protocol.protobuf.ApplyCommutativeDecryptionResponse
 import wfanet.panelmatch.protocol.protobuf.ApplyCommutativeEncryptionRequest
@@ -39,4 +40,31 @@ interface CommutativeEncryption {
   fun applyCommutativeDecryption(
     request: ApplyCommutativeDecryptionRequest
   ): ApplyCommutativeDecryptionResponse
+
+  fun encrypt(key: ByteString, plaintexts: List<ByteString>): List<ByteString> {
+    val request =
+      ApplyCommutativeEncryptionRequest.newBuilder()
+        .setEncryptionKey(key)
+        .addAllPlaintexts(plaintexts)
+        .build()
+    return applyCommutativeEncryption(request).encryptedTextsList
+  }
+
+  fun reencrypt(key: ByteString, encryptedTexts: List<ByteString>): List<ByteString> {
+    val request =
+      ReApplyCommutativeEncryptionRequest.newBuilder()
+        .setEncryptionKey(key)
+        .addAllEncryptedTexts(encryptedTexts)
+        .build()
+    return reApplyCommutativeEncryption(request).reencryptedTextsList
+  }
+
+  fun decrypt(key: ByteString, encryptedTexts: List<ByteString>): List<ByteString> {
+    val request =
+      ApplyCommutativeDecryptionRequest.newBuilder()
+        .setEncryptionKey(key)
+        .addAllEncryptedTexts(encryptedTexts)
+        .build()
+    return applyCommutativeDecryption(request).decryptedTextsList
+  }
 }

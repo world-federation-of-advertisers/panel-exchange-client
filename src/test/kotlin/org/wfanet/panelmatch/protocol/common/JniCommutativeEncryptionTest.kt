@@ -14,13 +14,11 @@
 
 package org.wfanet.panelmatch.protocol.common
 
-import com.google.protobuf.ByteString
-import wfanet.panelmatch.protocol.protobuf.SharedInputs
+import org.junit.runner.RunWith
+import org.junit.runners.JUnit4
+import org.wfanet.panelmatch.protocol.common.testing.AbstractCommutativeEncryptionTest
 
-fun makeSerializedSharedInputs(data: List<ByteString>): ByteString {
-  return SharedInputs.newBuilder().addAllData(data).build().toByteString()
-}
-
-fun parseSerializedSharedInputs(data: ByteString): List<ByteString> {
-  return SharedInputs.parseFrom(data).getDataList()
+@RunWith(JUnit4::class)
+class JniCommutativeEncryptionTest : AbstractCommutativeEncryptionTest() {
+  override val commutativeEncryption: CommutativeEncryption = JniCommutativeEncryption()
 }
