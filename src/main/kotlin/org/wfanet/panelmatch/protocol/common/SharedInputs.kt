@@ -17,10 +17,12 @@ package org.wfanet.panelmatch.protocol.common
 import com.google.protobuf.ByteString
 import wfanet.panelmatch.protocol.protobuf.SharedInputs
 
+/** Encodes [data] in a [SharedInputs] protocol buffer and then serializes it. */
 fun makeSerializedSharedInputs(data: List<ByteString>): ByteString {
   return SharedInputs.newBuilder().addAllData(data).build().toByteString()
 }
 
+/** Deserializes a serialized [SharedInputs] protocol buffer and returns its `data` field. */
 fun parseSerializedSharedInputs(data: ByteString): List<ByteString> {
   return SharedInputs.parseFrom(data).dataList
 }

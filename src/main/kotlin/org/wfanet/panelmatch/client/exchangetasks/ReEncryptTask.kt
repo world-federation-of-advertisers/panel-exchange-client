@@ -19,7 +19,7 @@ import org.wfanet.panelmatch.protocol.common.makeSerializedSharedInputs
 import org.wfanet.panelmatch.protocol.common.parseSerializedSharedInputs
 import org.wfanet.panelmatch.protocol.common.reApplyCommutativeEncryption
 
-// Encrypts already encrypted text using commutative encryption
+/** Encrypts already encrypted text using commutative encryption. */
 class ReEncryptTask : ExchangeTask {
   override suspend fun execute(
     input: Map<String, ByteString>,

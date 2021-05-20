@@ -19,7 +19,7 @@ import org.wfanet.panelmatch.protocol.common.applyCommutativeDecryption
 import org.wfanet.panelmatch.protocol.common.makeSerializedSharedInputs
 import org.wfanet.panelmatch.protocol.common.parseSerializedSharedInputs
 
-// Decrypts encrypted data using commutative encryption
+/** Decrypts encrypted data using commutative encryption. */
 class DecryptTask : ExchangeTask {
 
   override suspend fun execute(

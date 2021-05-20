@@ -69,7 +69,7 @@ fun applyCommutativeEncryption(key: ByteString, plaintexts: List<ByteString>): L
       .setEncryptionKey(key)
       .addAllPlaintexts(plaintexts)
       .build()
-  return JniCommutativeEncryption().applyCommutativeEncryption(request).getEncryptedTextsList()
+  return JniCommutativeEncryption().applyCommutativeEncryption(request).encryptedTextsList
 }
 
 fun reApplyCommutativeEncryption(
@@ -81,7 +81,7 @@ fun reApplyCommutativeEncryption(
       .setEncryptionKey(key)
       .addAllEncryptedTexts(encryptedTexts)
       .build()
-  return JniCommutativeEncryption().reApplyCommutativeEncryption(request).getReencryptedTextsList()
+  return JniCommutativeEncryption().reApplyCommutativeEncryption(request).reencryptedTextsList
 }
 
 fun applyCommutativeDecryption(
@@ -93,5 +93,5 @@ fun applyCommutativeDecryption(
       .setEncryptionKey(key)
       .addAllEncryptedTexts(encryptedTexts)
       .build()
-  return JniCommutativeEncryption().applyCommutativeDecryption(request).getDecryptedTextsList()
+  return JniCommutativeEncryption().applyCommutativeDecryption(request).decryptedTextsList
 }

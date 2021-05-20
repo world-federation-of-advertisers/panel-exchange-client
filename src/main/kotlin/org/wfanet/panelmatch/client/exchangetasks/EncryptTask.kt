@@ -19,7 +19,7 @@ import org.wfanet.panelmatch.protocol.common.applyCommutativeEncryption
 import org.wfanet.panelmatch.protocol.common.makeSerializedSharedInputs
 import org.wfanet.panelmatch.protocol.common.parseSerializedSharedInputs
 
-// Encrypts a plaintext using commutative encryption
+/** Encrypts a plaintext using commutative encryption. */
 class EncryptTask : ExchangeTask {
 
   override suspend fun execute(
