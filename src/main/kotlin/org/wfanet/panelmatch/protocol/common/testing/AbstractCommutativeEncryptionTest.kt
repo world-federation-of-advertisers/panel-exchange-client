@@ -16,8 +16,29 @@ package org.wfanet.panelmatch.protocol.common.testing
 
 import com.google.common.truth.Truth.assertThat
 import com.google.protobuf.ByteString
+import java.lang.RuntimeException
+import kotlin.test.assertFails
+import kotlin.test.assertFailsWith
 import org.junit.Test
 import org.wfanet.panelmatch.protocol.common.CommutativeEncryption
+import wfanet.panelmatch.protocol.protobuf.ApplyCommutativeDecryptionRequest
+import wfanet.panelmatch.protocol.protobuf.ApplyCommutativeEncryptionRequest
+import wfanet.panelmatch.protocol.protobuf.ReApplyCommutativeEncryptionRequest
+
+private val PLAINTEXTS: List<ByteString> =
+  listOf<ByteString>(
+    ByteString.copyFromUtf8("some plaintext0"),
+    ByteString.copyFromUtf8("some plaintext1"),
+    ByteString.copyFromUtf8("some plaintext2"),
+    ByteString.copyFromUtf8("some plaintext3"),
+    ByteString.copyFromUtf8("some plaintext4")
+  )
+
+private val CIPHERTEXTS: List<ByteString> =
+  listOf<ByteString>(
+    ByteString.copyFromUtf8("some ciphertext0"),
+    ByteString.copyFromUtf8("some ciphertext1")
+  )
 
 /** Abstract base class for testing implementations of [CommutativeEncryption]. */
 abstract class AbstractCommutativeEncryptionTest {
@@ -25,19 +46,11 @@ abstract class AbstractCommutativeEncryptionTest {
 
   @Test
   fun testCommutativeEncryption() {
-    val plaintexts =
-      listOf<ByteString>(
-        ByteString.copyFromUtf8("some plaintext0"),
-        ByteString.copyFromUtf8("some plaintext1"),
-        ByteString.copyFromUtf8("some plaintext2"),
-        ByteString.copyFromUtf8("some plaintext3"),
-        ByteString.copyFromUtf8("some plaintext4")
-      )
     val randomKey1: ByteString = ByteString.copyFromUtf8("random-key-00")
     val randomKey2: ByteString = ByteString.copyFromUtf8("random-key-222")
 
-    val encryptedTexts1 = commutativeEncryption.encrypt(randomKey1, plaintexts)
-    val encryptedTexts2 = commutativeEncryption.encrypt(randomKey2, plaintexts)
+    val encryptedTexts1 = commutativeEncryption.encrypt(randomKey1, PLAINTEXTS)
+    val encryptedTexts2 = commutativeEncryption.encrypt(randomKey2, PLAINTEXTS)
     assertThat(encryptedTexts1).isNotEqualTo(encryptedTexts2)
 
     val reEncryptedTexts1 = commutativeEncryption.reencrypt(randomKey1, encryptedTexts2)
@@ -54,5 +67,46 @@ abstract class AbstractCommutativeEncryptionTest {
     val decryptedTexts4 = commutativeEncryption.decrypt(randomKey2, reEncryptedTexts2)
     assertThat(decryptedTexts3).isEqualTo(encryptedTexts1)
     assertThat(decryptedTexts4).isEqualTo(encryptedTexts1)
+  }
+
+  @Test
+  fun `invalid key`() {
+    val key: ByteString = ByteString.copyFromUtf8("this key is too long so it causes problems")
+    assertFails { commutativeEncryption.encrypt(key, PLAINTEXTS) }
+    assertFails { commutativeEncryption.decrypt(key, PLAINTEXTS) }
+    assertFails { commutativeEncryption.reencrypt(key, PLAINTEXTS) }
+  }
+
+  @Test
+  fun `invalid ApplyCommutativeEncryption proto`() {
+    val missingKeyException =
+      assertFailsWith(RuntimeException::class) {
+        val request =
+          ApplyCommutativeEncryptionRequest.newBuilder().addAllPlaintexts(PLAINTEXTS).build()
+        commutativeEncryption.applyCommutativeEncryption(request)
+      }
+    assertThat(missingKeyException.message).contains("Failed to create the protocol cipher")
+  }
+
+  @Test
+  fun `invalid ApplyCommutativeDecryption proto`() {
+    val missingKeyException =
+      assertFailsWith(RuntimeException::class) {
+        val request =
+          ApplyCommutativeDecryptionRequest.newBuilder().addAllEncryptedTexts(CIPHERTEXTS).build()
+        commutativeEncryption.applyCommutativeDecryption(request)
+      }
+    assertThat(missingKeyException.message).contains("Failed to create the protocol cipher")
+  }
+
+  @Test
+  fun `invalid ReApplyCommutativeEncryption proto`() {
+    val missingKeyException =
+      assertFailsWith(RuntimeException::class) {
+        val request =
+          ReApplyCommutativeEncryptionRequest.newBuilder().addAllEncryptedTexts(CIPHERTEXTS).build()
+        commutativeEncryption.reApplyCommutativeEncryption(request)
+      }
+    assertThat(missingKeyException.message).contains("Failed to create the protocol cipher")
   }
 }
