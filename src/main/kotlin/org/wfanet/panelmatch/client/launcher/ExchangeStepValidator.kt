@@ -16,8 +16,11 @@ package org.wfanet.panelmatch.client.launcher
 
 import org.wfanet.measurement.api.v2alpha.ExchangeStep
 
+/** Indicates that an [ExchangeStep] is not valid to execute. */
+class InvalidExchangeStepException(message: String) : Exception(message)
+
 /** Determines whether an ExchangeStep is valid and can be safely executed. */
 interface ExchangeStepValidator {
-  /** Returns [bool] if [exchangeStep] is invalid. */
-  bool fun validate(exchangeStep: ExchangeStep)
+  /** Throws [InvalidExchangeStepException] if [exchangeStep] is invalid. */
+  @Throws(InvalidExchangeStepException::class) fun validate(exchangeStep: ExchangeStep)
 }

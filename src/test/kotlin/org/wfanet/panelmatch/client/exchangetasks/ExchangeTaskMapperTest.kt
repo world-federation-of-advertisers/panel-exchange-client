@@ -21,7 +21,8 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
 import org.wfanet.measurement.api.v2alpha.ExchangeWorkflow
-import org.wfanet.panelmatch.client.storage.*
+import org.wfanet.panelmatch.client.storage.InMemoryStorage
+import org.wfanet.panelmatch.client.storage.Storage
 import org.wfanet.panelmatch.protocol.common.applyCommutativeEncryption
 import org.wfanet.panelmatch.protocol.common.makeSerializedSharedInputs
 import org.wfanet.panelmatch.protocol.common.parseSerializedSharedInputs
