@@ -19,25 +19,26 @@ import org.wfanet.measurement.api.v2alpha.ExchangeWorkflow
 import org.wfanet.panelmatch.client.storage.Storage
 
 /**
- * Maps ExchangeWorkflow.Step to respective tasks. Stores inputs and outputs.
+ * Maps ExchangeWorkflow.Step to respective tasks. Retrieves necessary inputs. Executes step. Stores
+ * outputs.
  *
  * @param ExchangeWorkflow.Step to execute.
  * @param input inputs needed by all [task]s.
+ * @param storage the Storage class to store the intermediary steps
  * @param sendDebugLog function which writes logs happened during execution.
- * @return Executed output. It is a map from the labels to the payload associated with the label.
+ * @return mapped output. This is either a ByteString or null for input steps.
  */
 class ExchangeTaskMapper {
 
   suspend fun execute(
     step: ExchangeWorkflow.Step,
     input: Map<String, ByteString>,
-    storageClass: Storage,
+    storage: Storage,
     sendDebugLog: suspend (String) -> Unit
   ): ByteString? {
     val inputLabels = step.getInputLabelsMap()
     val outputLabels = step.getOutputLabelsMap()
     val outputFieldName = requireNotNull(outputLabels["output"])
-    val storage = storageClass
     when (step.getStepCase()) {
       ExchangeWorkflow.Step.StepCase.INPUT -> {
         val inputFieldName = requireNotNull(inputLabels["input"])
@@ -89,7 +90,7 @@ class ExchangeTaskMapper {
         return decryptedData
       }
       else -> {
-        error("Unsupported step for Model Provider")
+        error("Unsupported step type")
       }
     }
   }
