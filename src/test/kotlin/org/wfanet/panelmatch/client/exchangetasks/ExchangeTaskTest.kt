@@ -27,7 +27,7 @@ import org.wfanet.panelmatch.protocol.common.reApplyCommutativeEncryption
 import wfanet.panelmatch.protocol.protobuf.SharedInputs
 
 @RunWith(JUnit4::class)
-class ExchangeTasksTest {
+class ExchangeTaskTest {
   private val joinKeys =
     listOf<ByteString>(
       ByteString.copyFromUtf8("some key0"),

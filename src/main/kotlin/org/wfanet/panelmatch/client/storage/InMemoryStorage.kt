@@ -16,15 +16,19 @@ package org.wfanet.panelmatch.client.storage
 
 import com.google.protobuf.ByteString
 
-/** Interface for InputReader adapter. */
-interface InputReader {
+/**
+ * Stores everything in memory. Nothing is persistent. Use with caution. Uses a simple hashmap to
+ * storage everything where path is the key.
+ */
+class InMemoryStorage : Storage {
+  private var inMemoryStorage = HashMap<String, ByteString>()
+  constructor() {}
 
-  /**
-   * Reads input data from given path.
-   *
-   * @param path String location of input data to read from.
-   * @return Input data.
-   * @throws IOException
-   */
-  suspend fun read(path: String): ByteString
+  override suspend fun read(path: String): ByteString {
+    return requireNotNull(inMemoryStorage[path])
+  }
+
+  override suspend fun write(path: String, data: ByteString) {
+    inMemoryStorage.put(path, data)
+  }
 }
