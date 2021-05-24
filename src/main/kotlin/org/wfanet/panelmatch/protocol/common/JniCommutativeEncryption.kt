@@ -38,7 +38,7 @@ class JniCommutativeEncryption : CommutativeEncryption {
     }
   }
 
-  override fun applyCommutativeEncryption(
+  override fun encrypt(
     request: ApplyCommutativeEncryptionRequest
   ): ApplyCommutativeEncryptionResponse {
     return wrapJniException {
@@ -48,7 +48,7 @@ class JniCommutativeEncryption : CommutativeEncryption {
     }
   }
 
-  override fun reApplyCommutativeEncryption(
+  override fun reEncrypt(
     request: ReApplyCommutativeEncryptionRequest
   ): ReApplyCommutativeEncryptionResponse {
     return wrapJniException {
@@ -58,7 +58,7 @@ class JniCommutativeEncryption : CommutativeEncryption {
     }
   }
 
-  override fun applyCommutativeDecryption(
+  override fun decrypt(
     request: ApplyCommutativeDecryptionRequest
   ): ApplyCommutativeDecryptionResponse {
     return wrapJniException {

@@ -53,8 +53,8 @@ abstract class AbstractCommutativeEncryptionTest {
     val encryptedTexts2 = commutativeEncryption.encrypt(randomKey2, PLAINTEXTS)
     assertThat(encryptedTexts1).isNotEqualTo(encryptedTexts2)
 
-    val reEncryptedTexts1 = commutativeEncryption.reencrypt(randomKey1, encryptedTexts2)
-    val reEncryptedTexts2 = commutativeEncryption.reencrypt(randomKey2, encryptedTexts1)
+    val reEncryptedTexts1 = commutativeEncryption.reEncrypt(randomKey1, encryptedTexts2)
+    val reEncryptedTexts2 = commutativeEncryption.reEncrypt(randomKey2, encryptedTexts1)
     assertThat(reEncryptedTexts1).isNotEqualTo(encryptedTexts2)
     assertThat(reEncryptedTexts2).isNotEqualTo(encryptedTexts1)
 
@@ -74,7 +74,7 @@ abstract class AbstractCommutativeEncryptionTest {
     val key: ByteString = ByteString.copyFromUtf8("this key is too long so it causes problems")
     assertFails { commutativeEncryption.encrypt(key, PLAINTEXTS) }
     assertFails { commutativeEncryption.decrypt(key, PLAINTEXTS) }
-    assertFails { commutativeEncryption.reencrypt(key, PLAINTEXTS) }
+    assertFails { commutativeEncryption.reEncrypt(key, PLAINTEXTS) }
   }
 
   @Test
@@ -83,7 +83,7 @@ abstract class AbstractCommutativeEncryptionTest {
       assertFailsWith(RuntimeException::class) {
         val request =
           ApplyCommutativeEncryptionRequest.newBuilder().addAllPlaintexts(PLAINTEXTS).build()
-        commutativeEncryption.applyCommutativeEncryption(request)
+        commutativeEncryption.encrypt(request)
       }
     assertThat(missingKeyException.message).contains("Failed to create the protocol cipher")
   }
@@ -94,7 +94,7 @@ abstract class AbstractCommutativeEncryptionTest {
       assertFailsWith(RuntimeException::class) {
         val request =
           ApplyCommutativeDecryptionRequest.newBuilder().addAllEncryptedTexts(CIPHERTEXTS).build()
-        commutativeEncryption.applyCommutativeDecryption(request)
+        commutativeEncryption.decrypt(request)
       }
     assertThat(missingKeyException.message).contains("Failed to create the protocol cipher")
   }
@@ -105,7 +105,7 @@ abstract class AbstractCommutativeEncryptionTest {
       assertFailsWith(RuntimeException::class) {
         val request =
           ReApplyCommutativeEncryptionRequest.newBuilder().addAllEncryptedTexts(CIPHERTEXTS).build()
-        commutativeEncryption.reApplyCommutativeEncryption(request)
+        commutativeEncryption.reEncrypt(request)
       }
     assertThat(missingKeyException.message).contains("Failed to create the protocol cipher")
   }

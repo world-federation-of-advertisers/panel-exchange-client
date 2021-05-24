@@ -14,11 +14,25 @@
 
 package org.wfanet.panelmatch.protocol.common
 
+import com.google.common.truth.Truth.assertThat
+import kotlin.test.assertFailsWith
+import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
 import org.wfanet.panelmatch.protocol.common.testing.AbstractCommutativeEncryptionTest
+import wfanet.panelmatch.protocol.protobuf.ReApplyCommutativeEncryptionRequest
 
 @RunWith(JUnit4::class)
 class JniCommutativeEncryptionTest : AbstractCommutativeEncryptionTest() {
   override val commutativeEncryption: CommutativeEncryption = JniCommutativeEncryption()
+
+  @Test
+  fun `invalid proto throws JniException`() {
+    val missingKeyException =
+      assertFailsWith(JniCommutativeEncryption.JniException::class) {
+        val request = ReApplyCommutativeEncryptionRequest.getDefaultInstance()
+        commutativeEncryption.reEncrypt(request)
+      }
+    assertThat(missingKeyException.message).contains("Failed to create the protocol cipher")
+  }
 }

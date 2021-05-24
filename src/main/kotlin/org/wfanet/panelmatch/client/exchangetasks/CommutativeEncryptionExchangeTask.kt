@@ -67,7 +67,7 @@ internal constructor(
      */
     fun forReEncryption(commutativeEncryption: CommutativeEncryption): ExchangeTask {
       return CommutativeEncryptionExchangeTask(
-        operation = commutativeEncryption::reencrypt,
+        operation = commutativeEncryption::reEncrypt,
         inputDataLabel = "encrypted-data",
         outputDataLabel = "reencrypted-data"
       )

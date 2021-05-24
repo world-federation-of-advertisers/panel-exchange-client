@@ -174,7 +174,7 @@ class CommutativeEncryptionExchangeTaskTest {
 
   @Test
   fun `reEncryptTask with valid inputs`() {
-    whenever(commutativeEncryption.reencrypt(any(), any())).thenReturn(DOUBLE_CIPHERTEXTS)
+    whenever(commutativeEncryption.reEncrypt(any(), any())).thenReturn(DOUBLE_CIPHERTEXTS)
 
     val result = runBlocking {
       CommutativeEncryptionExchangeTask.forReEncryption(commutativeEncryption)
@@ -193,7 +193,7 @@ class CommutativeEncryptionExchangeTaskTest {
 
   @Test
   fun `reEncryptTask with crypto error`() {
-    whenever(commutativeEncryption.reencrypt(any(), any()))
+    whenever(commutativeEncryption.reEncrypt(any(), any()))
       .thenThrow(IllegalArgumentException("Something went wrong"))
 
     val exception = runBlocking {
