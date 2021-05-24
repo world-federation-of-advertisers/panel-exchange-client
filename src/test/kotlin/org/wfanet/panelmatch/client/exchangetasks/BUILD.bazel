@@ -1,41 +1,9 @@
 load("@io_bazel_rules_kotlin//kotlin:kotlin.bzl", "kt_jvm_test")
 
 kt_jvm_test(
-    name = "EncryptTaskTest",
-    srcs = ["EncryptTaskTest.kt"],
-    test_class = "org.wfanet.panelmatch.client.exchangetasks.EncryptTaskTest",
-    deps = [
-        "//src/main/kotlin/org/wfanet/panelmatch/client/exchangetasks",
-        "//src/main/proto/wfanet/panelmatch/protocol/exchangesteps:exchangesteps_java_proto",
-        "@wfa_measurement_system//imports/java/com/google/common/truth",
-        "@wfa_measurement_system//imports/java/com/google/common/truth/extensions/proto",
-        "@wfa_measurement_system//imports/java/org/junit",
-        "@wfa_measurement_system//imports/kotlin/com/nhaarman/mockitokotlin2",
-        "@wfa_measurement_system//imports/kotlin/kotlin/test",
-        "@wfa_measurement_system//src/main/kotlin/org/wfanet/measurement/common/grpc/testing",
-    ],
-)
-
-kt_jvm_test(
-    name = "DecryptTaskTest",
-    srcs = ["DecryptTaskTest.kt"],
-    test_class = "org.wfanet.panelmatch.client.exchangetasks.DecryptTaskTest",
-    deps = [
-        "//src/main/kotlin/org/wfanet/panelmatch/client/exchangetasks",
-        "//src/main/proto/wfanet/panelmatch/protocol/exchangesteps:exchangesteps_java_proto",
-        "@wfa_measurement_system//imports/java/com/google/common/truth",
-        "@wfa_measurement_system//imports/java/com/google/common/truth/extensions/proto",
-        "@wfa_measurement_system//imports/java/org/junit",
-        "@wfa_measurement_system//imports/kotlin/com/nhaarman/mockitokotlin2",
-        "@wfa_measurement_system//imports/kotlin/kotlin/test",
-        "@wfa_measurement_system//src/main/kotlin/org/wfanet/measurement/common/grpc/testing",
-    ],
-)
-
-kt_jvm_test(
-    name = "ReEncryptTaskTest",
-    srcs = ["ReEncryptTaskTest.kt"],
-    test_class = "org.wfanet.panelmatch.client.exchangetasks.ReEncryptTaskTest",
+    name = "CommutativeEncryptionExchangeTaskTest",
+    srcs = ["CommutativeEncryptionExchangeTaskTest.kt"],
+    test_class = "org.wfanet.panelmatch.client.exchangetasks.CommutativeEncryptionExchangeTaskTest",
     deps = [
         "//src/main/kotlin/org/wfanet/panelmatch/client/exchangetasks",
         "//src/main/proto/wfanet/panelmatch/protocol/exchangesteps:exchangesteps_java_proto",

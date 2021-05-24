@@ -14,6 +14,7 @@
 
 package org.wfanet.panelmatch.protocol.common
 
+import java.lang.RuntimeException
 import java.nio.file.Paths
 import org.wfanet.panelmatch.common.loadLibrary
 import wfanet.panelmatch.protocol.crypto.CommutativeEncryptionUtility
@@ -26,29 +27,45 @@ import wfanet.panelmatch.protocol.protobuf.ReApplyCommutativeEncryptionResponse
 
 /** A [CommutativeEncryption] implementation using the JNI [CommutativeEncryptionUtility]. */
 class JniCommutativeEncryption : CommutativeEncryption {
+  /** Indicates something went wrong in C++. */
+  class JniException(cause: Throwable) : RuntimeException(cause)
+
+  private fun <T> wrapJniException(block: () -> T): T {
+    return try {
+      block()
+    } catch (e: RuntimeException) {
+      throw JniException(e)
+    }
+  }
 
   override fun applyCommutativeEncryption(
     request: ApplyCommutativeEncryptionRequest
   ): ApplyCommutativeEncryptionResponse {
-    return ApplyCommutativeEncryptionResponse.parseFrom(
-      CommutativeEncryptionUtility.applyCommutativeEncryptionWrapper(request.toByteArray())
-    )
+    return wrapJniException {
+      ApplyCommutativeEncryptionResponse.parseFrom(
+        CommutativeEncryptionUtility.applyCommutativeEncryptionWrapper(request.toByteArray())
+      )
+    }
   }
 
   override fun reApplyCommutativeEncryption(
     request: ReApplyCommutativeEncryptionRequest
   ): ReApplyCommutativeEncryptionResponse {
-    return ReApplyCommutativeEncryptionResponse.parseFrom(
-      CommutativeEncryptionUtility.reApplyCommutativeEncryptionWrapper(request.toByteArray())
-    )
+    return wrapJniException {
+      ReApplyCommutativeEncryptionResponse.parseFrom(
+        CommutativeEncryptionUtility.reApplyCommutativeEncryptionWrapper(request.toByteArray())
+      )
+    }
   }
 
   override fun applyCommutativeDecryption(
     request: ApplyCommutativeDecryptionRequest
   ): ApplyCommutativeDecryptionResponse {
-    return ApplyCommutativeDecryptionResponse.parseFrom(
-      CommutativeEncryptionUtility.applyCommutativeDecryptionWrapper(request.toByteArray())
-    )
+    return wrapJniException {
+      ApplyCommutativeDecryptionResponse.parseFrom(
+        CommutativeEncryptionUtility.applyCommutativeDecryptionWrapper(request.toByteArray())
+      )
+    }
   }
 
   companion object {

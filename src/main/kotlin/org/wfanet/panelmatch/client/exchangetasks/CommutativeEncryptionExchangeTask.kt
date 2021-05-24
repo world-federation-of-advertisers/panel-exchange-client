@@ -19,23 +19,58 @@ import org.wfanet.panelmatch.protocol.common.CommutativeEncryption
 import org.wfanet.panelmatch.protocol.common.makeSerializedSharedInputs
 import org.wfanet.panelmatch.protocol.common.parseSerializedSharedInputs
 
-abstract class CommutativeEncryptionExchangeTask(
-  private val commutativeEncryption: CommutativeEncryption
+private const val DEFAULT_INPUT_KEY_LABEL: String = "encryption-key"
+
+class CommutativeEncryptionExchangeTask
+internal constructor(
+  private val operation: (ByteString, List<ByteString>) -> List<ByteString>,
+  private val inputDataLabel: String,
+  private val outputDataLabel: String,
+  private val inputKeyLabel: String = DEFAULT_INPUT_KEY_LABEL
 ) : ExchangeTask {
-  abstract val inputLabel: String
-  abstract val outputLabel: String
-  abstract val operation: CommutativeEncryption.(ByteString, List<ByteString>) -> List<ByteString>
 
   override suspend fun execute(
     input: Map<String, ByteString>,
     sendDebugLog: suspend (String) -> Unit
   ): Map<String, ByteString> {
-    val key = requireNotNull(input["encryption-key"]) { "Missing input label 'encryption-key'" }
-
-    val serializedInputs = requireNotNull(input[inputLabel]) { "Missing input label '$inputLabel'" }
+    val key = requireNotNull(input[inputKeyLabel]) { "Missing input label '$inputKeyLabel'" }
+    val serializedInputs =
+      requireNotNull(input[inputDataLabel]) { "Missing input label '$inputDataLabel'" }
 
     val inputs = parseSerializedSharedInputs(serializedInputs)
-    val result = commutativeEncryption.operation(key, inputs)
-    return mapOf(outputLabel to makeSerializedSharedInputs(result))
+    val result = operation(key, inputs)
+    return mapOf(outputDataLabel to makeSerializedSharedInputs(result))
+  }
+
+  companion object {
+    /** Returns an [ExchangeTask] that removes deterministic commutative encryption from data. */
+    fun forDecryption(commutativeEncryption: CommutativeEncryption): ExchangeTask {
+      return CommutativeEncryptionExchangeTask(
+        operation = commutativeEncryption::decrypt,
+        inputDataLabel = "encrypted-data",
+        outputDataLabel = "decrypted-data"
+      )
+    }
+
+    /** Returns an [ExchangeTask] that adds deterministic commutative encryption to plaintext. */
+    fun forEncryption(commutativeEncryption: CommutativeEncryption): ExchangeTask {
+      return CommutativeEncryptionExchangeTask(
+        operation = commutativeEncryption::encrypt,
+        inputDataLabel = "unencrypted-data",
+        outputDataLabel = "encrypted-data"
+      )
+    }
+
+    /**
+     * Returns an [ExchangeTask] that adds another layer of deterministic commutative encryption to
+     * data.
+     */
+    fun forReEncryption(commutativeEncryption: CommutativeEncryption): ExchangeTask {
+      return CommutativeEncryptionExchangeTask(
+        operation = commutativeEncryption::reencrypt,
+        inputDataLabel = "encrypted-data",
+        outputDataLabel = "reencrypted-data"
+      )
+    }
   }
 }
