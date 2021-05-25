@@ -18,6 +18,7 @@ import com.google.protobuf.ByteString
 import org.wfanet.panelmatch.protocol.common.makeSerializedSharedInputs
 import org.wfanet.panelmatch.protocol.common.parseSerializedSharedInputs
 import org.wfanet.panelmatch.protocol.common.reApplyCommutativeEncryption
+import org.wfanet.panelmatch.client.utils.loggerFor
 
 /**
  * Encrypts many already encrypted texts using commutative encryption
@@ -27,11 +28,12 @@ import org.wfanet.panelmatch.protocol.common.reApplyCommutativeEncryption
  * @return Executed output. It is a map from the labels to the payload associated with the label.
  */
 class ReEncryptTask : ExchangeTask {
+  private val LOGGER = loggerFor(javaClass)
 
   override suspend fun execute(
-    input: Map<String, ByteString>,
-    sendDebugLog: suspend (String) -> Unit
+    input: Map<String, ByteString>
   ): Map<String, ByteString> {
+    LOGGER.info("Execute ReEncryptTask")
     val encryptionKey = requireNotNull(input["encryption-key"])
     val encryptedData = requireNotNull(input["encrypted-data"])
     return mapOf(

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package org.wfanet.panelmatch.client.exchangetasks
+package org.wfanet.panelmatch.client.launcher
 
 import com.google.common.truth.Truth.assertThat
 import com.google.protobuf.ByteString
@@ -20,7 +20,11 @@ import kotlinx.coroutines.runBlocking
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
+import com.nhaarman.mockitokotlin2.mock
+import com.nhaarman.mockitokotlin2.whenever
 import org.wfanet.measurement.api.v2alpha.ExchangeWorkflow
+import org.wfanet.measurement.api.v2alpha.ExchangeStep
+import org.wfanet.measurement.api.v2alpha.ExchangeStepAttempt
 import org.wfanet.panelmatch.client.storage.InMemoryStorage
 import org.wfanet.panelmatch.client.storage.Storage
 import org.wfanet.panelmatch.protocol.common.applyCommutativeEncryption
@@ -29,7 +33,7 @@ import org.wfanet.panelmatch.protocol.common.parseSerializedSharedInputs
 import org.wfanet.panelmatch.protocol.common.reApplyCommutativeEncryption
 
 @RunWith(JUnit4::class)
-class ExchangeTaskMapperTest {
+class CoroutineLauncherTest {
   private val DP_0_SECRET_KEY = ByteString.copyFromUtf8("random-edp-string-0")
   private val MP_0_SECRET_KEY = ByteString.copyFromUtf8("random-mp-string-0")
   private val joinkeys =
@@ -40,10 +44,13 @@ class ExchangeTaskMapperTest {
       ByteString.copyFromUtf8("some joinkey3"),
       ByteString.copyFromUtf8("some joinkey4")
     )
+  private val apiClient: ApiClient = mock()
+
   private suspend fun executeStepConfig(
     stepConfig: Map<String, Any>,
     storage: Storage
   ): ByteString? {
+    var exchangeStep = ExchangeStep.newBuilder()
     var step = ExchangeWorkflow.Step.newBuilder()
     val inputLabels = requireNotNull(stepConfig["inputLabels"]) as Map<String, String>
     val outputLabels = requireNotNull(stepConfig["outputLabels"]) as Map<String, String>
@@ -66,13 +73,20 @@ class ExchangeTaskMapperTest {
           step.apply { decrypt = ExchangeWorkflow.Step.DecryptStep.getDefaultInstance() }
         else -> throw Exception("Unsupported step config")
       }
-    val builtStep = step.putAllInputLabels(inputLabels).putAllOutputLabels(outputLabels).build()
-    return ExchangeTaskMapper()
-      .execute(
-        builtStep,
-        stepConfig["inputData"] as Map<String, ByteString>,
-        storage
-      )
+    val builtExchangeStep = exchangeStep.apply{
+      step =  step.putAllInputLabels(inputLabels).putAllOutputLabels(outputLabels)
+    }.build()
+    CoroutineLauncher()
+        .execute(
+          apiClient,
+          builtExchangeStep,
+          ExchangeStepAttempt.Key.getDefaultInstance()
+          //stepConfig["inputData"] as Map<String, ByteString>,
+          //storage
+        )
+    println("********* WAITING *********")
+    //whenever(apiClient.finishExchangeStepAttempt(any(), any(), any())).thenReturn(ByteString.copyFromUtf8("some joinkey0"))
+    return ByteString.copyFromUtf8("some joinkey0")
   }
   @Test
   fun `test single party initiating steps for both parties in shared memory`() = runBlocking {

@@ -127,6 +127,7 @@ MAVEN_ARTIFACTS.update({
     "com.nhaarman.mockitokotlin2:mockito-kotlin": "2.2.0",
     "info.picocli:picocli": "4.4.0",
     "junit:junit": "4.13",
+    "ch.qos.logback:logback-classic":  "1.2.3",
 })
 
 maven_install(

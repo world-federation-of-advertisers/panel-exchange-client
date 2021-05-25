@@ -43,7 +43,6 @@ class ExchangeTaskTest {
 
   @Test
   fun `test encrypt reencrypt and decrypt tasks`() = runBlocking {
-    val fakeSendDebugLog: suspend (String) -> Unit = {}
 
     val encryptedOutputs: Map<String, ByteString> =
       EncryptTask()
@@ -52,8 +51,7 @@ class ExchangeTaskTest {
             "encryption-key" to randomCommutativeDeterministicKey1,
             "unencrypted-data" to
               SharedInputs.newBuilder().addAllData(joinKeys).build().toByteString()
-          ),
-          fakeSendDebugLog
+          )
         )
     assertThat(SharedInputs.parseFrom(encryptedOutputs["encrypted-data"]).getDataList())
       .isEqualTo(applyCommutativeEncryption(randomCommutativeDeterministicKey1, joinKeys))
@@ -64,8 +62,7 @@ class ExchangeTaskTest {
           mapOf(
             "encryption-key" to randomCommutativeDeterministicKey2,
             "encrypted-data" to encryptedOutputs["encrypted-data"]!!
-          ),
-          fakeSendDebugLog
+          )
         )
     assertThat(SharedInputs.parseFrom(reEncryptedOutputs["reencrypted-data"]).getDataList())
       .isEqualTo(
@@ -81,8 +78,7 @@ class ExchangeTaskTest {
           mapOf(
             "encryption-key" to randomCommutativeDeterministicKey1,
             "encrypted-data" to reEncryptedOutputs["reencrypted-data"]!!
-          ),
-          fakeSendDebugLog
+          )
         )
     assertThat(SharedInputs.parseFrom(decryptedOutputs["decrypted-data"]).getDataList())
       .isEqualTo(
@@ -99,7 +95,6 @@ class ExchangeTaskTest {
   @Test
   fun detectErrorsfromJni() = runBlocking {
     val randomCommutativeDeterministicKeyInvalid: ByteString = ByteString.copyFromUtf8("")
-    val fakeSendDebugLog: suspend (String) -> Unit = {}
     val decryptException =
       assertFailsWith(RuntimeException::class) {
         DecryptTask()
@@ -108,8 +103,7 @@ class ExchangeTaskTest {
               "encryption-key" to randomCommutativeDeterministicKeyInvalid,
               "encrypted-data" to
                 SharedInputs.newBuilder().addAllData(joinKeys).build().toByteString()
-            ),
-            fakeSendDebugLog
+            )
           )
       }
     assertThat(decryptException.message)
@@ -123,8 +117,7 @@ class ExchangeTaskTest {
               "encryption-key" to randomCommutativeDeterministicKeyInvalid,
               "unencrypted-data" to
                 SharedInputs.newBuilder().addAllData(joinKeys).build().toByteString()
-            ),
-            fakeSendDebugLog
+            )
           )
       }
     assertThat(encryptException.message)
@@ -138,8 +131,7 @@ class ExchangeTaskTest {
               "encryption-key" to randomCommutativeDeterministicKeyInvalid,
               "encrypted-data" to
                 SharedInputs.newBuilder().addAllData(joinKeys).build().toByteString()
-            ),
-            fakeSendDebugLog
+            )
           )
       }
     assertThat(reencryptException.message)
@@ -148,15 +140,13 @@ class ExchangeTaskTest {
 
   @Test
   fun detectMissingTaskFields() = runBlocking {
-    val fakeSendDebugLog: suspend (String) -> Unit = {}
     assertFailsWith<IllegalArgumentException> {
       DecryptTask()
         .execute(
           mapOf(
             "encrypted-data" to
               SharedInputs.newBuilder().addAllData(joinKeys).build().toByteString()
-          ),
-          fakeSendDebugLog
+          )
         )
     }
     val encryptException =
@@ -166,8 +156,7 @@ class ExchangeTaskTest {
             mapOf(
               "unencrypted-data" to
                 SharedInputs.newBuilder().addAllData(joinKeys).build().toByteString()
-            ),
-            fakeSendDebugLog
+            )
           )
       }
     val reencryptException =
@@ -177,8 +166,7 @@ class ExchangeTaskTest {
             mapOf(
               "encrypted-data" to
                 SharedInputs.newBuilder().addAllData(joinKeys).build().toByteString()
-            ),
-            fakeSendDebugLog
+            )
           )
       }
   }

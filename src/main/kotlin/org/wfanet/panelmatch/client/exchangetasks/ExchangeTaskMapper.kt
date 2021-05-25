@@ -17,6 +17,7 @@ package org.wfanet.panelmatch.client.exchangetasks
 import com.google.protobuf.ByteString
 import org.wfanet.measurement.api.v2alpha.ExchangeWorkflow
 import org.wfanet.panelmatch.client.storage.Storage
+import org.wfanet.panelmatch.client.utils.loggerFor
 
 /**
  * Maps ExchangeWorkflow.Step to respective tasks. Retrieves necessary inputs. Executes step. Stores
@@ -25,17 +26,17 @@ import org.wfanet.panelmatch.client.storage.Storage
  * @param ExchangeWorkflow.Step to execute.
  * @param input inputs needed by all [task]s.
  * @param storage the Storage class to store the intermediary steps
- * @param sendDebugLog function which writes logs happened during execution.
  * @return mapped output. This is either a ByteString or null for input steps.
  */
 class ExchangeTaskMapper {
+  private val LOGGER = loggerFor(javaClass)
 
   suspend fun execute(
     step: ExchangeWorkflow.Step,
     input: Map<String, ByteString>,
-    storage: Storage,
-    sendDebugLog: suspend (String) -> Unit
+    storage: Storage
   ): ByteString? {
+    LOGGER.info("Excecute step: ${step.toString()}")
     val inputLabels = step.getInputLabelsMap()
     val outputLabels = step.getOutputLabelsMap()
     val outputFieldName = requireNotNull(outputLabels["output"])
@@ -54,7 +55,7 @@ class ExchangeTaskMapper {
                 "encryption-key" to storage.read(requireNotNull(inputLabels["crypto-key"])),
                 "unencrypted-data" to storage.read(requireNotNull(inputLabels["unencrypted-data"]))
               )
-            val taskOutput = EncryptTask().execute(taskInput, sendDebugLog)
+            val taskOutput = EncryptTask().execute(taskInput)
             val encryptedData = requireNotNull(taskOutput["encrypted-data"])
             // TODO store data in shared location or send to Measurement Coordinator
             storage.write(outputFieldName, encryptedData)
@@ -66,7 +67,7 @@ class ExchangeTaskMapper {
                 "encryption-key" to storage.read(requireNotNull(inputLabels["crypto-key"])),
                 "encrypted-data" to storage.read(requireNotNull(inputLabels["encrypted-data"]))
               )
-            val taskOutput = ReEncryptTask().execute(taskInput, sendDebugLog)
+            val taskOutput = ReEncryptTask().execute(taskInput)
             val reencryptedData = requireNotNull(taskOutput["reencrypted-data"])
             // TODO store data in shared location or send to Measurement Coordinator
             storage.write(outputFieldName, reencryptedData)
@@ -83,7 +84,7 @@ class ExchangeTaskMapper {
             "encryption-key" to storage.read(requireNotNull(inputLabels["crypto-key"])),
             "encrypted-data" to storage.read(requireNotNull(inputLabels["encrypted-data"]))
           )
-        val taskOutput = ReEncryptTask().execute(taskInput, sendDebugLog)
+        val taskOutput = ReEncryptTask().execute(taskInput)
         val decryptedData = requireNotNull(taskOutput["reencrypted-data"])
         // TODO store data in shared location or send to Measurement Coordinator
         storage.write(outputFieldName, decryptedData)
