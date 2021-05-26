@@ -19,38 +19,38 @@ package wfanet.panelmatch.protocol.protobuf;
 option java_package = "wfanet.panelmatch.protocol.protobuf";
 option java_multiple_files = true;
 
-// The request to apply commutative encryption.
-message ApplyCommutativeEncryptionRequest {
+// The request to apply encryption.
+message ApplyEncryptionRequest {
   repeated bytes plaintexts = 1;
   bytes encryption_key = 2;
 }
 
-// Response of the ApplyCommutativeEncryptionRequest method.
-message ApplyCommutativeEncryptionResponse {
+// Response of the ApplyEncryptionRequest method.
+message ApplyEncryptionResponse {
   repeated bytes encrypted_texts = 1;
   int64 elapsed_cpu_time_millis = 2;
 }
 
-// The request to reapply commutative encryption.
-message ReApplyCommutativeEncryptionRequest {
+// The request to reapply encryption.
+message ReApplyEncryptionRequest {
   repeated bytes encrypted_texts = 1;
   bytes encryption_key = 2;
 }
 
-// Response of the ReApplyCommutativeEncryptionRequest method.
-message ReApplyCommutativeEncryptionResponse {
+// Response of the ReApplyEncryptionRequest method.
+message ReApplyEncryptionResponse {
   repeated bytes reencrypted_texts = 1;
   int64 elapsed_cpu_time_millis = 2;
 }
 
-// The request to apply commutative decryption.
-message ApplyCommutativeDecryptionRequest {
+// The request to apply decryption.
+message ApplyDecryptionRequest {
   repeated bytes encrypted_texts = 1;
   bytes encryption_key = 2;
 }
 
-// Response of the ApplyCommutativeEncryptionRequest method.
-message ApplyCommutativeDecryptionResponse {
+// Response of the ApplyEncryptionRequest method.
+message ApplyDecryptionResponse {
   repeated bytes decrypted_texts = 1;
   int64 elapsed_cpu_time_millis = 2;
 }

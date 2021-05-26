@@ -23,7 +23,7 @@ import wfanet.panelmatch.protocol.protobuf.ReApplyEncryptionRequest
 import wfanet.panelmatch.protocol.protobuf.ReApplyEncryptionResponse
 
 /** Core deterministic, commutative cryptographic operations. */
-interface DeterministicCommutativeEncryption {
+interface Encryption {
 
   /** Encrypts plaintexts. */
   fun encrypt(request: ApplyEncryptionRequest): ApplyEncryptionResponse

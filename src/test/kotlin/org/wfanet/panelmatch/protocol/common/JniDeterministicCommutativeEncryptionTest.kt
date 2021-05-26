@@ -24,15 +24,14 @@ import wfanet.panelmatch.protocol.protobuf.ReApplyEncryptionRequest
 
 @RunWith(JUnit4::class)
 class JniDeterministicCommutativeEncryptionTest : AbstractEncryptionTest() {
-  override val deterministicCommutativeEncryption: DeterministicCommutativeEncryption =
-    JniDeterministicCommutativeEncryption()
+  override val Encryption: Encryption = JniDeterministicCommutativeEncryption()
 
   @Test
   fun `invalid proto throws JniException`() {
     val missingKeyException =
       assertFailsWith(JniDeterministicCommutativeEncryption.JniException::class) {
         val request = ReApplyEncryptionRequest.getDefaultInstance()
-        deterministicCommutativeEncryption.reEncrypt(request)
+        Encryption.reEncrypt(request)
       }
     assertThat(missingKeyException.message).contains("Failed to create the protocol cipher")
   }

@@ -44,9 +44,7 @@ internal constructor(
 
   companion object {
     /** Returns an [ExchangeTask] that removes encryption from data. */
-    fun forDecryption(
-      encryption: Encryption
-    ): ExchangeTask {
+    fun forDecryption(Encryption: Encryption): ExchangeTask {
       return EncryptionExchangeTask(
         operation = Encryption::decrypt,
         inputDataLabel = "encrypted-data",
@@ -55,9 +53,7 @@ internal constructor(
     }
 
     /** Returns an [ExchangeTask] that adds encryption to plaintext. */
-    fun forEncryption(
-      Encryption: Encryption
-    ): ExchangeTask {
+    fun forEncryption(Encryption: Encryption): ExchangeTask {
       return EncryptionExchangeTask(
         operation = Encryption::encrypt,
         inputDataLabel = "unencrypted-data",
@@ -65,13 +61,8 @@ internal constructor(
       )
     }
 
-    /**
-     * Returns an [ExchangeTask] that adds another layer of encryption to
-     * data.
-     */
-    fun forReEncryption(
-      Encryption: Encryption
-    ): ExchangeTask {
+    /** Returns an [ExchangeTask] that adds another layer of encryption to data. */
+    fun forReEncryption(Encryption: Encryption): ExchangeTask {
       return EncryptionExchangeTask(
         operation = Encryption::reEncrypt,
         inputDataLabel = "encrypted-data",

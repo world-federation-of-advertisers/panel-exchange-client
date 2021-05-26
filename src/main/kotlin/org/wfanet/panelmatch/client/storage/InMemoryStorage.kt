@@ -22,13 +22,15 @@ import com.google.protobuf.ByteString
  */
 class InMemoryStorage : Storage {
   private var inMemoryStorage = HashMap<String, ByteString>()
-  constructor() {}
 
   override suspend fun read(path: String): ByteString {
     return requireNotNull(inMemoryStorage[path])
   }
 
   override suspend fun write(path: String, data: ByteString) {
+    if (inMemoryStorage.containsKey(path)) {
+      throw IllegalArgumentException("Cannot write to an existing key")
+    }
     inMemoryStorage.put(path, data)
   }
 }

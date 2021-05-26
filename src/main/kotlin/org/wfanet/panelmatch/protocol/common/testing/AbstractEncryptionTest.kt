@@ -20,7 +20,7 @@ import java.lang.RuntimeException
 import kotlin.test.assertFails
 import kotlin.test.assertFailsWith
 import org.junit.Test
-import org.wfanet.panelmatch.protocol.common.DeterministicCommutativeEncryption
+import org.wfanet.panelmatch.protocol.common.Encryption
 import wfanet.panelmatch.protocol.protobuf.ApplyDecryptionRequest
 import wfanet.panelmatch.protocol.protobuf.ApplyEncryptionRequest
 import wfanet.panelmatch.protocol.protobuf.ReApplyEncryptionRequest
@@ -40,33 +40,31 @@ private val CIPHERTEXTS: List<ByteString> =
     ByteString.copyFromUtf8("some ciphertext1")
   )
 
-/** Abstract base class for testing implementations of [DeterministicCommutativeEncryption]. */
-abstract class AbstractDeterministicCommutativeEncryptionTest {
-  abstract val deterministicCommutativeEncryption: DeterministicCommutativeEncryption
+/** Abstract base class for testing implementations of [Encryption]. */
+abstract class AbstractEncryptionTest {
+  abstract val Encryption: Encryption
 
   @Test
-  fun testDeterministicCommutativeEncryption() {
+  fun testEncryption() {
     val randomKey1: ByteString = ByteString.copyFromUtf8("random-key-00")
     val randomKey2: ByteString = ByteString.copyFromUtf8("random-key-222")
 
-    val encryptedTexts1 = deterministicCommutativeEncryption.encrypt(randomKey1, PLAINTEXTS)
-    val encryptedTexts2 = deterministicCommutativeEncryption.encrypt(randomKey2, PLAINTEXTS)
+    val encryptedTexts1 = Encryption.encrypt(randomKey1, PLAINTEXTS)
+    val encryptedTexts2 = Encryption.encrypt(randomKey2, PLAINTEXTS)
     assertThat(encryptedTexts1).isNotEqualTo(encryptedTexts2)
 
-    val reEncryptedTexts1 =
-      deterministicCommutativeEncryption.reEncrypt(randomKey1, encryptedTexts2)
-    val reEncryptedTexts2 =
-      deterministicCommutativeEncryption.reEncrypt(randomKey2, encryptedTexts1)
+    val reEncryptedTexts1 = Encryption.reEncrypt(randomKey1, encryptedTexts2)
+    val reEncryptedTexts2 = Encryption.reEncrypt(randomKey2, encryptedTexts1)
     assertThat(reEncryptedTexts1).isNotEqualTo(encryptedTexts2)
     assertThat(reEncryptedTexts2).isNotEqualTo(encryptedTexts1)
 
-    val decryptedTexts1 = deterministicCommutativeEncryption.decrypt(randomKey1, reEncryptedTexts1)
-    val decryptedTexts2 = deterministicCommutativeEncryption.decrypt(randomKey1, reEncryptedTexts2)
+    val decryptedTexts1 = Encryption.decrypt(randomKey1, reEncryptedTexts1)
+    val decryptedTexts2 = Encryption.decrypt(randomKey1, reEncryptedTexts2)
     assertThat(decryptedTexts1).isEqualTo(encryptedTexts2)
     assertThat(decryptedTexts2).isEqualTo(encryptedTexts2)
 
-    val decryptedTexts3 = deterministicCommutativeEncryption.decrypt(randomKey2, reEncryptedTexts1)
-    val decryptedTexts4 = deterministicCommutativeEncryption.decrypt(randomKey2, reEncryptedTexts2)
+    val decryptedTexts3 = Encryption.decrypt(randomKey2, reEncryptedTexts1)
+    val decryptedTexts4 = Encryption.decrypt(randomKey2, reEncryptedTexts2)
     assertThat(decryptedTexts3).isEqualTo(encryptedTexts1)
     assertThat(decryptedTexts4).isEqualTo(encryptedTexts1)
   }
@@ -74,9 +72,9 @@ abstract class AbstractDeterministicCommutativeEncryptionTest {
   @Test
   fun `invalid key`() {
     val key: ByteString = ByteString.copyFromUtf8("this key is too long so it causes problems")
-    assertFails { deterministicCommutativeEncryption.encrypt(key, PLAINTEXTS) }
-    assertFails { deterministicCommutativeEncryption.decrypt(key, PLAINTEXTS) }
-    assertFails { deterministicCommutativeEncryption.reEncrypt(key, PLAINTEXTS) }
+    assertFails { Encryption.encrypt(key, PLAINTEXTS) }
+    assertFails { Encryption.decrypt(key, PLAINTEXTS) }
+    assertFails { Encryption.reEncrypt(key, PLAINTEXTS) }
   }
 
   @Test
@@ -84,7 +82,7 @@ abstract class AbstractDeterministicCommutativeEncryptionTest {
     val missingKeyException =
       assertFailsWith(RuntimeException::class) {
         val request = ApplyEncryptionRequest.newBuilder().addAllPlaintexts(PLAINTEXTS).build()
-        deterministicCommutativeEncryption.encrypt(request)
+        Encryption.encrypt(request)
       }
     assertThat(missingKeyException.message).contains("Failed to create the protocol cipher")
   }
@@ -94,7 +92,7 @@ abstract class AbstractDeterministicCommutativeEncryptionTest {
     val missingKeyException =
       assertFailsWith(RuntimeException::class) {
         val request = ApplyDecryptionRequest.newBuilder().addAllEncryptedTexts(CIPHERTEXTS).build()
-        deterministicCommutativeEncryption.decrypt(request)
+        Encryption.decrypt(request)
       }
     assertThat(missingKeyException.message).contains("Failed to create the protocol cipher")
   }
@@ -105,7 +103,7 @@ abstract class AbstractDeterministicCommutativeEncryptionTest {
       assertFailsWith(RuntimeException::class) {
         val request =
           ReApplyEncryptionRequest.newBuilder().addAllEncryptedTexts(CIPHERTEXTS).build()
-        deterministicCommutativeEncryption.reEncrypt(request)
+        Encryption.reEncrypt(request)
       }
     assertThat(missingKeyException.message).contains("Failed to create the protocol cipher")
   }

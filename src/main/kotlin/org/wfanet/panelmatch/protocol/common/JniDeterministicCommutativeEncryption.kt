@@ -17,16 +17,19 @@ package org.wfanet.panelmatch.protocol.common
 import java.lang.RuntimeException
 import java.nio.file.Paths
 import org.wfanet.panelmatch.common.loadLibrary
-import wfanet.panelmatch.protocol.crypto.CommutativeEncryptionUtility
-import wfanet.panelmatch.protocol.protobuf.ApplyCommutativeDecryptionRequest
-import wfanet.panelmatch.protocol.protobuf.ApplyCommutativeDecryptionResponse
-import wfanet.panelmatch.protocol.protobuf.ApplyCommutativeEncryptionRequest
-import wfanet.panelmatch.protocol.protobuf.ApplyCommutativeEncryptionResponse
-import wfanet.panelmatch.protocol.protobuf.ReApplyCommutativeEncryptionRequest
-import wfanet.panelmatch.protocol.protobuf.ReApplyCommutativeEncryptionResponse
+import wfanet.panelmatch.protocol.crypto.DeterministicCommutativeEncryptionUtility
+import wfanet.panelmatch.protocol.protobuf.ApplyDecryptionRequest
+import wfanet.panelmatch.protocol.protobuf.ApplyDecryptionResponse
+import wfanet.panelmatch.protocol.protobuf.ApplyEncryptionRequest
+import wfanet.panelmatch.protocol.protobuf.ApplyEncryptionResponse
+import wfanet.panelmatch.protocol.protobuf.ReApplyEncryptionRequest
+import wfanet.panelmatch.protocol.protobuf.ReApplyEncryptionResponse
 
-/** A [CommutativeEncryption] implementation using the JNI [CommutativeEncryptionUtility]. */
-class JniCommutativeEncryption : CommutativeEncryption {
+/**
+ * A [DeterministicCommutativeEncryption] implementation using the JNI
+ * [DeterministicCommutativeEncryptionUtility].
+ */
+class JniDeterministicCommutativeEncryption : Encryption {
   /** Indicates something went wrong in C++. */
   class JniException(cause: Throwable) : RuntimeException(cause)
 
@@ -38,32 +41,32 @@ class JniCommutativeEncryption : CommutativeEncryption {
     }
   }
 
-  override fun encrypt(
-    request: ApplyCommutativeEncryptionRequest
-  ): ApplyCommutativeEncryptionResponse {
+  override fun encrypt(request: ApplyEncryptionRequest): ApplyEncryptionResponse {
     return wrapJniException {
-      ApplyCommutativeEncryptionResponse.parseFrom(
-        CommutativeEncryptionUtility.applyCommutativeEncryptionWrapper(request.toByteArray())
+      ApplyEncryptionResponse.parseFrom(
+        DeterministicCommutativeEncryptionUtility.applyDeterministicCommutativeEncryptionWrapper(
+          request.toByteArray()
+        )
       )
     }
   }
 
-  override fun reEncrypt(
-    request: ReApplyCommutativeEncryptionRequest
-  ): ReApplyCommutativeEncryptionResponse {
+  override fun reEncrypt(request: ReApplyEncryptionRequest): ReApplyEncryptionResponse {
     return wrapJniException {
-      ReApplyCommutativeEncryptionResponse.parseFrom(
-        CommutativeEncryptionUtility.reApplyCommutativeEncryptionWrapper(request.toByteArray())
+      ReApplyEncryptionResponse.parseFrom(
+        DeterministicCommutativeEncryptionUtility.reApplyDeterministicCommutativeEncryptionWrapper(
+          request.toByteArray()
+        )
       )
     }
   }
 
-  override fun decrypt(
-    request: ApplyCommutativeDecryptionRequest
-  ): ApplyCommutativeDecryptionResponse {
+  override fun decrypt(request: ApplyDecryptionRequest): ApplyDecryptionResponse {
     return wrapJniException {
-      ApplyCommutativeDecryptionResponse.parseFrom(
-        CommutativeEncryptionUtility.applyCommutativeDecryptionWrapper(request.toByteArray())
+      ApplyDecryptionResponse.parseFrom(
+        DeterministicCommutativeEncryptionUtility.applyDeterministicCommutativeDecryptionWrapper(
+          request.toByteArray()
+        )
       )
     }
   }
@@ -71,7 +74,7 @@ class JniCommutativeEncryption : CommutativeEncryption {
   companion object {
     init {
       loadLibrary(
-        name = "commutative_encryption_utility",
+        name = "deterministic_commutative_encryption_utility",
         directoryPath =
           Paths.get("panel_exchange_client/src/main/swig/wfanet/panelmatch/protocol/crypto")
       )

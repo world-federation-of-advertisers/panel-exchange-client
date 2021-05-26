@@ -12,29 +12,30 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef SRC_MAIN_CC_WFANET_PANELMATCH_PROTOCOL_CRYPTO_COMMUTATIVE_ENCRYPTION_UTILITY_H_
-#define SRC_MAIN_CC_WFANET_PANELMATCH_PROTOCOL_CRYPTO_COMMUTATIVE_ENCRYPTION_UTILITY_H_
+#ifndef SRC_MAIN_CC_WFANET_PANELMATCH_PROTOCOL_CRYPTO_DETERMINISTIC_COMMUTATIVE_ENCRYPTION_UTILITY_H_
+#define SRC_MAIN_CC_WFANET_PANELMATCH_PROTOCOL_CRYPTO_DETERMINISTIC_COMMUTATIVE_ENCRYPTION_UTILITY_H_
 
 #include "absl/status/statusor.h"
 #include "wfanet/panelmatch/protocol/crypto/cryptor.pb.h"
 
 namespace wfanet::panelmatch::protocol::crypto {
 
-absl::StatusOr<
-    wfanet::panelmatch::protocol::protobuf::ApplyCommutativeEncryptionResponse>
-ApplyCommutativeEncryption(const wfanet::panelmatch::protocol::protobuf::
-                               ApplyCommutativeEncryptionRequest& request);
-
-absl::StatusOr<wfanet::panelmatch::protocol::protobuf::
-                   ReApplyCommutativeEncryptionResponse>
-ReApplyCommutativeEncryption(const wfanet::panelmatch::protocol::protobuf::
-                                 ReApplyCommutativeEncryptionRequest& request);
+absl::StatusOr<wfanet::panelmatch::protocol::protobuf::ApplyEncryptionResponse>
+ApplyDeterministicCommutativeEncryption(
+    const wfanet::panelmatch::protocol::protobuf::ApplyEncryptionRequest&
+        request);
 
 absl::StatusOr<
-    wfanet::panelmatch::protocol::protobuf::ApplyCommutativeDecryptionResponse>
-ApplyCommutativeDecryption(const wfanet::panelmatch::protocol::protobuf::
-                               ApplyCommutativeDecryptionRequest& request);
+    wfanet::panelmatch::protocol::protobuf::ReApplyEncryptionResponse>
+ReApplyDeterministicCommutativeEncryption(
+    const wfanet::panelmatch::protocol::protobuf::ReApplyEncryptionRequest&
+        request);
+
+absl::StatusOr<wfanet::panelmatch::protocol::protobuf::ApplyDecryptionResponse>
+ApplyDeterministicCommutativeDecryption(
+    const wfanet::panelmatch::protocol::protobuf::ApplyDecryptionRequest&
+        request);
 
 }  // namespace wfanet::panelmatch::protocol::crypto
 
-#endif  // SRC_MAIN_CC_WFANET_PANELMATCH_PROTOCOL_CRYPTO_COMMUTATIVE_ENCRYPTION_UTILITY_H_
+#endif  // SRC_MAIN_CC_WFANET_PANELMATCH_PROTOCOL_CRYPTO_DETERMINISTIC_COMMUTATIVE_ENCRYPTION_UTILITY_H_
