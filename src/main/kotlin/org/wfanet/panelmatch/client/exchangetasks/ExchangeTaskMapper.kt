@@ -15,12 +15,14 @@
 package org.wfanet.panelmatch.client.exchangetasks
 
 import com.google.protobuf.ByteString
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import org.wfanet.measurement.api.v2alpha.ExchangeWorkflow
 import org.wfanet.panelmatch.client.storage.Storage
-import org.wfanet.panelmatch.protocol.common.JniDeterministicCommutativeEncryption
+import org.wfanet.panelmatch.protocol.common.Cryptor
+import org.wfanet.panelmatch.protocol.common.JniDeterministicCommutativeCryptor
 
 /**
  * Maps ExchangeWorkflow.Step to respective tasks. Retrieves necessary inputs. Executes step. Stores
@@ -32,25 +34,21 @@ import org.wfanet.panelmatch.protocol.common.JniDeterministicCommutativeEncrypti
  * @param sendDebugLog function which writes logs happened during execution.
  * @return mapped output.
  */
-class ExchangeTaskMapper {
-  private val deterministicCommutativeEncryption = JniDeterministicCommutativeEncryption()
+class ExchangeTaskMapper
+constructor(
+  private val deterministicCommutativeCryptor: Cryptor = JniDeterministicCommutativeCryptor()
+) {
 
-  private suspend fun mapToTask(
-    step: ExchangeWorkflow.Step,
-    taskInput: Map<String, ByteString>,
-    sendDebugLog: suspend (String) -> Unit
-  ): Map<String, ByteString> {
+  private suspend fun mapToTask(step: ExchangeWorkflow.Step): ExchangeTask {
     when (step.getStepCase()) {
       // TODO split this up into encrypt and reencrypt
       ExchangeWorkflow.Step.StepCase.ENCRYPT_AND_SHARE -> {
         when (step.encryptAndShare.getInputFormat()) {
           ExchangeWorkflow.Step.EncryptAndShareStep.InputFormat.PLAINTEXT -> {
-            return EncryptionExchangeTask.forEncryption(JniDeterministicCommutativeEncryption())
-              .execute(taskInput, sendDebugLog)
+            return CryptorExchangeTask.forEncryption(deterministicCommutativeCryptor)
           }
           ExchangeWorkflow.Step.EncryptAndShareStep.InputFormat.CIPHERTEXT -> {
-            return EncryptionExchangeTask.forReEncryption(JniDeterministicCommutativeEncryption())
-              .execute(taskInput, sendDebugLog)
+            return CryptorExchangeTask.forReEncryption(deterministicCommutativeCryptor)
           }
           else -> {
             error("Unsupported encryption type")
@@ -58,8 +56,7 @@ class ExchangeTaskMapper {
         }
       }
       ExchangeWorkflow.Step.StepCase.DECRYPT -> {
-        return EncryptionExchangeTask.forDecryption(JniDeterministicCommutativeEncryption())
-          .execute(taskInput, sendDebugLog)
+        return CryptorExchangeTask.forDecryption(deterministicCommutativeCryptor)
       }
       else -> {
         error("Unsupported step type")
@@ -75,6 +72,10 @@ class ExchangeTaskMapper {
   ): Map<String, ByteString> {
     val inputLabels = step.getInputLabelsMap()
     val outputLabels = step.getOutputLabelsMap()
+    // TODO: Currently, INPUT is a special use case. It is the only one that uses the `input`
+    // variable. However, in production, it is likely the inputs will be pre-stored in storage or
+    // this variable will instead map to a cloud storage device of some kind. Either way, this needs
+    // a refactor.
     if (step.getStepCase() == ExchangeWorkflow.Step.StepCase.INPUT) {
       val inputFieldName = requireNotNull(inputLabels["input"])
       val outputFieldName = requireNotNull(outputLabels["output"])
@@ -82,11 +83,11 @@ class ExchangeTaskMapper {
       return emptyMap<String, ByteString>()
     }
     val taskInput: Map<String, ByteString> = coroutineScope {
-      inputLabels.mapValues { entry -> async { storage.read(entry.value) } }.mapValues { entry ->
-        entry.value.await()
-      }
+      inputLabels
+        .mapValues { entry -> async(start = CoroutineStart.DEFAULT) { storage.read(entry.value) } }
+        .mapValues { entry -> entry.value.await() }
     }
-    val taskOutput: Map<String, ByteString> = mapToTask(step, taskInput, sendDebugLog)
+    val taskOutput: Map<String, ByteString> = mapToTask(step).execute(taskInput, sendDebugLog)
     coroutineScope {
       for ((key, value) in outputLabels) {
         launch { storage.write(value, requireNotNull(taskOutput[key])) }

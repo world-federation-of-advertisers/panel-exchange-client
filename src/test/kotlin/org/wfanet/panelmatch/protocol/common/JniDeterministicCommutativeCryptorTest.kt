@@ -19,19 +19,19 @@ import kotlin.test.assertFailsWith
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
-import org.wfanet.panelmatch.protocol.common.testing.AbstractEncryptionTest
-import wfanet.panelmatch.protocol.protobuf.ReApplyEncryptionRequest
+import org.wfanet.panelmatch.protocol.common.testing.AbstractCryptorTest
+import wfanet.panelmatch.protocol.protobuf.CryptorReEncryptRequest
 
 @RunWith(JUnit4::class)
-class JniDeterministicCommutativeEncryptionTest : AbstractEncryptionTest() {
-  override val Encryption: Encryption = JniDeterministicCommutativeEncryption()
+class JniDeterministicCommutativeCryptorTest : AbstractCryptorTest() {
+  override val Cryptor: Cryptor = JniDeterministicCommutativeCryptor()
 
   @Test
   fun `invalid proto throws JniException`() {
     val missingKeyException =
-      assertFailsWith(JniDeterministicCommutativeEncryption.JniException::class) {
-        val request = ReApplyEncryptionRequest.getDefaultInstance()
-        Encryption.reEncrypt(request)
+      assertFailsWith(JniDeterministicCommutativeCryptor.JniException::class) {
+        val request = CryptorReEncryptRequest.getDefaultInstance()
+        Cryptor.reEncrypt(request)
       }
     assertThat(missingKeyException.message).contains("Failed to create the protocol cipher")
   }

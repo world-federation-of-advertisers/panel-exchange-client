@@ -20,20 +20,19 @@
 
 namespace wfanet::panelmatch::protocol::crypto {
 
-absl::StatusOr<wfanet::panelmatch::protocol::protobuf::ApplyEncryptionResponse>
-ApplyDeterministicCommutativeEncryption(
-    const wfanet::panelmatch::protocol::protobuf::ApplyEncryptionRequest&
+absl::StatusOr<wfanet::panelmatch::protocol::protobuf::CryptorEncryptResponse>
+DeterministicCommutativeEncrypt(
+    const wfanet::panelmatch::protocol::protobuf::CryptorEncryptRequest&
         request);
 
-absl::StatusOr<
-    wfanet::panelmatch::protocol::protobuf::ReApplyEncryptionResponse>
-ReApplyDeterministicCommutativeEncryption(
-    const wfanet::panelmatch::protocol::protobuf::ReApplyEncryptionRequest&
+absl::StatusOr<wfanet::panelmatch::protocol::protobuf::CryptorReEncryptResponse>
+DeterministicCommutativeReEncrypt(
+    const wfanet::panelmatch::protocol::protobuf::CryptorReEncryptRequest&
         request);
 
-absl::StatusOr<wfanet::panelmatch::protocol::protobuf::ApplyDecryptionResponse>
-ApplyDeterministicCommutativeDecryption(
-    const wfanet::panelmatch::protocol::protobuf::ApplyDecryptionRequest&
+absl::StatusOr<wfanet::panelmatch::protocol::protobuf::CryptorDecryptResponse>
+DeterministicCommutativeDecrypt(
+    const wfanet::panelmatch::protocol::protobuf::CryptorDecryptRequest&
         request);
 
 }  // namespace wfanet::panelmatch::protocol::crypto

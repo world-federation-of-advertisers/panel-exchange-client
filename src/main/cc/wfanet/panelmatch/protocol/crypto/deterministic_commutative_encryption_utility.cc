@@ -41,12 +41,12 @@ using ::wfanet::panelmatch::common::crypto::CreateCryptorFromKey;
 
 }  // namespace
 
-absl::StatusOr<wfanet::panelmatch::protocol::protobuf::ApplyEncryptionResponse>
-ApplyDeterministicCommutativeEncryption(
-    const wfanet::panelmatch::protocol::protobuf::ApplyEncryptionRequest&
+absl::StatusOr<wfanet::panelmatch::protocol::protobuf::CryptorEncryptResponse>
+DeterministicCommutativeEncrypt(
+    const wfanet::panelmatch::protocol::protobuf::CryptorEncryptRequest&
         request) {
   wfa::measurement::common::crypto::StartedThreadCpuTimer timer;
-  wfanet::panelmatch::protocol::protobuf::ApplyEncryptionResponse response;
+  wfanet::panelmatch::protocol::protobuf::CryptorEncryptResponse response;
   ASSIGN_OR_RETURN_ERROR(auto cryptor,
                          CreateCryptorFromKey(request.encryption_key()),
                          "Failed to create the protocol cipher");
@@ -57,12 +57,12 @@ ApplyDeterministicCommutativeEncryption(
   return response;
 }
 
-absl::StatusOr<wfanet::panelmatch::protocol::protobuf::ApplyDecryptionResponse>
-ApplyDeterministicCommutativeDecryption(
-    const wfanet::panelmatch::protocol::protobuf::ApplyDecryptionRequest&
+absl::StatusOr<wfanet::panelmatch::protocol::protobuf::CryptorDecryptResponse>
+DeterministicCommutativeDecrypt(
+    const wfanet::panelmatch::protocol::protobuf::CryptorDecryptRequest&
         request) {
   wfa::measurement::common::crypto::StartedThreadCpuTimer timer;
-  wfanet::panelmatch::protocol::protobuf::ApplyDecryptionResponse response;
+  wfanet::panelmatch::protocol::protobuf::CryptorDecryptResponse response;
   ASSIGN_OR_RETURN_ERROR(auto cryptor,
                          CreateCryptorFromKey(request.encryption_key()),
                          "Failed to create the protocol cipher");
@@ -73,13 +73,12 @@ ApplyDeterministicCommutativeDecryption(
   return response;
 }
 
-absl::StatusOr<
-    wfanet::panelmatch::protocol::protobuf::ReApplyEncryptionResponse>
-ReApplyDeterministicCommutativeEncryption(
-    const wfanet::panelmatch::protocol::protobuf::ReApplyEncryptionRequest&
+absl::StatusOr<wfanet::panelmatch::protocol::protobuf::CryptorReEncryptResponse>
+DeterministicCommutativeReEncrypt(
+    const wfanet::panelmatch::protocol::protobuf::CryptorReEncryptRequest&
         request) {
   wfa::measurement::common::crypto::StartedThreadCpuTimer timer;
-  wfanet::panelmatch::protocol::protobuf::ReApplyEncryptionResponse response;
+  wfanet::panelmatch::protocol::protobuf::CryptorReEncryptResponse response;
   ASSIGN_OR_RETURN_ERROR(auto cryptor,
                          CreateCryptorFromKey(request.encryption_key()),
                          "Failed to create the protocol cipher");

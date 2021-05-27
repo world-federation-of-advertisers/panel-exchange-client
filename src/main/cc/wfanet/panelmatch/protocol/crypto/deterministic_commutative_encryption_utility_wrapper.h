@@ -27,13 +27,13 @@
 // commutative_encryption methods.
 namespace wfanet::panelmatch::protocol::crypto {
 
-absl::StatusOr<std::string> ApplyDeterministicCommutativeEncryptionWrapper(
+absl::StatusOr<std::string> DeterministicCommutativeEncryptWrapper(
     const std::string& serialized_request);
 
-absl::StatusOr<std::string> ReApplyDeterministicCommutativeEncryptionWrapper(
+absl::StatusOr<std::string> DeterministicCommutativeReEncryptWrapper(
     const std::string& serialized_request);
 
-absl::StatusOr<std::string> ApplyDeterministicCommutativeDecryptionWrapper(
+absl::StatusOr<std::string> DeterministicCommutativeDecryptWrapper(
     const std::string& serialized_request);
 
 }  // namespace wfanet::panelmatch::protocol::crypto

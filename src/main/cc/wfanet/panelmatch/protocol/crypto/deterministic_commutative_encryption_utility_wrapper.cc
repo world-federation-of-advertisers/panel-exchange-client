@@ -23,37 +23,36 @@
 
 namespace wfanet::panelmatch::protocol::crypto {
 
-absl::StatusOr<std::string> ApplyDeterministicCommutativeEncryptionWrapper(
+absl::StatusOr<std::string> DeterministicCommutativeEncryptWrapper(
     const std::string& serialized_request) {
-  wfanet::panelmatch::protocol::protobuf::ApplyEncryptionRequest request_proto;
+  wfanet::panelmatch::protocol::protobuf::CryptorEncryptRequest request_proto;
   RETURN_IF_ERROR(wfanet::panelmatch::common::crypto::ParseRequestFromString(
       serialized_request, request_proto));
   ASSIGN_OR_RETURN(
-      wfanet::panelmatch::protocol::protobuf::ApplyEncryptionResponse result,
-      ApplyDeterministicCommutativeEncryption(request_proto));
+      wfanet::panelmatch::protocol::protobuf::CryptorEncryptResponse result,
+      DeterministicCommutativeEncrypt(request_proto));
   return result.SerializeAsString();
 }
 
-absl::StatusOr<std::string> ReApplyDeterministicCommutativeEncryptionWrapper(
+absl::StatusOr<std::string> DeterministicCommutativeReEncryptWrapper(
     const std::string& serialized_request) {
-  wfanet::panelmatch::protocol::protobuf::ReApplyEncryptionRequest
-      request_proto;
+  wfanet::panelmatch::protocol::protobuf::CryptorReEncryptRequest request_proto;
   RETURN_IF_ERROR(wfanet::panelmatch::common::crypto::ParseRequestFromString(
       serialized_request, request_proto));
   ASSIGN_OR_RETURN(
-      wfanet::panelmatch::protocol::protobuf::ReApplyEncryptionResponse result,
-      ReApplyDeterministicCommutativeEncryption(request_proto));
+      wfanet::panelmatch::protocol::protobuf::CryptorReEncryptResponse result,
+      DeterministicCommutativeReEncrypt(request_proto));
   return result.SerializeAsString();
 }
 
-absl::StatusOr<std::string> ApplyDeterministicCommutativeDecryptionWrapper(
+absl::StatusOr<std::string> DeterministicCommutativeDecryptWrapper(
     const std::string& serialized_request) {
-  wfanet::panelmatch::protocol::protobuf::ApplyDecryptionRequest request_proto;
+  wfanet::panelmatch::protocol::protobuf::CryptorDecryptRequest request_proto;
   RETURN_IF_ERROR(wfanet::panelmatch::common::crypto::ParseRequestFromString(
       serialized_request, request_proto));
   ASSIGN_OR_RETURN(
-      wfanet::panelmatch::protocol::protobuf::ApplyDecryptionResponse result,
-      ApplyDeterministicCommutativeDecryption(request_proto));
+      wfanet::panelmatch::protocol::protobuf::CryptorDecryptResponse result,
+      DeterministicCommutativeDecrypt(request_proto));
   return result.SerializeAsString();
 }
 

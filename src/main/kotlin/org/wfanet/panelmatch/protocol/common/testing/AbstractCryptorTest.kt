@@ -20,10 +20,10 @@ import java.lang.RuntimeException
 import kotlin.test.assertFails
 import kotlin.test.assertFailsWith
 import org.junit.Test
-import org.wfanet.panelmatch.protocol.common.Encryption
-import wfanet.panelmatch.protocol.protobuf.ApplyDecryptionRequest
-import wfanet.panelmatch.protocol.protobuf.ApplyEncryptionRequest
-import wfanet.panelmatch.protocol.protobuf.ReApplyEncryptionRequest
+import org.wfanet.panelmatch.protocol.common.Cryptor
+import wfanet.panelmatch.protocol.protobuf.CryptorDecryptRequest
+import wfanet.panelmatch.protocol.protobuf.CryptorEncryptRequest
+import wfanet.panelmatch.protocol.protobuf.CryptorReEncryptRequest
 
 private val PLAINTEXTS: List<ByteString> =
   listOf<ByteString>(
@@ -40,31 +40,31 @@ private val CIPHERTEXTS: List<ByteString> =
     ByteString.copyFromUtf8("some ciphertext1")
   )
 
-/** Abstract base class for testing implementations of [Encryption]. */
-abstract class AbstractEncryptionTest {
-  abstract val Encryption: Encryption
+/** Abstract base class for testing implementations of [Cryptor]. */
+abstract class AbstractCryptorTest {
+  abstract val Cryptor: Cryptor
 
   @Test
-  fun testEncryption() {
+  fun testCryptor() {
     val randomKey1: ByteString = ByteString.copyFromUtf8("random-key-00")
     val randomKey2: ByteString = ByteString.copyFromUtf8("random-key-222")
 
-    val encryptedTexts1 = Encryption.encrypt(randomKey1, PLAINTEXTS)
-    val encryptedTexts2 = Encryption.encrypt(randomKey2, PLAINTEXTS)
+    val encryptedTexts1 = Cryptor.encrypt(randomKey1, PLAINTEXTS)
+    val encryptedTexts2 = Cryptor.encrypt(randomKey2, PLAINTEXTS)
     assertThat(encryptedTexts1).isNotEqualTo(encryptedTexts2)
 
-    val reEncryptedTexts1 = Encryption.reEncrypt(randomKey1, encryptedTexts2)
-    val reEncryptedTexts2 = Encryption.reEncrypt(randomKey2, encryptedTexts1)
+    val reEncryptedTexts1 = Cryptor.reEncrypt(randomKey1, encryptedTexts2)
+    val reEncryptedTexts2 = Cryptor.reEncrypt(randomKey2, encryptedTexts1)
     assertThat(reEncryptedTexts1).isNotEqualTo(encryptedTexts2)
     assertThat(reEncryptedTexts2).isNotEqualTo(encryptedTexts1)
 
-    val decryptedTexts1 = Encryption.decrypt(randomKey1, reEncryptedTexts1)
-    val decryptedTexts2 = Encryption.decrypt(randomKey1, reEncryptedTexts2)
+    val decryptedTexts1 = Cryptor.decrypt(randomKey1, reEncryptedTexts1)
+    val decryptedTexts2 = Cryptor.decrypt(randomKey1, reEncryptedTexts2)
     assertThat(decryptedTexts1).isEqualTo(encryptedTexts2)
     assertThat(decryptedTexts2).isEqualTo(encryptedTexts2)
 
-    val decryptedTexts3 = Encryption.decrypt(randomKey2, reEncryptedTexts1)
-    val decryptedTexts4 = Encryption.decrypt(randomKey2, reEncryptedTexts2)
+    val decryptedTexts3 = Cryptor.decrypt(randomKey2, reEncryptedTexts1)
+    val decryptedTexts4 = Cryptor.decrypt(randomKey2, reEncryptedTexts2)
     assertThat(decryptedTexts3).isEqualTo(encryptedTexts1)
     assertThat(decryptedTexts4).isEqualTo(encryptedTexts1)
   }
@@ -72,38 +72,37 @@ abstract class AbstractEncryptionTest {
   @Test
   fun `invalid key`() {
     val key: ByteString = ByteString.copyFromUtf8("this key is too long so it causes problems")
-    assertFails { Encryption.encrypt(key, PLAINTEXTS) }
-    assertFails { Encryption.decrypt(key, PLAINTEXTS) }
-    assertFails { Encryption.reEncrypt(key, PLAINTEXTS) }
+    assertFails { Cryptor.encrypt(key, PLAINTEXTS) }
+    assertFails { Cryptor.decrypt(key, PLAINTEXTS) }
+    assertFails { Cryptor.reEncrypt(key, PLAINTEXTS) }
   }
 
   @Test
-  fun `invalid ApplyEncryption proto`() {
+  fun `invalid CryptorEncrypt proto`() {
     val missingKeyException =
       assertFailsWith(RuntimeException::class) {
-        val request = ApplyEncryptionRequest.newBuilder().addAllPlaintexts(PLAINTEXTS).build()
-        Encryption.encrypt(request)
+        val request = CryptorEncryptRequest.newBuilder().addAllPlaintexts(PLAINTEXTS).build()
+        Cryptor.encrypt(request)
       }
     assertThat(missingKeyException.message).contains("Failed to create the protocol cipher")
   }
 
   @Test
-  fun `invalid ApplyDecryption proto`() {
+  fun `invalid CryptorDecrypt proto`() {
     val missingKeyException =
       assertFailsWith(RuntimeException::class) {
-        val request = ApplyDecryptionRequest.newBuilder().addAllEncryptedTexts(CIPHERTEXTS).build()
-        Encryption.decrypt(request)
+        val request = CryptorDecryptRequest.newBuilder().addAllEncryptedTexts(CIPHERTEXTS).build()
+        Cryptor.decrypt(request)
       }
     assertThat(missingKeyException.message).contains("Failed to create the protocol cipher")
   }
 
   @Test
-  fun `invalid ReApplyEncryption proto`() {
+  fun `invalid CryptorReEncrypt proto`() {
     val missingKeyException =
       assertFailsWith(RuntimeException::class) {
-        val request =
-          ReApplyEncryptionRequest.newBuilder().addAllEncryptedTexts(CIPHERTEXTS).build()
-        Encryption.reEncrypt(request)
+        val request = CryptorReEncryptRequest.newBuilder().addAllEncryptedTexts(CIPHERTEXTS).build()
+        Cryptor.reEncrypt(request)
       }
     assertThat(missingKeyException.message).contains("Failed to create the protocol cipher")
   }

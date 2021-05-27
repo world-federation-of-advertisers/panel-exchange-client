@@ -24,13 +24,12 @@ class InMemoryStorage : Storage {
   private var inMemoryStorage = HashMap<String, ByteString>()
 
   override suspend fun read(path: String): ByteString {
+    require(path in inMemoryStorage) { "Key does not exist in storage: $path" }
     return requireNotNull(inMemoryStorage[path])
   }
 
   override suspend fun write(path: String, data: ByteString) {
-    if (inMemoryStorage.containsKey(path)) {
-      throw IllegalArgumentException("Cannot write to an existing key")
-    }
+    require(path !in inMemoryStorage) { "Cannot write to an existing key: $path" }
     inMemoryStorage.put(path, data)
   }
 }

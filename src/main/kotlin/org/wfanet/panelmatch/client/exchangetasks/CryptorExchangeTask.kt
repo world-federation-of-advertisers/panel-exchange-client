@@ -15,13 +15,13 @@
 package org.wfanet.panelmatch.client.exchangetasks
 
 import com.google.protobuf.ByteString
-import org.wfanet.panelmatch.protocol.common.Encryption
+import org.wfanet.panelmatch.protocol.common.Cryptor
 import org.wfanet.panelmatch.protocol.common.makeSerializedSharedInputs
 import org.wfanet.panelmatch.protocol.common.parseSerializedSharedInputs
 
 private const val DEFAULT_INPUT_KEY_LABEL: String = "encryption-key"
 
-class EncryptionExchangeTask
+class CryptorExchangeTask
 internal constructor(
   private val operation: (ByteString, List<ByteString>) -> List<ByteString>,
   private val inputDataLabel: String,
@@ -44,27 +44,27 @@ internal constructor(
 
   companion object {
     /** Returns an [ExchangeTask] that removes encryption from data. */
-    fun forDecryption(Encryption: Encryption): ExchangeTask {
-      return EncryptionExchangeTask(
-        operation = Encryption::decrypt,
+    fun forDecryption(Cryptor: Cryptor): ExchangeTask {
+      return CryptorExchangeTask(
+        operation = Cryptor::decrypt,
         inputDataLabel = "encrypted-data",
         outputDataLabel = "decrypted-data"
       )
     }
 
     /** Returns an [ExchangeTask] that adds encryption to plaintext. */
-    fun forEncryption(Encryption: Encryption): ExchangeTask {
-      return EncryptionExchangeTask(
-        operation = Encryption::encrypt,
+    fun forEncryption(Cryptor: Cryptor): ExchangeTask {
+      return CryptorExchangeTask(
+        operation = Cryptor::encrypt,
         inputDataLabel = "unencrypted-data",
         outputDataLabel = "encrypted-data"
       )
     }
 
     /** Returns an [ExchangeTask] that adds another layer of encryption to data. */
-    fun forReEncryption(Encryption: Encryption): ExchangeTask {
-      return EncryptionExchangeTask(
-        operation = Encryption::reEncrypt,
+    fun forReEncryption(Cryptor: Cryptor): ExchangeTask {
+      return CryptorExchangeTask(
+        operation = Cryptor::reEncrypt,
         inputDataLabel = "encrypted-data",
         outputDataLabel = "reencrypted-data"
       )

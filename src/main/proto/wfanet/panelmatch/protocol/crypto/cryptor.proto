@@ -19,38 +19,38 @@ package wfanet.panelmatch.protocol.protobuf;
 option java_package = "wfanet.panelmatch.protocol.protobuf";
 option java_multiple_files = true;
 
-// The request to apply encryption.
-message ApplyEncryptionRequest {
+// The request to encrypt.
+message CryptorEncryptRequest {
   repeated bytes plaintexts = 1;
   bytes encryption_key = 2;
 }
 
-// Response of the ApplyEncryptionRequest method.
-message ApplyEncryptionResponse {
+// Response of the CryptorEncryptRequest method.
+message CryptorEncryptResponse {
   repeated bytes encrypted_texts = 1;
   int64 elapsed_cpu_time_millis = 2;
 }
 
-// The request to reapply encryption.
-message ReApplyEncryptionRequest {
+// The request to reencrypt.
+message CryptorReEncryptRequest {
   repeated bytes encrypted_texts = 1;
   bytes encryption_key = 2;
 }
 
-// Response of the ReApplyEncryptionRequest method.
-message ReApplyEncryptionResponse {
+// Response of the CryptorReEncryptRequest method.
+message CryptorReEncryptResponse {
   repeated bytes reencrypted_texts = 1;
   int64 elapsed_cpu_time_millis = 2;
 }
 
-// The request to apply decryption.
-message ApplyDecryptionRequest {
+// The request to decrypt.
+message CryptorDecryptRequest {
   repeated bytes encrypted_texts = 1;
   bytes encryption_key = 2;
 }
 
-// Response of the ApplyEncryptionRequest method.
-message ApplyDecryptionResponse {
+// Response of the CryptorEncryptRequest method.
+message CryptorDecryptResponse {
   repeated bytes decrypted_texts = 1;
   int64 elapsed_cpu_time_millis = 2;
 }

@@ -18,18 +18,18 @@ import java.lang.RuntimeException
 import java.nio.file.Paths
 import org.wfanet.panelmatch.common.loadLibrary
 import wfanet.panelmatch.protocol.crypto.DeterministicCommutativeEncryptionUtility
-import wfanet.panelmatch.protocol.protobuf.ApplyDecryptionRequest
-import wfanet.panelmatch.protocol.protobuf.ApplyDecryptionResponse
-import wfanet.panelmatch.protocol.protobuf.ApplyEncryptionRequest
-import wfanet.panelmatch.protocol.protobuf.ApplyEncryptionResponse
-import wfanet.panelmatch.protocol.protobuf.ReApplyEncryptionRequest
-import wfanet.panelmatch.protocol.protobuf.ReApplyEncryptionResponse
+import wfanet.panelmatch.protocol.protobuf.CryptorDecryptRequest
+import wfanet.panelmatch.protocol.protobuf.CryptorDecryptResponse
+import wfanet.panelmatch.protocol.protobuf.CryptorEncryptRequest
+import wfanet.panelmatch.protocol.protobuf.CryptorEncryptResponse
+import wfanet.panelmatch.protocol.protobuf.CryptorReEncryptRequest
+import wfanet.panelmatch.protocol.protobuf.CryptorReEncryptResponse
 
 /**
  * A [DeterministicCommutativeEncryption] implementation using the JNI
  * [DeterministicCommutativeEncryptionUtility].
  */
-class JniDeterministicCommutativeEncryption : Encryption {
+class JniDeterministicCommutativeCryptor : Cryptor {
   /** Indicates something went wrong in C++. */
   class JniException(cause: Throwable) : RuntimeException(cause)
 
@@ -41,30 +41,30 @@ class JniDeterministicCommutativeEncryption : Encryption {
     }
   }
 
-  override fun encrypt(request: ApplyEncryptionRequest): ApplyEncryptionResponse {
+  override fun encrypt(request: CryptorEncryptRequest): CryptorEncryptResponse {
     return wrapJniException {
-      ApplyEncryptionResponse.parseFrom(
-        DeterministicCommutativeEncryptionUtility.applyDeterministicCommutativeEncryptionWrapper(
+      CryptorEncryptResponse.parseFrom(
+        DeterministicCommutativeEncryptionUtility.deterministicCommutativeEncryptWrapper(
           request.toByteArray()
         )
       )
     }
   }
 
-  override fun reEncrypt(request: ReApplyEncryptionRequest): ReApplyEncryptionResponse {
+  override fun reEncrypt(request: CryptorReEncryptRequest): CryptorReEncryptResponse {
     return wrapJniException {
-      ReApplyEncryptionResponse.parseFrom(
-        DeterministicCommutativeEncryptionUtility.reApplyDeterministicCommutativeEncryptionWrapper(
+      CryptorReEncryptResponse.parseFrom(
+        DeterministicCommutativeEncryptionUtility.deterministicCommutativeReEncryptWrapper(
           request.toByteArray()
         )
       )
     }
   }
 
-  override fun decrypt(request: ApplyDecryptionRequest): ApplyDecryptionResponse {
+  override fun decrypt(request: CryptorDecryptRequest): CryptorDecryptResponse {
     return wrapJniException {
-      ApplyDecryptionResponse.parseFrom(
-        DeterministicCommutativeEncryptionUtility.applyDeterministicCommutativeDecryptionWrapper(
+      CryptorDecryptResponse.parseFrom(
+        DeterministicCommutativeEncryptionUtility.deterministicCommutativeDecryptWrapper(
           request.toByteArray()
         )
       )

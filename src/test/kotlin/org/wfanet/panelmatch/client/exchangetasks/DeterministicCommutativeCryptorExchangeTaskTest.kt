@@ -25,7 +25,7 @@ import kotlinx.coroutines.runBlocking
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
-import org.wfanet.panelmatch.protocol.common.Encryption
+import org.wfanet.panelmatch.protocol.common.Cryptor
 import org.wfanet.panelmatch.protocol.common.makeSerializedSharedInputs
 
 private val KEY = ByteString.copyFromUtf8("some-key")
@@ -52,16 +52,16 @@ private val DOUBLE_CIPHERTEXTS: List<ByteString> =
   )
 
 @RunWith(JUnit4::class)
-class DeterministicCommutativeEncryptionExchangeTaskTest {
-  private val deterministicCommutativeEncryption = mock<Encryption>()
+class DeterministicCommutativeCryptorExchangeTaskTest {
+  private val deterministicCommutativeCryptor = mock<Cryptor>()
   private val fakeSendDebugLog: suspend (String) -> Unit = {}
 
   @Test
   fun `decrypt with valid inputs`() {
-    whenever(deterministicCommutativeEncryption.decrypt(any(), any())).thenReturn(PLAINTEXTS)
+    whenever(deterministicCommutativeCryptor.decrypt(any(), any())).thenReturn(PLAINTEXTS)
 
     val result = runBlocking {
-      EncryptionExchangeTask.forDecryption(deterministicCommutativeEncryption)
+      CryptorExchangeTask.forDecryption(deterministicCommutativeCryptor)
         .execute(
           mapOf(
             "encryption-key" to KEY,
@@ -76,12 +76,12 @@ class DeterministicCommutativeEncryptionExchangeTaskTest {
 
   @Test
   fun `decrypt with crypto error`() {
-    whenever(deterministicCommutativeEncryption.decrypt(any(), any()))
+    whenever(deterministicCommutativeCryptor.decrypt(any(), any()))
       .thenThrow(IllegalArgumentException("Something went wrong"))
 
     val exception = runBlocking {
       assertFailsWith(IllegalArgumentException::class) {
-        EncryptionExchangeTask.forDecryption(deterministicCommutativeEncryption)
+        CryptorExchangeTask.forDecryption(deterministicCommutativeCryptor)
           .execute(
             mapOf(
               "encryption-key" to KEY,
@@ -99,27 +99,27 @@ class DeterministicCommutativeEncryptionExchangeTaskTest {
   fun `decrypt with missing inputs`() {
     runBlocking {
       assertFailsWith(IllegalArgumentException::class) {
-        EncryptionExchangeTask.forDecryption(deterministicCommutativeEncryption)
+        CryptorExchangeTask.forDecryption(deterministicCommutativeCryptor)
           .execute(
             mapOf("encrypted-data" to makeSerializedSharedInputs(CIPHERTEXTS)),
             fakeSendDebugLog
           )
       }
       assertFailsWith(IllegalArgumentException::class) {
-        EncryptionExchangeTask.forDecryption(deterministicCommutativeEncryption)
+        CryptorExchangeTask.forDecryption(deterministicCommutativeCryptor)
           .execute(mapOf("encryption-key" to KEY), fakeSendDebugLog)
       }
     }
 
-    verifyZeroInteractions(deterministicCommutativeEncryption)
+    verifyZeroInteractions(deterministicCommutativeCryptor)
   }
 
   @Test
   fun `encrypt with valid inputs`() {
-    whenever(deterministicCommutativeEncryption.encrypt(any(), any())).thenReturn(CIPHERTEXTS)
+    whenever(deterministicCommutativeCryptor.encrypt(any(), any())).thenReturn(CIPHERTEXTS)
 
     val result = runBlocking {
-      EncryptionExchangeTask.forEncryption(deterministicCommutativeEncryption)
+      CryptorExchangeTask.forEncryption(deterministicCommutativeCryptor)
         .execute(
           mapOf(
             "encryption-key" to KEY,
@@ -134,12 +134,12 @@ class DeterministicCommutativeEncryptionExchangeTaskTest {
 
   @Test
   fun `encrypt with crypto error`() {
-    whenever(deterministicCommutativeEncryption.encrypt(any(), any()))
+    whenever(deterministicCommutativeCryptor.encrypt(any(), any()))
       .thenThrow(IllegalArgumentException("Something went wrong"))
 
     val exception = runBlocking {
       assertFailsWith(IllegalArgumentException::class) {
-        EncryptionExchangeTask.forEncryption(deterministicCommutativeEncryption)
+        CryptorExchangeTask.forEncryption(deterministicCommutativeCryptor)
           .execute(
             mapOf(
               "encryption-key" to KEY,
@@ -157,28 +157,27 @@ class DeterministicCommutativeEncryptionExchangeTaskTest {
   fun `encrypt with missing inputs`() {
     runBlocking {
       assertFailsWith(IllegalArgumentException::class) {
-        EncryptionExchangeTask.forEncryption(deterministicCommutativeEncryption)
+        CryptorExchangeTask.forEncryption(deterministicCommutativeCryptor)
           .execute(
             mapOf("unencrypted-data" to makeSerializedSharedInputs(PLAINTEXTS)),
             fakeSendDebugLog
           )
       }
       assertFailsWith(IllegalArgumentException::class) {
-        EncryptionExchangeTask.forEncryption(deterministicCommutativeEncryption)
+        CryptorExchangeTask.forEncryption(deterministicCommutativeCryptor)
           .execute(mapOf("encryption-key" to KEY), fakeSendDebugLog)
       }
     }
 
-    verifyZeroInteractions(deterministicCommutativeEncryption)
+    verifyZeroInteractions(deterministicCommutativeCryptor)
   }
 
   @Test
   fun `reEncryptTask with valid inputs`() {
-    whenever(deterministicCommutativeEncryption.reEncrypt(any(), any()))
-      .thenReturn(DOUBLE_CIPHERTEXTS)
+    whenever(deterministicCommutativeCryptor.reEncrypt(any(), any())).thenReturn(DOUBLE_CIPHERTEXTS)
 
     val result = runBlocking {
-      EncryptionExchangeTask.forReEncryption(deterministicCommutativeEncryption)
+      CryptorExchangeTask.forReEncryption(deterministicCommutativeCryptor)
         .execute(
           mapOf(
             "encryption-key" to KEY,
@@ -194,12 +193,12 @@ class DeterministicCommutativeEncryptionExchangeTaskTest {
 
   @Test
   fun `reEncryptTask with crypto error`() {
-    whenever(deterministicCommutativeEncryption.reEncrypt(any(), any()))
+    whenever(deterministicCommutativeCryptor.reEncrypt(any(), any()))
       .thenThrow(IllegalArgumentException("Something went wrong"))
 
     val exception = runBlocking {
       assertFailsWith(IllegalArgumentException::class) {
-        EncryptionExchangeTask.forReEncryption(deterministicCommutativeEncryption)
+        CryptorExchangeTask.forReEncryption(deterministicCommutativeCryptor)
           .execute(
             mapOf(
               "encryption-key" to KEY,
@@ -217,18 +216,18 @@ class DeterministicCommutativeEncryptionExchangeTaskTest {
   fun `reEncryptTask with missing inputs`() {
     runBlocking {
       assertFailsWith(IllegalArgumentException::class) {
-        EncryptionExchangeTask.forReEncryption(deterministicCommutativeEncryption)
+        CryptorExchangeTask.forReEncryption(deterministicCommutativeCryptor)
           .execute(
             mapOf("encrypted-data" to makeSerializedSharedInputs(CIPHERTEXTS)),
             fakeSendDebugLog
           )
       }
       assertFailsWith(IllegalArgumentException::class) {
-        EncryptionExchangeTask.forReEncryption(deterministicCommutativeEncryption)
+        CryptorExchangeTask.forReEncryption(deterministicCommutativeCryptor)
           .execute(mapOf("encryption-key" to KEY), fakeSendDebugLog)
       }
     }
 
-    verifyZeroInteractions(deterministicCommutativeEncryption)
+    verifyZeroInteractions(deterministicCommutativeCryptor)
   }
 }

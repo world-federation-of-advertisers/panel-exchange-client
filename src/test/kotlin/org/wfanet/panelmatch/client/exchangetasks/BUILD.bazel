@@ -1,9 +1,9 @@
 load("@io_bazel_rules_kotlin//kotlin:kotlin.bzl", "kt_jvm_test")
 
 kt_jvm_test(
-    name = "DeterministicCommutativeEncryptionExchangeTaskTest",
-    srcs = ["DeterministicCommutativeEncryptionExchangeTaskTest.kt"],
-    test_class = "org.wfanet.panelmatch.client.exchangetasks.DeterministicCommutativeEncryptionExchangeTaskTest",
+    name = "DeterministicCommutativeCryptorExchangeTaskTest",
+    srcs = ["DeterministicCommutativeCryptorExchangeTaskTest.kt"],
+    test_class = "org.wfanet.panelmatch.client.exchangetasks.DeterministicCommutativeCryptorExchangeTaskTest",
     deps = [
         "//src/main/kotlin/org/wfanet/panelmatch/client/exchangetasks",
         "//src/main/proto/wfanet/panelmatch/protocol/exchangesteps:exchangesteps_java_proto",
