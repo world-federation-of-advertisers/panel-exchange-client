@@ -34,33 +34,25 @@ import org.wfanet.panelmatch.protocol.common.JniDeterministicCommutativeCryptor
  * @param storage the Storage class to store the intermediary steps
  * @return mapped output.
  */
-class ExchangeTaskMapper
-constructor(
+class ExchangeTaskMapper(
   private val deterministicCommutativeCryptor: Cryptor = JniDeterministicCommutativeCryptor()
 ) {
   private val LOGGER = loggerFor(javaClass)
-  private suspend fun mapToTask(step: ExchangeWorkflow.Step): ExchangeTask {
+  private suspend fun getExchangeTaskForStep(step: ExchangeWorkflow.Step): ExchangeTask {
     when (step.getStepCase()) {
       // TODO split this up into encrypt and reencrypt
       ExchangeWorkflow.Step.StepCase.ENCRYPT_AND_SHARE -> {
         when (step.encryptAndShare.getInputFormat()) {
-          ExchangeWorkflow.Step.EncryptAndShareStep.InputFormat.PLAINTEXT -> {
+          ExchangeWorkflow.Step.EncryptAndShareStep.InputFormat.PLAINTEXT ->
             return CryptorExchangeTask.forEncryption(deterministicCommutativeCryptor)
-          }
-          ExchangeWorkflow.Step.EncryptAndShareStep.InputFormat.CIPHERTEXT -> {
+          ExchangeWorkflow.Step.EncryptAndShareStep.InputFormat.CIPHERTEXT ->
             return CryptorExchangeTask.forReEncryption(deterministicCommutativeCryptor)
-          }
-          else -> {
-            error("Unsupported encryption type")
-          }
+          else -> error("Unsupported encryption type")
         }
       }
-      ExchangeWorkflow.Step.StepCase.DECRYPT -> {
+      ExchangeWorkflow.Step.StepCase.DECRYPT ->
         return CryptorExchangeTask.forDecryption(deterministicCommutativeCryptor)
-      }
-      else -> {
-        error("Unsupported step type")
-      }
+      else -> error("Unsupported step type")
     }
   }
 
@@ -87,7 +79,7 @@ constructor(
         .mapValues { entry -> async(start = CoroutineStart.DEFAULT) { storage.read(entry.value) } }
         .mapValues { entry -> entry.value.await() }
     }
-    val taskOutput: Map<String, ByteString> = mapToTask(step).execute(taskInput)
+    val taskOutput: Map<String, ByteString> = getExchangeTaskForStep(step).execute(taskInput)
     coroutineScope {
       for ((key, value) in outputLabels) {
         launch { storage.write(value, requireNotNull(taskOutput[key])) }

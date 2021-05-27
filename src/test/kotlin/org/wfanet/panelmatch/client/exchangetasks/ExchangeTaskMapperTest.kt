@@ -32,7 +32,7 @@ import org.wfanet.panelmatch.protocol.common.parseSerializedSharedInputs
 
 private val DP_0_SECRET_KEY = ByteString.copyFromUtf8("random-edp-string-0")
 private val MP_0_SECRET_KEY = ByteString.copyFromUtf8("random-mp-string-0")
-private val joinKeys =
+private val JOIN_KEYS =
   listOf<ByteString>(
     ByteString.copyFromUtf8("some joinkey0"),
     ByteString.copyFromUtf8("some joinkey1"),
@@ -40,7 +40,7 @@ private val joinKeys =
     ByteString.copyFromUtf8("some joinkey3"),
     ByteString.copyFromUtf8("some joinkey4")
   )
-private val singleBlindedKeys =
+private val SINGLE_BLINDED_JOIN_KEYS =
   listOf<ByteString>(
     ByteString.copyFromUtf8("some single-blinded key0"),
     ByteString.copyFromUtf8("some single-blinded key1"),
@@ -48,7 +48,7 @@ private val singleBlindedKeys =
     ByteString.copyFromUtf8("some single-blinded key3"),
     ByteString.copyFromUtf8("some single-blinded key4")
   )
-private val doubleBlindedKeys =
+private val DOUBLE_BLINDED_JOIN_KEYS =
   listOf<ByteString>(
     ByteString.copyFromUtf8("some double-blinded key0"),
     ByteString.copyFromUtf8("some double-blinded key1"),
@@ -56,7 +56,7 @@ private val doubleBlindedKeys =
     ByteString.copyFromUtf8("some double-blinded key3"),
     ByteString.copyFromUtf8("some double-blinded key4")
   )
-private val lookupKeys =
+private val LOOKUP_KEYS =
   listOf<ByteString>(
     ByteString.copyFromUtf8("some lookup0"),
     ByteString.copyFromUtf8("some lookup1"),
@@ -68,8 +68,7 @@ private val deterministicCommutativeCryptor = mock<Cryptor>()
 
 @RunWith(JUnit4::class)
 class ExchangeTaskMapperTest {
-  private class TestStep
-  constructor(
+  private class TestStep(
     val inputLabels: Map<String, String>,
     val outputLabels: Map<String, String>,
     val stepType: ExchangeWorkflow.Step.StepCase,
@@ -79,31 +78,33 @@ class ExchangeTaskMapperTest {
   ) {
 
     private suspend fun build(): ExchangeWorkflow.Step {
-      var stepBuilder = ExchangeWorkflow.Step.newBuilder()
-      stepBuilder =
-        when (stepType) {
-          ExchangeWorkflow.Step.StepCase.INPUT ->
-            stepBuilder.apply { input = ExchangeWorkflow.Step.InputStep.getDefaultInstance() }
-          ExchangeWorkflow.Step.StepCase.ENCRYPT_AND_SHARE ->
-            stepBuilder.apply {
+      return ExchangeWorkflow.Step.newBuilder()
+        .putAllInputLabels(inputLabels)
+        .putAllOutputLabels(outputLabels)
+        .apply {
+          when (stepType) {
+            ExchangeWorkflow.Step.StepCase.INPUT ->
+              input = ExchangeWorkflow.Step.InputStep.getDefaultInstance()
+            ExchangeWorkflow.Step.StepCase.ENCRYPT_AND_SHARE ->
               encryptAndShare =
                 ExchangeWorkflow.Step.EncryptAndShareStep.newBuilder()
                   .apply { inputFormat = encryptFormat }
                   .build()
-            }
-          ExchangeWorkflow.Step.StepCase.DECRYPT ->
-            stepBuilder.apply { decrypt = ExchangeWorkflow.Step.DecryptStep.getDefaultInstance() }
-          else -> throw Exception("Unsupported step config")
+            ExchangeWorkflow.Step.StepCase.DECRYPT ->
+              decrypt = ExchangeWorkflow.Step.DecryptStep.getDefaultInstance()
+            else -> error("Unsupported step config")
+          }
         }
-      return stepBuilder.putAllInputLabels(inputLabels).putAllOutputLabels(outputLabels).build()
+        .build()
     }
 
     suspend fun buildAndExecute(storage: Storage): Map<String, ByteString> {
       val builtStep: ExchangeWorkflow.Step = build()
-      whenever(deterministicCommutativeCryptor.encrypt(any(), any())).thenReturn(singleBlindedKeys)
+      whenever(deterministicCommutativeCryptor.encrypt(any(), any()))
+        .thenReturn(SINGLE_BLINDED_JOIN_KEYS)
       whenever(deterministicCommutativeCryptor.reEncrypt(any(), any()))
-        .thenReturn(doubleBlindedKeys)
-      whenever(deterministicCommutativeCryptor.decrypt(any(), any())).thenReturn(lookupKeys)
+        .thenReturn(DOUBLE_BLINDED_JOIN_KEYS)
+      whenever(deterministicCommutativeCryptor.decrypt(any(), any())).thenReturn(LOOKUP_KEYS)
       return ExchangeTaskMapper(deterministicCommutativeCryptor)
         .execute(builtStep, inputData, storage)
     }
@@ -130,7 +131,7 @@ class ExchangeTaskMapperTest {
           inputLabels = mapOf("input" to "joinkeys"),
           outputLabels = mapOf("output" to "mp-joinkeys"),
           stepType = ExchangeWorkflow.Step.StepCase.INPUT,
-          inputData = mapOf("joinkeys" to makeSerializedSharedInputs(joinKeys))
+          inputData = mapOf("joinkeys" to makeSerializedSharedInputs(JOIN_KEYS))
         ),
         TestStep(
           inputLabels =
@@ -160,19 +161,17 @@ class ExchangeTaskMapperTest {
         )
       )
     val stepOutputs = mutableListOf<Map<String, ByteString>>()
-    for (testStep in testSteps) {
-      stepOutputs.add(testStep.buildAndExecute(storage))
-    }
+    testSteps.forEach { stepOutputs.add(it.buildAndExecute(storage)) }
     // Verify single blinded output
     assertThat(parseSerializedSharedInputs(requireNotNull(stepOutputs[3]["encrypted-data"])))
-      .isEqualTo(singleBlindedKeys)
+      .isEqualTo(SINGLE_BLINDED_JOIN_KEYS)
 
     // Verify double blinded output
     assertThat(parseSerializedSharedInputs(requireNotNull(stepOutputs[4]["reencrypted-data"])))
-      .isEqualTo(doubleBlindedKeys)
+      .isEqualTo(DOUBLE_BLINDED_JOIN_KEYS)
 
     // Verify decrypted double blinded output
     assertThat(parseSerializedSharedInputs(requireNotNull(stepOutputs[5]["decrypted-data"])))
-      .isEqualTo(lookupKeys)
+      .isEqualTo(LOOKUP_KEYS)
   }
 }

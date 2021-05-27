@@ -24,8 +24,7 @@ class InMemoryStorage : Storage {
   private var inMemoryStorage = HashMap<String, ByteString>()
 
   override suspend fun read(path: String): ByteString {
-    require(path in inMemoryStorage) { "Key does not exist in storage: $path" }
-    return requireNotNull(inMemoryStorage[path])
+    return requireNotNull(inMemoryStorage[path]) { "Key does not exist in storage: $path" }
   }
 
   override suspend fun write(path: String, data: ByteString) {
