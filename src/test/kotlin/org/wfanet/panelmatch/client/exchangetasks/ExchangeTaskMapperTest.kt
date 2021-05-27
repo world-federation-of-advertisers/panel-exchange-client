@@ -64,21 +64,19 @@ private val LOOKUP_KEYS =
     ByteString.copyFromUtf8("some lookup3"),
     ByteString.copyFromUtf8("some lookup4")
   )
-private val deterministicCommutativeCryptor = mock<Cryptor>()
 
 @RunWith(JUnit4::class)
 class ExchangeTaskMapperTest {
-  private class TestStep
-  constructor(
+  private class TestStep(
     val inputLabels: Map<String, String>,
     val outputLabels: Map<String, String>,
     val stepType: ExchangeWorkflow.Step.StepCase,
     val encryptFormat: ExchangeWorkflow.Step.EncryptAndShareStep.InputFormat =
       ExchangeWorkflow.Step.EncryptAndShareStep.InputFormat.INPUT_FORMAT_UNSPECIFIED,
     val inputData: Map<String, ByteString> = emptyMap<String, ByteString>(),
-    val fakeSendDebugLog: suspend (String) -> Unit = {}
+    val fakeSendDebugLog: suspend (String) -> Unit = {},
+    val deterministicCommutativeCryptor: Cryptor = mock<Cryptor>()
   ) {
-
     private suspend fun build(): ExchangeWorkflow.Step {
       return ExchangeWorkflow.Step.newBuilder()
         .putAllInputLabels(inputLabels)
