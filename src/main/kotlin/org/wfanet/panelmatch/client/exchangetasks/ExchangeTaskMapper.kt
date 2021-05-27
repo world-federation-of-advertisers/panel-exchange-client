@@ -34,12 +34,11 @@ import org.wfanet.panelmatch.protocol.common.JniDeterministicCommutativeCryptor
  * @param sendDebugLog function which writes logs happened during execution.
  * @return mapped output.
  */
-class ExchangeTaskMapper
-constructor(
+class ExchangeTaskMapper(
   private val deterministicCommutativeCryptor: Cryptor = JniDeterministicCommutativeCryptor()
 ) {
 
-  private suspend fun mapToTask(step: ExchangeWorkflow.Step): ExchangeTask {
+  private suspend fun getExchangeTaskForStep(step: ExchangeWorkflow.Step): ExchangeTask {
     when (step.getStepCase()) {
       // TODO split this up into encrypt and reencrypt
       ExchangeWorkflow.Step.StepCase.ENCRYPT_AND_SHARE -> {
@@ -87,7 +86,8 @@ constructor(
         .mapValues { entry -> async(start = CoroutineStart.DEFAULT) { storage.read(entry.value) } }
         .mapValues { entry -> entry.value.await() }
     }
-    val taskOutput: Map<String, ByteString> = mapToTask(step).execute(taskInput, sendDebugLog)
+    val taskOutput: Map<String, ByteString> =
+      getExchangeTaskForStep(step).execute(taskInput, sendDebugLog)
     coroutineScope {
       for ((key, value) in outputLabels) {
         launch { storage.write(value, requireNotNull(taskOutput[key])) }
