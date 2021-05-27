@@ -15,9 +15,15 @@
 package org.wfanet.panelmatch.client.exchangetasks
 
 import com.google.protobuf.ByteString
+import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
 import org.wfanet.measurement.api.v2alpha.ExchangeWorkflow
 import org.wfanet.panelmatch.client.storage.Storage
 import org.wfanet.panelmatch.client.utils.loggerFor
+import org.wfanet.panelmatch.protocol.common.Cryptor
+import org.wfanet.panelmatch.protocol.common.JniDeterministicCommutativeCryptor
 
 /**
  * Maps ExchangeWorkflow.Step to respective tasks. Retrieves necessary inputs. Executes step. Stores
@@ -26,52 +32,23 @@ import org.wfanet.panelmatch.client.utils.loggerFor
  * @param ExchangeWorkflow.Step to execute.
  * @param input inputs needed by all [task]s.
  * @param storage the Storage class to store the intermediary steps
- * @return mapped output. This is either a ByteString or null for input steps.
+ * @return mapped output.
  */
-class ExchangeTaskMapper {
+class ExchangeTaskMapper
+constructor(
+  private val deterministicCommutativeCryptor: Cryptor = JniDeterministicCommutativeCryptor()
+) {
   private val LOGGER = loggerFor(javaClass)
-
-  suspend fun execute(
-    step: ExchangeWorkflow.Step,
-    input: Map<String, ByteString>,
-    storage: Storage
-  ): ByteString? {
-    LOGGER.info("Excecute step: ${step.toString()}")
-    val inputLabels = step.getInputLabelsMap()
-    val outputLabels = step.getOutputLabelsMap()
-    val outputFieldName = requireNotNull(outputLabels["output"])
+  private suspend fun mapToTask(step: ExchangeWorkflow.Step): ExchangeTask {
     when (step.getStepCase()) {
-      ExchangeWorkflow.Step.StepCase.INPUT -> {
-        val inputFieldName = requireNotNull(inputLabels["input"])
-        storage.write(outputFieldName, requireNotNull(input[inputFieldName]))
-        return null
-      }
       // TODO split this up into encrypt and reencrypt
       ExchangeWorkflow.Step.StepCase.ENCRYPT_AND_SHARE -> {
         when (step.encryptAndShare.getInputFormat()) {
           ExchangeWorkflow.Step.EncryptAndShareStep.InputFormat.PLAINTEXT -> {
-            val taskInput: Map<String, ByteString> =
-              mapOf(
-                "encryption-key" to storage.read(requireNotNull(inputLabels["crypto-key"])),
-                "unencrypted-data" to storage.read(requireNotNull(inputLabels["unencrypted-data"]))
-              )
-            val taskOutput = EncryptTask().execute(taskInput)
-            val encryptedData = requireNotNull(taskOutput["encrypted-data"])
-            // TODO store data in shared location or send to Measurement Coordinator
-            storage.write(outputFieldName, encryptedData)
-            return encryptedData
+            return CryptorExchangeTask.forEncryption(deterministicCommutativeCryptor)
           }
           ExchangeWorkflow.Step.EncryptAndShareStep.InputFormat.CIPHERTEXT -> {
-            val taskInput: Map<String, ByteString> =
-              mapOf(
-                "encryption-key" to storage.read(requireNotNull(inputLabels["crypto-key"])),
-                "encrypted-data" to storage.read(requireNotNull(inputLabels["encrypted-data"]))
-              )
-            val taskOutput = ReEncryptTask().execute(taskInput)
-            val reencryptedData = requireNotNull(taskOutput["reencrypted-data"])
-            // TODO store data in shared location or send to Measurement Coordinator
-            storage.write(outputFieldName, reencryptedData)
-            return reencryptedData
+            return CryptorExchangeTask.forReEncryption(deterministicCommutativeCryptor)
           }
           else -> {
             error("Unsupported encryption type")
@@ -79,20 +56,45 @@ class ExchangeTaskMapper {
         }
       }
       ExchangeWorkflow.Step.StepCase.DECRYPT -> {
-        val taskInput: Map<String, ByteString> =
-          mapOf(
-            "encryption-key" to storage.read(requireNotNull(inputLabels["crypto-key"])),
-            "encrypted-data" to storage.read(requireNotNull(inputLabels["encrypted-data"]))
-          )
-        val taskOutput = ReEncryptTask().execute(taskInput)
-        val decryptedData = requireNotNull(taskOutput["reencrypted-data"])
-        // TODO store data in shared location or send to Measurement Coordinator
-        storage.write(outputFieldName, decryptedData)
-        return decryptedData
+        return CryptorExchangeTask.forDecryption(deterministicCommutativeCryptor)
       }
       else -> {
         error("Unsupported step type")
       }
     }
+  }
+
+  suspend fun execute(
+    step: ExchangeWorkflow.Step,
+    input: Map<String, ByteString>,
+    storage: Storage
+  ): Map<String, ByteString> {
+    LOGGER.info("Execute step: ${step.toString()}")
+    val inputLabels = step.getInputLabelsMap()
+    val outputLabels = step.getOutputLabelsMap()
+    // TODO: Currently, INPUT is a special use case. It is the only one that uses the `input`
+    // variable. However, in production, it is likely the inputs will be pre-stored in storage or
+    // this variable will instead map to a cloud storage device of some kind. Either way, this needs
+    // a refactor.
+    if (step.getStepCase() == ExchangeWorkflow.Step.StepCase.INPUT) {
+      val inputFieldName = requireNotNull(inputLabels["input"])
+      val outputFieldName = requireNotNull(outputLabels["output"])
+      storage.write(outputFieldName, requireNotNull(input[inputFieldName]))
+      return emptyMap<String, ByteString>()
+    }
+    val taskInput: Map<String, ByteString> = coroutineScope {
+      inputLabels
+        .mapValues { entry -> async(start = CoroutineStart.DEFAULT) { storage.read(entry.value) } }
+        .mapValues { entry -> entry.value.await() }
+    }
+    val taskOutput: Map<String, ByteString> = mapToTask(step).execute(taskInput)
+    coroutineScope {
+      for ((key, value) in outputLabels) {
+        launch { storage.write(value, requireNotNull(taskOutput[key])) }
+      }
+    }
+    // TODO make rpc call to update that task was completed. Also catch if task errored and report
+    // that as well.
+    return taskOutput
   }
 }

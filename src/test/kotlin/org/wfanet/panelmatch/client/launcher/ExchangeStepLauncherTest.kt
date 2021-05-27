@@ -89,9 +89,11 @@ class ExchangeStepLauncherTest {
       assertThat(firstValue).isEqualTo(EXCHANGE_STEP)
     }
 
-    val (exchangeStepCaptor, attemptCaptor) =
-      argumentCaptor(ExchangeStep::class, ExchangeStepAttempt.Key::class)
-    verifyBlocking(jobLauncher) { execute(exchangeStepCaptor.capture(), attemptCaptor.capture()) }
+    val (apiClientCaptor, exchangeStepCaptor, attemptCaptor) =
+      argumentCaptor(ApiClient::class, ExchangeStep::class, ExchangeStepAttempt.Key::class)
+    verifyBlocking(jobLauncher) {
+      execute(apiClientCaptor.capture(), exchangeStepCaptor.capture(), attemptCaptor.capture())
+    }
     assertThat(exchangeStepCaptor.firstValue).isEqualTo(EXCHANGE_STEP)
     assertThat(attemptCaptor.firstValue).isEqualTo(EXCHANGE_STEP_ATTEMPT_KEY)
   }

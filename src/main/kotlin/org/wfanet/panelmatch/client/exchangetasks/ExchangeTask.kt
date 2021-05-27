@@ -25,7 +25,5 @@ interface ExchangeTask {
    * @param sendDebugLog function which writes logs happened during execution.
    * @return Executed output. It is a map from the labels to the payload associated with the label.
    */
-  suspend fun execute(
-    input: Map<String, ByteString>
-  ): Map<String, ByteString>
+  suspend fun execute(input: Map<String, ByteString>): Map<String, ByteString>
 }

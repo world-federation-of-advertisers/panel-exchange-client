@@ -1,9 +1,9 @@
 load("@io_bazel_rules_kotlin//kotlin:kotlin.bzl", "kt_jvm_test")
 
 kt_jvm_test(
-    name = "ExchangeTaskTest",
-    srcs = ["ExchangeTaskTest.kt"],
-    test_class = "org.wfanet.panelmatch.client.exchangetasks.ExchangeTaskTest",
+    name = "DeterministicCommutativeCryptorExchangeTaskTest",
+    srcs = ["DeterministicCommutativeCryptorExchangeTaskTest.kt"],
+    test_class = "org.wfanet.panelmatch.client.exchangetasks.DeterministicCommutativeCryptorExchangeTaskTest",
     deps = [
         "//src/main/kotlin/org/wfanet/panelmatch/client/exchangetasks",
         "//src/main/proto/wfanet/panelmatch/protocol/exchangesteps:exchangesteps_java_proto",
@@ -23,7 +23,6 @@ kt_jvm_test(
     deps = [
         "//src/main/kotlin/org/wfanet/panelmatch/client/exchangetasks",
         "//src/main/kotlin/org/wfanet/panelmatch/client/storage",
-        "//src/main/kotlin/org/wfanet/panelmatch/protocol/common:protocolutils",
         "@wfa_measurement_system//imports/java/com/google/common/truth",
         "@wfa_measurement_system//imports/java/com/google/common/truth/extensions/proto",
         "@wfa_measurement_system//imports/java/org/junit",
