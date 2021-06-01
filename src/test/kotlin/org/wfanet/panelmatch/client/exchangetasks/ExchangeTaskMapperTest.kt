@@ -40,7 +40,7 @@ private val JOIN_KEYS =
     ByteString.copyFromUtf8("some joinkey3"),
     ByteString.copyFromUtf8("some joinkey4")
   )
-private val SINGLE_BLINDED_JOIN_KEYS =
+private val SINGLE_BLINDED_KEYS =
   listOf<ByteString>(
     ByteString.copyFromUtf8("some single-blinded key0"),
     ByteString.copyFromUtf8("some single-blinded key1"),
@@ -48,7 +48,7 @@ private val SINGLE_BLINDED_JOIN_KEYS =
     ByteString.copyFromUtf8("some single-blinded key3"),
     ByteString.copyFromUtf8("some single-blinded key4")
   )
-private val DOUBLE_BLINDED_JOIN_KEYS =
+private val DOUBLE_BLINDED_KEYS =
   listOf<ByteString>(
     ByteString.copyFromUtf8("some double-blinded key0"),
     ByteString.copyFromUtf8("some double-blinded key1"),
@@ -64,7 +64,6 @@ private val LOOKUP_KEYS =
     ByteString.copyFromUtf8("some lookup3"),
     ByteString.copyFromUtf8("some lookup4")
   )
-private val deterministicCommutativeCryptor = mock<Cryptor>()
 
 @RunWith(JUnit4::class)
 class ExchangeTaskMapperTest {
@@ -74,9 +73,9 @@ class ExchangeTaskMapperTest {
     val stepType: ExchangeWorkflow.Step.StepCase,
     val encryptFormat: ExchangeWorkflow.Step.EncryptAndShareStep.InputFormat =
       ExchangeWorkflow.Step.EncryptAndShareStep.InputFormat.INPUT_FORMAT_UNSPECIFIED,
-    val inputData: Map<String, ByteString> = emptyMap<String, ByteString>()
+    val inputData: Map<String, ByteString> = emptyMap<String, ByteString>(),
+    val deterministicCommutativeCryptor: Cryptor = mock<Cryptor>()
   ) {
-
     private suspend fun build(): ExchangeWorkflow.Step {
       return ExchangeWorkflow.Step.newBuilder()
         .putAllInputLabels(inputLabels)
@@ -101,9 +100,9 @@ class ExchangeTaskMapperTest {
     suspend fun buildAndExecute(storage: Storage): Map<String, ByteString> {
       val builtStep: ExchangeWorkflow.Step = build()
       whenever(deterministicCommutativeCryptor.encrypt(any(), any()))
-        .thenReturn(SINGLE_BLINDED_JOIN_KEYS)
+        .thenReturn(SINGLE_BLINDED_KEYS)
       whenever(deterministicCommutativeCryptor.reEncrypt(any(), any()))
-        .thenReturn(DOUBLE_BLINDED_JOIN_KEYS)
+        .thenReturn(DOUBLE_BLINDED_KEYS)
       whenever(deterministicCommutativeCryptor.decrypt(any(), any())).thenReturn(LOOKUP_KEYS)
       return ExchangeTaskMapper(deterministicCommutativeCryptor)
         .execute(builtStep, inputData, storage)
@@ -164,11 +163,11 @@ class ExchangeTaskMapperTest {
     testSteps.forEach { stepOutputs.add(it.buildAndExecute(storage)) }
     // Verify single blinded output
     assertThat(parseSerializedSharedInputs(requireNotNull(stepOutputs[3]["encrypted-data"])))
-      .isEqualTo(SINGLE_BLINDED_JOIN_KEYS)
+      .isEqualTo(SINGLE_BLINDED_KEYS)
 
     // Verify double blinded output
     assertThat(parseSerializedSharedInputs(requireNotNull(stepOutputs[4]["reencrypted-data"])))
-      .isEqualTo(DOUBLE_BLINDED_JOIN_KEYS)
+      .isEqualTo(DOUBLE_BLINDED_KEYS)
 
     // Verify decrypted double blinded output
     assertThat(parseSerializedSharedInputs(requireNotNull(stepOutputs[5]["decrypted-data"])))

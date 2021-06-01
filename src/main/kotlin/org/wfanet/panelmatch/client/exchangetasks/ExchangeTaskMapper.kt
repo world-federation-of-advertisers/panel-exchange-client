@@ -38,21 +38,29 @@ class ExchangeTaskMapper(
   private val deterministicCommutativeCryptor: Cryptor = JniDeterministicCommutativeCryptor()
 ) {
   private val LOGGER = loggerFor(javaClass)
+
   private suspend fun getExchangeTaskForStep(step: ExchangeWorkflow.Step): ExchangeTask {
     when (step.getStepCase()) {
       // TODO split this up into encrypt and reencrypt
       ExchangeWorkflow.Step.StepCase.ENCRYPT_AND_SHARE -> {
         when (step.encryptAndShare.getInputFormat()) {
-          ExchangeWorkflow.Step.EncryptAndShareStep.InputFormat.PLAINTEXT ->
+          ExchangeWorkflow.Step.EncryptAndShareStep.InputFormat.PLAINTEXT -> {
             return CryptorExchangeTask.forEncryption(deterministicCommutativeCryptor)
-          ExchangeWorkflow.Step.EncryptAndShareStep.InputFormat.CIPHERTEXT ->
+          }
+          ExchangeWorkflow.Step.EncryptAndShareStep.InputFormat.CIPHERTEXT -> {
             return CryptorExchangeTask.forReEncryption(deterministicCommutativeCryptor)
-          else -> error("Unsupported encryption type")
+          }
+          else -> {
+            error("Unsupported encryption type")
+          }
         }
       }
-      ExchangeWorkflow.Step.StepCase.DECRYPT ->
+      ExchangeWorkflow.Step.StepCase.DECRYPT -> {
         return CryptorExchangeTask.forDecryption(deterministicCommutativeCryptor)
-      else -> error("Unsupported step type")
+      }
+      else -> {
+        error("Unsupported step type")
+      }
     }
   }
 

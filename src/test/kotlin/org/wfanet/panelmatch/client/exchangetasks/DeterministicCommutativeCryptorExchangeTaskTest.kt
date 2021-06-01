@@ -97,7 +97,9 @@ class DeterministicCommutativeCryptorExchangeTaskTest {
     runBlocking {
       assertFailsWith(IllegalArgumentException::class) {
         CryptorExchangeTask.forDecryption(deterministicCommutativeCryptor)
-          .execute(mapOf("encrypted-data" to makeSerializedSharedInputs(CIPHERTEXTS)))
+          .execute(
+            mapOf("encrypted-data" to makeSerializedSharedInputs(CIPHERTEXTS))
+          )
       }
       assertFailsWith(IllegalArgumentException::class) {
         CryptorExchangeTask.forDecryption(deterministicCommutativeCryptor)
@@ -150,7 +152,9 @@ class DeterministicCommutativeCryptorExchangeTaskTest {
     runBlocking {
       assertFailsWith(IllegalArgumentException::class) {
         CryptorExchangeTask.forEncryption(deterministicCommutativeCryptor)
-          .execute(mapOf("unencrypted-data" to makeSerializedSharedInputs(PLAINTEXTS)))
+          .execute(
+            mapOf("unencrypted-data" to makeSerializedSharedInputs(PLAINTEXTS))
+          )
       }
       assertFailsWith(IllegalArgumentException::class) {
         CryptorExchangeTask.forEncryption(deterministicCommutativeCryptor)
@@ -204,7 +208,9 @@ class DeterministicCommutativeCryptorExchangeTaskTest {
     runBlocking {
       assertFailsWith(IllegalArgumentException::class) {
         CryptorExchangeTask.forReEncryption(deterministicCommutativeCryptor)
-          .execute(mapOf("encrypted-data" to makeSerializedSharedInputs(CIPHERTEXTS)))
+          .execute(
+            mapOf("encrypted-data" to makeSerializedSharedInputs(CIPHERTEXTS))
+          )
       }
       assertFailsWith(IllegalArgumentException::class) {
         CryptorExchangeTask.forReEncryption(deterministicCommutativeCryptor)
