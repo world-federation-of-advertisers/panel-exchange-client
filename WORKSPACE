@@ -188,9 +188,9 @@ http_archive(
 # Measurement system.
 http_archive(
     name = "wfa_measurement_system",
-    sha256 = "d0200afef07d5a2c81adbe6c0c319a663e058195ad563401bfc4813bc4de6cb9",
-    strip_prefix = "cross-media-measurement-933284c02cff0be89991c31178bb9538de70f01b",
-    url = "https://github.com/world-federation-of-advertisers/cross-media-measurement/archive/933284c02cff0be89991c31178bb9538de70f01b.tar.gz",
+    sha256 = "50dcfbbd95eb7585c3e1faf66c6c1f3101d05012477f084e055348b963aeef40",
+    strip_prefix = "cross-media-measurement-04da26b2fb351b857114ba44df2b992c80ad9ec3",
+    url = "https://github.com/world-federation-of-advertisers/cross-media-measurement/archive/04da26b2fb351b857114ba44df2b992c80ad9ec3.tar.gz",
 )
 
 # Measurement proto.

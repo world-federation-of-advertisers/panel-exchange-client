@@ -18,9 +18,9 @@ import java.time.Clock
 import kotlinx.coroutines.runBlocking
 import org.wfanet.measurement.api.v2alpha.ExchangeStepAttemptsGrpcKt.ExchangeStepAttemptsCoroutineStub
 import org.wfanet.measurement.api.v2alpha.ExchangeStepsGrpcKt.ExchangeStepsCoroutineStub
-import org.wfanet.measurement.api.v2alpha.ExchangeWorkflow.Party
 import org.wfanet.measurement.common.commandLineMain
 import org.wfanet.measurement.common.grpc.buildChannel
+import org.wfanet.measurement.common.logAndSuppressExceptionSuspend
 import org.wfanet.measurement.common.throttler.MinimumIntervalThrottler
 import org.wfanet.panelmatch.client.launcher.BlockingJobLauncher
 import org.wfanet.panelmatch.client.launcher.ExchangeStepLauncher
@@ -36,17 +36,22 @@ import picocli.CommandLine
   showDefaultValues = true
 )
 private fun run(@CommandLine.Mixin flags: ExchangeWorkflowFlags) {
+  val exchangeStepsServiceTarget = flags.exchangeStepsServiceTarget
+  validateTarget(exchangeStepsServiceTarget, "ExchangeSteps")
+  val exchangeStepAttemptsServiceTarget = flags.exchangeStepAttemptsServiceTarget
+  validateTarget(exchangeStepAttemptsServiceTarget, "ExchangeStepAttempts")
+
   val exchangeStepsClient =
     ExchangeStepsCoroutineStub(
-      buildChannel(flags.exchangeStepsServiceTarget, flags.channelShutdownTimeout)
+      buildChannel(exchangeStepsServiceTarget, flags.channelShutdownTimeout)
     )
   val exchangeStepAttemptsClient =
     ExchangeStepAttemptsCoroutineStub(
-      buildChannel(flags.exchangeStepAttemptsServiceTarget, flags.channelShutdownTimeout)
+      buildChannel(exchangeStepAttemptsServiceTarget, flags.channelShutdownTimeout)
     )
   val grpcApiClient =
     GrpcApiClient(
-      Identity(flags.id, buildParty(flags.partyType)),
+      Identity(flags.id, flags.partyType),
       exchangeStepsClient,
       exchangeStepAttemptsClient,
       Clock.systemUTC()
@@ -55,13 +60,18 @@ private fun run(@CommandLine.Mixin flags: ExchangeWorkflowFlags) {
   val exchangeStepLauncher =
     ExchangeStepLauncher(grpcApiClient, ExchangeStepValidatorImpl(), BlockingJobLauncher())
 
-  runBlocking { pollingThrottler.loopOnReady { exchangeStepLauncher.findAndRunExchangeStep() } }
+  runBlocking {
+    pollingThrottler.loopOnReady {
+      logAndSuppressExceptionSuspend { exchangeStepLauncher.findAndRunExchangeStep() }
+    }
+  }
 }
 
-/** Turn string party type into enum. */
-private fun buildParty(type: String): Party {
-  val map = mapOf("model" to Party.MODEL_PROVIDER, "data" to Party.DATA_PROVIDER)
-  return map[type] ?: throw IllegalArgumentException("Unsupported value for Party Type $type.")
+private fun validateTarget(target: String, serviceName: String) {
+  val pos = target.lastIndexOf(':')
+  require(pos >= 0) {
+    "Invalid target format for $serviceName Service: must be 'host:port' but was $target."
+  }
 }
 
 fun main(args: Array<String>) = commandLineMain(::run, args)

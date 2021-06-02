@@ -15,6 +15,7 @@
 package org.wfanet.panelmatch.client.deploy
 
 import java.time.Duration
+import org.wfanet.measurement.api.v2alpha.ExchangeWorkflow.Party
 import picocli.CommandLine
 
 class ExchangeWorkflowFlags {
@@ -24,11 +25,10 @@ class ExchangeWorkflowFlags {
 
   @CommandLine.Option(
     names = ["--party-type"],
-    description = ["Type of the party [model, data]."],
-    defaultValue = "model",
+    description = ["Type of the party: \${COMPLETION-CANDIDATES}"],
     required = true
   )
-  lateinit var partyType: String
+  lateinit var partyType: Party
     private set
 
   @CommandLine.Option(
