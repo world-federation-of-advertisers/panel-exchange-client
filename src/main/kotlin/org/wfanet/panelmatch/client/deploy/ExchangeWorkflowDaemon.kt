@@ -36,18 +36,13 @@ import picocli.CommandLine
   showDefaultValues = true
 )
 private fun run(@CommandLine.Mixin flags: ExchangeWorkflowFlags) {
-  val exchangeStepsServiceTarget = flags.exchangeStepsServiceTarget
-  validateTarget(exchangeStepsServiceTarget, "ExchangeSteps")
-  val exchangeStepAttemptsServiceTarget = flags.exchangeStepAttemptsServiceTarget
-  validateTarget(exchangeStepAttemptsServiceTarget, "ExchangeStepAttempts")
-
   val exchangeStepsClient =
     ExchangeStepsCoroutineStub(
-      buildChannel(exchangeStepsServiceTarget, flags.channelShutdownTimeout)
+      buildChannel(flags.exchangeStepsServiceTarget, flags.channelShutdownTimeout)
     )
   val exchangeStepAttemptsClient =
     ExchangeStepAttemptsCoroutineStub(
-      buildChannel(exchangeStepAttemptsServiceTarget, flags.channelShutdownTimeout)
+      buildChannel(flags.exchangeStepAttemptsServiceTarget, flags.channelShutdownTimeout)
     )
   val grpcApiClient =
     GrpcApiClient(
@@ -64,13 +59,6 @@ private fun run(@CommandLine.Mixin flags: ExchangeWorkflowFlags) {
     pollingThrottler.loopOnReady {
       logAndSuppressExceptionSuspend { exchangeStepLauncher.findAndRunExchangeStep() }
     }
-  }
-}
-
-private fun validateTarget(target: String, serviceName: String) {
-  val pos = target.lastIndexOf(':')
-  require(pos >= 0) {
-    "Invalid target format for $serviceName Service: must be 'host:port' but was $target."
   }
 }
 

@@ -45,9 +45,17 @@ load("//build/com_google_truth:repo.bzl", "com_google_truth_artifact_dict")
 # Measurement system.
 http_archive(
     name = "wfa_measurement_system",
-    sha256 = "6d73a34a1db5af9a89484134b2f20d78552efce21ba4a21e5a27567e6c262fc5",
-    strip_prefix = "cross-media-measurement-6c0992bc9859e0e1e2b10e4f5ee9f9f3c89d7251",
-    url = "https://github.com/world-federation-of-advertisers/cross-media-measurement/archive/6c0992bc9859e0e1e2b10e4f5ee9f9f3c89d7251.tar.gz",
+    sha256 = "50dcfbbd95eb7585c3e1faf66c6c1f3101d05012477f084e055348b963aeef40",
+    strip_prefix = "cross-media-measurement-04da26b2fb351b857114ba44df2b992c80ad9ec3",
+    url = "https://github.com/world-federation-of-advertisers/cross-media-measurement/archive/04da26b2fb351b857114ba44df2b992c80ad9ec3.tar.gz",
+)
+
+# Measurement proto.
+http_archive(
+    name = "wfa_measurement_proto",
+    sha256 = "c7d87a438a446ebeacdcae8bcfed270c513ae5c5d26bccd36fb179d47e7d3365",
+    strip_prefix = "cross-media-measurement-api-ab647fffd78f29769611f05ef131ec1f1feed820",
+    url = "https://github.com/world-federation-of-advertisers/cross-media-measurement-api/archive/ab647fffd78f29769611f05ef131ec1f1feed820.tar.gz",
 )
 
 # @io_bazel_rules_kotlin
@@ -183,22 +191,6 @@ http_archive(
     urls = [
         "https://github.com/protocolbuffers/protobuf/archive/refs/tags/v3.15.6.tar.gz",
     ],
-)
-
-# Measurement system.
-http_archive(
-    name = "wfa_measurement_system",
-    sha256 = "50dcfbbd95eb7585c3e1faf66c6c1f3101d05012477f084e055348b963aeef40",
-    strip_prefix = "cross-media-measurement-04da26b2fb351b857114ba44df2b992c80ad9ec3",
-    url = "https://github.com/world-federation-of-advertisers/cross-media-measurement/archive/04da26b2fb351b857114ba44df2b992c80ad9ec3.tar.gz",
-)
-
-# Measurement proto.
-http_archive(
-    name = "wfa_measurement_proto",
-    sha256 = "c7d87a438a446ebeacdcae8bcfed270c513ae5c5d26bccd36fb179d47e7d3365",
-    strip_prefix = "cross-media-measurement-api-ab647fffd78f29769611f05ef131ec1f1feed820",
-    url = "https://github.com/world-federation-of-advertisers/cross-media-measurement-api/archive/ab647fffd78f29769611f05ef131ec1f1feed820.tar.gz",
 )
 
 # @com_google_truth_truth
