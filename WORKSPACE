@@ -45,9 +45,9 @@ load("//build/com_google_truth:repo.bzl", "com_google_truth_artifact_dict")
 # Measurement system.
 http_archive(
     name = "wfa_measurement_system",
-    sha256 = "d0200afef07d5a2c81adbe6c0c319a663e058195ad563401bfc4813bc4de6cb9",
-    strip_prefix = "cross-media-measurement-933284c02cff0be89991c31178bb9538de70f01b",
-    url = "https://github.com/world-federation-of-advertisers/cross-media-measurement/archive/933284c02cff0be89991c31178bb9538de70f01b.tar.gz",
+    sha256 = "6d73a34a1db5af9a89484134b2f20d78552efce21ba4a21e5a27567e6c262fc5",
+    strip_prefix = "cross-media-measurement-6c0992bc9859e0e1e2b10e4f5ee9f9f3c89d7251",
+    url = "https://github.com/world-federation-of-advertisers/cross-media-measurement/archive/6c0992bc9859e0e1e2b10e4f5ee9f9f3c89d7251.tar.gz",
 )
 
 # @io_bazel_rules_kotlin
