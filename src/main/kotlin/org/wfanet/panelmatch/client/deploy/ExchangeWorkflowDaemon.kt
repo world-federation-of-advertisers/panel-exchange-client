@@ -14,6 +14,7 @@
 
 package org.wfanet.panelmatch.client.deploy
 
+import java.time.Clock
 import kotlinx.coroutines.runBlocking
 import org.wfanet.measurement.api.v2alpha.ExchangeStepAttemptsGrpcKt.ExchangeStepAttemptsCoroutineStub
 import org.wfanet.measurement.api.v2alpha.ExchangeStepsGrpcKt.ExchangeStepsCoroutineStub
@@ -27,7 +28,6 @@ import org.wfanet.panelmatch.client.launcher.ExchangeStepValidatorImpl
 import org.wfanet.panelmatch.client.launcher.GrpcApiClient
 import org.wfanet.panelmatch.client.launcher.Identity
 import picocli.CommandLine
-import java.time.Clock
 
 @CommandLine.Command(
   name = "ExchangeWorkflowDaemon",
