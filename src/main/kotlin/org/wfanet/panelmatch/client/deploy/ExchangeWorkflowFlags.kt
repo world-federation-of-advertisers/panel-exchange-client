@@ -14,9 +14,12 @@
 
 package org.wfanet.panelmatch.client.deploy
 
-import java.time.Duration
 import org.wfanet.measurement.api.v2alpha.ExchangeWorkflow.Party
 import picocli.CommandLine
+import picocli.CommandLine.ITypeConverter
+import picocli.CommandLine.TypeConversionException
+import java.net.InetSocketAddress
+import java.time.Duration
 
 class ExchangeWorkflowFlags {
   @CommandLine.Option(names = ["--id"], description = ["Id of the provider"], required = true)
@@ -51,17 +54,31 @@ class ExchangeWorkflowFlags {
 
   @CommandLine.Option(
     names = ["--exchange-steps-service-target"],
-    description = ["Address and port of the Exchange Steps Service"],
+    description = ["Address and port of the Exchange Steps service"],
+    converter = [InetSocketAddressConverter::class],
     required = true
   )
-  lateinit var exchangeStepsServiceTarget: String
+  lateinit var exchangeStepsServiceTarget: InetSocketAddress
     private set
 
   @CommandLine.Option(
     names = ["--exchange-step-attempts-service-target"],
     description = ["Address and port of the Exchange Step Attempts service"],
+    converter = [InetSocketAddressConverter::class],
     required = true
   )
-  lateinit var exchangeStepAttemptsServiceTarget: String
+  lateinit var exchangeStepAttemptsServiceTarget: InetSocketAddress
     private set
+
+  private inner class InetSocketAddressConverter : ITypeConverter<InetSocketAddress> {
+    override fun convert(value: String): InetSocketAddress {
+      val pos = value.lastIndexOf(':')
+      if (pos < 0) {
+        throw TypeConversionException("Invalid format: must be 'host:port' but was '$value'")
+      }
+      val adr = value.substring(0, pos)
+      val port = value.substring(pos + 1).toInt() // invalid port shows the generic error message
+      return InetSocketAddress(adr, port)
+    }
+  }
 }

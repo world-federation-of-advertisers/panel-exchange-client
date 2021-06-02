@@ -38,11 +38,11 @@ import picocli.CommandLine
 private fun run(@CommandLine.Mixin flags: ExchangeWorkflowFlags) {
   val exchangeStepsClient =
     ExchangeStepsCoroutineStub(
-      buildChannel(flags.exchangeStepsServiceTarget, flags.channelShutdownTimeout)
+      buildChannel(flags.exchangeStepsServiceTarget.toString(), flags.channelShutdownTimeout)
     )
   val exchangeStepAttemptsClient =
     ExchangeStepAttemptsCoroutineStub(
-      buildChannel(flags.exchangeStepAttemptsServiceTarget, flags.channelShutdownTimeout)
+      buildChannel(flags.exchangeStepAttemptsServiceTarget.toString(), flags.channelShutdownTimeout)
     )
   val grpcApiClient =
     GrpcApiClient(
