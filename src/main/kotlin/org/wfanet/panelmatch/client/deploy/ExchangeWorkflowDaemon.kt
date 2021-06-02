@@ -38,44 +38,29 @@ import java.time.Clock
 private fun run(@CommandLine.Mixin flags: ExchangeWorkflowFlags) {
   val exchangeStepsClient =
     ExchangeStepsCoroutineStub(
-      buildChannel(
-        flags.exchangeStepsServiceTarget,
-        flags.channelShutdownTimeout
-      )
+      buildChannel(flags.exchangeStepsServiceTarget, flags.channelShutdownTimeout)
     )
   val exchangeStepAttemptsClient =
     ExchangeStepAttemptsCoroutineStub(
-      buildChannel(
-        flags.exchangeStepAttemptsServiceTarget,
-        flags.channelShutdownTimeout
-      )
+      buildChannel(flags.exchangeStepAttemptsServiceTarget, flags.channelShutdownTimeout)
     )
-  val grpcApiClient = GrpcApiClient(
-    Identity(flags.id, buildParty(flags.partyType)),
-    exchangeStepsClient,
-    exchangeStepAttemptsClient,
-    Clock.systemUTC()
-  )
+  val grpcApiClient =
+    GrpcApiClient(
+      Identity(flags.id, buildParty(flags.partyType)),
+      exchangeStepsClient,
+      exchangeStepAttemptsClient,
+      Clock.systemUTC()
+    )
   val pollingThrottler = MinimumIntervalThrottler(Clock.systemUTC(), flags.pollingInterval)
-  val exchangeStepLauncher = ExchangeStepLauncher(
-    grpcApiClient,
-    ExchangeStepValidatorImpl(),
-    BlockingJobLauncher()
-  )
+  val exchangeStepLauncher =
+    ExchangeStepLauncher(grpcApiClient, ExchangeStepValidatorImpl(), BlockingJobLauncher())
 
-  runBlocking {
-    pollingThrottler.loopOnReady {
-      exchangeStepLauncher.findAndRunExchangeStep()
-    }
-  }
+  runBlocking { pollingThrottler.loopOnReady { exchangeStepLauncher.findAndRunExchangeStep() } }
 }
 
 /** Turn string party type into enum. */
 private fun buildParty(type: String): Party {
-  val map = mapOf(
-    "model" to Party.MODEL_PROVIDER,
-    "data" to Party.DATA_PROVIDER
-  )
+  val map = mapOf("model" to Party.MODEL_PROVIDER, "data" to Party.DATA_PROVIDER)
   return map[type] ?: throw IllegalArgumentException("Unsupported value for Party Type $type.")
 }
 

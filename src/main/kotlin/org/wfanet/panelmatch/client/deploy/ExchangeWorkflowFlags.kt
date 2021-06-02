@@ -14,15 +14,11 @@
 
 package org.wfanet.panelmatch.client.deploy
 
-import picocli.CommandLine
 import java.time.Duration
+import picocli.CommandLine
 
 class ExchangeWorkflowFlags {
-  @CommandLine.Option(
-    names = ["--id"],
-    description = ["Id of the provider"],
-    required = true
-  )
+  @CommandLine.Option(names = ["--id"], description = ["Id of the provider"], required = true)
   lateinit var id: String
     private set
 
