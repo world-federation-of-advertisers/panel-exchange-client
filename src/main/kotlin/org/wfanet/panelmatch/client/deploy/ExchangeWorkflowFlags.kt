@@ -14,12 +14,12 @@
 
 package org.wfanet.panelmatch.client.deploy
 
+import java.net.InetSocketAddress
+import java.time.Duration
 import org.wfanet.measurement.api.v2alpha.ExchangeWorkflow.Party
 import picocli.CommandLine
 import picocli.CommandLine.ITypeConverter
 import picocli.CommandLine.TypeConversionException
-import java.net.InetSocketAddress
-import java.time.Duration
 
 class ExchangeWorkflowFlags {
   @CommandLine.Option(names = ["--id"], description = ["Id of the provider"], required = true)
