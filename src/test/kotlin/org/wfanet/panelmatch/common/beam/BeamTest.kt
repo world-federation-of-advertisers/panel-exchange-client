@@ -15,41 +15,29 @@
 package org.wfanet.panelmatch.common.beam
 
 import com.google.common.truth.Truth.assertThat
-import org.apache.beam.sdk.testing.PAssert
-import org.apache.beam.sdk.testing.TestPipeline
-import org.apache.beam.sdk.transforms.Create
-import org.apache.beam.sdk.transforms.DoFn
-import org.apache.beam.sdk.transforms.ParDo
 import org.apache.beam.sdk.values.KV
 import org.apache.beam.sdk.values.PCollection
 import org.apache.beam.sdk.values.PCollectionList
-import org.apache.beam.sdk.values.PCollectionView
-import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
+import org.wfanet.panelmatch.common.beam.testing.BeamTestBase
+import org.wfanet.panelmatch.common.beam.testing.assertThat
 
 @RunWith(JUnit4::class)
-class BeamTest {
-  @get:Rule
-  val pipeline: TestPipeline =
-    TestPipeline.create().enableAbandonedNodeEnforcement(false).enableAutoRunIfMissing(true)
-
+class BeamTest : BeamTestBase() {
   private val collection: PCollection<KV<Int, String>> by lazy {
     pcollectionOf("collection", 1 toKv "A", 2 toKv "B", 3 toKv "C")
-  }
-
-  private fun <T> pcollectionOf(name: String, vararg values: T): PCollection<T> {
-    return pipeline.apply(name, Create.of(values.asIterable()))
-  }
-
-  private fun <T> assertThat(pCollection: PCollection<T>): PAssert.IterableAssert<T> {
-    return PAssert.that(pCollection)
   }
 
   @Test
   fun keys() {
     assertThat(collection.keys()).containsInAnyOrder(1, 2, 3)
+  }
+
+  @Test
+  fun values() {
+    assertThat(collection.values()).containsInAnyOrder("A", "B", "C")
   }
 
   @Test
@@ -114,21 +102,7 @@ class BeamTest {
 
   @Test
   fun count() {
-    @Suppress("UNCHECKED_CAST") val result: PCollectionView<Long> = collection.count()
-    val extractedResult =
-      pcollectionOf("dummy", 1)
-        .apply(
-          ParDo.of(
-              object : DoFn<Int, Long>() {
-                @ProcessElement
-                fun processElement(context: ProcessContext, out: OutputReceiver<Long>) {
-                  out.output(context.sideInput(result))
-                }
-              }
-            )
-            .withSideInputs(result)
-        )
-    assertThat(extractedResult).containsInAnyOrder(3L)
+    assertThat(collection.count()).containsInAnyOrder(3L)
   }
 
   @Test

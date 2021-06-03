@@ -7,14 +7,9 @@ kt_jvm_test(
     deps = [
         "//imports/java/com/google/common:guava",
         "//imports/java/org/apache/beam:core",
-        "//imports/java/org/apache/beam:direct_runner",
-        "//imports/java/org/hamcrest:core",
-        "//imports/java/org/hamcrest:library",
         "//src/main/kotlin/org/wfanet/panelmatch/common/beam",
+        "//src/main/kotlin/org/wfanet/panelmatch/common/beam/testing",
         "@wfa_measurement_system//imports/java/com/google/common/truth",
-        "@wfa_measurement_system//imports/java/com/google/common/truth/extensions/proto",
         "@wfa_measurement_system//imports/java/org/junit",
-        "@wfa_measurement_system//imports/kotlin/com/nhaarman/mockitokotlin2",
-        "@wfa_measurement_system//imports/kotlin/kotlin/test",
     ],
 )
