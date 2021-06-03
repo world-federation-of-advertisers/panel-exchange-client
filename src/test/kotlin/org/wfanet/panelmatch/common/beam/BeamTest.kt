@@ -128,4 +128,14 @@ class BeamTest : BeamTestBase() {
       collection.parDoWithSideInput(sideInput) { element, count -> yield(element.key toKv count) }
     assertThat(result).containsInAnyOrder(1 toKv 3L, 2 toKv 3L, 3 toKv 3L)
   }
+
+  @Test
+  fun combinePerKey() {
+    val result =
+      pcollectionOf("values", "A" toKv 1, "A" toKv 2, "B" toKv 5).combinePerKey {
+        it.reduce(Int::plus)
+      }
+
+    assertThat(result).containsInAnyOrder("A" toKv 3, "B" toKv 5)
+  }
 }

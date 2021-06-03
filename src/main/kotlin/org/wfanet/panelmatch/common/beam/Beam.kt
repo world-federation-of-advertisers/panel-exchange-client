@@ -21,6 +21,7 @@ import org.apache.beam.sdk.transforms.Flatten
 import org.apache.beam.sdk.transforms.Keys
 import org.apache.beam.sdk.transforms.ParDo
 import org.apache.beam.sdk.transforms.Partition
+import org.apache.beam.sdk.transforms.SerializableFunction
 import org.apache.beam.sdk.transforms.Values
 import org.apache.beam.sdk.transforms.join.CoGroupByKey
 import org.apache.beam.sdk.transforms.join.KeyedPCollectionTuple
@@ -134,4 +135,10 @@ inline fun <InT, reified SideT, reified OutT> PCollection<InT>.parDoWithSideInpu
       }
     }
   return ParDo.of(doFn).withSideInputs(sideInput).expand(this)
+}
+
+inline fun <KeyT, reified ValueT> PCollection<KV<KeyT, ValueT>>.combinePerKey(
+  crossinline block: (Iterable<ValueT>) -> ValueT
+): PCollection<KV<KeyT, ValueT>> {
+  return Combine.perKey<KeyT, ValueT>(SerializableFunction { block(it) }).expand(this)
 }
