@@ -19,6 +19,7 @@ import org.apache.beam.sdk.testing.TestPipeline
 import org.apache.beam.sdk.transforms.Create
 import org.apache.beam.sdk.transforms.DoFn
 import org.apache.beam.sdk.transforms.ParDo
+import org.apache.beam.sdk.transforms.View
 import org.apache.beam.sdk.values.PCollection
 import org.apache.beam.sdk.values.PCollectionView
 import org.junit.Rule
@@ -36,6 +37,10 @@ open class BeamTestBase {
 
   protected fun <T> pcollectionOf(name: String, vararg values: T): PCollection<T> {
     return pipeline.apply(name, Create.of(values.asIterable()))
+  }
+
+  protected fun <T> pcollectionViewOf(name: String, value: T): PCollectionView<T> {
+    return pcollectionOf("$name:Create", value).apply("$name:View", View.asSingleton())
   }
 }
 
