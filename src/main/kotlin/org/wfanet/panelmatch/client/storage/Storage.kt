@@ -15,9 +15,25 @@
 package org.wfanet.panelmatch.client.storage
 
 import com.google.protobuf.ByteString
+import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
+import org.wfanet.measurement.api.v2alpha.ExchangeWorkflow
 
 /** Interface for Storage adapter. */
-interface Storage {
+interface Storage
+  /*(
+    storageType:Storage.STORAGE_TYPE,
+    label:String,
+    step: ExchangeWorkflow.Step
+
+  )*/
+{
+  enum class STORAGE_TYPE {
+    PRIVATE,
+    SHARED
+  }
 
   /**
    * Reads input data from given path.
@@ -33,4 +49,70 @@ interface Storage {
    * @param path String location of data to write to.
    */
   suspend fun write(path: String, data: ByteString)
+}
+
+private suspend fun getKey(exchangeId: String, label: String, step: ExchangeWorkflow.Step): String {
+  val fields: List<String> = listOf(exchangeId, label)
+  return fields.joinToString(separator = "-")
+}
+
+/**
+ * This can be extended to read from a local config along with step meta data like the data label,
+ * input labels, and output labels and return a StorageClient such as FileSystem, GCS, S3, etc
+ */
+private suspend fun getStorageAndPathForStep(
+  storageType: Storage.STORAGE_TYPE,
+  exchangeId: String,
+  label: String,
+  step: ExchangeWorkflow.Step
+): Pair<Storage, String> {
+  val storage = FileSystemStorage(storageType = storageType, label = label, step = step)
+  val fields: List<String> = listOf(exchangeId, label)
+  val path = fields.joinToString(separator = "-")
+  return Pair(storage, path)
+}
+
+suspend fun batchRead(
+  storageType: Storage.STORAGE_TYPE,
+  exchangeId: String,
+  step: ExchangeWorkflow.Step,
+  inputLabels: Map<String, String>
+): Map<String, ByteString> = coroutineScope {
+  inputLabels
+    .mapValues { entry ->
+      async(start = CoroutineStart.DEFAULT) {
+        val (storage: Storage, path: String) =
+          getStorageAndPathForStep(
+            storageType = storageType,
+            exchangeId = exchangeId,
+            label = entry.value,
+            step = step
+          )
+        storage.read(path = path)
+      }
+    }
+    .mapValues { entry -> entry.value.await() }
+}
+
+suspend fun batchWrite(
+  storageType: Storage.STORAGE_TYPE,
+  exchangeId: String,
+  step: ExchangeWorkflow.Step,
+  outputLabels: Map<String, String>,
+  data: Map<String, ByteString>
+) {
+  coroutineScope {
+    for ((key, value) in outputLabels) {
+      launch {
+        val (storage: Storage, path: String) =
+          getStorageAndPathForStep(
+            storageType = storageType,
+            exchangeId = exchangeId,
+            label = value,
+            step = step
+          )
+        storage.write(path = path, data = requireNotNull(data[key]))
+      }
+    }
+  }
 }

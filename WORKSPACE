@@ -13,6 +13,22 @@ http_archive(
     ],
 )
 
+
+load("@bazel_skylib//:workspace.bzl", "bazel_skylib_workspace")
+
+bazel_skylib_workspace()
+
+# @platforms
+
+http_archive(
+    name = "platforms",
+    sha256 = "079945598e4b6cc075846f7fd6a9d0857c33a7afc0de868c2ccb96405225135d",
+    urls = [
+        "https://mirror.bazel.build/github.com/bazelbuild/platforms/releases/download/0.0.4/platforms-0.0.4.tar.gz",
+        "https://github.com/bazelbuild/platforms/releases/download/0.0.4/platforms-0.0.4.tar.gz",
+    ],
+)
+
 http_archive(
     name = "com_google_protobuf",
     sha256 = "65e020a42bdab44a66664d34421995829e9e79c60e5adaa08282fd14ca552f57",
@@ -45,9 +61,9 @@ load("//build/com_google_truth:repo.bzl", "com_google_truth_artifact_dict")
 # Measurement system.
 http_archive(
     name = "wfa_measurement_system",
-    sha256 = "d0200afef07d5a2c81adbe6c0c319a663e058195ad563401bfc4813bc4de6cb9",
-    strip_prefix = "cross-media-measurement-933284c02cff0be89991c31178bb9538de70f01b",
-    url = "https://github.com/world-federation-of-advertisers/cross-media-measurement/archive/933284c02cff0be89991c31178bb9538de70f01b.tar.gz",
+    sha256 = "3c87e8a2847f29baed098e4403ea113f1dd61f3febc1f34352384e1137c3c62e",
+    strip_prefix = "cross-media-measurement-ba7e21d7347a3b2b1492ee7b9e2f0633cfc3dcf9",
+    url = "https://github.com/world-federation-of-advertisers/cross-media-measurement/archive/ba7e21d7347a3b2b1492ee7b9e2f0633cfc3dcf9.tar.gz",
 )
 
 # @io_bazel_rules_kotlin
@@ -147,6 +163,44 @@ load("@maven//:compat.bzl", "compat_repositories")
 
 compat_repositories()
 
+# @io_bazel_rules_docker
+
+load("//build/io_bazel_rules_docker:repo.bzl", "rules_docker_repo")
+
+rules_docker_repo(
+    name = "io_bazel_rules_docker",
+    commit = "f929d80c5a4363994968248d87a892b1c2ef61d4",
+    sha256 = "efda18e39a63ee3c1b187b1349f61c48c31322bf84227d319b5dece994380bb6",
+)
+
+load(
+    "@io_bazel_rules_docker//repositories:repositories.bzl",
+    container_repositories = "repositories",
+)
+
+container_repositories()
+
+load("@io_bazel_rules_docker//repositories:deps.bzl", container_deps = "deps")
+
+container_deps()
+
+load("//build/io_bazel_rules_docker:base_images.bzl", "base_java_images")
+
+
+# Defualt base images for java_image targets. Must come before
+# java_image_repositories().
+base_java_images(
+    # gcr.io/distroless/java:11-debug
+    debug_digest = "sha256:c3fe781de55d375de2675c3f23beb3e76f007e53fed9366ba931cc6d1df4b457",
+    # gcr.io/distroless/java:11
+    digest = "sha256:7fc091e8686df11f7bf0b7f67fd7da9862b2b9a3e49978d1184f0ff62cb673cc",
+)
+
+load(
+    "@io_bazel_rules_docker//java:image.bzl",
+    java_image_repositories = "repositories",
+)
+
 # Run after compat_repositories to ensure the maven_install-selected
 # dependencies are used.
 grpc_kt_repositories()
@@ -197,9 +251,9 @@ http_archive(
 # Measurement proto.
 http_archive(
     name = "wfa_measurement_proto",
-    sha256 = "c7d87a438a446ebeacdcae8bcfed270c513ae5c5d26bccd36fb179d47e7d3365",
-    strip_prefix = "cross-media-measurement-api-ab647fffd78f29769611f05ef131ec1f1feed820",
-    url = "https://github.com/world-federation-of-advertisers/cross-media-measurement-api/archive/ab647fffd78f29769611f05ef131ec1f1feed820.tar.gz",
+    sha256 = "5f1b91b8cabd226f44ae161ea10b1619dc397b87df0e39e360c27cb5644ff12f",
+    strip_prefix = "cross-media-measurement-api-d2f8a5557d33cb016bd0e7687f6bbf02332ed23b",
+    url = "https://github.com/world-federation-of-advertisers/cross-media-measurement-api/archive/d2f8a5557d33cb016bd0e7687f6bbf02332ed23b.tar.gz",
 )
 
 # @com_google_truth_truth

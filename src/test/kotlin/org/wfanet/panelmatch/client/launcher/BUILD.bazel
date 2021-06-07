@@ -19,6 +19,7 @@ kt_jvm_test(
     test_class = "org.wfanet.panelmatch.client.launcher.CoroutineLauncherTest",
     deps = [
         "//src/main/kotlin/org/wfanet/panelmatch/client/launcher",
+        "//src/main/kotlin/org/wfanet/panelmatch/client/launcher/testing:ExchangeTaskTesting",
         "@wfa_measurement_system//imports/java/com/google/common/truth",
         "@wfa_measurement_system//imports/java/com/google/common/truth/extensions/proto",
         "@wfa_measurement_system//imports/java/org/junit",

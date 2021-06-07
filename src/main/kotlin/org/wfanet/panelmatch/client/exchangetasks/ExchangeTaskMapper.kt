@@ -18,10 +18,13 @@ import com.google.protobuf.ByteString
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.wfanet.measurement.api.v2alpha.ExchangeWorkflow
-import org.wfanet.panelmatch.client.storage.Storage
-import org.wfanet.panelmatch.client.utils.loggerFor
+import org.wfanet.panelmatch.client.logger.loggerFor
+import org.wfanet.panelmatch.client.storage.Storage.STORAGE_TYPE
+import org.wfanet.panelmatch.client.storage.batchRead
+import org.wfanet.panelmatch.client.storage.batchWrite
 import org.wfanet.panelmatch.protocol.common.Cryptor
 import org.wfanet.panelmatch.protocol.common.JniDeterministicCommutativeCryptor
 
@@ -40,61 +43,83 @@ class ExchangeTaskMapper(
   private val LOGGER = loggerFor(javaClass)
 
   private suspend fun getExchangeTaskForStep(step: ExchangeWorkflow.Step): ExchangeTask {
-    when (step.getStepCase()) {
-      // TODO split this up into encrypt and reencrypt
-      ExchangeWorkflow.Step.StepCase.ENCRYPT_AND_SHARE -> {
-        when (step.encryptAndShare.getInputFormat()) {
-          ExchangeWorkflow.Step.EncryptAndShareStep.InputFormat.PLAINTEXT -> {
-            return CryptorExchangeTask.forEncryption(deterministicCommutativeCryptor)
-          }
-          ExchangeWorkflow.Step.EncryptAndShareStep.InputFormat.CIPHERTEXT -> {
-            return CryptorExchangeTask.forReEncryption(deterministicCommutativeCryptor)
-          }
-          else -> {
-            error("Unsupported encryption type")
-          }
-        }
-      }
-      ExchangeWorkflow.Step.StepCase.DECRYPT -> {
-        return CryptorExchangeTask.forDecryption(deterministicCommutativeCryptor)
-      }
-      else -> {
-        error("Unsupported step type")
-      }
+    return when (step.getStepCase()) {
+      ExchangeWorkflow.Step.StepCase.ENCRYPT_STEP ->
+        CryptorExchangeTask.forEncryption(deterministicCommutativeCryptor)
+      ExchangeWorkflow.Step.StepCase.REENCRYPT_STEP ->
+        CryptorExchangeTask.forReEncryption(deterministicCommutativeCryptor)
+      ExchangeWorkflow.Step.StepCase.DECRYPT_STEP ->
+        CryptorExchangeTask.forDecryption(deterministicCommutativeCryptor)
+      else -> error("Unsupported step type")
     }
   }
 
-  suspend fun execute(
-    step: ExchangeWorkflow.Step,
-    input: Map<String, ByteString>,
-    storage: Storage
-  ): Map<String, ByteString> {
+  suspend fun execute(exchangeId: String, step: ExchangeWorkflow.Step) {
+
+    // }: Map<String, ByteString> {
     LOGGER.info("Execute step: ${step.toString()}")
-    val inputLabels = step.getInputLabelsMap()
-    val outputLabels = step.getOutputLabelsMap()
-    // TODO: Currently, INPUT is a special use case. It is the only one that uses the `input`
-    // variable. However, in production, it is likely the inputs will be pre-stored in storage or
-    // this variable will instead map to a cloud storage device of some kind. Either way, this needs
-    // a refactor.
-    if (step.getStepCase() == ExchangeWorkflow.Step.StepCase.INPUT) {
-      val inputFieldName = requireNotNull(inputLabels["input"])
-      val outputFieldName = requireNotNull(outputLabels["output"])
-      storage.write(outputFieldName, requireNotNull(input[inputFieldName]))
-      return emptyMap<String, ByteString>()
+    val privateInputLabels = step.getPrivateInputLabelsMap()
+    val privateOutputLabels = step.getPrivateOutputLabelsMap()
+    val sharedInputLabels = step.getSharedInputLabelsMap()
+    val sharedOutputLabels = step.getSharedOutputLabelsMap()
+    if (step.getStepCase() == ExchangeWorkflow.Step.StepCase.INPUT_STEP) {
+      do {
+        try {
+          batchRead(
+            storageType = STORAGE_TYPE.PRIVATE,
+            exchangeId = exchangeId,
+            step = step,
+            inputLabels = mapOf("input" to "mp-crypto-key")
+          )
+          return // emptyMap<String, ByteString>()
+        } catch (e: IllegalArgumentException) {
+          delay(500)
+        }
+      } while (true)
     }
-    val taskInput: Map<String, ByteString> = coroutineScope {
-      inputLabels
-        .mapValues { entry -> async(start = CoroutineStart.DEFAULT) { storage.read(entry.value) } }
-        .mapValues { entry -> entry.value.await() }
-    }
-    val taskOutput: Map<String, ByteString> = getExchangeTaskForStep(step).execute(taskInput)
     coroutineScope {
-      for ((key, value) in outputLabels) {
-        launch { storage.write(value, requireNotNull(taskOutput[key])) }
+      val taskPrivateInput =
+        async(start = CoroutineStart.DEFAULT) {
+          batchRead(
+            storageType = STORAGE_TYPE.PRIVATE,
+            exchangeId = exchangeId,
+            step = step,
+            inputLabels = privateInputLabels
+          )
+        }
+      val taskSharedInput =
+        async(start = CoroutineStart.DEFAULT) {
+          batchRead(
+            storageType = STORAGE_TYPE.SHARED,
+            exchangeId = exchangeId,
+            step = step,
+            inputLabels = sharedInputLabels
+          )
+        }
+      val taskInput: Map<String, ByteString> =
+        LinkedHashMap(taskPrivateInput.await()).apply { putAll(taskSharedInput.await()) }
+      val taskOutput: Map<String, ByteString> = getExchangeTaskForStep(step).execute(taskInput)
+      coroutineScope {
+        launch {
+          batchWrite(
+            storageType = STORAGE_TYPE.PRIVATE,
+            exchangeId = exchangeId,
+            step = step,
+            outputLabels = privateOutputLabels,
+            data = taskOutput
+          )
+        }
+        launch {
+          batchWrite(
+            storageType = STORAGE_TYPE.SHARED,
+            exchangeId = exchangeId,
+            step = step,
+            outputLabels = sharedOutputLabels,
+            data = taskOutput
+          )
+        }
       }
     }
-    // TODO make rpc call to update that task was completed. Also catch if task errored and report
-    // that as well.
-    return taskOutput
+    return
   }
 }

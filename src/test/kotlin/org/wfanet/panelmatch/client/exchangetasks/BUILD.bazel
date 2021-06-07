@@ -22,6 +22,7 @@ kt_jvm_test(
     test_class = "org.wfanet.panelmatch.client.exchangetasks.ExchangeTaskMapperTest",
     deps = [
         "//src/main/kotlin/org/wfanet/panelmatch/client/exchangetasks",
+        "//src/main/kotlin/org/wfanet/panelmatch/client/launcher/testing:ExchangeTaskTesting",
         "//src/main/kotlin/org/wfanet/panelmatch/client/storage",
         "@wfa_measurement_system//imports/java/com/google/common/truth",
         "@wfa_measurement_system//imports/java/com/google/common/truth/extensions/proto",

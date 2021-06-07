@@ -15,7 +15,7 @@
 package org.wfanet.panelmatch.client.exchangetasks
 
 import com.google.protobuf.ByteString
-import org.wfanet.panelmatch.client.utils.loggerFor
+import org.wfanet.panelmatch.client.logger.loggerFor
 import org.wfanet.panelmatch.protocol.common.Cryptor
 import org.wfanet.panelmatch.protocol.common.makeSerializedSharedInputs
 import org.wfanet.panelmatch.protocol.common.parseSerializedSharedInputs
