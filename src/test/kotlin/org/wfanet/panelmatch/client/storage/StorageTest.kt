@@ -29,7 +29,7 @@ class StorageTest {
     val key = java.util.UUID.randomUUID().toString()
     val storage =
       FileSystemStorage(
-        storageType = Storage.STORAGE_TYPE.PRIVATE,
+        baseDir = "/tmp",
         label = key,
         step = ExchangeWorkflow.Step.getDefaultInstance()
       )
@@ -43,7 +43,7 @@ class StorageTest {
     val key = java.util.UUID.randomUUID().toString()
     val storage =
       FileSystemStorage(
-        storageType = Storage.STORAGE_TYPE.PRIVATE,
+        baseDir = "/tmp",
         label = key,
         step = ExchangeWorkflow.Step.getDefaultInstance()
       )
@@ -57,7 +57,7 @@ class StorageTest {
     val key = java.util.UUID.randomUUID().toString()
     val storage =
       FileSystemStorage(
-        storageType = Storage.STORAGE_TYPE.PRIVATE,
+        baseDir = "/tmp",
         label = key,
         step = ExchangeWorkflow.Step.getDefaultInstance()
       )
@@ -67,13 +67,13 @@ class StorageTest {
   }
 
   @Test
-  fun `private read can but shared read cannot access private storage`() = runBlocking {
+  fun `read to one baseDir and make sure you cannot read it from another baseDir`() = runBlocking {
     val valueToStore1 = ByteString.copyFromUtf8("random-edp-string-1")
     val valueToStore2 = ByteString.copyFromUtf8("random-edp-string-2")
     val key = java.util.UUID.randomUUID().toString()
     val privateStorage =
       FileSystemStorage(
-        storageType = Storage.STORAGE_TYPE.PRIVATE,
+        baseDir = "/tmp",
         label = key,
         step = ExchangeWorkflow.Step.getDefaultInstance()
       )
@@ -81,7 +81,7 @@ class StorageTest {
     val storedValue = privateStorage.read(key)
     val sharedStorage =
       FileSystemStorage(
-        storageType = Storage.STORAGE_TYPE.SHARED,
+        baseDir = "/var/tmp",
         label = key,
         step = ExchangeWorkflow.Step.getDefaultInstance()
       )

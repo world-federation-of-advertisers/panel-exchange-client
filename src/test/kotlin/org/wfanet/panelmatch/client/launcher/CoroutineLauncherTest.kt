@@ -16,6 +16,7 @@ package org.wfanet.panelmatch.client.launcher
 
 import com.google.common.truth.Truth.assertThat
 import com.nhaarman.mockitokotlin2.any
+import com.nhaarman.mockitokotlin2.eq
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.times
 import com.nhaarman.mockitokotlin2.verify
@@ -26,6 +27,7 @@ import kotlinx.coroutines.runBlocking
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
+import org.wfanet.measurement.api.v2alpha.ExchangeStepAttempt
 import org.wfanet.measurement.api.v2alpha.ExchangeWorkflow
 import org.wfanet.panelmatch.client.launcher.testing.DP_0_SECRET_KEY
 import org.wfanet.panelmatch.client.launcher.testing.JOIN_KEYS
@@ -43,13 +45,15 @@ class CoroutineLauncherTest {
   @Test
   fun `test input task`() {
     val apiClient: ApiClient = mock()
-    val EXCHANGE_ID = java.util.UUID.randomUUID().toString()
+    val EXCHANGE_KEY = java.util.UUID.randomUUID().toString()
+    val ATTEMPT_KEY = java.util.UUID.randomUUID().toString()
     runBlocking {
       whenever(apiClient.finishExchangeStepAttempt(any(), any(), any())).thenReturn(Unit)
       val outputLabels = mapOf("output" to "mp-crypto-key")
       val testStep =
         TestStep(
-          exchangeId = EXCHANGE_ID,
+          exchangeKey = EXCHANGE_KEY,
+          exchangeStepAttemptKey = ATTEMPT_KEY,
           privateInputLabels = mapOf("input" to "encryption-key"),
           privateOutputLabels = outputLabels,
           stepType = ExchangeWorkflow.Step.StepCase.INPUT_STEP
@@ -59,7 +63,7 @@ class CoroutineLauncherTest {
         assertFailsWith(IllegalArgumentException::class) {
           batchRead(
             storageType = STORAGE_TYPE.PRIVATE,
-            exchangeId = EXCHANGE_ID,
+            exchangeKey = EXCHANGE_KEY,
             step = testStep.build(),
             inputLabels = mapOf("input" to "mp-crypto-key")
           )
@@ -68,7 +72,7 @@ class CoroutineLauncherTest {
       // Model Provider asynchronously writes data
       batchWrite(
         storageType = STORAGE_TYPE.PRIVATE,
-        exchangeId = EXCHANGE_ID,
+        exchangeKey = EXCHANGE_KEY,
         step = testStep.build(),
         outputLabels = outputLabels,
         data = mapOf("output" to MP_0_SECRET_KEY)
@@ -78,25 +82,30 @@ class CoroutineLauncherTest {
         requireNotNull(
           batchRead(
             storageType = STORAGE_TYPE.PRIVATE,
-            exchangeId = EXCHANGE_ID,
+            exchangeKey = EXCHANGE_KEY,
             step = testStep.build(),
             inputLabels = mapOf("input" to "mp-crypto-key")
           )["input"]
         )
       assertThat(readValues).isEqualTo(MP_0_SECRET_KEY)
-      verify(apiClient, times(1)).finishExchangeStepAttempt(any(), any(), any())
+      verify(apiClient, times(0))
+        .finishExchangeStepAttempt(any(), eq(ExchangeStepAttempt.State.FAILED), any())
+      verify(apiClient, times(1))
+        .finishExchangeStepAttempt(any(), eq(ExchangeStepAttempt.State.SUCCEEDED), any())
     }
   }
 
   @Test
   fun `test crypto task with private inputs and private output`() {
     val apiClient: ApiClient = mock()
-    val EXCHANGE_ID = java.util.UUID.randomUUID().toString()
+    val EXCHANGE_KEY = java.util.UUID.randomUUID().toString()
+    val ATTEMPT_KEY = java.util.UUID.randomUUID().toString()
     runBlocking {
       whenever(apiClient.finishExchangeStepAttempt(any(), any(), any())).thenReturn(Unit)
       val testStep =
         TestStep(
-          exchangeId = EXCHANGE_ID,
+          exchangeKey = EXCHANGE_KEY,
+          exchangeStepAttemptKey = ATTEMPT_KEY,
           privateInputLabels =
             mapOf("encryption-key" to "mp-crypto-key", "unencrypted-data" to "mp-joinkeys"),
           privateOutputLabels = mapOf("encrypted-data" to "mp-single-blinded-joinkeys"),
@@ -104,14 +113,14 @@ class CoroutineLauncherTest {
         )
       batchWrite(
         storageType = STORAGE_TYPE.PRIVATE,
-        exchangeId = EXCHANGE_ID,
+        exchangeKey = EXCHANGE_KEY,
         step = testStep.build(),
         outputLabels = mapOf("output" to "mp-crypto-key"),
         data = mapOf("output" to MP_0_SECRET_KEY)
       )
       batchWrite(
         storageType = STORAGE_TYPE.PRIVATE,
-        exchangeId = EXCHANGE_ID,
+        exchangeKey = EXCHANGE_KEY,
         step = testStep.build(),
         outputLabels = mapOf("output" to "mp-joinkeys"),
         data = mapOf("output" to makeSerializedSharedInputs(JOIN_KEYS))
@@ -121,7 +130,7 @@ class CoroutineLauncherTest {
         assertFailsWith(IllegalArgumentException::class) {
           batchRead(
             storageType = STORAGE_TYPE.PRIVATE,
-            exchangeId = EXCHANGE_ID,
+            exchangeKey = EXCHANGE_KEY,
             step = testStep.build(),
             inputLabels = mapOf("input" to "mp-single-blinded-joinkeys")
           )
@@ -132,24 +141,29 @@ class CoroutineLauncherTest {
         requireNotNull(
           batchRead(
             storageType = STORAGE_TYPE.PRIVATE,
-            exchangeId = EXCHANGE_ID,
+            exchangeKey = EXCHANGE_KEY,
             step = testStep.build(),
             inputLabels = mapOf("input" to "mp-single-blinded-joinkeys")
           )["input"]
         )
-      verify(apiClient, times(1)).finishExchangeStepAttempt(any(), any(), any())
+      verify(apiClient, times(0))
+        .finishExchangeStepAttempt(any(), eq(ExchangeStepAttempt.State.FAILED), any())
+      verify(apiClient, times(1))
+        .finishExchangeStepAttempt(any(), eq(ExchangeStepAttempt.State.SUCCEEDED), any())
     }
   }
 
   @Test
   fun `test crypto task with private and shared inputs and shared and private output`() {
     val apiClient: ApiClient = mock()
-    val EXCHANGE_ID = java.util.UUID.randomUUID().toString()
+    val EXCHANGE_KEY = java.util.UUID.randomUUID().toString()
+    val ATTEMPT_KEY = java.util.UUID.randomUUID().toString()
     runBlocking {
       whenever(apiClient.finishExchangeStepAttempt(any(), any(), any())).thenReturn(Unit)
       val testStep =
         TestStep(
-          exchangeId = EXCHANGE_ID,
+          exchangeKey = EXCHANGE_KEY,
+          exchangeStepAttemptKey = ATTEMPT_KEY,
           privateInputLabels = mapOf("encryption-key" to "dp-crypto-key"),
           privateOutputLabels = mapOf("reencrypted-data" to "dp-mp-double-blinded-joinkeys"),
           sharedInputLabels = mapOf("encrypted-data" to "mp-single-blinded-joinkeys"),
@@ -158,14 +172,14 @@ class CoroutineLauncherTest {
         )
       batchWrite(
         storageType = STORAGE_TYPE.PRIVATE,
-        exchangeId = EXCHANGE_ID,
+        exchangeKey = EXCHANGE_KEY,
         step = testStep.build(),
         outputLabels = mapOf("output" to "dp-crypto-key"),
         data = mapOf("output" to DP_0_SECRET_KEY)
       )
       batchWrite(
         storageType = STORAGE_TYPE.SHARED,
-        exchangeId = EXCHANGE_ID,
+        exchangeKey = EXCHANGE_KEY,
         step = testStep.build(),
         outputLabels = mapOf("output" to "mp-single-blinded-joinkeys"),
         data = mapOf("output" to makeSerializedSharedInputs(SINGLE_BLINDED_KEYS))
@@ -175,7 +189,7 @@ class CoroutineLauncherTest {
         assertFailsWith(IllegalArgumentException::class) {
           batchRead(
             storageType = STORAGE_TYPE.PRIVATE,
-            exchangeId = EXCHANGE_ID,
+            exchangeKey = EXCHANGE_KEY,
             step = testStep.build(),
             inputLabels = mapOf("input" to "dp-mp-double-blinded-joinkeys")
           )
@@ -186,7 +200,7 @@ class CoroutineLauncherTest {
         requireNotNull(
           batchRead(
             storageType = STORAGE_TYPE.PRIVATE,
-            exchangeId = EXCHANGE_ID,
+            exchangeKey = EXCHANGE_KEY,
             step = testStep.build(),
             inputLabels = mapOf("input" to "dp-mp-double-blinded-joinkeys")
           )["input"]
@@ -195,24 +209,29 @@ class CoroutineLauncherTest {
         requireNotNull(
           batchRead(
             storageType = STORAGE_TYPE.SHARED,
-            exchangeId = EXCHANGE_ID,
+            exchangeKey = EXCHANGE_KEY,
             step = testStep.build(),
             inputLabels = mapOf("input" to "dp-mp-double-blinded-joinkeys")
           )["input"]
         )
-      verify(apiClient, times(1)).finishExchangeStepAttempt(any(), any(), any())
+      verify(apiClient, times(0))
+        .finishExchangeStepAttempt(any(), eq(ExchangeStepAttempt.State.FAILED), any())
+      verify(apiClient, times(1))
+        .finishExchangeStepAttempt(any(), eq(ExchangeStepAttempt.State.SUCCEEDED), any())
     }
   }
 
   @Test
   fun `test crypto task with missing shared inputs`() {
     val apiClient: ApiClient = mock()
-    val EXCHANGE_ID = java.util.UUID.randomUUID().toString()
+    val EXCHANGE_KEY = java.util.UUID.randomUUID().toString()
+    val ATTEMPT_KEY = java.util.UUID.randomUUID().toString()
     runBlocking {
       whenever(apiClient.finishExchangeStepAttempt(any(), any(), any())).thenReturn(Unit)
       val testStep =
         TestStep(
-          exchangeId = EXCHANGE_ID,
+          exchangeKey = EXCHANGE_KEY,
+          exchangeStepAttemptKey = ATTEMPT_KEY,
           privateInputLabels = mapOf("encryption-key" to "dp-crypto-key"),
           privateOutputLabels = mapOf("reencrypted-data" to "dp-mp-double-blinded-joinkeys"),
           sharedInputLabels = mapOf("encrypted-data" to "mp-single-blinded-joinkeys"),
@@ -221,33 +240,26 @@ class CoroutineLauncherTest {
         )
       batchWrite(
         storageType = STORAGE_TYPE.PRIVATE,
-        exchangeId = EXCHANGE_ID,
+        exchangeKey = EXCHANGE_KEY,
         step = testStep.build(),
         outputLabels = mapOf("output" to "dp-crypto-key"),
         data = mapOf("output" to DP_0_SECRET_KEY)
       )
       testStep.buildAndExecuteJob(apiClient)
-      val argumentException0 =
-        assertFailsWith(IllegalArgumentException::class) {
-          batchRead(
-            storageType = STORAGE_TYPE.PRIVATE,
-            exchangeId = EXCHANGE_ID,
-            step = testStep.build(),
-            inputLabels = mapOf("input" to "dp-mp-double-blinded-joinkeys")
-          )
-        }
-      verify(apiClient, times(0)).finishExchangeStepAttempt(any(), any(), any())
       delay(600)
+      verify(apiClient, times(1))
+        .finishExchangeStepAttempt(any(), eq(ExchangeStepAttempt.State.FAILED), any())
+      verify(apiClient, times(0))
+        .finishExchangeStepAttempt(any(), eq(ExchangeStepAttempt.State.SUCCEEDED), any())
       val argumentException1 =
         assertFailsWith(IllegalArgumentException::class) {
           batchRead(
             storageType = STORAGE_TYPE.PRIVATE,
-            exchangeId = EXCHANGE_ID,
+            exchangeKey = EXCHANGE_KEY,
             step = testStep.build(),
             inputLabels = mapOf("input" to "dp-mp-double-blinded-joinkeys")
           )
         }
-      verify(apiClient, times(0)).finishExchangeStepAttempt(any(), any(), any())
     }
   }
 }

@@ -20,33 +20,23 @@ import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.reduce
 import org.wfanet.measurement.api.v2alpha.ExchangeWorkflow
 import org.wfanet.measurement.storage.filesystem.FileSystemStorageClient
+import org.wfanet.panelmatch.client.logger.loggerFor
 
-class FileSystemStorage(
-  storageType: Storage.STORAGE_TYPE,
-  label: String,
-  step: ExchangeWorkflow.Step
-) : Storage {
+class FileSystemStorage(baseDir: String, label: String, step: ExchangeWorkflow.Step) : Storage {
+  private val LOGGER = loggerFor(javaClass)
   private var storageClient: FileSystemStorageClient
   init {
-    // This logic can be extended to use different file systems for different steps or labels
-    val DEFAULT_SHARED_STORAGE_DIR = File("/tmp/")
-    val DEFAULT_PRIVATE_STORAGE_DIR = File("/var/tmp/")
-    storageClient =
-      when (storageType) {
-        Storage.STORAGE_TYPE.SHARED ->
-          FileSystemStorageClient(directory = DEFAULT_SHARED_STORAGE_DIR)
-        Storage.STORAGE_TYPE.PRIVATE ->
-          FileSystemStorageClient(directory = DEFAULT_PRIVATE_STORAGE_DIR)
-      }
+    val BASE_DIR = File(baseDir)
+    storageClient = FileSystemStorageClient(directory = BASE_DIR)
   }
 
   override suspend fun read(path: String): ByteString {
-    print("READ:${path}\n")
+    LOGGER.info("Read:${path}\n")
     return requireNotNull(storageClient.getBlob(path)).read(4096).reduce { a, b -> a.concat(b) }
   }
 
   override suspend fun write(path: String, data: ByteString) {
-    print("WRITE:${path}\n")
+    LOGGER.info("Write:${path}\n")
     storageClient.createBlob(path, listOf(data).asFlow())
   }
 }

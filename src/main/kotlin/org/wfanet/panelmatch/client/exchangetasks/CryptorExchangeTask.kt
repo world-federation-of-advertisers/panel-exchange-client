@@ -32,6 +32,8 @@ internal constructor(
   private val LOGGER = loggerFor(javaClass)
 
   override suspend fun execute(input: Map<String, ByteString>): Map<String, ByteString> {
+    LOGGER.addToTaskLog("Executing operation:${operation.toString()}")
+
     val key = requireNotNull(input[inputKeyLabel]) { "Missing input label '$inputKeyLabel'" }
     val serializedInputs =
       requireNotNull(input[inputDataLabel]) { "Missing input label '$inputDataLabel'" }

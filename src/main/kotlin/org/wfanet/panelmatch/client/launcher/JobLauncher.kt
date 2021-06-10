@@ -19,7 +19,6 @@ import org.wfanet.measurement.api.v2alpha.ExchangeStepAttempt
 
 /** Executes an [ExchangeStep]. This may be locally or remotely. */
 interface JobLauncher {
-
   /**
    * Initiates work on [exchangeStep].
    *
@@ -29,7 +28,8 @@ interface JobLauncher {
    */
   suspend fun execute(
     apiClient: ApiClient,
-    exchangeId: String,
+    exchangeKey: String,
+    exchangeStepAttemptKey: String,
     exchangeStep: ExchangeStep,
     attempt: ExchangeStepAttempt.Key
   )

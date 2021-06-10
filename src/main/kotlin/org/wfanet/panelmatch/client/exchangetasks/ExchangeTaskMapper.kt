@@ -54,9 +54,7 @@ class ExchangeTaskMapper(
     }
   }
 
-  suspend fun execute(exchangeId: String, step: ExchangeWorkflow.Step) {
-
-    // }: Map<String, ByteString> {
+  suspend fun execute(exchangeKey: String, step: ExchangeWorkflow.Step) {
     LOGGER.info("Execute step: ${step.toString()}")
     val privateInputLabels = step.getPrivateInputLabelsMap()
     val privateOutputLabels = step.getPrivateOutputLabelsMap()
@@ -67,11 +65,11 @@ class ExchangeTaskMapper(
         try {
           batchRead(
             storageType = STORAGE_TYPE.PRIVATE,
-            exchangeId = exchangeId,
+            exchangeKey = exchangeKey,
             step = step,
             inputLabels = mapOf("input" to "mp-crypto-key")
           )
-          return // emptyMap<String, ByteString>()
+          return
         } catch (e: IllegalArgumentException) {
           delay(500)
         }
@@ -82,7 +80,7 @@ class ExchangeTaskMapper(
         async(start = CoroutineStart.DEFAULT) {
           batchRead(
             storageType = STORAGE_TYPE.PRIVATE,
-            exchangeId = exchangeId,
+            exchangeKey = exchangeKey,
             step = step,
             inputLabels = privateInputLabels
           )
@@ -91,7 +89,7 @@ class ExchangeTaskMapper(
         async(start = CoroutineStart.DEFAULT) {
           batchRead(
             storageType = STORAGE_TYPE.SHARED,
-            exchangeId = exchangeId,
+            exchangeKey = exchangeKey,
             step = step,
             inputLabels = sharedInputLabels
           )
@@ -103,7 +101,7 @@ class ExchangeTaskMapper(
         launch {
           batchWrite(
             storageType = STORAGE_TYPE.PRIVATE,
-            exchangeId = exchangeId,
+            exchangeKey = exchangeKey,
             step = step,
             outputLabels = privateOutputLabels,
             data = taskOutput
@@ -112,7 +110,7 @@ class ExchangeTaskMapper(
         launch {
           batchWrite(
             storageType = STORAGE_TYPE.SHARED,
-            exchangeId = exchangeId,
+            exchangeKey = exchangeKey,
             step = step,
             outputLabels = sharedOutputLabels,
             data = taskOutput

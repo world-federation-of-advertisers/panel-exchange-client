@@ -22,14 +22,7 @@ import kotlinx.coroutines.launch
 import org.wfanet.measurement.api.v2alpha.ExchangeWorkflow
 
 /** Interface for Storage adapter. */
-interface Storage
-  /*(
-    storageType:Storage.STORAGE_TYPE,
-    label:String,
-    step: ExchangeWorkflow.Step
-
-  )*/
-{
+interface Storage {
   enum class STORAGE_TYPE {
     PRIVATE,
     SHARED
@@ -51,30 +44,31 @@ interface Storage
   suspend fun write(path: String, data: ByteString)
 }
 
-private suspend fun getKey(exchangeId: String, label: String, step: ExchangeWorkflow.Step): String {
-  val fields: List<String> = listOf(exchangeId, label)
-  return fields.joinToString(separator = "-")
-}
-
 /**
- * This can be extended to read from a local config along with step meta data like the data label,
- * input labels, and output labels and return a StorageClient such as FileSystem, GCS, S3, etc
+ * This should be extended to read from a local config along with step meta data like the data
+ * label, input labels, and output labels and return a StorageClient such as FileSystem, GCS, S3,
+ * etc
  */
 private suspend fun getStorageAndPathForStep(
   storageType: Storage.STORAGE_TYPE,
-  exchangeId: String,
+  exchangeKey: String,
   label: String,
   step: ExchangeWorkflow.Step
 ): Pair<Storage, String> {
-  val storage = FileSystemStorage(storageType = storageType, label = label, step = step)
-  val fields: List<String> = listOf(exchangeId, label)
+  val baseDir =
+    when (storageType) {
+      Storage.STORAGE_TYPE.SHARED -> "/tmp"
+      Storage.STORAGE_TYPE.PRIVATE -> "/var/tmp"
+    }
+  val storage = FileSystemStorage(baseDir = baseDir, label = label, step = step)
+  val fields: List<String> = listOf(exchangeKey, label)
   val path = fields.joinToString(separator = "-")
   return Pair(storage, path)
 }
 
 suspend fun batchRead(
   storageType: Storage.STORAGE_TYPE,
-  exchangeId: String,
+  exchangeKey: String,
   step: ExchangeWorkflow.Step,
   inputLabels: Map<String, String>
 ): Map<String, ByteString> = coroutineScope {
@@ -84,7 +78,7 @@ suspend fun batchRead(
         val (storage: Storage, path: String) =
           getStorageAndPathForStep(
             storageType = storageType,
-            exchangeId = exchangeId,
+            exchangeKey = exchangeKey,
             label = entry.value,
             step = step
           )
@@ -96,7 +90,7 @@ suspend fun batchRead(
 
 suspend fun batchWrite(
   storageType: Storage.STORAGE_TYPE,
-  exchangeId: String,
+  exchangeKey: String,
   step: ExchangeWorkflow.Step,
   outputLabels: Map<String, String>,
   data: Map<String, ByteString>
@@ -107,7 +101,7 @@ suspend fun batchWrite(
         val (storage: Storage, path: String) =
           getStorageAndPathForStep(
             storageType = storageType,
-            exchangeId = exchangeId,
+            exchangeKey = exchangeKey,
             label = value,
             step = step
           )

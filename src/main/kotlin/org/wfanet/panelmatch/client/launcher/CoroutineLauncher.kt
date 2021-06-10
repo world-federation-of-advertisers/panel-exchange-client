@@ -14,6 +14,7 @@
 
 package org.wfanet.panelmatch.client.launcher
 
+import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -34,26 +35,43 @@ class CoroutineLauncher(
 
   private fun executeStep(
     apiClient: ApiClient,
-    exchangeId: String,
+    exchangeKey: String,
+    exchangeStepAttemptKey: String,
     exchangeStep: ExchangeStep,
     attempt: ExchangeStepAttempt.Key
-  ): Job =
-    scope.launch {
-      LOGGER.info(
-        "Executing ${exchangeId}:${exchangeStep.toString()} with attempt ${attempt.toString()}"
-      )
-      ExchangeTaskMapper(deterministicCommutativeCryptor).execute(exchangeId, exchangeStep.step)
-      val logs = emptyList<String>()
-      apiClient.finishExchangeStepAttempt(attempt, ExchangeStepAttempt.State.SUCCEEDED, logs)
+  ): Job {
+    // All Jobs should be launched to a coroutine with a name associated with attemptKey for easy
+    // later debugging
+    return scope.launch(CoroutineName(exchangeStepAttemptKey) + Dispatchers.Default) {
+      try {
+        LOGGER.addToTaskLog(
+          "Executing ${exchangeStepAttemptKey}:${exchangeStep.toString()} with attempt ${attempt.toString()}"
+        )
+        ExchangeTaskMapper(deterministicCommutativeCryptor).execute(exchangeKey, exchangeStep.step)
+        apiClient.finishExchangeStepAttempt(
+          attempt,
+          ExchangeStepAttempt.State.SUCCEEDED,
+          LOGGER.getAndClearTaskLog()
+        )
+      } catch (e: Exception) {
+        LOGGER.addToTaskLog(e.toString())
+        apiClient.finishExchangeStepAttempt(
+          attempt,
+          ExchangeStepAttempt.State.FAILED,
+          LOGGER.getAndClearTaskLog()
+        )
+      }
     }
+  }
 
-  // TODO: read jobConfig for the correct storage to use
   override suspend fun execute(
     apiClient: ApiClient,
-    exchangeId: String,
+    exchangeKey: String,
+    exchangeStepAttemptKey: String,
     exchangeStep: ExchangeStep,
     attempt: ExchangeStepAttempt.Key
   ) {
-    val job: Job = executeStep(apiClient, exchangeId, exchangeStep, attempt)
+    val job: Job =
+      executeStep(apiClient, exchangeKey, exchangeStepAttemptKey, exchangeStep, attempt)
   }
 }

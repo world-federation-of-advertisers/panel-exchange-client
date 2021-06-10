@@ -89,9 +89,15 @@ class ExchangeStepLauncherTest {
       assertThat(firstValue).isEqualTo(EXCHANGE_STEP)
     }
 
-    val (apiClientCaptor, exchangeIdCaptor, exchangeStepCaptor, attemptCaptor) =
+    val (
+      apiClientCaptor,
+      exchangeKeyCaptor,
+      exchangeStepAttemptKeyCaptor,
+      exchangeStepCaptor,
+      attemptCaptor) =
       argumentCaptor(
         ApiClient::class,
+        String::class,
         String::class,
         ExchangeStep::class,
         ExchangeStepAttempt.Key::class
@@ -99,7 +105,8 @@ class ExchangeStepLauncherTest {
     verifyBlocking(jobLauncher) {
       execute(
         apiClientCaptor.capture(),
-        exchangeIdCaptor.capture(),
+        exchangeKeyCaptor.capture(),
+        exchangeStepAttemptKeyCaptor.capture(),
         exchangeStepCaptor.capture(),
         attemptCaptor.capture()
       )

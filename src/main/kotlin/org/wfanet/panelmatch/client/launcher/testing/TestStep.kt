@@ -18,6 +18,10 @@ import com.google.protobuf.ByteString
 import com.nhaarman.mockitokotlin2.any
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.whenever
+import kotlinx.coroutines.CoroutineName
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.runBlocking
 import org.wfanet.measurement.api.v2alpha.ExchangeStep
 import org.wfanet.measurement.api.v2alpha.ExchangeStepAttempt
 import org.wfanet.measurement.api.v2alpha.ExchangeWorkflow
@@ -62,7 +66,8 @@ val LOOKUP_KEYS =
   )
 
 class TestStep(
-  val exchangeId: String,
+  val exchangeKey: String,
+  val exchangeStepAttemptKey: String,
   val privateInputLabels: Map<String, String> = emptyMap<String, String>(),
   val privateOutputLabels: Map<String, String> = emptyMap<String, String>(),
   val sharedInputLabels: Map<String, String> = emptyMap<String, String>(),
@@ -92,13 +97,18 @@ class TestStep(
       .build()
   }
 
-  suspend fun buildAndExecute() {
+  suspend fun buildAndExecute() = runBlocking {
     val builtStep: ExchangeWorkflow.Step = build()
     whenever(deterministicCommutativeCryptor.encrypt(any(), any())).thenReturn(SINGLE_BLINDED_KEYS)
     whenever(deterministicCommutativeCryptor.reEncrypt(any(), any()))
       .thenReturn(DOUBLE_BLINDED_KEYS)
     whenever(deterministicCommutativeCryptor.decrypt(any(), any())).thenReturn(LOOKUP_KEYS)
-    return ExchangeTaskMapper(deterministicCommutativeCryptor).execute(exchangeId, builtStep)
+    val job =
+      async(CoroutineName(exchangeKey) + Dispatchers.Default) {
+        ExchangeTaskMapper(deterministicCommutativeCryptor)
+          .execute(exchangeKey = exchangeKey, step = builtStep)
+      }
+    job.await()
   }
 
   suspend fun buildAndExecuteJob(apiClient: ApiClient) {
@@ -119,6 +129,12 @@ class TestStep(
       .thenReturn(DOUBLE_BLINDED_KEYS)
     whenever(deterministicCommutativeCryptor.decrypt(any(), any())).thenReturn(LOOKUP_KEYS)
     CoroutineLauncher(deterministicCommutativeCryptor)
-      .execute(apiClient, exchangeId, exchangeStep, attempt)
+      .execute(
+        apiClient = apiClient,
+        exchangeKey = exchangeKey,
+        exchangeStepAttemptKey = exchangeStepAttemptKey,
+        exchangeStep = exchangeStep,
+        attempt = attempt
+      )
   }
 }
