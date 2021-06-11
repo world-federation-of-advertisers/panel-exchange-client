@@ -14,61 +14,27 @@
 
 package org.wfanet.panelmatch.client.logger
 
+import java.util.concurrent.ConcurrentHashMap
+import java.util.Collections.synchronizedList
 import java.util.logging.Logger
 import kotlin.coroutines.coroutineContext
 import kotlinx.coroutines.CoroutineName
 
-private val taskLogs: MutableMap<String, MutableList<String>> =
-  mutableMapOf<String, MutableList<String>>()
+private val taskLogs = ConcurrentHashMap<String, MutableList<String>>()
 
-class loggerWrapper(className: String) {
-
-  private val pLogger = Logger.getLogger(className)
-
-  suspend fun addToTaskLog(logMessage: String) {
-    val coroutineContextName: String =
-      requireNotNull(coroutineContext[CoroutineName.Key]).toString()
-    if (coroutineContextName !in taskLogs) {
-      taskLogs[coroutineContextName] = mutableListOf<String>()
-    }
-    requireNotNull(taskLogs[coroutineContextName]).add("${coroutineContextName}:${logMessage}")
-    pLogger.info("${coroutineContextName}:${logMessage}")
-  }
-
-  fun finest(logMessage: String) {
-    pLogger.finest(logMessage)
-  }
-
-  fun finer(logMessage: String) {
-    pLogger.finer(logMessage)
-  }
-
-  fun fine(logMessage: String) {
-    pLogger.fine(logMessage)
-  }
-
-  fun config(logMessage: String) {
-    pLogger.config(logMessage)
-  }
-
-  fun info(logMessage: String) {
-    pLogger.info(logMessage)
-  }
-
-  fun warning(logMessage: String) {
-    pLogger.warning(logMessage)
-  }
-
-  fun severe(logMessage: String) {
-    pLogger.severe(logMessage)
-  }
-
-  suspend fun getAndClearTaskLog(): List<String> {
-    val taskKey = requireNotNull(coroutineContext[CoroutineName.Key]).toString()
-    val listCopy = mutableListOf<String>().apply { addAll(requireNotNull(taskLogs[taskKey])) }
-    taskLogs.remove(taskKey)
-    return listCopy
-  }
+public fun <R : Any> R.loggerFor(): Lazy<Logger> {
+  return lazy { Logger.getLogger(this.javaClass.getName()) }
 }
 
-fun <T> loggerFor(myClass: Class<T>) = loggerWrapper(myClass.getName())
+suspend fun Logger.addToTaskLog(logMessage: String) {
+  val coroutineContextName: String = requireNotNull(coroutineContext[CoroutineName.Key]).toString()
+  taskLogs.computeIfAbsent(coroutineContextName) { synchronizedList(mutableListOf<String>()) }
+  requireNotNull(taskLogs[coroutineContextName]).add("${coroutineContextName}:${logMessage}")
+  info("${coroutineContextName}:${logMessage}")
+}
+
+suspend fun Logger.getAndClearTaskLog(): List<String> {
+  val taskKey = requireNotNull(coroutineContext[CoroutineName.Key]).toString()
+  val listCopy: MutableList<String>? = taskLogs.remove(taskKey)
+  return if (listCopy == null) emptyList() else listCopy
+}

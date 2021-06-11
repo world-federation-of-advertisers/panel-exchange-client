@@ -15,6 +15,7 @@
 package org.wfanet.panelmatch.client.exchangetasks
 
 import com.google.protobuf.ByteString
+import org.wfanet.panelmatch.client.logger.addToTaskLog
 import org.wfanet.panelmatch.client.logger.loggerFor
 import org.wfanet.panelmatch.protocol.common.Cryptor
 import org.wfanet.panelmatch.protocol.common.makeSerializedSharedInputs
@@ -29,10 +30,9 @@ internal constructor(
   private val outputDataLabel: String,
   private val inputKeyLabel: String = DEFAULT_INPUT_KEY_LABEL
 ) : ExchangeTask {
-  private val LOGGER = loggerFor(javaClass)
 
   override suspend fun execute(input: Map<String, ByteString>): Map<String, ByteString> {
-    LOGGER.addToTaskLog("Executing operation:${operation.toString()}")
+    logger.addToTaskLog("Executing operation:${operation.toString()}")
 
     val key = requireNotNull(input[inputKeyLabel]) { "Missing input label '$inputKeyLabel'" }
     val serializedInputs =
@@ -44,6 +44,8 @@ internal constructor(
   }
 
   companion object {
+    val logger by loggerFor()
+
     /** Returns an [ExchangeTask] that removes encryption from data. */
     fun forDecryption(Cryptor: Cryptor): ExchangeTask {
       return CryptorExchangeTask(

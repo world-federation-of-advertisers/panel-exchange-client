@@ -19,7 +19,6 @@ import com.google.protobuf.ByteString
 import kotlin.test.assertFailsWith
 import kotlinx.coroutines.runBlocking
 import org.junit.Test
-import org.wfanet.measurement.api.v2alpha.ExchangeWorkflow
 
 class StorageTest {
 
@@ -27,12 +26,7 @@ class StorageTest {
   fun `write and read FileSystemStorage`() = runBlocking {
     val valueToStore = ByteString.copyFromUtf8("random-edp-string-0")
     val key = java.util.UUID.randomUUID().toString()
-    val storage =
-      FileSystemStorage(
-        baseDir = "/tmp",
-        label = key,
-        step = ExchangeWorkflow.Step.getDefaultInstance()
-      )
+    val storage = FileSystemStorage(baseDir = "/tmp", label = key)
     storage.write(key, valueToStore)
     assertThat(storage.read(key)).isEqualTo(valueToStore)
   }
@@ -41,12 +35,7 @@ class StorageTest {
   fun `get error for invalid key from FileSystemStorage`() = runBlocking {
     val valueToStore = ByteString.copyFromUtf8("random-edp-string-0")
     val key = java.util.UUID.randomUUID().toString()
-    val storage =
-      FileSystemStorage(
-        baseDir = "/tmp",
-        label = key,
-        step = ExchangeWorkflow.Step.getDefaultInstance()
-      )
+    val storage = FileSystemStorage(baseDir = "/tmp", label = key)
     val reencryptException = assertFailsWith(IllegalArgumentException::class) { storage.read(key) }
   }
 
@@ -55,12 +44,7 @@ class StorageTest {
     val valueToStore1 = ByteString.copyFromUtf8("random-edp-string-1")
     val valueToStore2 = ByteString.copyFromUtf8("random-edp-string-2")
     val key = java.util.UUID.randomUUID().toString()
-    val storage =
-      FileSystemStorage(
-        baseDir = "/tmp",
-        label = key,
-        step = ExchangeWorkflow.Step.getDefaultInstance()
-      )
+    val storage = FileSystemStorage(baseDir = "/tmp", label = key)
     storage.write(key, valueToStore1)
     val doubleWriteException =
       assertFailsWith(IllegalArgumentException::class) { storage.write(key, valueToStore1) }
@@ -71,20 +55,10 @@ class StorageTest {
     val valueToStore1 = ByteString.copyFromUtf8("random-edp-string-1")
     val valueToStore2 = ByteString.copyFromUtf8("random-edp-string-2")
     val key = java.util.UUID.randomUUID().toString()
-    val privateStorage =
-      FileSystemStorage(
-        baseDir = "/tmp",
-        label = key,
-        step = ExchangeWorkflow.Step.getDefaultInstance()
-      )
+    val privateStorage = FileSystemStorage(baseDir = "/tmp", label = key)
     privateStorage.write(key, valueToStore1)
     val storedValue = privateStorage.read(key)
-    val sharedStorage =
-      FileSystemStorage(
-        baseDir = "/var/tmp",
-        label = key,
-        step = ExchangeWorkflow.Step.getDefaultInstance()
-      )
+    val sharedStorage = FileSystemStorage(baseDir = "/var/tmp", label = key)
     val doubleWriteException =
       assertFailsWith(IllegalArgumentException::class) { sharedStorage.read(key) }
   }

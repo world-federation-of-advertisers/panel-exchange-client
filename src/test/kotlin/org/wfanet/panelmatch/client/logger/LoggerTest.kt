@@ -25,34 +25,39 @@ import kotlinx.coroutines.runBlocking
 import org.junit.Test
 
 class JobTestClass1 {
-  private val LOGGER = loggerFor(javaClass)
+  companion object {
+    val logger by loggerFor()
+  }
   suspend fun logWithDelay() {
-    LOGGER.addToTaskLog("logWithDelay: Log Message 0")
+    logger.addToTaskLog("logWithDelay: Log Message 0")
     delay(100)
-    LOGGER.addToTaskLog("logWithDelay: Log Message 1")
+    logger.addToTaskLog("logWithDelay: Log Message 1")
   }
 }
 
 class JobTestClass2 {
-  private val LOGGER = loggerFor(javaClass)
+  companion object {
+    val logger by loggerFor()
+  }
   suspend fun logWithDelay() {
-    LOGGER.addToTaskLog("logWithDelay: Log Message 0")
+    logger.addToTaskLog("logWithDelay: Log Message 0")
     delay(100)
-    LOGGER.addToTaskLog("logWithDelay: Log Message 1")
+    logger.addToTaskLog("logWithDelay: Log Message 1")
   }
 }
 
 class LoggerTest {
-  private val LOGGER = loggerFor(javaClass)
-
+  companion object {
+    val logger by loggerFor()
+  }
   @Test
   fun `write single task log from coroutine and suspend function`() = runBlocking {
     val ATTEMPT_KEY = java.util.UUID.randomUUID().toString()
     val job =
       async(CoroutineName(ATTEMPT_KEY) + Dispatchers.Default) {
-        LOGGER.addToTaskLog("Log Message 0")
+        logger.addToTaskLog("Log Message 0")
         JobTestClass1().logWithDelay()
-        val log = LOGGER.getAndClearTaskLog()
+        val log = logger.getAndClearTaskLog()
         assertThat(log).hasSize(3)
         log.forEach { assertThat(it).contains(ATTEMPT_KEY) }
       }
@@ -65,16 +70,16 @@ class LoggerTest {
     val ATTEMPT_KEY_1 = java.util.UUID.randomUUID().toString()
     val job1 =
       async(CoroutineName(ATTEMPT_KEY_0) + Dispatchers.Default) {
-        LOGGER.addToTaskLog("Log Message 0")
+        logger.addToTaskLog("Log Message 0")
         JobTestClass1().logWithDelay()
-        val log = LOGGER.getAndClearTaskLog()
+        val log = logger.getAndClearTaskLog()
         assertThat(log).hasSize(3)
         log.forEach { assertThat(it).contains(ATTEMPT_KEY_0) }
       }
     val job2 =
       async(CoroutineName(ATTEMPT_KEY_1) + Dispatchers.Default) {
         JobTestClass1().logWithDelay()
-        val log = LOGGER.getAndClearTaskLog()
+        val log = logger.getAndClearTaskLog()
         assertThat(log).hasSize(2)
         log.forEach { assertThat(it).contains(ATTEMPT_KEY_1) }
       }
@@ -85,6 +90,6 @@ class LoggerTest {
   @Test
   fun `cannot add to a task log unless you are in a job`() = runBlocking {
     val outsideCoroutineException =
-      assertFailsWith(IllegalArgumentException::class) { LOGGER.addToTaskLog("Log Message 0") }
+      assertFailsWith(IllegalArgumentException::class) { logger.addToTaskLog("Log Message 0") }
   }
 }

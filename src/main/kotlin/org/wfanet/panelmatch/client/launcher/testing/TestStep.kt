@@ -73,8 +73,16 @@ class TestStep(
   val sharedInputLabels: Map<String, String> = emptyMap<String, String>(),
   val sharedOutputLabels: Map<String, String> = emptyMap<String, String>(),
   val stepType: ExchangeWorkflow.Step.StepCase,
-  val deterministicCommutativeCryptor: Cryptor = mock<Cryptor>()
+  val deterministicCommutativeCryptor: Cryptor = mock<Cryptor>(),
+  val attemptKey: ExchangeStepAttempt.Key =
+    ExchangeStepAttempt.Key.newBuilder()
+      .apply {
+        exchangeId = exchangeKey
+        exchangeStepAttemptId = exchangeStepAttemptKey
+      }
+      .build()
 ) {
+  init {}
   suspend fun build(): ExchangeWorkflow.Step {
     return ExchangeWorkflow.Step.newBuilder()
       .putAllPrivateInputLabels(privateInputLabels)
@@ -104,9 +112,9 @@ class TestStep(
       .thenReturn(DOUBLE_BLINDED_KEYS)
     whenever(deterministicCommutativeCryptor.decrypt(any(), any())).thenReturn(LOOKUP_KEYS)
     val job =
-      async(CoroutineName(exchangeKey) + Dispatchers.Default) {
+      async(CoroutineName(attemptKey.exchangeId) + Dispatchers.Default) {
         ExchangeTaskMapper(deterministicCommutativeCryptor)
-          .execute(exchangeKey = exchangeKey, step = builtStep)
+          .execute(exchangeKey = attemptKey.exchangeId, step = builtStep)
       }
     job.await()
   }
@@ -120,21 +128,11 @@ class TestStep(
           state = ExchangeStep.State.READY_FOR_RETRY
         }
         .build()
-    val attempt: ExchangeStepAttempt.Key =
-      ExchangeStepAttempt.Key.newBuilder()
-        .apply { exchangeStepAttemptId = "some-attempt-id-0" }
-        .build()
     whenever(deterministicCommutativeCryptor.encrypt(any(), any())).thenReturn(SINGLE_BLINDED_KEYS)
     whenever(deterministicCommutativeCryptor.reEncrypt(any(), any()))
       .thenReturn(DOUBLE_BLINDED_KEYS)
     whenever(deterministicCommutativeCryptor.decrypt(any(), any())).thenReturn(LOOKUP_KEYS)
     CoroutineLauncher(deterministicCommutativeCryptor)
-      .execute(
-        apiClient = apiClient,
-        exchangeKey = exchangeKey,
-        exchangeStepAttemptKey = exchangeStepAttemptKey,
-        exchangeStep = exchangeStep,
-        attempt = attempt
-      )
+      .execute(apiClient = apiClient, exchangeStep = exchangeStep, attemptKey = attemptKey)
   }
 }

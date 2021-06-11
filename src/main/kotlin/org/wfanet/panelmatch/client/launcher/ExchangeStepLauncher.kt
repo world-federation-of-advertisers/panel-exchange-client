@@ -38,13 +38,7 @@ class ExchangeStepLauncher(
       return
     }
 
-    jobLauncher.execute(
-      apiClient,
-      attemptKey.exchangeId,
-      attemptKey.exchangeStepAttemptId,
-      exchangeStep,
-      attemptKey
-    )
+    jobLauncher.execute(apiClient, exchangeStep, attemptKey)
   }
 
   private suspend fun invalidateAttempt(attemptKey: ExchangeStepAttempt.Key, cause: Throwable) {

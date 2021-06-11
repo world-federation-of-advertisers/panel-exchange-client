@@ -18,12 +18,19 @@ import com.google.protobuf.ByteString
 import java.io.File
 import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.reduce
-import org.wfanet.measurement.api.v2alpha.ExchangeWorkflow
 import org.wfanet.measurement.storage.filesystem.FileSystemStorageClient
 import org.wfanet.panelmatch.client.logger.loggerFor
 
-class FileSystemStorage(baseDir: String, label: String, step: ExchangeWorkflow.Step) : Storage {
-  private val LOGGER = loggerFor(javaClass)
+/**
+ * Reads input data from given path from the File System.
+ *
+ * @param baseDir String directory to read/write.
+ * @param label String name of file to read/write
+ */
+class FileSystemStorage(baseDir: String, label: String) : Storage {
+  companion object {
+    val logger by loggerFor()
+  }
   private var storageClient: FileSystemStorageClient
   init {
     val BASE_DIR = File(baseDir)
@@ -31,12 +38,12 @@ class FileSystemStorage(baseDir: String, label: String, step: ExchangeWorkflow.S
   }
 
   override suspend fun read(path: String): ByteString {
-    LOGGER.info("Read:${path}\n")
+    logger.info("Read:${path}\n")
     return requireNotNull(storageClient.getBlob(path)).read(4096).reduce { a, b -> a.concat(b) }
   }
 
   override suspend fun write(path: String, data: ByteString) {
-    LOGGER.info("Write:${path}\n")
+    logger.info("Write:${path}\n")
     storageClient.createBlob(path, listOf(data).asFlow())
   }
 }

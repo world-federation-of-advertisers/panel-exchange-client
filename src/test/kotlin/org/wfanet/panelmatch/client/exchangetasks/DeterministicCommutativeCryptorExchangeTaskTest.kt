@@ -61,8 +61,8 @@ class DeterministicCommutativeCryptorExchangeTaskTest {
   val ATTEMPT_KEY = java.util.UUID.randomUUID().toString()
 
   @Test
-  fun `decrypt with valid inputs`() {
-    runBlocking {
+  fun `decrypt with valid inputs`() =
+    runBlocking<Unit> {
       whenever(deterministicCommutativeCryptor.decrypt(any(), any())).thenReturn(PLAINTEXTS)
 
       async(CoroutineName(ATTEMPT_KEY) + Dispatchers.Default) {
@@ -79,11 +79,10 @@ class DeterministicCommutativeCryptorExchangeTaskTest {
         }
         .await()
     }
-  }
 
   @Test
-  fun `decrypt with crypto error`() {
-    runBlocking {
+  fun `decrypt with crypto error`() =
+    runBlocking<Unit> {
       whenever(deterministicCommutativeCryptor.decrypt(any(), any()))
         .thenThrow(IllegalArgumentException("Something went wrong"))
 
@@ -102,11 +101,10 @@ class DeterministicCommutativeCryptorExchangeTaskTest {
         }
         .await()
     }
-  }
 
   @Test
-  fun `decrypt with missing inputs`() {
-    runBlocking {
+  fun `decrypt with missing inputs`() =
+    runBlocking<Unit> {
       async(CoroutineName(ATTEMPT_KEY) + Dispatchers.Default) {
           assertFailsWith(IllegalArgumentException::class) {
             CryptorExchangeTask.forDecryption(deterministicCommutativeCryptor)
@@ -120,11 +118,10 @@ class DeterministicCommutativeCryptorExchangeTaskTest {
         }
         .await()
     }
-  }
 
   @Test
-  fun `encrypt with valid inputs`() {
-    runBlocking {
+  fun `encrypt with valid inputs`() =
+    runBlocking<Unit> {
       whenever(deterministicCommutativeCryptor.encrypt(any(), any())).thenReturn(CIPHERTEXTS)
 
       async(CoroutineName(ATTEMPT_KEY) + Dispatchers.Default) {
@@ -141,11 +138,10 @@ class DeterministicCommutativeCryptorExchangeTaskTest {
         }
         .await()
     }
-  }
 
   @Test
-  fun `encrypt with crypto error`() {
-    runBlocking {
+  fun `encrypt with crypto error`() =
+    runBlocking<Unit> {
       whenever(deterministicCommutativeCryptor.encrypt(any(), any()))
         .thenThrow(IllegalArgumentException("Something went wrong"))
 
@@ -164,11 +160,10 @@ class DeterministicCommutativeCryptorExchangeTaskTest {
         }
         .await()
     }
-  }
 
   @Test
-  fun `encrypt with missing inputs`() {
-    runBlocking {
+  fun `encrypt with missing inputs`() =
+    runBlocking<Unit> {
       val job =
         async(CoroutineName(ATTEMPT_KEY) + Dispatchers.Default) {
           assertFailsWith(IllegalArgumentException::class) {
@@ -183,11 +178,10 @@ class DeterministicCommutativeCryptorExchangeTaskTest {
         }
       job.await()
     }
-  }
 
   @Test
-  fun `reEncryptTask with valid inputs`() {
-    runBlocking {
+  fun `reEncryptTask with valid inputs`() =
+    runBlocking<Unit> {
       whenever(deterministicCommutativeCryptor.reEncrypt(any(), any()))
         .thenReturn(DOUBLE_CIPHERTEXTS)
 
@@ -205,11 +199,10 @@ class DeterministicCommutativeCryptorExchangeTaskTest {
         }
         .await()
     }
-  }
 
   @Test
-  fun `reEncryptTask with crypto error`() {
-    runBlocking {
+  fun `reEncryptTask with crypto error`() =
+    runBlocking<Unit> {
       whenever(deterministicCommutativeCryptor.reEncrypt(any(), any()))
         .thenThrow(IllegalArgumentException("Something went wrong"))
 
@@ -228,11 +221,10 @@ class DeterministicCommutativeCryptorExchangeTaskTest {
         }
         .await()
     }
-  }
 
   @Test
-  fun `reEncryptTask with missing inputs`() {
-    runBlocking {
+  fun `reEncryptTask with missing inputs`() =
+    runBlocking<Unit> {
       async(CoroutineName(ATTEMPT_KEY) + Dispatchers.Default) {
           assertFailsWith(IllegalArgumentException::class) {
             CryptorExchangeTask.forReEncryption(deterministicCommutativeCryptor)
@@ -246,5 +238,4 @@ class DeterministicCommutativeCryptorExchangeTaskTest {
         }
         .await()
     }
-  }
 }

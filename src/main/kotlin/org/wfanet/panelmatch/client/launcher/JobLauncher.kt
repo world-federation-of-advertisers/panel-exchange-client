@@ -28,8 +28,6 @@ interface JobLauncher {
    */
   suspend fun execute(
     apiClient: ApiClient,
-    exchangeKey: String,
-    exchangeStepAttemptKey: String,
     exchangeStep: ExchangeStep,
     attempt: ExchangeStepAttempt.Key
   )

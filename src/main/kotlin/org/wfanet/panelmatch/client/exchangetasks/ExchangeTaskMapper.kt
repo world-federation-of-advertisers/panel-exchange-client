@@ -15,16 +15,13 @@
 package org.wfanet.panelmatch.client.exchangetasks
 
 import com.google.protobuf.ByteString
-import kotlinx.coroutines.CoroutineStart
-import kotlinx.coroutines.async
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 import org.wfanet.measurement.api.v2alpha.ExchangeWorkflow
 import org.wfanet.panelmatch.client.logger.loggerFor
 import org.wfanet.panelmatch.client.storage.Storage.STORAGE_TYPE
 import org.wfanet.panelmatch.client.storage.batchRead
-import org.wfanet.panelmatch.client.storage.batchWrite
+import org.wfanet.panelmatch.client.storage.getAllInputForStep
+import org.wfanet.panelmatch.client.storage.writeAllOutputForStep
 import org.wfanet.panelmatch.protocol.common.Cryptor
 import org.wfanet.panelmatch.protocol.common.JniDeterministicCommutativeCryptor
 
@@ -40,7 +37,9 @@ import org.wfanet.panelmatch.protocol.common.JniDeterministicCommutativeCryptor
 class ExchangeTaskMapper(
   private val deterministicCommutativeCryptor: Cryptor = JniDeterministicCommutativeCryptor()
 ) {
-  private val LOGGER = loggerFor(javaClass)
+  companion object {
+    val logger by loggerFor()
+  }
 
   private suspend fun getExchangeTaskForStep(step: ExchangeWorkflow.Step): ExchangeTask {
     return when (step.getStepCase()) {
@@ -55,11 +54,7 @@ class ExchangeTaskMapper(
   }
 
   suspend fun execute(exchangeKey: String, step: ExchangeWorkflow.Step) {
-    LOGGER.info("Execute step: ${step.toString()}")
-    val privateInputLabels = step.getPrivateInputLabelsMap()
-    val privateOutputLabels = step.getPrivateOutputLabelsMap()
-    val sharedInputLabels = step.getSharedInputLabelsMap()
-    val sharedOutputLabels = step.getSharedOutputLabelsMap()
+    logger.info("Execute step: ${step.toString()}")
     if (step.getStepCase() == ExchangeWorkflow.Step.StepCase.INPUT_STEP) {
       do {
         try {
@@ -75,49 +70,10 @@ class ExchangeTaskMapper(
         }
       } while (true)
     }
-    coroutineScope {
-      val taskPrivateInput =
-        async(start = CoroutineStart.DEFAULT) {
-          batchRead(
-            storageType = STORAGE_TYPE.PRIVATE,
-            exchangeKey = exchangeKey,
-            step = step,
-            inputLabels = privateInputLabels
-          )
-        }
-      val taskSharedInput =
-        async(start = CoroutineStart.DEFAULT) {
-          batchRead(
-            storageType = STORAGE_TYPE.SHARED,
-            exchangeKey = exchangeKey,
-            step = step,
-            inputLabels = sharedInputLabels
-          )
-        }
-      val taskInput: Map<String, ByteString> =
-        LinkedHashMap(taskPrivateInput.await()).apply { putAll(taskSharedInput.await()) }
-      val taskOutput: Map<String, ByteString> = getExchangeTaskForStep(step).execute(taskInput)
-      coroutineScope {
-        launch {
-          batchWrite(
-            storageType = STORAGE_TYPE.PRIVATE,
-            exchangeKey = exchangeKey,
-            step = step,
-            outputLabels = privateOutputLabels,
-            data = taskOutput
-          )
-        }
-        launch {
-          batchWrite(
-            storageType = STORAGE_TYPE.SHARED,
-            exchangeKey = exchangeKey,
-            step = step,
-            outputLabels = sharedOutputLabels,
-            data = taskOutput
-          )
-        }
-      }
-    }
+    val taskInput: Map<String, ByteString> =
+      getAllInputForStep(exchangeKey = exchangeKey, step = step)
+    val taskOutput: Map<String, ByteString> = getExchangeTaskForStep(step).execute(taskInput)
+    writeAllOutputForStep(exchangeKey = exchangeKey, step = step, taskOutput = taskOutput)
     return
   }
 }
