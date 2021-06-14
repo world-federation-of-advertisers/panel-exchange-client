@@ -14,8 +14,8 @@
 
 package org.wfanet.panelmatch.client.logger
 
-import java.util.concurrent.ConcurrentHashMap
 import java.util.Collections.synchronizedList
+import java.util.concurrent.ConcurrentHashMap
 import java.util.logging.Logger
 import kotlin.coroutines.coroutineContext
 import kotlinx.coroutines.CoroutineName

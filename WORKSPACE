@@ -66,6 +66,14 @@ http_archive(
     url = "https://github.com/world-federation-of-advertisers/cross-media-measurement/archive/ba7e21d7347a3b2b1492ee7b9e2f0633cfc3dcf9.tar.gz",
 )
 
+# Measurement proto.
+http_archive(
+    name = "wfa_measurement_proto",
+    sha256 = "5f1b91b8cabd226f44ae161ea10b1619dc397b87df0e39e360c27cb5644ff12f",
+    strip_prefix = "cross-media-measurement-api-d2f8a5557d33cb016bd0e7687f6bbf02332ed23b",
+    url = "https://github.com/world-federation-of-advertisers/cross-media-measurement-api/archive/d2f8a5557d33cb016bd0e7687f6bbf02332ed23b.tar.gz",
+)
+
 # @io_bazel_rules_kotlin
 
 load("@wfa_measurement_system//build/io_bazel_rules_kotlin:repo.bzl", "kotlinc_release", "rules_kotlin_repo")
@@ -237,22 +245,6 @@ http_archive(
     urls = [
         "https://github.com/protocolbuffers/protobuf/archive/refs/tags/v3.15.6.tar.gz",
     ],
-)
-
-# Measurement system.
-http_archive(
-    name = "wfa_measurement_system",
-    sha256 = "d0200afef07d5a2c81adbe6c0c319a663e058195ad563401bfc4813bc4de6cb9",
-    strip_prefix = "cross-media-measurement-933284c02cff0be89991c31178bb9538de70f01b",
-    url = "https://github.com/world-federation-of-advertisers/cross-media-measurement/archive/933284c02cff0be89991c31178bb9538de70f01b.tar.gz",
-)
-
-# Measurement proto.
-http_archive(
-    name = "wfa_measurement_proto",
-    sha256 = "5f1b91b8cabd226f44ae161ea10b1619dc397b87df0e39e360c27cb5644ff12f",
-    strip_prefix = "cross-media-measurement-api-d2f8a5557d33cb016bd0e7687f6bbf02332ed23b",
-    url = "https://github.com/world-federation-of-advertisers/cross-media-measurement-api/archive/d2f8a5557d33cb016bd0e7687f6bbf02332ed23b.tar.gz",
 )
 
 # @com_google_truth_truth
