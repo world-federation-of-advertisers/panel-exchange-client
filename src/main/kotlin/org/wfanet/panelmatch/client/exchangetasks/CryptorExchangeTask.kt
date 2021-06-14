@@ -32,7 +32,7 @@ internal constructor(
 ) : ExchangeTask {
 
   override suspend fun execute(input: Map<String, ByteString>): Map<String, ByteString> {
-    logger.addToTaskLog("Executing operation:${operation.toString()}")
+    logger.addToTaskLog("Executing operation: $operation")
 
     val key = requireNotNull(input[inputKeyLabel]) { "Missing input label '$inputKeyLabel'" }
     val serializedInputs =

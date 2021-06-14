@@ -29,8 +29,8 @@ public fun <R : Any> R.loggerFor(): Lazy<Logger> {
 suspend fun Logger.addToTaskLog(logMessage: String) {
   val coroutineContextName: String = requireNotNull(coroutineContext[CoroutineName.Key]).toString()
   taskLogs.computeIfAbsent(coroutineContextName) { synchronizedList(mutableListOf<String>()) }
-  requireNotNull(taskLogs[coroutineContextName]).add("${coroutineContextName}:${logMessage}")
-  info("${coroutineContextName}:${logMessage}")
+  requireNotNull(taskLogs[coroutineContextName]).add("$coroutineContextName:$logMessage")
+  info("$coroutineContextName:$logMessage")
 }
 
 suspend fun Logger.getAndClearTaskLog(): List<String> {

@@ -54,7 +54,7 @@ class ExchangeTaskMapper(
   }
 
   suspend fun execute(exchangeKey: String, step: ExchangeWorkflow.Step) {
-    logger.info("Execute step: ${step.toString()}")
+    logger.info("Execute step: $step")
     if (step.getStepCase() == ExchangeWorkflow.Step.StepCase.INPUT_STEP) {
       do {
         try {

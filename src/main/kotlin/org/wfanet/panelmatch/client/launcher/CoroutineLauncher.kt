@@ -48,7 +48,9 @@ class CoroutineLauncher(
       scope.launch(CoroutineName(exchangeStepAttemptKey) + Dispatchers.Default) {
         try {
           logger.addToTaskLog(
-            "Executing ${exchangeStepAttemptKey}:${exchangeStep.toString()} with attempt ${attemptKey.toString()}"
+            """
+              Executing $exchangeStepAttemptKey: $exchangeStep with attempt $attemptKey
+            """.trimIndent()
           )
           ExchangeTaskMapper(deterministicCommutativeCryptor)
             .execute(exchangeKey, exchangeStep.step)
