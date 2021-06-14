@@ -49,6 +49,11 @@ class ExchangeTaskMapper(
         CryptorExchangeTask.forReEncryption(deterministicCommutativeCryptor)
       ExchangeWorkflow.Step.StepCase.DECRYPT_STEP ->
         CryptorExchangeTask.forDecryption(deterministicCommutativeCryptor)
+      ExchangeWorkflow.Step.StepCase.INTERSECT_AND_VALIDATE_STEP ->
+        IntersectValidateTask(
+          maxSize = step.intersectAndValidateStep.maxSize,
+          minimumOverlap = step.intersectAndValidateStep.minimumOverlap
+        )
       else -> error("Unsupported step type")
     }
   }

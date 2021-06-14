@@ -78,6 +78,48 @@ class ExchangeTaskMapperTest {
   }
 
   @Test
+  fun `test intersect and validate exchange step`() = runBlocking {
+    val EXCHANGE_KEY = java.util.UUID.randomUUID().toString()
+    val ATTEMPT_KEY = java.util.UUID.randomUUID().toString()
+    val testStep =
+      TestStep(
+        exchangeKey = EXCHANGE_KEY,
+        exchangeStepAttemptKey = ATTEMPT_KEY,
+        sharedInputLabels = mapOf("current-data" to "mp-single-blinded-joinkeys"),
+        privateInputLabels = mapOf("previous-data" to "previous-mp-single-blinded-joinkeys"),
+        sharedOutputLabels = mapOf("current-data" to "copy-mp-single-blinded-joinkeys"),
+        stepType = ExchangeWorkflow.Step.StepCase.INTERSECT_AND_VALIDATE_STEP,
+        intersectMaxSize = 100000L,
+        intersectMinimumOverlap = 0.99f
+      )
+    batchWrite(
+      storageType = STORAGE_TYPE.SHARED,
+      exchangeKey = EXCHANGE_KEY,
+      step = testStep.build(),
+      outputLabels = mapOf("output" to "mp-single-blinded-joinkeys"),
+      data = mapOf("output" to makeSerializedSharedInputs(SINGLE_BLINDED_KEYS))
+    )
+    batchWrite(
+      storageType = STORAGE_TYPE.PRIVATE,
+      exchangeKey = EXCHANGE_KEY,
+      step = testStep.build(),
+      outputLabels = mapOf("output" to "previous-mp-single-blinded-joinkeys"),
+      data = mapOf("output" to makeSerializedSharedInputs(SINGLE_BLINDED_KEYS))
+    )
+    testStep.buildAndExecute()
+    val singleBlindedKeysCopy =
+      requireNotNull(
+        batchRead(
+          storageType = STORAGE_TYPE.SHARED,
+          exchangeKey = EXCHANGE_KEY,
+          step = testStep.build(),
+          inputLabels = mapOf("input" to "copy-mp-single-blinded-joinkeys")
+        )["input"]
+      )
+    assertThat(parseSerializedSharedInputs(singleBlindedKeysCopy)).isEqualTo(SINGLE_BLINDED_KEYS)
+  }
+
+  @Test
   fun `test reencrypt exchange task`() = runBlocking {
     val EXCHANGE_KEY = java.util.UUID.randomUUID().toString()
     val ATTEMPT_KEY = java.util.UUID.randomUUID().toString()
