@@ -19,7 +19,6 @@ import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.wfanet.measurement.api.v2alpha.ExchangeWorkflow
 
@@ -111,7 +110,7 @@ suspend fun batchWrite(
   withContext(Dispatchers.IO) {
     coroutineScope {
       for ((key, value) in outputLabels) {
-        launch {
+        async {
           val (storage: Storage, path: String) =
             getStorageAndPathForStep(
               storageType = storageType,
@@ -167,7 +166,7 @@ suspend fun writeAllOutputForStep(
 ) = coroutineScope {
   val privateOutputLabels = step.getPrivateOutputLabelsMap()
   val sharedOutputLabels = step.getSharedOutputLabelsMap()
-  launch {
+  async {
     batchWrite(
       storageType = Storage.STORAGE_TYPE.PRIVATE,
       exchangeKey = exchangeKey,
@@ -176,7 +175,7 @@ suspend fun writeAllOutputForStep(
       data = taskOutput
     )
   }
-  launch {
+  async {
     batchWrite(
       storageType = Storage.STORAGE_TYPE.SHARED,
       exchangeKey = exchangeKey,

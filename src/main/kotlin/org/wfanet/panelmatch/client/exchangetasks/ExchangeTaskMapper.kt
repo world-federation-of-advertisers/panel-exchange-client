@@ -15,11 +15,10 @@
 package org.wfanet.panelmatch.client.exchangetasks
 
 import com.google.protobuf.ByteString
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.withTimeout
 import org.wfanet.measurement.api.v2alpha.ExchangeWorkflow
 import org.wfanet.panelmatch.client.logger.loggerFor
-import org.wfanet.panelmatch.client.storage.Storage.STORAGE_TYPE
-import org.wfanet.panelmatch.client.storage.batchRead
 import org.wfanet.panelmatch.client.storage.getAllInputForStep
 import org.wfanet.panelmatch.client.storage.writeAllOutputForStep
 import org.wfanet.panelmatch.protocol.common.Cryptor
@@ -35,7 +34,9 @@ import org.wfanet.panelmatch.protocol.common.JniDeterministicCommutativeCryptor
  * @return mapped output.
  */
 class ExchangeTaskMapper(
-  private val deterministicCommutativeCryptor: Cryptor = JniDeterministicCommutativeCryptor()
+  private val deterministicCommutativeCryptor: Cryptor = JniDeterministicCommutativeCryptor(),
+  private val timeoutMillis: Long = 24 * 60 * 60 * 1000, // 1 Day SLA By Default
+  private val retryMillis: Long = 60 * 1000 // 1 minute. Only for retryable tasks. eg InputTask
 ) {
   companion object {
     val logger by loggerFor()
@@ -53,27 +54,23 @@ class ExchangeTaskMapper(
     }
   }
 
-  suspend fun execute(exchangeKey: String, step: ExchangeWorkflow.Step) {
-    logger.info("Execute step: $step")
-    if (step.getStepCase() == ExchangeWorkflow.Step.StepCase.INPUT_STEP) {
-      do {
-        try {
-          batchRead(
-            storageType = STORAGE_TYPE.PRIVATE,
+  suspend fun execute(exchangeKey: String, step: ExchangeWorkflow.Step) = coroutineScope {
+    withTimeout(timeoutMillis) {
+      logger.info("Execute step: $step")
+      if (step.getStepCase() == ExchangeWorkflow.Step.StepCase.INPUT_STEP) {
+        InputTask(
             exchangeKey = exchangeKey,
             step = step,
-            inputLabels = mapOf("input" to "mp-crypto-key")
+            timeoutMillis = timeoutMillis,
+            retryMillis = retryMillis
           )
-          return
-        } catch (e: IllegalArgumentException) {
-          delay(500)
-        }
-      } while (true)
+          .execute(emptyMap<String, ByteString>())
+      } else {
+        val taskInput: Map<String, ByteString> =
+          getAllInputForStep(exchangeKey = exchangeKey, step = step)
+        val taskOutput: Map<String, ByteString> = getExchangeTaskForStep(step).execute(taskInput)
+        writeAllOutputForStep(exchangeKey = exchangeKey, step = step, taskOutput = taskOutput)
+      }
     }
-    val taskInput: Map<String, ByteString> =
-      getAllInputForStep(exchangeKey = exchangeKey, step = step)
-    val taskOutput: Map<String, ByteString> = getExchangeTaskForStep(step).execute(taskInput)
-    writeAllOutputForStep(exchangeKey = exchangeKey, step = step, taskOutput = taskOutput)
-    return
   }
 }

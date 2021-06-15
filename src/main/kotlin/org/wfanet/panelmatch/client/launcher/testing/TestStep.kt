@@ -74,6 +74,8 @@ class TestStep(
   val sharedOutputLabels: Map<String, String> = emptyMap<String, String>(),
   val stepType: ExchangeWorkflow.Step.StepCase,
   val deterministicCommutativeCryptor: Cryptor = mock<Cryptor>(),
+  val timeoutMillis: Long = 500L,
+  val retryMillis: Long = 100L,
   val attemptKey: ExchangeStepAttempt.Key =
     ExchangeStepAttempt.Key.newBuilder()
       .apply {
@@ -113,7 +115,11 @@ class TestStep(
     whenever(deterministicCommutativeCryptor.decrypt(any(), any())).thenReturn(LOOKUP_KEYS)
     val job =
       async(CoroutineName(attemptKey.exchangeId) + Dispatchers.Default) {
-        ExchangeTaskMapper(deterministicCommutativeCryptor)
+        ExchangeTaskMapper(
+            deterministicCommutativeCryptor = deterministicCommutativeCryptor,
+            timeoutMillis = timeoutMillis,
+            retryMillis = retryMillis
+          )
           .execute(exchangeKey = attemptKey.exchangeId, step = builtStep)
       }
     job.await()
