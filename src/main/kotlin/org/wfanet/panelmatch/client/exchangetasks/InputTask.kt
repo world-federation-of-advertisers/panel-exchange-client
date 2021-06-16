@@ -15,62 +15,50 @@
 package org.wfanet.panelmatch.client.exchangetasks
 
 import com.google.protobuf.ByteString
-import kotlinx.coroutines.CoroutineStart
-import kotlinx.coroutines.Deferred
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.delay
+import java.time.Duration
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.retryWhen
+import kotlinx.coroutines.flow.toList
 import org.wfanet.measurement.api.v2alpha.ExchangeWorkflow
 import org.wfanet.panelmatch.client.storage.Storage.STORAGE_TYPE
 import org.wfanet.panelmatch.client.storage.batchRead
 
-/*
- Input task waits for output labels to be present. Clients should not pass in the actual required
- inputs for the next task. Instead, these outputs should be small files with contents of `done`
- that are written after the actual outputs are done being written.
-*/
+/**
+ * Input task waits for output labels to be present. Clients should not pass in the actual required
+ * inputs for the next task. Instead, these outputs should be small files with contents of `done`
+ * that are written after the actual outputs are done being written.
+ */
 class InputTask(
   val exchangeKey: String,
   val step: ExchangeWorkflow.Step,
-  val timeoutMillis: Long,
-  val retryMillis: Long
+  val retryDuration: Duration
 ) : ExchangeTask {
 
   override suspend fun execute(input: Map<String, ByteString>): Map<String, ByteString> {
-    var readStatus: Boolean = false
-    do {
-      try {
-        val privateOutputLabels = step.getPrivateOutputLabelsMap()
-        val sharedOutputLabels = step.getSharedOutputLabelsMap()
-        coroutineScope {
-          val readDeferreds: List<Deferred<Map<String, ByteString>>> =
-            listOf(
-              async(start = CoroutineStart.DEFAULT) {
-                batchRead(
-                  storageType = STORAGE_TYPE.PRIVATE,
-                  exchangeKey = exchangeKey,
-                  step = step,
-                  inputLabels = privateOutputLabels
-                )
-              },
-              async(start = CoroutineStart.DEFAULT) {
-                batchRead(
-                  storageType = STORAGE_TYPE.SHARED,
-                  exchangeKey = exchangeKey,
-                  step = step,
-                  inputLabels = sharedOutputLabels
-                )
-              }
-            )
-          readDeferreds.awaitAll()
-        }
-        readStatus = true
-      } catch (e: IllegalArgumentException) {
-        println("FAILED\n")
-        delay(retryMillis)
+    val privateOutputLabels = step.getPrivateOutputLabelsMap()
+    val sharedOutputLabels = step.getSharedOutputLabelsMap()
+    flow<String> {
+        batchRead(
+          storageType = STORAGE_TYPE.PRIVATE,
+          exchangeKey = exchangeKey,
+          step = step,
+          inputLabels = privateOutputLabels
+        )
+          .keys
+          .forEach { emit(it) }
+        batchRead(
+          storageType = STORAGE_TYPE.SHARED,
+          exchangeKey = exchangeKey,
+          step = step,
+          inputLabels = sharedOutputLabels
+        )
+          .keys
+          .forEach { emit(it) }
       }
-    } while (!readStatus)
+      .debounce(retryDuration.toMillis())
+      .retryWhen { cause, attempt -> true }
+      .toList()
     // This function only returns that input is ready. It does not return actual values.
     return emptyMap<String, ByteString>()
   }

@@ -12,10 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package org.wfanet.panelmatch.client.exchangetasks
+package org.wfanet.panelmatch.client.launcher
 
 import com.google.common.truth.Truth.assertThat
+import com.nhaarman.mockitokotlin2.mock
 import kotlin.test.assertFailsWith
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -36,6 +38,7 @@ import org.wfanet.panelmatch.protocol.common.parseSerializedSharedInputs
 
 @RunWith(JUnit4::class)
 class ExchangeTaskMapperTest {
+  val apiClient: ApiClient = mock()
 
   @Test
   fun `test encrypt exchange step`() = runBlocking {
@@ -43,6 +46,7 @@ class ExchangeTaskMapperTest {
     val ATTEMPT_KEY = java.util.UUID.randomUUID().toString()
     val testStep =
       TestStep(
+        apiClient = apiClient,
         exchangeKey = EXCHANGE_KEY,
         exchangeStepAttemptKey = ATTEMPT_KEY,
         privateInputLabels =
@@ -64,7 +68,9 @@ class ExchangeTaskMapperTest {
       outputLabels = mapOf("output" to "mp-joinkeys"),
       data = mapOf("output" to makeSerializedSharedInputs(JOIN_KEYS))
     )
+    delay(10)
     testStep.buildAndExecute()
+    delay(10)
     val singleBlindedKeys =
       requireNotNull(
         batchRead(
@@ -83,6 +89,7 @@ class ExchangeTaskMapperTest {
     val ATTEMPT_KEY = java.util.UUID.randomUUID().toString()
     val testStep =
       TestStep(
+        apiClient = apiClient,
         exchangeKey = EXCHANGE_KEY,
         exchangeStepAttemptKey = ATTEMPT_KEY,
         privateInputLabels = mapOf("encryption-key" to "dp-crypto-key"),
@@ -104,7 +111,9 @@ class ExchangeTaskMapperTest {
       outputLabels = mapOf("output" to "mp-single-blinded-joinkeys"),
       data = mapOf("output" to makeSerializedSharedInputs(SINGLE_BLINDED_KEYS))
     )
+    delay(10)
     testStep.buildAndExecute()
+    delay(10)
     val doubleBlindedKeys =
       requireNotNull(
         batchRead(
@@ -123,6 +132,7 @@ class ExchangeTaskMapperTest {
     val ATTEMPT_KEY = java.util.UUID.randomUUID().toString()
     val testStep =
       TestStep(
+        apiClient = apiClient,
         exchangeKey = EXCHANGE_KEY,
         exchangeStepAttemptKey = ATTEMPT_KEY,
         privateInputLabels = mapOf("encryption-key" to "mp-crypto-key"),
@@ -144,7 +154,9 @@ class ExchangeTaskMapperTest {
       outputLabels = mapOf("output" to "dp-mp-double-blinded-joinkeys"),
       data = mapOf("output" to makeSerializedSharedInputs(DOUBLE_BLINDED_KEYS))
     )
+    delay(10)
     testStep.buildAndExecute()
+    delay(10)
     val argumentException =
       assertFailsWith(IllegalArgumentException::class) {
         batchRead(

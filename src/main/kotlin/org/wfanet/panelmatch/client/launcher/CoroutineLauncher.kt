@@ -17,13 +17,9 @@ package org.wfanet.panelmatch.client.launcher
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import org.wfanet.measurement.api.v2alpha.ExchangeStep
 import org.wfanet.measurement.api.v2alpha.ExchangeStepAttempt
-import org.wfanet.panelmatch.client.exchangetasks.ExchangeTaskMapper
-import org.wfanet.panelmatch.client.logger.addToTaskLog
-import org.wfanet.panelmatch.client.logger.getAndClearTaskLog
 import org.wfanet.panelmatch.client.logger.loggerFor
 import org.wfanet.panelmatch.protocol.common.Cryptor
 import org.wfanet.panelmatch.protocol.common.JniDeterministicCommutativeCryptor
@@ -33,41 +29,20 @@ class CoroutineLauncher(
   private val deterministicCommutativeCryptor: Cryptor = JniDeterministicCommutativeCryptor(),
   private val scope: CoroutineScope = CoroutineScope(Dispatchers.Default)
 ) : JobLauncher {
-  companion object {
-    val logger by loggerFor()
-  }
 
   override suspend fun execute(
     apiClient: ApiClient,
     exchangeStep: ExchangeStep,
     attemptKey: ExchangeStepAttempt.Key
   ) {
-    val exchangeKey: String = attemptKey.exchangeId
     val exchangeStepAttemptKey: String = attemptKey.exchangeStepAttemptId
-    val job: Job =
-      scope.launch(CoroutineName(exchangeStepAttemptKey) + Dispatchers.Default) {
-        try {
-          logger.addToTaskLog(
-            """
-              Executing $exchangeStepAttemptKey: $exchangeStep with attempt $attemptKey
-            """.trimIndent()
-          )
-          ExchangeTaskMapper(deterministicCommutativeCryptor)
-            .execute(exchangeKey, exchangeStep.step)
-          apiClient.finishExchangeStepAttempt(
-            attemptKey,
-            ExchangeStepAttempt.State.SUCCEEDED,
-            logger.getAndClearTaskLog()
-          )
-        } catch (e: Exception) {
-          logger.addToTaskLog(e.toString())
-          apiClient.finishExchangeStepAttempt(
-            attemptKey,
-            ExchangeStepAttempt.State.FAILED,
-            logger.getAndClearTaskLog()
-          )
-        }
-      }
-    return
+    scope.launch(CoroutineName(exchangeStepAttemptKey) + Dispatchers.Default) {
+      ExchangeTaskMapper(deterministicCommutativeCryptor)
+        .execute(apiClient, attemptKey, exchangeStep.step)
+    }
+  }
+
+  companion object {
+    val logger by loggerFor()
   }
 }

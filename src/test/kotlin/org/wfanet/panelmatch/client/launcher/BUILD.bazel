@@ -43,3 +43,19 @@ kt_jvm_test(
         "@wfa_measurement_system//src/main/kotlin/org/wfanet/measurement/common/grpc/testing",
     ],
 )
+
+kt_jvm_test(
+    name = "ExchangeTaskMapperTest",
+    srcs = ["ExchangeTaskMapperTest.kt"],
+    test_class = "org.wfanet.panelmatch.client.launcher.ExchangeTaskMapperTest",
+    deps = [
+        "//src/main/kotlin/org/wfanet/panelmatch/client/exchangetasks",
+        "//src/main/kotlin/org/wfanet/panelmatch/client/launcher/testing:ExchangeTaskTesting",
+        "//src/main/kotlin/org/wfanet/panelmatch/client/storage",
+        "@wfa_measurement_system//imports/java/com/google/common/truth",
+        "@wfa_measurement_system//imports/java/com/google/common/truth/extensions/proto",
+        "@wfa_measurement_system//imports/java/org/junit",
+        "@wfa_measurement_system//imports/kotlin/com/nhaarman/mockitokotlin2",
+        "@wfa_measurement_system//imports/kotlin/kotlin/test",
+    ],
+)

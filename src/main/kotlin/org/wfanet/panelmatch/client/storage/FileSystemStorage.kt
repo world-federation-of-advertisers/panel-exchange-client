@@ -27,14 +27,25 @@ import org.wfanet.panelmatch.client.logger.loggerFor
  * @param baseDir String directory to read/write.
  * @param label String name of file to read/write
  */
-class FileSystemStorage(baseDir: String, label: String) : Storage {
-  companion object {
-    val logger by loggerFor()
-  }
+class FileSystemStorage(storageType: Storage.STORAGE_TYPE, label: String) : Storage {
   private var storageClient: FileSystemStorageClient
   init {
-    val BASE_DIR = File(baseDir)
-    storageClient = FileSystemStorageClient(directory = BASE_DIR)
+    /**
+     * FileSystemStorage needs two different folders: One for private storage and shared storage
+     * TODO: Read these values based on a local config
+     */
+    val baseFolder =
+      when (storageType) {
+        Storage.STORAGE_TYPE.SHARED -> File("/tmp/panel-match/private-storage")
+        Storage.STORAGE_TYPE.PRIVATE -> File("/tmp/panel-match/shared-storage")
+      }
+    if (!baseFolder.exists()) {
+      if (!baseFolder.getParentFile().exists()) {
+        baseFolder.getParentFile().mkdir()
+      }
+      baseFolder.mkdir()
+    }
+    storageClient = FileSystemStorageClient(directory = baseFolder)
   }
 
   override suspend fun read(path: String): ByteString {
@@ -45,5 +56,8 @@ class FileSystemStorage(baseDir: String, label: String) : Storage {
   override suspend fun write(path: String, data: ByteString) {
     logger.info("Write:${path}\n")
     storageClient.createBlob(path, listOf(data).asFlow())
+  }
+  companion object {
+    val logger by loggerFor()
   }
 }

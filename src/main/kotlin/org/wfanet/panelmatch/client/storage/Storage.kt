@@ -46,7 +46,9 @@ interface Storage {
 }
 
 /**
- * This should be extended to read from a local config along with step meta data like the data
+ * Returns a storage and path given a storage type, exchangeKey, label, and step.
+ *
+ * TODO: This should be extended to read from a local config along with step meta data like the data
  * label, input labels, and output labels and return a StorageClient such as FileSystem, GCS, S3,
  * etc
  */
@@ -56,12 +58,7 @@ private suspend fun getStorageAndPathForStep(
   label: String,
   step: ExchangeWorkflow.Step
 ): Pair<Storage, String> {
-  val baseDir =
-    when (storageType) {
-      Storage.STORAGE_TYPE.SHARED -> "/tmp"
-      Storage.STORAGE_TYPE.PRIVATE -> "/var/tmp"
-    }
-  val storage = FileSystemStorage(baseDir = baseDir, label = label)
+  val storage = FileSystemStorage(storageType = storageType, label = label)
   val fields: List<String> = listOf(exchangeKey, label)
   val path = fields.joinToString(separator = "-")
   return Pair(storage, path)
@@ -152,7 +149,7 @@ suspend fun getAllInputForStep(
         inputLabels = sharedInputLabels
       )
     }
-  LinkedHashMap(taskPrivateInput.await()).apply { putAll(taskSharedInput.await()) }
+  taskPrivateInput.await().toMutableMap().apply { putAll(taskSharedInput.await()) }
 }
 
 /**

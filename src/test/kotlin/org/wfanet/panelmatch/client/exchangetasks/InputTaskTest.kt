@@ -14,6 +14,8 @@
 
 package org.wfanet.panelmatch.client.exchangetasks
 
+import com.nhaarman.mockitokotlin2.mock
+import java.time.Duration
 import kotlin.test.assertFailsWith
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.async
@@ -24,6 +26,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
 import org.wfanet.measurement.api.v2alpha.ExchangeWorkflow
+import org.wfanet.panelmatch.client.launcher.ApiClient
 import org.wfanet.panelmatch.client.launcher.testing.MP_0_SECRET_KEY
 import org.wfanet.panelmatch.client.launcher.testing.SINGLE_BLINDED_KEYS
 import org.wfanet.panelmatch.client.launcher.testing.TestStep
@@ -33,18 +36,20 @@ import org.wfanet.panelmatch.protocol.common.makeSerializedSharedInputs
 
 @RunWith(JUnit4::class)
 class InputTaskTest {
+  val apiClient: ApiClient = mock()
   @Test
   fun `wait on private input`() = runBlocking {
     val EXCHANGE_KEY = java.util.UUID.randomUUID().toString()
     val ATTEMPT_KEY = java.util.UUID.randomUUID().toString()
     val testStep =
       TestStep(
+        apiClient = apiClient,
         exchangeKey = EXCHANGE_KEY,
         exchangeStepAttemptKey = ATTEMPT_KEY,
         privateOutputLabels = mapOf("input" to "mp-crypto-key"),
         stepType = ExchangeWorkflow.Step.StepCase.INPUT_STEP,
-        timeoutMillis = 500L,
-        retryMillis = 100L
+        timeoutDuration = Duration.ofMillis(500),
+        retryDuration = Duration.ofMillis(100)
       )
     val output = coroutineScope {
       async { testStep.buildAndExecute() }
@@ -65,12 +70,13 @@ class InputTaskTest {
     val ATTEMPT_KEY = java.util.UUID.randomUUID().toString()
     val testStep =
       TestStep(
+        apiClient = apiClient,
         exchangeKey = EXCHANGE_KEY,
         exchangeStepAttemptKey = ATTEMPT_KEY,
         sharedOutputLabels = mapOf("input" to "mp-single-blinded-keys"),
         stepType = ExchangeWorkflow.Step.StepCase.INPUT_STEP,
-        timeoutMillis = 500L,
-        retryMillis = 100L
+        timeoutDuration = Duration.ofMillis(500),
+        retryDuration = Duration.ofMillis(100)
       )
     val output = coroutineScope {
       async { testStep.buildAndExecute() }
@@ -91,12 +97,13 @@ class InputTaskTest {
     val ATTEMPT_KEY = java.util.UUID.randomUUID().toString()
     val testStep =
       TestStep(
+        apiClient = apiClient,
         exchangeKey = EXCHANGE_KEY,
         exchangeStepAttemptKey = ATTEMPT_KEY,
         privateOutputLabels = mapOf("input" to "mp-crypto-key"),
         stepType = ExchangeWorkflow.Step.StepCase.INPUT_STEP,
-        timeoutMillis = 500L,
-        retryMillis = 100L
+        timeoutDuration = Duration.ofMillis(500),
+        retryDuration = Duration.ofMillis(100)
       )
     val argumentException =
       assertFailsWith(TimeoutCancellationException::class) {
@@ -106,33 +113,35 @@ class InputTaskTest {
         }
       }
   }
-}
 
-@Test
-fun `wait on shared input fails if party takes too long to write`() = runBlocking {
-  val EXCHANGE_KEY = java.util.UUID.randomUUID().toString()
-  val ATTEMPT_KEY = java.util.UUID.randomUUID().toString()
-  val testStep =
-    TestStep(
-      exchangeKey = EXCHANGE_KEY,
-      exchangeStepAttemptKey = ATTEMPT_KEY,
-      sharedOutputLabels = mapOf("input" to "mp-single-blinded-keys"),
-      stepType = ExchangeWorkflow.Step.StepCase.INPUT_STEP,
-      timeoutMillis = 500L,
-      retryMillis = 100L
-    )
-  val argumentException =
-    assertFailsWith(TimeoutCancellationException::class) {
-      val output = coroutineScope {
-        async { testStep.buildAndExecute() }
-        delay(600)
-        batchWrite(
-          storageType = STORAGE_TYPE.SHARED,
-          exchangeKey = EXCHANGE_KEY,
-          step = testStep.build(),
-          outputLabels = mapOf("output" to "mp-single-blinded-keys"),
-          data = mapOf("output" to makeSerializedSharedInputs(SINGLE_BLINDED_KEYS))
-        )
+  @Test
+  fun `wait on shared input fails if party takes too long to write`() = runBlocking {
+    val EXCHANGE_KEY = java.util.UUID.randomUUID().toString()
+    val ATTEMPT_KEY = java.util.UUID.randomUUID().toString()
+    val testStep =
+      TestStep(
+        apiClient = apiClient,
+        exchangeKey = EXCHANGE_KEY,
+        exchangeStepAttemptKey = ATTEMPT_KEY,
+        sharedOutputLabels = mapOf("input" to "mp-single-blinded-keys"),
+        stepType = ExchangeWorkflow.Step.StepCase.INPUT_STEP,
+        timeoutDuration = Duration.ofMillis(500),
+        retryDuration = Duration.ofMillis(100)
+      )
+    val argumentException =
+      assertFailsWith(TimeoutCancellationException::class) {
+        val output = coroutineScope {
+          val job = async { testStep.buildAndExecute() }
+          delay(600)
+          batchWrite(
+            storageType = STORAGE_TYPE.SHARED,
+            exchangeKey = EXCHANGE_KEY,
+            step = testStep.build(),
+            outputLabels = mapOf("output" to "mp-single-blinded-keys"),
+            data = mapOf("output" to makeSerializedSharedInputs(SINGLE_BLINDED_KEYS))
+          )
+          job.await()
+        }
       }
-    }
+  }
 }

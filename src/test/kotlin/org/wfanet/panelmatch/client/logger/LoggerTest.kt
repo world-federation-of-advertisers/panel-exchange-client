@@ -25,31 +25,28 @@ import kotlinx.coroutines.runBlocking
 import org.junit.Test
 
 class JobTestClass1 {
-  companion object {
-    val logger by loggerFor()
-  }
   suspend fun logWithDelay() {
     logger.addToTaskLog("logWithDelay: Log Message 0")
     delay(100)
     logger.addToTaskLog("logWithDelay: Log Message 1")
+  }
+  companion object {
+    val logger by loggerFor()
   }
 }
 
 class JobTestClass2 {
-  companion object {
-    val logger by loggerFor()
-  }
   suspend fun logWithDelay() {
     logger.addToTaskLog("logWithDelay: Log Message 0")
     delay(100)
     logger.addToTaskLog("logWithDelay: Log Message 1")
   }
-}
-
-class LoggerTest {
   companion object {
     val logger by loggerFor()
   }
+}
+
+class LoggerTest {
   @Test
   fun `write single task log from coroutine and suspend function`() = runBlocking {
     val ATTEMPT_KEY = java.util.UUID.randomUUID().toString()
@@ -91,5 +88,8 @@ class LoggerTest {
   fun `cannot add to a task log unless you are in a job`() = runBlocking {
     val outsideCoroutineException =
       assertFailsWith(IllegalArgumentException::class) { logger.addToTaskLog("Log Message 0") }
+  }
+  companion object {
+    val logger by loggerFor()
   }
 }

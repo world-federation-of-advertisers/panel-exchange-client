@@ -18,6 +18,7 @@ import com.google.protobuf.ByteString
 import com.nhaarman.mockitokotlin2.any
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.whenever
+import java.time.Duration
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -25,9 +26,9 @@ import kotlinx.coroutines.runBlocking
 import org.wfanet.measurement.api.v2alpha.ExchangeStep
 import org.wfanet.measurement.api.v2alpha.ExchangeStepAttempt
 import org.wfanet.measurement.api.v2alpha.ExchangeWorkflow
-import org.wfanet.panelmatch.client.exchangetasks.ExchangeTaskMapper
 import org.wfanet.panelmatch.client.launcher.ApiClient
 import org.wfanet.panelmatch.client.launcher.CoroutineLauncher
+import org.wfanet.panelmatch.client.launcher.ExchangeTaskMapper
 import org.wfanet.panelmatch.protocol.common.Cryptor
 
 val DP_0_SECRET_KEY = ByteString.copyFromUtf8("random-edp-string-0")
@@ -66,6 +67,7 @@ val LOOKUP_KEYS =
   )
 
 class TestStep(
+  val apiClient: ApiClient,
   val exchangeKey: String,
   val exchangeStepAttemptKey: String,
   val privateInputLabels: Map<String, String> = emptyMap<String, String>(),
@@ -74,8 +76,8 @@ class TestStep(
   val sharedOutputLabels: Map<String, String> = emptyMap<String, String>(),
   val stepType: ExchangeWorkflow.Step.StepCase,
   val deterministicCommutativeCryptor: Cryptor = mock<Cryptor>(),
-  val timeoutMillis: Long = 500L,
-  val retryMillis: Long = 100L,
+  val timeoutDuration: Duration = Duration.ofMillis(500),
+  val retryDuration: Duration = Duration.ofMillis(100),
   val attemptKey: ExchangeStepAttempt.Key =
     ExchangeStepAttempt.Key.newBuilder()
       .apply {
@@ -117,15 +119,15 @@ class TestStep(
       async(CoroutineName(attemptKey.exchangeId) + Dispatchers.Default) {
         ExchangeTaskMapper(
             deterministicCommutativeCryptor = deterministicCommutativeCryptor,
-            timeoutMillis = timeoutMillis,
-            retryMillis = retryMillis
+            timeoutDuration = timeoutDuration,
+            retryDuration = retryDuration
           )
-          .execute(exchangeKey = attemptKey.exchangeId, step = builtStep)
+          .execute(apiClient = apiClient, attemptKey = attemptKey, step = builtStep)
       }
     job.await()
   }
 
-  suspend fun buildAndExecuteJob(apiClient: ApiClient) {
+  suspend fun buildAndExecuteJob() {
     val builtStep: ExchangeWorkflow.Step = build()
     val exchangeStep =
       ExchangeStep.newBuilder()

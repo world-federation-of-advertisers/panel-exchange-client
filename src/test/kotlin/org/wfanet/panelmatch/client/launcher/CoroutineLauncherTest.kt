@@ -52,13 +52,14 @@ class CoroutineLauncherTest {
       val outputLabels = mapOf("output" to "mp-crypto-key")
       val testStep =
         TestStep(
+          apiClient = apiClient,
           exchangeKey = EXCHANGE_KEY,
           exchangeStepAttemptKey = ATTEMPT_KEY,
           privateInputLabels = mapOf("input" to "encryption-key"),
           privateOutputLabels = outputLabels,
           stepType = ExchangeWorkflow.Step.StepCase.INPUT_STEP
         )
-      testStep.buildAndExecuteJob(apiClient)
+      testStep.buildAndExecuteJob()
       val argumentException =
         assertFailsWith(IllegalArgumentException::class) {
           batchRead(
@@ -104,6 +105,7 @@ class CoroutineLauncherTest {
       whenever(apiClient.finishExchangeStepAttempt(any(), any(), any())).thenReturn(Unit)
       val testStep =
         TestStep(
+          apiClient = apiClient,
           exchangeKey = EXCHANGE_KEY,
           exchangeStepAttemptKey = ATTEMPT_KEY,
           privateInputLabels =
@@ -125,7 +127,7 @@ class CoroutineLauncherTest {
         outputLabels = mapOf("output" to "mp-joinkeys"),
         data = mapOf("output" to makeSerializedSharedInputs(JOIN_KEYS))
       )
-      testStep.buildAndExecuteJob(apiClient)
+      testStep.buildAndExecuteJob()
       val argumentException =
         assertFailsWith(IllegalArgumentException::class) {
           batchRead(
@@ -162,6 +164,7 @@ class CoroutineLauncherTest {
       whenever(apiClient.finishExchangeStepAttempt(any(), any(), any())).thenReturn(Unit)
       val testStep =
         TestStep(
+          apiClient = apiClient,
           exchangeKey = EXCHANGE_KEY,
           exchangeStepAttemptKey = ATTEMPT_KEY,
           privateInputLabels = mapOf("encryption-key" to "dp-crypto-key"),
@@ -184,7 +187,7 @@ class CoroutineLauncherTest {
         outputLabels = mapOf("output" to "mp-single-blinded-joinkeys"),
         data = mapOf("output" to makeSerializedSharedInputs(SINGLE_BLINDED_KEYS))
       )
-      testStep.buildAndExecuteJob(apiClient)
+      testStep.buildAndExecuteJob()
       val argumentException =
         assertFailsWith(IllegalArgumentException::class) {
           batchRead(
@@ -230,6 +233,7 @@ class CoroutineLauncherTest {
       whenever(apiClient.finishExchangeStepAttempt(any(), any(), any())).thenReturn(Unit)
       val testStep =
         TestStep(
+          apiClient = apiClient,
           exchangeKey = EXCHANGE_KEY,
           exchangeStepAttemptKey = ATTEMPT_KEY,
           privateInputLabels = mapOf("encryption-key" to "dp-crypto-key"),
@@ -245,7 +249,7 @@ class CoroutineLauncherTest {
         outputLabels = mapOf("output" to "dp-crypto-key"),
         data = mapOf("output" to DP_0_SECRET_KEY)
       )
-      testStep.buildAndExecuteJob(apiClient)
+      testStep.buildAndExecuteJob()
       delay(600)
       verify(apiClient, times(1))
         .finishExchangeStepAttempt(any(), eq(ExchangeStepAttempt.State.FAILED), any())
