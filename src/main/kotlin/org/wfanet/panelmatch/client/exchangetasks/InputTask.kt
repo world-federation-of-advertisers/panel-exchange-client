@@ -16,13 +16,13 @@ package org.wfanet.panelmatch.client.exchangetasks
 
 import com.google.protobuf.ByteString
 import java.time.Duration
-import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.retryWhen
 import kotlinx.coroutines.flow.toList
 import org.wfanet.measurement.api.v2alpha.ExchangeWorkflow
-import org.wfanet.panelmatch.client.storage.Storage.STORAGE_TYPE
-import org.wfanet.panelmatch.client.storage.batchRead
+import org.wfanet.panelmatch.client.logger.loggerFor
+import org.wfanet.panelmatch.client.storage.waitForOutputsToBeReady
 
 /**
  * Input task waits for output labels to be present. Clients should not pass in the actual required
@@ -38,28 +38,21 @@ class InputTask(
   override suspend fun execute(input: Map<String, ByteString>): Map<String, ByteString> {
     val privateOutputLabels = step.getPrivateOutputLabelsMap()
     val sharedOutputLabels = step.getSharedOutputLabelsMap()
-    flow<String> {
-        batchRead(
-          storageType = STORAGE_TYPE.PRIVATE,
-          exchangeKey = exchangeKey,
-          step = step,
-          inputLabels = privateOutputLabels
-        )
-          .keys
-          .forEach { emit(it) }
-        batchRead(
-          storageType = STORAGE_TYPE.SHARED,
-          exchangeKey = exchangeKey,
-          step = step,
-          inputLabels = sharedOutputLabels
-        )
-          .keys
-          .forEach { emit(it) }
+    flow<Boolean> {
+        waitForOutputsToBeReady(exchangeKey = exchangeKey, step = step)
+        emit(true)
       }
-      .debounce(retryDuration.toMillis())
-      .retryWhen { cause, attempt -> true }
+      .retryWhen { cause, attempt ->
+        logger.info("$exchangeKey: $cause")
+        delay(retryDuration.toMillis())
+        true
+      }
       .toList()
     // This function only returns that input is ready. It does not return actual values.
     return emptyMap<String, ByteString>()
+  }
+
+  companion object {
+    val logger by loggerFor()
   }
 }

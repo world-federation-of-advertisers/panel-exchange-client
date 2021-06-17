@@ -17,7 +17,6 @@ package org.wfanet.panelmatch.client.launcher
 import com.google.common.truth.Truth.assertThat
 import com.nhaarman.mockitokotlin2.mock
 import kotlin.test.assertFailsWith
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -30,7 +29,7 @@ import org.wfanet.panelmatch.client.launcher.testing.LOOKUP_KEYS
 import org.wfanet.panelmatch.client.launcher.testing.MP_0_SECRET_KEY
 import org.wfanet.panelmatch.client.launcher.testing.SINGLE_BLINDED_KEYS
 import org.wfanet.panelmatch.client.launcher.testing.TestStep
-import org.wfanet.panelmatch.client.storage.Storage.STORAGE_TYPE
+import org.wfanet.panelmatch.client.storage.Storage.STORAGE_CLASS
 import org.wfanet.panelmatch.client.storage.batchRead
 import org.wfanet.panelmatch.client.storage.batchWrite
 import org.wfanet.panelmatch.protocol.common.makeSerializedSharedInputs
@@ -42,6 +41,10 @@ class ExchangeTaskMapperTest {
 
   @Test
   fun `test encrypt exchange step`() = runBlocking {
+    System.setProperty("PRIVATE_STORAGE_TYPE", "IN_MEMORY")
+    System.setProperty("PRIVATE_INMEMORY_PREFIX", "private")
+    System.setProperty("SHARED_STORAGE_TYPE", "IN_MEMORY")
+    System.setProperty("SHARED_INMEMORY_PREFIX", "shared")
     val EXCHANGE_KEY = java.util.UUID.randomUUID().toString()
     val ATTEMPT_KEY = java.util.UUID.randomUUID().toString()
     val testStep =
@@ -55,26 +58,26 @@ class ExchangeTaskMapperTest {
         stepType = ExchangeWorkflow.Step.StepCase.ENCRYPT_STEP
       )
     batchWrite(
-      storageType = STORAGE_TYPE.PRIVATE,
+      storageClass = STORAGE_CLASS.PRIVATE,
       exchangeKey = EXCHANGE_KEY,
       step = testStep.build(),
       outputLabels = mapOf("output" to "mp-crypto-key"),
       data = mapOf("output" to MP_0_SECRET_KEY)
     )
     batchWrite(
-      storageType = STORAGE_TYPE.PRIVATE,
+      storageClass = STORAGE_CLASS.PRIVATE,
       exchangeKey = EXCHANGE_KEY,
       step = testStep.build(),
       outputLabels = mapOf("output" to "mp-joinkeys"),
       data = mapOf("output" to makeSerializedSharedInputs(JOIN_KEYS))
     )
-    delay(10)
+
     testStep.buildAndExecute()
-    delay(10)
+
     val singleBlindedKeys =
       requireNotNull(
         batchRead(
-          storageType = STORAGE_TYPE.SHARED,
+          storageClass = STORAGE_CLASS.SHARED,
           exchangeKey = EXCHANGE_KEY,
           step = testStep.build(),
           inputLabels = mapOf("input" to "mp-single-blinded-joinkeys")
@@ -85,6 +88,10 @@ class ExchangeTaskMapperTest {
 
   @Test
   fun `test reencrypt exchange task`() = runBlocking {
+    System.setProperty("PRIVATE_STORAGE_TYPE", "IN_MEMORY")
+    System.setProperty("PRIVATE_INMEMORY_PREFIX", "private")
+    System.setProperty("SHARED_STORAGE_TYPE", "IN_MEMORY")
+    System.setProperty("SHARED_INMEMORY_PREFIX", "shared")
     val EXCHANGE_KEY = java.util.UUID.randomUUID().toString()
     val ATTEMPT_KEY = java.util.UUID.randomUUID().toString()
     val testStep =
@@ -98,26 +105,26 @@ class ExchangeTaskMapperTest {
         stepType = ExchangeWorkflow.Step.StepCase.REENCRYPT_STEP
       )
     batchWrite(
-      storageType = STORAGE_TYPE.PRIVATE,
+      storageClass = STORAGE_CLASS.PRIVATE,
       exchangeKey = EXCHANGE_KEY,
       step = testStep.build(),
       outputLabels = mapOf("output" to "dp-crypto-key"),
       data = mapOf("output" to DP_0_SECRET_KEY)
     )
     batchWrite(
-      storageType = STORAGE_TYPE.SHARED,
+      storageClass = STORAGE_CLASS.SHARED,
       exchangeKey = EXCHANGE_KEY,
       step = testStep.build(),
       outputLabels = mapOf("output" to "mp-single-blinded-joinkeys"),
       data = mapOf("output" to makeSerializedSharedInputs(SINGLE_BLINDED_KEYS))
     )
-    delay(10)
+
     testStep.buildAndExecute()
-    delay(10)
+
     val doubleBlindedKeys =
       requireNotNull(
         batchRead(
-          storageType = STORAGE_TYPE.SHARED,
+          storageClass = STORAGE_CLASS.SHARED,
           exchangeKey = EXCHANGE_KEY,
           step = testStep.build(),
           inputLabels = mapOf("input" to "dp-mp-double-blinded-joinkeys")
@@ -128,6 +135,10 @@ class ExchangeTaskMapperTest {
 
   @Test
   fun `test decrypt exchange step that only mp has access to lookup keys`() = runBlocking {
+    System.setProperty("PRIVATE_STORAGE_TYPE", "IN_MEMORY")
+    System.setProperty("PRIVATE_INMEMORY_PREFIX", "private")
+    System.setProperty("SHARED_STORAGE_TYPE", "IN_MEMORY")
+    System.setProperty("SHARED_INMEMORY_PREFIX", "shared")
     val EXCHANGE_KEY = java.util.UUID.randomUUID().toString()
     val ATTEMPT_KEY = java.util.UUID.randomUUID().toString()
     val testStep =
@@ -141,26 +152,26 @@ class ExchangeTaskMapperTest {
         stepType = ExchangeWorkflow.Step.StepCase.DECRYPT_STEP
       )
     batchWrite(
-      storageType = STORAGE_TYPE.PRIVATE,
+      storageClass = STORAGE_CLASS.PRIVATE,
       exchangeKey = EXCHANGE_KEY,
       step = testStep.build(),
       outputLabels = mapOf("output" to "mp-crypto-key"),
       data = mapOf("output" to MP_0_SECRET_KEY)
     )
     batchWrite(
-      storageType = STORAGE_TYPE.SHARED,
+      storageClass = STORAGE_CLASS.SHARED,
       exchangeKey = EXCHANGE_KEY,
       step = testStep.build(),
       outputLabels = mapOf("output" to "dp-mp-double-blinded-joinkeys"),
       data = mapOf("output" to makeSerializedSharedInputs(DOUBLE_BLINDED_KEYS))
     )
-    delay(10)
+
     testStep.buildAndExecute()
-    delay(10)
+
     val argumentException =
       assertFailsWith(IllegalArgumentException::class) {
         batchRead(
-          storageType = STORAGE_TYPE.SHARED,
+          storageClass = STORAGE_CLASS.SHARED,
           exchangeKey = EXCHANGE_KEY,
           step = testStep.build(),
           inputLabels = mapOf("input" to "decrypted-data")
@@ -169,7 +180,7 @@ class ExchangeTaskMapperTest {
     val lookupKeys =
       requireNotNull(
         batchRead(
-          storageType = STORAGE_TYPE.PRIVATE,
+          storageClass = STORAGE_CLASS.PRIVATE,
           exchangeKey = EXCHANGE_KEY,
           step = testStep.build(),
           inputLabels = mapOf("input" to "decrypted-data")

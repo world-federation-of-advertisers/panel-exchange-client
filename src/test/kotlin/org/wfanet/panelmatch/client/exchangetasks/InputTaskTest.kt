@@ -30,15 +30,17 @@ import org.wfanet.panelmatch.client.launcher.ApiClient
 import org.wfanet.panelmatch.client.launcher.testing.MP_0_SECRET_KEY
 import org.wfanet.panelmatch.client.launcher.testing.SINGLE_BLINDED_KEYS
 import org.wfanet.panelmatch.client.launcher.testing.TestStep
-import org.wfanet.panelmatch.client.storage.Storage.STORAGE_TYPE
+import org.wfanet.panelmatch.client.storage.Storage.STORAGE_CLASS
 import org.wfanet.panelmatch.client.storage.batchWrite
 import org.wfanet.panelmatch.protocol.common.makeSerializedSharedInputs
 
 @RunWith(JUnit4::class)
 class InputTaskTest {
-  val apiClient: ApiClient = mock()
+  private val apiClient: ApiClient = mock()
   @Test
   fun `wait on private input`() = runBlocking {
+    System.setProperty("PRIVATE_STORAGE_TYPE", "FILESYSTEM")
+    System.setProperty("PRIVATE_FILESYSTEM_PATH", "${System.getenv("TEST_TMPDIR")}/private")
     val EXCHANGE_KEY = java.util.UUID.randomUUID().toString()
     val ATTEMPT_KEY = java.util.UUID.randomUUID().toString()
     val testStep =
@@ -52,20 +54,23 @@ class InputTaskTest {
         retryDuration = Duration.ofMillis(100)
       )
     val output = coroutineScope {
-      async { testStep.buildAndExecute() }
+      var buildJob = async { testStep.buildAndExecute() }
       delay(300)
       batchWrite(
-        storageType = STORAGE_TYPE.PRIVATE,
+        storageClass = STORAGE_CLASS.PRIVATE,
         exchangeKey = EXCHANGE_KEY,
         step = testStep.build(),
         outputLabels = mapOf("output" to "mp-crypto-key"),
         data = mapOf("output" to MP_0_SECRET_KEY)
       )
+      buildJob.await()
     }
   }
 
   @Test
   fun `wait on shared input`() = runBlocking {
+    System.setProperty("SHARED_STORAGE_TYPE", "FILESYSTEM")
+    System.setProperty("SHARED_FILESYSTEM_PATH", "${System.getenv("TEST_TMPDIR")}/shared")
     val EXCHANGE_KEY = java.util.UUID.randomUUID().toString()
     val ATTEMPT_KEY = java.util.UUID.randomUUID().toString()
     val testStep =
@@ -79,20 +84,23 @@ class InputTaskTest {
         retryDuration = Duration.ofMillis(100)
       )
     val output = coroutineScope {
-      async { testStep.buildAndExecute() }
+      val job = async { testStep.buildAndExecute() }
       delay(300)
       batchWrite(
-        storageType = STORAGE_TYPE.SHARED,
+        storageClass = STORAGE_CLASS.SHARED,
         exchangeKey = EXCHANGE_KEY,
         step = testStep.build(),
         outputLabels = mapOf("output" to "mp-single-blinded-keys"),
         data = mapOf("output" to makeSerializedSharedInputs(SINGLE_BLINDED_KEYS))
       )
+      job.await()
     }
   }
 
   @Test
   fun `wait on private input fails after timeout`() = runBlocking {
+    System.setProperty("PRIVATE_STORAGE_TYPE", "FILESYSTEM")
+    System.setProperty("PRIVATE_FILESYSTEM_PATH", "${System.getenv("TEST_TMPDIR")}/private")
     val EXCHANGE_KEY = java.util.UUID.randomUUID().toString()
     val ATTEMPT_KEY = java.util.UUID.randomUUID().toString()
     val testStep =
@@ -116,6 +124,8 @@ class InputTaskTest {
 
   @Test
   fun `wait on shared input fails if party takes too long to write`() = runBlocking {
+    System.setProperty("SHARED_STORAGE_TYPE", "FILESYSTEM")
+    System.setProperty("SHARED_FILESYSTEM_PATH", "${System.getenv("TEST_TMPDIR")}/shared")
     val EXCHANGE_KEY = java.util.UUID.randomUUID().toString()
     val ATTEMPT_KEY = java.util.UUID.randomUUID().toString()
     val testStep =
@@ -134,7 +144,7 @@ class InputTaskTest {
           val job = async { testStep.buildAndExecute() }
           delay(600)
           batchWrite(
-            storageType = STORAGE_TYPE.SHARED,
+            storageClass = STORAGE_CLASS.SHARED,
             exchangeKey = EXCHANGE_KEY,
             step = testStep.build(),
             outputLabels = mapOf("output" to "mp-single-blinded-keys"),

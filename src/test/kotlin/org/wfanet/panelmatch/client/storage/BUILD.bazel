@@ -1,11 +1,12 @@
 load("@io_bazel_rules_kotlin//kotlin:kotlin.bzl", "kt_jvm_test")
 
 kt_jvm_test(
-    name = "StorageTest",
-    srcs = ["StorageTest.kt"],
-    test_class = "org.wfanet.panelmatch.client.storage.StorageTest",
+    name = "FileSystemStorageTest",
+    srcs = ["FileSystemStorageTest.kt"],
+    test_class = "org.wfanet.panelmatch.client.storage.FileSystemStorageTest",
     deps = [
         "//src/main/kotlin/org/wfanet/panelmatch/client/storage",
+        "//src/main/kotlin/org/wfanet/panelmatch/client/storage/testing",
         "//src/main/proto/wfanet/panelmatch/protocol/exchangesteps:exchangesteps_java_proto",
         "@wfa_measurement_system//imports/java/com/google/common/truth",
         "@wfa_measurement_system//imports/java/com/google/common/truth/extensions/proto",

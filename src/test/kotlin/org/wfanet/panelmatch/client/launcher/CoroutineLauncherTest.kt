@@ -34,7 +34,7 @@ import org.wfanet.panelmatch.client.launcher.testing.JOIN_KEYS
 import org.wfanet.panelmatch.client.launcher.testing.MP_0_SECRET_KEY
 import org.wfanet.panelmatch.client.launcher.testing.SINGLE_BLINDED_KEYS
 import org.wfanet.panelmatch.client.launcher.testing.TestStep
-import org.wfanet.panelmatch.client.storage.Storage.STORAGE_TYPE
+import org.wfanet.panelmatch.client.storage.Storage.STORAGE_CLASS
 import org.wfanet.panelmatch.client.storage.batchRead
 import org.wfanet.panelmatch.client.storage.batchWrite
 import org.wfanet.panelmatch.protocol.common.makeSerializedSharedInputs
@@ -44,6 +44,8 @@ class CoroutineLauncherTest {
 
   @Test
   fun `test input task`() {
+    System.setProperty("PRIVATE_STORAGE_TYPE", "FILESYSTEM")
+    System.setProperty("PRIVATE_FILESYSTEM_PATH", "${System.getenv("TEST_TMPDIR")}/private")
     val apiClient: ApiClient = mock()
     val EXCHANGE_KEY = java.util.UUID.randomUUID().toString()
     val ATTEMPT_KEY = java.util.UUID.randomUUID().toString()
@@ -63,7 +65,7 @@ class CoroutineLauncherTest {
       val argumentException =
         assertFailsWith(IllegalArgumentException::class) {
           batchRead(
-            storageType = STORAGE_TYPE.PRIVATE,
+            storageClass = STORAGE_CLASS.PRIVATE,
             exchangeKey = EXCHANGE_KEY,
             step = testStep.build(),
             inputLabels = mapOf("input" to "mp-crypto-key")
@@ -72,7 +74,7 @@ class CoroutineLauncherTest {
       verify(apiClient, times(0)).finishExchangeStepAttempt(any(), any(), any())
       // Model Provider asynchronously writes data
       batchWrite(
-        storageType = STORAGE_TYPE.PRIVATE,
+        storageClass = STORAGE_CLASS.PRIVATE,
         exchangeKey = EXCHANGE_KEY,
         step = testStep.build(),
         outputLabels = outputLabels,
@@ -82,7 +84,7 @@ class CoroutineLauncherTest {
       val readValues =
         requireNotNull(
           batchRead(
-            storageType = STORAGE_TYPE.PRIVATE,
+            storageClass = STORAGE_CLASS.PRIVATE,
             exchangeKey = EXCHANGE_KEY,
             step = testStep.build(),
             inputLabels = mapOf("input" to "mp-crypto-key")
@@ -98,6 +100,8 @@ class CoroutineLauncherTest {
 
   @Test
   fun `test crypto task with private inputs and private output`() {
+    System.setProperty("PRIVATE_STORAGE_TYPE", "FILESYSTEM")
+    System.setProperty("PRIVATE_FILESYSTEM_PATH", "${System.getenv("TEST_TMPDIR")}/private")
     val apiClient: ApiClient = mock()
     val EXCHANGE_KEY = java.util.UUID.randomUUID().toString()
     val ATTEMPT_KEY = java.util.UUID.randomUUID().toString()
@@ -114,14 +118,14 @@ class CoroutineLauncherTest {
           stepType = ExchangeWorkflow.Step.StepCase.ENCRYPT_STEP
         )
       batchWrite(
-        storageType = STORAGE_TYPE.PRIVATE,
+        storageClass = STORAGE_CLASS.PRIVATE,
         exchangeKey = EXCHANGE_KEY,
         step = testStep.build(),
         outputLabels = mapOf("output" to "mp-crypto-key"),
         data = mapOf("output" to MP_0_SECRET_KEY)
       )
       batchWrite(
-        storageType = STORAGE_TYPE.PRIVATE,
+        storageClass = STORAGE_CLASS.PRIVATE,
         exchangeKey = EXCHANGE_KEY,
         step = testStep.build(),
         outputLabels = mapOf("output" to "mp-joinkeys"),
@@ -131,7 +135,7 @@ class CoroutineLauncherTest {
       val argumentException =
         assertFailsWith(IllegalArgumentException::class) {
           batchRead(
-            storageType = STORAGE_TYPE.PRIVATE,
+            storageClass = STORAGE_CLASS.PRIVATE,
             exchangeKey = EXCHANGE_KEY,
             step = testStep.build(),
             inputLabels = mapOf("input" to "mp-single-blinded-joinkeys")
@@ -142,7 +146,7 @@ class CoroutineLauncherTest {
       val readValues =
         requireNotNull(
           batchRead(
-            storageType = STORAGE_TYPE.PRIVATE,
+            storageClass = STORAGE_CLASS.PRIVATE,
             exchangeKey = EXCHANGE_KEY,
             step = testStep.build(),
             inputLabels = mapOf("input" to "mp-single-blinded-joinkeys")
@@ -157,6 +161,10 @@ class CoroutineLauncherTest {
 
   @Test
   fun `test crypto task with private and shared inputs and shared and private output`() {
+    System.setProperty("PRIVATE_STORAGE_TYPE", "FILESYSTEM")
+    System.setProperty("PRIVATE_FILESYSTEM_PATH", "${System.getenv("TEST_TMPDIR")}/private")
+    System.setProperty("SHARED_STORAGE_TYPE", "FILESYSTEM")
+    System.setProperty("SHARED_FILESYSTEM_PATH", "${System.getenv("TEST_TMPDIR")}/shared")
     val apiClient: ApiClient = mock()
     val EXCHANGE_KEY = java.util.UUID.randomUUID().toString()
     val ATTEMPT_KEY = java.util.UUID.randomUUID().toString()
@@ -174,14 +182,14 @@ class CoroutineLauncherTest {
           stepType = ExchangeWorkflow.Step.StepCase.REENCRYPT_STEP
         )
       batchWrite(
-        storageType = STORAGE_TYPE.PRIVATE,
+        storageClass = STORAGE_CLASS.PRIVATE,
         exchangeKey = EXCHANGE_KEY,
         step = testStep.build(),
         outputLabels = mapOf("output" to "dp-crypto-key"),
         data = mapOf("output" to DP_0_SECRET_KEY)
       )
       batchWrite(
-        storageType = STORAGE_TYPE.SHARED,
+        storageClass = STORAGE_CLASS.SHARED,
         exchangeKey = EXCHANGE_KEY,
         step = testStep.build(),
         outputLabels = mapOf("output" to "mp-single-blinded-joinkeys"),
@@ -191,7 +199,7 @@ class CoroutineLauncherTest {
       val argumentException =
         assertFailsWith(IllegalArgumentException::class) {
           batchRead(
-            storageType = STORAGE_TYPE.PRIVATE,
+            storageClass = STORAGE_CLASS.PRIVATE,
             exchangeKey = EXCHANGE_KEY,
             step = testStep.build(),
             inputLabels = mapOf("input" to "dp-mp-double-blinded-joinkeys")
@@ -202,7 +210,7 @@ class CoroutineLauncherTest {
       val privateReadValues =
         requireNotNull(
           batchRead(
-            storageType = STORAGE_TYPE.PRIVATE,
+            storageClass = STORAGE_CLASS.PRIVATE,
             exchangeKey = EXCHANGE_KEY,
             step = testStep.build(),
             inputLabels = mapOf("input" to "dp-mp-double-blinded-joinkeys")
@@ -211,7 +219,7 @@ class CoroutineLauncherTest {
       val sharedReadValues =
         requireNotNull(
           batchRead(
-            storageType = STORAGE_TYPE.SHARED,
+            storageClass = STORAGE_CLASS.SHARED,
             exchangeKey = EXCHANGE_KEY,
             step = testStep.build(),
             inputLabels = mapOf("input" to "dp-mp-double-blinded-joinkeys")
@@ -226,6 +234,8 @@ class CoroutineLauncherTest {
 
   @Test
   fun `test crypto task with missing shared inputs`() {
+    System.setProperty("PRIVATE_STORAGE_TYPE", "FILESYSTEM")
+    System.setProperty("PRIVATE_FILESYSTEM_PATH", "${System.getenv("TEST_TMPDIR")}/private")
     val apiClient: ApiClient = mock()
     val EXCHANGE_KEY = java.util.UUID.randomUUID().toString()
     val ATTEMPT_KEY = java.util.UUID.randomUUID().toString()
@@ -243,7 +253,7 @@ class CoroutineLauncherTest {
           stepType = ExchangeWorkflow.Step.StepCase.REENCRYPT_STEP
         )
       batchWrite(
-        storageType = STORAGE_TYPE.PRIVATE,
+        storageClass = STORAGE_CLASS.PRIVATE,
         exchangeKey = EXCHANGE_KEY,
         step = testStep.build(),
         outputLabels = mapOf("output" to "dp-crypto-key"),
@@ -258,7 +268,7 @@ class CoroutineLauncherTest {
       val argumentException1 =
         assertFailsWith(IllegalArgumentException::class) {
           batchRead(
-            storageType = STORAGE_TYPE.PRIVATE,
+            storageClass = STORAGE_CLASS.PRIVATE,
             exchangeKey = EXCHANGE_KEY,
             step = testStep.build(),
             inputLabels = mapOf("input" to "dp-mp-double-blinded-joinkeys")

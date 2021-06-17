@@ -12,30 +12,32 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package org.wfanet.panelmatch.client.storage
+package org.wfanet.panelmatch.client.storage.testing
 
 import com.google.common.truth.Truth.assertThat
 import com.google.protobuf.ByteString
 import kotlin.test.assertFailsWith
 import kotlinx.coroutines.runBlocking
 import org.junit.Test
+import org.wfanet.panelmatch.client.storage.Storage
 
-class StorageTest {
+abstract class AbstractStorageTest {
+  abstract val privateStorage: Storage
+  abstract val sharedStorage: Storage
   @Test
   fun `write and read FileSystemStorage`() = runBlocking {
     val valueToStore = ByteString.copyFromUtf8("random-edp-string-0")
     val key = java.util.UUID.randomUUID().toString()
-    val storage = FileSystemStorage(storageType = Storage.STORAGE_TYPE.PRIVATE, label = key)
-    storage.write(key, valueToStore)
-    assertThat(storage.read(key)).isEqualTo(valueToStore)
+    privateStorage.write(key, valueToStore)
+    assertThat(privateStorage.read(key)).isEqualTo(valueToStore)
   }
 
   @Test
   fun `get error for invalid key from FileSystemStorage`() = runBlocking {
     val valueToStore = ByteString.copyFromUtf8("random-edp-string-0")
     val key = java.util.UUID.randomUUID().toString()
-    val storage = FileSystemStorage(storageType = Storage.STORAGE_TYPE.PRIVATE, label = key)
-    val reencryptException = assertFailsWith(IllegalArgumentException::class) { storage.read(key) }
+    val reencryptException =
+      assertFailsWith(IllegalArgumentException::class) { privateStorage.read(key) }
   }
 
   @Test
@@ -43,21 +45,19 @@ class StorageTest {
     val valueToStore1 = ByteString.copyFromUtf8("random-edp-string-1")
     val valueToStore2 = ByteString.copyFromUtf8("random-edp-string-2")
     val key = java.util.UUID.randomUUID().toString()
-    val storage = FileSystemStorage(storageType = Storage.STORAGE_TYPE.PRIVATE, label = key)
-    storage.write(key, valueToStore1)
+    privateStorage.write(key, valueToStore1)
     val doubleWriteException =
-      assertFailsWith(IllegalArgumentException::class) { storage.write(key, valueToStore1) }
+      assertFailsWith(IllegalArgumentException::class) { privateStorage.write(key, valueToStore1) }
   }
 
   @Test
-  fun `read to one baseDir and make sure you cannot read it from another baseDir`() = runBlocking {
+  fun `read to one Storage Type and make sure you cannot read it from another Storage Type`() =
+      runBlocking {
     val valueToStore1 = ByteString.copyFromUtf8("random-edp-string-1")
     val valueToStore2 = ByteString.copyFromUtf8("random-edp-string-2")
     val key = java.util.UUID.randomUUID().toString()
-    val privateStorage = FileSystemStorage(storageType = Storage.STORAGE_TYPE.PRIVATE, label = key)
     privateStorage.write(key, valueToStore1)
     val storedValue = privateStorage.read(key)
-    val sharedStorage = FileSystemStorage(storageType = Storage.STORAGE_TYPE.SHARED, label = key)
     val doubleWriteException =
       assertFailsWith(IllegalArgumentException::class) { sharedStorage.read(key) }
   }
