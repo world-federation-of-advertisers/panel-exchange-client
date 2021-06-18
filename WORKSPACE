@@ -69,9 +69,9 @@ http_archive(
 # Measurement proto.
 http_archive(
     name = "wfa_measurement_proto",
-    sha256 = "5f1b91b8cabd226f44ae161ea10b1619dc397b87df0e39e360c27cb5644ff12f",
-    strip_prefix = "cross-media-measurement-api-d2f8a5557d33cb016bd0e7687f6bbf02332ed23b",
-    url = "https://github.com/world-federation-of-advertisers/cross-media-measurement-api/archive/d2f8a5557d33cb016bd0e7687f6bbf02332ed23b.tar.gz",
+    sha256 = "78dcfa75575c285fced66bfcea6116e868ca66647cf7ed6236153d03dcf8c655",
+    strip_prefix = "cross-media-measurement-api-d5a1865bddcad8ed1a6a5eb5d320c9c70133ec16",
+    url = "https://github.com/world-federation-of-advertisers/cross-media-measurement-api/archive/d5a1865bddcad8ed1a6a5eb5d320c9c70133ec16.tar.gz",
 )
 
 # @io_bazel_rules_kotlin

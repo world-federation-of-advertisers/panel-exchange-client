@@ -89,7 +89,7 @@ class ExchangeTaskMapperTest {
         privateInputLabels = mapOf("previous-data" to "previous-mp-single-blinded-joinkeys"),
         sharedOutputLabels = mapOf("current-data" to "copy-mp-single-blinded-joinkeys"),
         stepType = ExchangeWorkflow.Step.StepCase.INTERSECT_AND_VALIDATE_STEP,
-        intersectMaxSize = 100000L,
+        intersectMaxSize = 100000,
         intersectMinimumOverlap = 0.99f
       )
     batchWrite(

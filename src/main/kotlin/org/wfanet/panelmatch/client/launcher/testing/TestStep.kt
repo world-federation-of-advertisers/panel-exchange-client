@@ -68,7 +68,7 @@ val LOOKUP_KEYS =
 class TestStep(
   val exchangeKey: String,
   val exchangeStepAttemptKey: String,
-  val intersectMaxSize: Long = 100000L,
+  val intersectMaxSize: Int = 100000,
   val intersectMinimumOverlap: Float = 0.99f,
   val privateInputLabels: Map<String, String> = emptyMap<String, String>(),
   val privateOutputLabels: Map<String, String> = emptyMap<String, String>(),

@@ -30,7 +30,7 @@ class IntersectValidateTaskTest {
   @Test
   fun `test valid intersect and validate exchange step`() = runBlocking {
     val output =
-      IntersectValidateTask(maxSize = 100L, minimumOverlap = 0.75f)
+      IntersectValidateTask(maxSize = 100, minimumOverlap = 0.75f)
         .execute(
           mapOf(
             "previous-data" to makeSerializedSharedInputs(SINGLE_BLINDED_KEYS.dropLast(1)),
@@ -45,7 +45,7 @@ class IntersectValidateTaskTest {
   fun `test data greater than max size fails to validate`() = runBlocking {
     val argumentException =
       assertFailsWith(IllegalArgumentException::class) {
-        IntersectValidateTask(maxSize = 1L, minimumOverlap = 0.99f)
+        IntersectValidateTask(maxSize = 1, minimumOverlap = 0.99f)
           .execute(
             mapOf(
               "previous-data" to makeSerializedSharedInputs(SINGLE_BLINDED_KEYS),
@@ -59,7 +59,7 @@ class IntersectValidateTaskTest {
   fun `test data with overlap below minimum overlap fails to validate`() = runBlocking {
     val argumentException =
       assertFailsWith(IllegalArgumentException::class) {
-        IntersectValidateTask(maxSize = 10L, minimumOverlap = 0.85f)
+        IntersectValidateTask(maxSize = 10, minimumOverlap = 0.85f)
           .execute(
             mapOf(
               "previous-data" to makeSerializedSharedInputs(SINGLE_BLINDED_KEYS.dropLast(1)),
