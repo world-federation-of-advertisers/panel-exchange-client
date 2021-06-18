@@ -182,7 +182,7 @@ class CoroutineLauncherTest {
           )
         }
       verify(apiClient, times(0)).finishExchangeStepAttempt(any(), any(), any())
-      delay(600)
+      delay(1000)
       val privateReadValues =
         requireNotNull(
           preferredPrivateStorage.batchRead(

@@ -26,6 +26,9 @@ import kotlinx.coroutines.runBlocking
 import org.wfanet.measurement.api.v2alpha.ExchangeStep
 import org.wfanet.measurement.api.v2alpha.ExchangeStepAttempt
 import org.wfanet.measurement.api.v2alpha.ExchangeWorkflow
+import org.wfanet.panelmatch.client.exchangetasks.CryptorExchangeTask
+import org.wfanet.panelmatch.client.exchangetasks.ExchangeTask
+import org.wfanet.panelmatch.client.exchangetasks.InputTask
 import org.wfanet.panelmatch.client.launcher.ApiClient
 import org.wfanet.panelmatch.client.launcher.CoroutineLauncher
 import org.wfanet.panelmatch.client.launcher.ExchangeTaskMapper
@@ -77,7 +80,7 @@ class TestStep(
   val sharedOutputLabels: Map<String, String> = emptyMap<String, String>(),
   val stepType: ExchangeWorkflow.Step.StepCase,
   val deterministicCommutativeCryptor: Cryptor = mock<Cryptor>(),
-  val timeoutDuration: Duration = Duration.ofMillis(500),
+  val timeoutDuration: Duration = Duration.ofMillis(1000),
   val retryDuration: Duration = Duration.ofMillis(100),
   val preferredSharedStorage: Storage,
   val preferredPrivateStorage: Storage,
@@ -90,6 +93,26 @@ class TestStep(
       .build()
 ) {
   init {}
+
+  fun getExchangeTaskForStep(step: ExchangeWorkflow.Step): ExchangeTask {
+    return when (step.getStepCase()) {
+      ExchangeWorkflow.Step.StepCase.ENCRYPT_STEP ->
+        CryptorExchangeTask.forEncryption(deterministicCommutativeCryptor)
+      ExchangeWorkflow.Step.StepCase.REENCRYPT_STEP ->
+        CryptorExchangeTask.forReEncryption(deterministicCommutativeCryptor)
+      ExchangeWorkflow.Step.StepCase.DECRYPT_STEP ->
+        CryptorExchangeTask.forDecryption(deterministicCommutativeCryptor)
+      ExchangeWorkflow.Step.StepCase.INPUT_STEP ->
+        InputTask(
+          preferredSharedStorage = preferredSharedStorage,
+          preferredPrivateStorage = preferredPrivateStorage,
+          step = step,
+          retryDuration = retryDuration
+        )
+      else -> error("Unsupported step type")
+    }
+  }
+
   suspend fun build(): ExchangeWorkflow.Step {
     return ExchangeWorkflow.Step.newBuilder()
       .putAllPrivateInputLabels(privateInputLabels)
@@ -124,9 +147,8 @@ class TestStep(
             apiClient = apiClient,
             preferredSharedStorage = preferredSharedStorage,
             preferredPrivateStorage = preferredPrivateStorage,
-            deterministicCommutativeCryptor = deterministicCommutativeCryptor,
             timeoutDuration = timeoutDuration,
-            retryDuration = retryDuration
+            getExchangeTaskForStep = ::getExchangeTaskForStep
           )
           .execute(attemptKey = attemptKey, step = builtStep)
       }
@@ -150,7 +172,7 @@ class TestStep(
         apiClient = apiClient,
         preferredSharedStorage = preferredSharedStorage,
         preferredPrivateStorage = preferredPrivateStorage,
-        deterministicCommutativeCryptor = deterministicCommutativeCryptor
+        getExchangeTaskForStep = this::getExchangeTaskForStep
       )
       .execute(exchangeStep = exchangeStep, attemptKey = attemptKey)
   }

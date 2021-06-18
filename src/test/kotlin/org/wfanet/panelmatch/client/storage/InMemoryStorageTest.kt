@@ -16,7 +16,7 @@ package org.wfanet.panelmatch.client.storage
 
 import org.wfanet.panelmatch.client.storage.testing.AbstractStorageTest
 
-class FileSystemStorageTest : AbstractStorageTest() {
+class InMemoryStorageTest : AbstractStorageTest() {
   override val privateStorage = InMemoryStorage(keyPrefix = "private")
   override val sharedStorage = InMemoryStorage(keyPrefix = "shared")
 }
