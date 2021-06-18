@@ -17,57 +17,37 @@ package org.wfanet.panelmatch.client.launcher
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import org.wfanet.measurement.api.v2alpha.ExchangeStep
 import org.wfanet.measurement.api.v2alpha.ExchangeStepAttempt
-import org.wfanet.panelmatch.client.exchangetasks.ExchangeTaskMapper
-import org.wfanet.panelmatch.client.logger.addToTaskLog
-import org.wfanet.panelmatch.client.logger.getAndClearTaskLog
+import org.wfanet.measurement.api.v2alpha.ExchangeWorkflow
+import org.wfanet.panelmatch.client.exchangetasks.ExchangeTask
 import org.wfanet.panelmatch.client.logger.loggerFor
-import org.wfanet.panelmatch.protocol.common.Cryptor
-import org.wfanet.panelmatch.protocol.common.JniDeterministicCommutativeCryptor
+import org.wfanet.panelmatch.client.storage.Storage
 
 /** Executes an [ExchangeStep] using a couroutine. */
 class CoroutineLauncher(
-  private val deterministicCommutativeCryptor: Cryptor = JniDeterministicCommutativeCryptor(),
-  private val scope: CoroutineScope = CoroutineScope(Dispatchers.Default)
+  private val apiClient: ApiClient,
+  private val scope: CoroutineScope = CoroutineScope(Dispatchers.Default),
+  private val preferredSharedStorage: Storage,
+  private val preferredPrivateStorage: Storage,
+  private val getExchangeTaskForStep: (ExchangeWorkflow.Step) -> ExchangeTask
 ) : JobLauncher {
-  companion object {
-    val logger by loggerFor()
+
+  override suspend fun execute(exchangeStep: ExchangeStep, attemptKey: ExchangeStepAttempt.Key) {
+    val exchangeStepAttemptKey: String = attemptKey.exchangeStepAttemptId
+    scope.launch(CoroutineName(exchangeStepAttemptKey) + Dispatchers.Default) {
+      ExchangeTaskMapper(
+          apiClient = apiClient,
+          preferredSharedStorage = preferredSharedStorage,
+          preferredPrivateStorage = preferredPrivateStorage,
+          getExchangeTaskForStep = getExchangeTaskForStep
+        )
+        .execute(attemptKey, exchangeStep.step)
+    }
   }
 
-  override suspend fun execute(
-    apiClient: ApiClient,
-    exchangeStep: ExchangeStep,
-    attemptKey: ExchangeStepAttempt.Key
-  ) {
-    val exchangeKey: String = attemptKey.exchangeId
-    val exchangeStepAttemptKey: String = attemptKey.exchangeStepAttemptId
-    val job: Job =
-      scope.launch(CoroutineName(exchangeStepAttemptKey) + Dispatchers.Default) {
-        try {
-          logger.addToTaskLog(
-            """
-              Executing $exchangeStepAttemptKey: $exchangeStep with attempt $attemptKey
-            """.trimIndent()
-          )
-          ExchangeTaskMapper(deterministicCommutativeCryptor)
-            .execute(exchangeKey, exchangeStep.step)
-          apiClient.finishExchangeStepAttempt(
-            attemptKey,
-            ExchangeStepAttempt.State.SUCCEEDED,
-            logger.getAndClearTaskLog()
-          )
-        } catch (e: Exception) {
-          logger.addToTaskLog(e.toString())
-          apiClient.finishExchangeStepAttempt(
-            attemptKey,
-            ExchangeStepAttempt.State.FAILED,
-            logger.getAndClearTaskLog()
-          )
-        }
-      }
-    return
+  companion object {
+    val logger by loggerFor()
   }
 }

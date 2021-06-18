@@ -26,9 +26,5 @@ interface JobLauncher {
    *
    * This could run [exchangeStep] in-process or enqueue/start work remotely, e.g. via an RPC call.
    */
-  suspend fun execute(
-    apiClient: ApiClient,
-    exchangeStep: ExchangeStep,
-    attempt: ExchangeStepAttempt.Key
-  )
+  suspend fun execute(exchangeStep: ExchangeStep, attemptKey: ExchangeStepAttempt.Key)
 }

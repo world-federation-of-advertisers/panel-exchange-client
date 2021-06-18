@@ -36,5 +36,5 @@ suspend fun Logger.addToTaskLog(logMessage: String) {
 suspend fun Logger.getAndClearTaskLog(): List<String> {
   val taskKey = requireNotNull(coroutineContext[CoroutineName.Key]).toString()
   val listCopy: MutableList<String>? = taskLogs.remove(taskKey)
-  return if (listCopy == null) emptyList() else listCopy
+  return listCopy ?: emptyList()
 }

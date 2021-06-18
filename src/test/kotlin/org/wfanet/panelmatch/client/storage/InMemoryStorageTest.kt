@@ -12,12 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package org.wfanet.panelmatch.client.launcher
+package org.wfanet.panelmatch.client.storage
 
-import org.wfanet.measurement.api.v2alpha.ExchangeStep
-import org.wfanet.measurement.api.v2alpha.ExchangeStepAttempt
+import org.wfanet.panelmatch.client.storage.testing.AbstractStorageTest
 
-class BlockingJobLauncher : JobLauncher {
-  // TODO: implement execute method.
-  override suspend fun execute(exchangeStep: ExchangeStep, attemptKey: ExchangeStepAttempt.Key) {}
+class InMemoryStorageTest : AbstractStorageTest() {
+  override val privateStorage = InMemoryStorage(keyPrefix = "private")
+  override val sharedStorage = InMemoryStorage(keyPrefix = "shared")
 }
