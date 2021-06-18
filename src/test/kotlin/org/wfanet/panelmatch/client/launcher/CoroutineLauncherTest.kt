@@ -76,7 +76,7 @@ class CoroutineLauncherTest {
         outputLabels = outputLabels,
         data = mapOf("output" to MP_0_SECRET_KEY)
       )
-      delay(600)
+      delay(1000)
       val readValues =
         requireNotNull(
           preferredPrivateStorage.batchRead(
@@ -130,7 +130,7 @@ class CoroutineLauncherTest {
           )
         }
       verify(apiClient, times(0)).finishExchangeStepAttempt(any(), any(), any())
-      delay(600)
+      delay(1000)
       val readValues =
         requireNotNull(
           preferredPrivateStorage.batchRead(
@@ -229,7 +229,7 @@ class CoroutineLauncherTest {
         data = mapOf("output" to DP_0_SECRET_KEY)
       )
       testStep.buildAndExecuteJob()
-      delay(600)
+      delay(1000)
       verify(apiClient, times(1))
         .finishExchangeStepAttempt(any(), eq(ExchangeStepAttempt.State.FAILED), any())
       verify(apiClient, times(0))
