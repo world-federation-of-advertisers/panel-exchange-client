@@ -16,6 +16,9 @@ package org.wfanet.panelmatch.client.launcher
 
 import com.google.protobuf.ByteString
 import java.time.Duration
+import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.withTimeout
 import org.wfanet.measurement.api.v2alpha.ExchangeStepAttempt
@@ -27,8 +30,6 @@ import org.wfanet.panelmatch.client.logger.addToTaskLog
 import org.wfanet.panelmatch.client.logger.getAndClearTaskLog
 import org.wfanet.panelmatch.client.logger.loggerFor
 import org.wfanet.panelmatch.client.storage.Storage
-import org.wfanet.panelmatch.client.storage.getAllInputForStep
-import org.wfanet.panelmatch.client.storage.writeAllOutputForStep
 import org.wfanet.panelmatch.protocol.common.Cryptor
 import org.wfanet.panelmatch.protocol.common.JniDeterministicCommutativeCryptor
 
@@ -42,12 +43,55 @@ import org.wfanet.panelmatch.protocol.common.JniDeterministicCommutativeCryptor
  * @return mapped output.
  */
 class ExchangeTaskMapper(
+  private val apiClient: ApiClient,
   private val deterministicCommutativeCryptor: Cryptor = JniDeterministicCommutativeCryptor(),
   private val timeoutDuration: Duration = Duration.ofDays(1),
   private val retryDuration: Duration = Duration.ofMinutes(1),
   private val preferredSharedStorage: Storage,
   private val preferredPrivateStorage: Storage
 ) {
+
+  /**
+   * Reads private and shared task input from different storage based on [exchangeKey] and
+   * [ExchangeStep] and returns Map<String, ByteString> of different input
+   */
+  suspend fun getAllInputForStep(
+    preferredSharedStorage: Storage,
+    preferredPrivateStorage: Storage,
+    step: ExchangeWorkflow.Step
+  ): Map<String, ByteString> = coroutineScope {
+    val privateInputLabels = step.getPrivateInputLabelsMap()
+    val sharedInputLabels = step.getSharedInputLabelsMap()
+    awaitAll(
+      async(start = CoroutineStart.DEFAULT) {
+        preferredPrivateStorage.batchRead(inputLabels = privateInputLabels)
+      },
+      async(start = CoroutineStart.DEFAULT) {
+        preferredSharedStorage.batchRead(inputLabels = sharedInputLabels)
+      }
+    )
+      .reduce { a, b -> a.toMutableMap().apply { putAll(b) } }
+  }
+
+  /**
+   * Writes private and shared task output [taskOutput] to different storage based on [exchangeKey]
+   * and [ExchangeStep].
+   */
+  private suspend fun writeAllOutputForStep(
+    preferredSharedStorage: Storage,
+    preferredPrivateStorage: Storage,
+    step: ExchangeWorkflow.Step,
+    taskOutput: Map<String, ByteString>
+  ) = coroutineScope {
+    val privateOutputLabels = step.getPrivateOutputLabelsMap()
+    val sharedOutputLabels = step.getSharedOutputLabelsMap()
+    async {
+      preferredPrivateStorage.batchWrite(outputLabels = privateOutputLabels, data = taskOutput)
+    }
+    async {
+      preferredSharedStorage.batchWrite(outputLabels = sharedOutputLabels, data = taskOutput)
+    }
+  }
 
   private suspend fun getExchangeTaskForStep(step: ExchangeWorkflow.Step): ExchangeTask {
     return when (step.getStepCase()) {
@@ -61,11 +105,8 @@ class ExchangeTaskMapper(
     }
   }
 
-  suspend fun execute(
-    apiClient: ApiClient,
-    attemptKey: ExchangeStepAttempt.Key,
-    step: ExchangeWorkflow.Step
-  ) = coroutineScope {
+  suspend fun execute(attemptKey: ExchangeStepAttempt.Key, step: ExchangeWorkflow.Step) =
+      coroutineScope {
     try {
       logger.addToTaskLog("Executing $step with attempt $attemptKey")
       withTimeout(timeoutDuration.toMillis()) {

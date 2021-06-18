@@ -19,16 +19,18 @@ import kotlin.test.assertFailsWith
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.joinAll
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.junit.Test
 
 class JobTestClass1 {
   suspend fun logWithDelay() {
-    logger.addToTaskLog("logWithDelay: Log Message 0")
+    logger.addToTaskLog("logWithDelay: Log Message A")
     delay(100)
-    logger.addToTaskLog("logWithDelay: Log Message 1")
+    logger.addToTaskLog("logWithDelay: Log Message B")
   }
   companion object {
     val logger by loggerFor()
@@ -36,10 +38,26 @@ class JobTestClass1 {
 }
 
 class JobTestClass2 {
-  suspend fun logWithDelay() {
-    logger.addToTaskLog("logWithDelay: Log Message 0")
-    delay(100)
-    logger.addToTaskLog("logWithDelay: Log Message 1")
+  suspend fun logWithDelay() = coroutineScope {
+    async {
+      logger.addToTaskLog("logWithDelay: Log Message C")
+      delay(100)
+      logger.addToTaskLog("logWithDelay: Log Message D")
+    }
+  }
+  companion object {
+    val logger by loggerFor()
+  }
+}
+
+class JobTestClass3 {
+  suspend fun logWithDelay() = coroutineScope {
+    val ATTEMPT_KEY = java.util.UUID.randomUUID().toString()
+    async(CoroutineName(ATTEMPT_KEY) + Dispatchers.Default) {
+      logger.addToTaskLog("logWithDelay: Log Message C")
+      delay(100)
+      logger.addToTaskLog("logWithDelay: Log Message D")
+    }
   }
   companion object {
     val logger by loggerFor()
@@ -88,6 +106,37 @@ class LoggerTest {
   fun `cannot add to a task log unless you are in a job`() = runBlocking {
     val outsideCoroutineException =
       assertFailsWith(IllegalArgumentException::class) { logger.addToTaskLog("Log Message 0") }
+  }
+
+  @Test
+  fun `jobs inside of jobs use the same log`() = runBlocking {
+    val ATTEMPT_KEY = java.util.UUID.randomUUID().toString()
+    val job =
+      async(CoroutineName(ATTEMPT_KEY) + Dispatchers.Default) {
+        logger.addToTaskLog("Log Message 0")
+        val subJob = launch { JobTestClass2().logWithDelay() }
+        JobTestClass1().logWithDelay()
+        subJob.join()
+        val log = logger.getAndClearTaskLog()
+        assertThat(log).hasSize(5)
+        log.forEach { assertThat(it).contains(ATTEMPT_KEY) }
+      }
+    job.join()
+  }
+  @Test
+  fun `jobs inside of jobs with different coroutine names use the different logs`() = runBlocking {
+    val ATTEMPT_KEY = java.util.UUID.randomUUID().toString()
+    val job =
+      async(CoroutineName(ATTEMPT_KEY) + Dispatchers.Default) {
+        logger.addToTaskLog("Log Message 0")
+        val subJob = launch { JobTestClass3().logWithDelay() }
+        JobTestClass1().logWithDelay()
+        subJob.join()
+        val log = logger.getAndClearTaskLog()
+        assertThat(log).hasSize(3)
+        log.forEach { assertThat(it).contains(ATTEMPT_KEY) }
+      }
+    job.join()
   }
   companion object {
     val logger by loggerFor()

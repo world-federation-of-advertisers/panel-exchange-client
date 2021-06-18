@@ -19,9 +19,5 @@ import org.wfanet.measurement.api.v2alpha.ExchangeStepAttempt
 
 class BlockingJobLauncher : JobLauncher {
   // TODO: implement execute method.
-  override suspend fun execute(
-    apiClient: ApiClient,
-    exchangeStep: ExchangeStep,
-    attemptKey: ExchangeStepAttempt.Key
-  ) {}
+  override suspend fun execute(exchangeStep: ExchangeStep, attemptKey: ExchangeStepAttempt.Key) {}
 }

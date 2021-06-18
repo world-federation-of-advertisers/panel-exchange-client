@@ -121,13 +121,14 @@ class TestStep(
     val job =
       async(CoroutineName(attemptKey.exchangeId) + Dispatchers.Default) {
         ExchangeTaskMapper(
+            apiClient = apiClient,
             preferredSharedStorage = preferredSharedStorage,
             preferredPrivateStorage = preferredPrivateStorage,
             deterministicCommutativeCryptor = deterministicCommutativeCryptor,
             timeoutDuration = timeoutDuration,
             retryDuration = retryDuration
           )
-          .execute(apiClient = apiClient, attemptKey = attemptKey, step = builtStep)
+          .execute(attemptKey = attemptKey, step = builtStep)
       }
     job.await()
   }
@@ -146,10 +147,11 @@ class TestStep(
       .thenReturn(DOUBLE_BLINDED_KEYS)
     whenever(deterministicCommutativeCryptor.decrypt(any(), any())).thenReturn(LOOKUP_KEYS)
     CoroutineLauncher(
+        apiClient = apiClient,
         preferredSharedStorage = preferredSharedStorage,
         preferredPrivateStorage = preferredPrivateStorage,
         deterministicCommutativeCryptor = deterministicCommutativeCryptor
       )
-      .execute(apiClient = apiClient, exchangeStep = exchangeStep, attemptKey = attemptKey)
+      .execute(exchangeStep = exchangeStep, attemptKey = attemptKey)
   }
 }

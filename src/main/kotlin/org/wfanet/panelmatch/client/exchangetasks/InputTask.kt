@@ -16,6 +16,10 @@ package org.wfanet.panelmatch.client.exchangetasks
 
 import com.google.protobuf.ByteString
 import java.time.Duration
+import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.retryWhen
@@ -23,7 +27,6 @@ import kotlinx.coroutines.flow.toList
 import org.wfanet.measurement.api.v2alpha.ExchangeWorkflow
 import org.wfanet.panelmatch.client.logger.loggerFor
 import org.wfanet.panelmatch.client.storage.Storage
-import org.wfanet.panelmatch.client.storage.waitForOutputsToBeReady
 
 /**
  * Input task waits for output labels to be present. Clients should not pass in the actual required
@@ -37,9 +40,28 @@ class InputTask(
   val preferredPrivateStorage: Storage
 ) : ExchangeTask {
 
-  override suspend fun execute(input: Map<String, ByteString>): Map<String, ByteString> {
+  /**
+   * Waits for all private and shared task input from different storage based on [exchangeKey] and
+   * [ExchangeStep] and returns when ready
+   */
+  suspend fun waitForOutputsToBeReady(
+    preferredSharedStorage: Storage,
+    preferredPrivateStorage: Storage,
+    step: ExchangeWorkflow.Step
+  ) = coroutineScope {
     val privateOutputLabels = step.getPrivateOutputLabelsMap()
     val sharedOutputLabels = step.getSharedOutputLabelsMap()
+    awaitAll(
+      async(start = CoroutineStart.DEFAULT) {
+        preferredPrivateStorage.batchRead(inputLabels = privateOutputLabels)
+      },
+      async(start = CoroutineStart.DEFAULT) {
+        preferredSharedStorage.batchRead(inputLabels = sharedOutputLabels)
+      }
+    )
+  }
+
+  override suspend fun execute(input: Map<String, ByteString>): Map<String, ByteString> {
     flow<Boolean> {
         waitForOutputsToBeReady(
           preferredSharedStorage = preferredSharedStorage,
@@ -48,12 +70,13 @@ class InputTask(
         )
         emit(true)
       }
-      .retryWhen { cause, attempt ->
+      .retryWhen { cause, _ ->
         logger.info(cause.toString())
         delay(retryDuration.toMillis())
         true
       }
       .toList()
+
     // This function only returns that input is ready. It does not return actual values.
     return emptyMap<String, ByteString>()
   }
