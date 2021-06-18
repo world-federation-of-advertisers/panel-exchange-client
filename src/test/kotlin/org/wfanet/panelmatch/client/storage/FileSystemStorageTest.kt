@@ -17,7 +17,7 @@ package org.wfanet.panelmatch.client.storage
 import org.wfanet.panelmatch.client.storage.testing.AbstractStorageTest
 
 class FileSystemStorageTest : AbstractStorageTest() {
-  private val BASE_DIR = System.getenv("TEST_TMPDIR")
-  override val privateStorage = FileSystemStorage(baseDir = "$BASE_DIR/private")
-  override val sharedStorage = FileSystemStorage(baseDir = "$BASE_DIR/shared")
+  private val BaseDir = System.getenv("TEST_TMPDIR")
+  override val privateStorage = FileSystemStorage(baseDir = "$BaseDir/private")
+  override val sharedStorage = FileSystemStorage(baseDir = "$BaseDir/shared")
 }

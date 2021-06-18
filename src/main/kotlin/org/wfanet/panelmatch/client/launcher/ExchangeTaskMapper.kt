@@ -26,6 +26,7 @@ import org.wfanet.panelmatch.client.exchangetasks.InputTask
 import org.wfanet.panelmatch.client.logger.addToTaskLog
 import org.wfanet.panelmatch.client.logger.getAndClearTaskLog
 import org.wfanet.panelmatch.client.logger.loggerFor
+import org.wfanet.panelmatch.client.storage.Storage
 import org.wfanet.panelmatch.client.storage.getAllInputForStep
 import org.wfanet.panelmatch.client.storage.writeAllOutputForStep
 import org.wfanet.panelmatch.protocol.common.Cryptor
@@ -43,7 +44,9 @@ import org.wfanet.panelmatch.protocol.common.JniDeterministicCommutativeCryptor
 class ExchangeTaskMapper(
   private val deterministicCommutativeCryptor: Cryptor = JniDeterministicCommutativeCryptor(),
   private val timeoutDuration: Duration = Duration.ofDays(1),
-  private val retryDuration: Duration = Duration.ofMinutes(1)
+  private val retryDuration: Duration = Duration.ofMinutes(1),
+  private val preferredSharedStorage: Storage,
+  private val preferredPrivateStorage: Storage
 ) {
 
   private suspend fun getExchangeTaskForStep(step: ExchangeWorkflow.Step): ExchangeTask {
@@ -64,18 +67,30 @@ class ExchangeTaskMapper(
     step: ExchangeWorkflow.Step
   ) = coroutineScope {
     try {
-      val exchangeKey: String = attemptKey.exchangeId
-      val exchangeStepAttemptKey: String = attemptKey.exchangeStepAttemptId
-      logger.addToTaskLog("Executing $exchangeStepAttemptKey: $step with attempt $attemptKey")
+      logger.addToTaskLog("Executing $step with attempt $attemptKey")
       withTimeout(timeoutDuration.toMillis()) {
         if (step.getStepCase() == ExchangeWorkflow.Step.StepCase.INPUT_STEP) {
-          InputTask(exchangeKey = exchangeKey, step = step, retryDuration = retryDuration)
+          InputTask(
+              preferredSharedStorage = preferredSharedStorage,
+              preferredPrivateStorage = preferredPrivateStorage,
+              step = step,
+              retryDuration = retryDuration
+            )
             .execute(emptyMap<String, ByteString>())
         } else {
           val taskInput: Map<String, ByteString> =
-            getAllInputForStep(exchangeKey = exchangeKey, step = step)
+            getAllInputForStep(
+              preferredSharedStorage = preferredSharedStorage,
+              preferredPrivateStorage = preferredPrivateStorage,
+              step = step
+            )
           val taskOutput: Map<String, ByteString> = getExchangeTaskForStep(step).execute(taskInput)
-          writeAllOutputForStep(exchangeKey = exchangeKey, step = step, taskOutput = taskOutput)
+          writeAllOutputForStep(
+            preferredSharedStorage = preferredSharedStorage,
+            preferredPrivateStorage = preferredPrivateStorage,
+            step = step,
+            taskOutput = taskOutput
+          )
         }
       }
       apiClient.finishExchangeStepAttempt(

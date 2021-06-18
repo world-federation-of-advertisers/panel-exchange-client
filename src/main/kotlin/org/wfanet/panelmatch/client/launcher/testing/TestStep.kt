@@ -29,6 +29,7 @@ import org.wfanet.measurement.api.v2alpha.ExchangeWorkflow
 import org.wfanet.panelmatch.client.launcher.ApiClient
 import org.wfanet.panelmatch.client.launcher.CoroutineLauncher
 import org.wfanet.panelmatch.client.launcher.ExchangeTaskMapper
+import org.wfanet.panelmatch.client.storage.Storage
 import org.wfanet.panelmatch.protocol.common.Cryptor
 
 val DP_0_SECRET_KEY = ByteString.copyFromUtf8("random-edp-string-0")
@@ -78,6 +79,8 @@ class TestStep(
   val deterministicCommutativeCryptor: Cryptor = mock<Cryptor>(),
   val timeoutDuration: Duration = Duration.ofMillis(500),
   val retryDuration: Duration = Duration.ofMillis(100),
+  val preferredSharedStorage: Storage,
+  val preferredPrivateStorage: Storage,
   val attemptKey: ExchangeStepAttempt.Key =
     ExchangeStepAttempt.Key.newBuilder()
       .apply {
@@ -118,6 +121,8 @@ class TestStep(
     val job =
       async(CoroutineName(attemptKey.exchangeId) + Dispatchers.Default) {
         ExchangeTaskMapper(
+            preferredSharedStorage = preferredSharedStorage,
+            preferredPrivateStorage = preferredPrivateStorage,
             deterministicCommutativeCryptor = deterministicCommutativeCryptor,
             timeoutDuration = timeoutDuration,
             retryDuration = retryDuration
@@ -140,7 +145,11 @@ class TestStep(
     whenever(deterministicCommutativeCryptor.reEncrypt(any(), any()))
       .thenReturn(DOUBLE_BLINDED_KEYS)
     whenever(deterministicCommutativeCryptor.decrypt(any(), any())).thenReturn(LOOKUP_KEYS)
-    CoroutineLauncher(deterministicCommutativeCryptor)
+    CoroutineLauncher(
+        preferredSharedStorage = preferredSharedStorage,
+        preferredPrivateStorage = preferredPrivateStorage,
+        deterministicCommutativeCryptor = deterministicCommutativeCryptor
+      )
       .execute(apiClient = apiClient, exchangeStep = exchangeStep, attemptKey = attemptKey)
   }
 }

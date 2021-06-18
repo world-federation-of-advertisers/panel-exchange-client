@@ -26,11 +26,11 @@ import org.wfanet.measurement.api.v2alpha.ExchangeWorkflow
 
 /** Interface for Storage adapter. */
 interface Storage {
-  enum class STORAGE_CLASS {
+  enum class StorageClass {
     PRIVATE,
     SHARED
   }
-  enum class STORAGE_TYPE {
+  enum class StorageType {
     FILESYSTEM,
     IN_MEMORY
   }
@@ -49,122 +49,46 @@ interface Storage {
    * @param path String location of data to write to.
    */
   suspend fun write(path: String, data: ByteString)
-}
 
-/**
- * Returns a storage and path given a storage type, exchangeKey, label, and step.
- *
- * TODO: This should be extended to read from a local config along with step meta data like the data
- * label, input labels, and output labels and return a StorageClient such as FileSystem, GCS, S3,
- * etc
- */
-private suspend fun getStorageAndPathForStep(
-  storageClass: Storage.STORAGE_CLASS,
-  exchangeKey: String,
-  label: String,
-  step: ExchangeWorkflow.Step
-): Pair<Storage, String> {
-  val storageType: Storage.STORAGE_TYPE =
-    Storage.STORAGE_TYPE.valueOf(System.getProperty("${storageClass.toString()}_STORAGE_TYPE"))
-  val storage: Storage =
-    when (storageType) {
-      Storage.STORAGE_TYPE.FILESYSTEM ->
-        FileSystemStorage(
-          baseDir = requireNotNull(System.getProperty("${storageClass.toString()}_FILESYSTEM_PATH"))
-        )
-      Storage.STORAGE_TYPE.IN_MEMORY ->
-        InMemoryStorage(
-          keyPrefix =
-            requireNotNull(System.getProperty("${storageClass.toString()}_INMEMORY_PREFIX"))
-        )
+  /** Reads different data from [storage] and returns Map<String, ByteString> of different input */
+  suspend fun batchRead(inputLabels: Map<String, String>): Map<String, ByteString> =
+    withContext(Dispatchers.IO) {
+      coroutineScope {
+        inputLabels
+          .mapValues { entry -> async(start = CoroutineStart.DEFAULT) { read(path = entry.value) } }
+          .mapValues { entry -> entry.value.await() }
+      }
     }
-  val fields: List<String> = listOf(exchangeKey, label)
-  val path = fields.joinToString(separator = "-")
-  return Pair(storage, path)
-}
 
-/**
- * Reads different data from a [Storage.STORAGE_TYPE] based on [exchangeKey] and [ExchangeStep] and
- * returns Map<String, ByteString> of different input
- */
-suspend fun batchRead(
-  storageClass: Storage.STORAGE_CLASS,
-  exchangeKey: String,
-  step: ExchangeWorkflow.Step,
-  inputLabels: Map<String, String>
-): Map<String, ByteString> =
-  withContext(Dispatchers.IO) {
-    coroutineScope {
-      inputLabels
-        .mapValues { entry ->
-          async(start = CoroutineStart.DEFAULT) {
-            val (storage: Storage, path: String) =
-              getStorageAndPathForStep(
-                storageClass = storageClass,
-                exchangeKey = exchangeKey,
-                label = entry.value,
-                step = step
-              )
-            storage.read(path = path)
-          }
-        }
-        .mapValues { entry -> entry.value.await() }
-    }
-  }
-
-/**
- * Writes output [data] for [storageClass] to different storage based on [exchangeKey] and
- * [ExchangeStep].
- */
-suspend fun batchWrite(
-  storageClass: Storage.STORAGE_CLASS,
-  exchangeKey: String,
-  step: ExchangeWorkflow.Step,
-  outputLabels: Map<String, String>,
-  data: Map<String, ByteString>
-) =
-  withContext(Dispatchers.IO) {
-    coroutineScope {
-      for ((key, value) in outputLabels) {
-        async {
-          val (storage: Storage, path: String) =
-            getStorageAndPathForStep(
-              storageClass = storageClass,
-              exchangeKey = exchangeKey,
-              label = value,
-              step = step
-            )
-          storage.write(path = path, data = requireNotNull(data[key]))
+  /** Writes output [data] to [storage] based on [outputLabels] */
+  suspend fun batchWrite(outputLabels: Map<String, String>, data: Map<String, ByteString>) =
+    withContext(Dispatchers.IO) {
+      coroutineScope {
+        for ((key, value) in outputLabels) {
+          async { write(path = value, data = requireNotNull(data[key])) }
         }
       }
     }
-  }
+}
 
 /**
  * Waits for all private and shared task input from different storage based on [exchangeKey] and
  * [ExchangeStep] and returns when ready
  */
-suspend fun waitForOutputsToBeReady(exchangeKey: String, step: ExchangeWorkflow.Step) =
-    coroutineScope {
+suspend fun waitForOutputsToBeReady(
+  preferredSharedStorage: Storage,
+  preferredPrivateStorage: Storage,
+  step: ExchangeWorkflow.Step
+) = coroutineScope {
   val privateOutputLabels = step.getPrivateOutputLabelsMap()
   val sharedOutputLabels = step.getSharedOutputLabelsMap()
   val readDeferreds: List<Deferred<Map<String, ByteString>>> =
     listOf(
       async(start = CoroutineStart.DEFAULT) {
-        batchRead(
-          storageClass = Storage.STORAGE_CLASS.PRIVATE,
-          exchangeKey = exchangeKey,
-          step = step,
-          inputLabels = privateOutputLabels
-        )
+        preferredPrivateStorage.batchRead(inputLabels = privateOutputLabels)
       },
       async(start = CoroutineStart.DEFAULT) {
-        batchRead(
-          storageClass = Storage.STORAGE_CLASS.SHARED,
-          exchangeKey = exchangeKey,
-          step = step,
-          inputLabels = sharedOutputLabels
-        )
+        preferredSharedStorage.batchRead(inputLabels = sharedOutputLabels)
       }
     )
   readDeferreds.awaitAll()
@@ -175,28 +99,19 @@ suspend fun waitForOutputsToBeReady(exchangeKey: String, step: ExchangeWorkflow.
  * [ExchangeStep] and returns Map<String, ByteString> of different input
  */
 suspend fun getAllInputForStep(
-  exchangeKey: String,
+  preferredSharedStorage: Storage,
+  preferredPrivateStorage: Storage,
   step: ExchangeWorkflow.Step
 ): Map<String, ByteString> = coroutineScope {
   val privateInputLabels = step.getPrivateInputLabelsMap()
   val sharedInputLabels = step.getSharedInputLabelsMap()
   val taskPrivateInput =
     async(start = CoroutineStart.DEFAULT) {
-      batchRead(
-        storageClass = Storage.STORAGE_CLASS.PRIVATE,
-        exchangeKey = exchangeKey,
-        step = step,
-        inputLabels = privateInputLabels
-      )
+      preferredPrivateStorage.batchRead(inputLabels = privateInputLabels)
     }
   val taskSharedInput =
     async(start = CoroutineStart.DEFAULT) {
-      batchRead(
-        storageClass = Storage.STORAGE_CLASS.SHARED,
-        exchangeKey = exchangeKey,
-        step = step,
-        inputLabels = sharedInputLabels
-      )
+      preferredSharedStorage.batchRead(inputLabels = sharedInputLabels)
     }
   taskPrivateInput.await().toMutableMap().apply { putAll(taskSharedInput.await()) }
 }
@@ -206,28 +121,15 @@ suspend fun getAllInputForStep(
  * and [ExchangeStep].
  */
 suspend fun writeAllOutputForStep(
-  exchangeKey: String,
+  preferredSharedStorage: Storage,
+  preferredPrivateStorage: Storage,
   step: ExchangeWorkflow.Step,
   taskOutput: Map<String, ByteString>
 ) = coroutineScope {
   val privateOutputLabels = step.getPrivateOutputLabelsMap()
   val sharedOutputLabels = step.getSharedOutputLabelsMap()
   async {
-    batchWrite(
-      storageClass = Storage.STORAGE_CLASS.PRIVATE,
-      exchangeKey = exchangeKey,
-      step = step,
-      outputLabels = privateOutputLabels,
-      data = taskOutput
-    )
+    preferredPrivateStorage.batchWrite(outputLabels = privateOutputLabels, data = taskOutput)
   }
-  async {
-    batchWrite(
-      storageClass = Storage.STORAGE_CLASS.SHARED,
-      exchangeKey = exchangeKey,
-      step = step,
-      outputLabels = sharedOutputLabels,
-      data = taskOutput
-    )
-  }
+  async { preferredSharedStorage.batchWrite(outputLabels = sharedOutputLabels, data = taskOutput) }
 }

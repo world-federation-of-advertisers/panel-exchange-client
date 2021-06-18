@@ -21,13 +21,16 @@ import kotlinx.coroutines.launch
 import org.wfanet.measurement.api.v2alpha.ExchangeStep
 import org.wfanet.measurement.api.v2alpha.ExchangeStepAttempt
 import org.wfanet.panelmatch.client.logger.loggerFor
+import org.wfanet.panelmatch.client.storage.Storage
 import org.wfanet.panelmatch.protocol.common.Cryptor
 import org.wfanet.panelmatch.protocol.common.JniDeterministicCommutativeCryptor
 
 /** Executes an [ExchangeStep] using a couroutine. */
 class CoroutineLauncher(
   private val deterministicCommutativeCryptor: Cryptor = JniDeterministicCommutativeCryptor(),
-  private val scope: CoroutineScope = CoroutineScope(Dispatchers.Default)
+  private val scope: CoroutineScope = CoroutineScope(Dispatchers.Default),
+  private val preferredSharedStorage: Storage,
+  private val preferredPrivateStorage: Storage
 ) : JobLauncher {
 
   override suspend fun execute(
@@ -37,7 +40,11 @@ class CoroutineLauncher(
   ) {
     val exchangeStepAttemptKey: String = attemptKey.exchangeStepAttemptId
     scope.launch(CoroutineName(exchangeStepAttemptKey) + Dispatchers.Default) {
-      ExchangeTaskMapper(deterministicCommutativeCryptor)
+      ExchangeTaskMapper(
+          preferredSharedStorage = preferredSharedStorage,
+          preferredPrivateStorage = preferredPrivateStorage,
+          deterministicCommutativeCryptor = deterministicCommutativeCryptor
+        )
         .execute(apiClient, attemptKey, exchangeStep.step)
     }
   }
