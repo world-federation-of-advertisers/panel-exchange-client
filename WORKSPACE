@@ -153,6 +153,10 @@ MAVEN_ARTIFACTS.update({
     "junit:junit": "4.13",
     "org.apache.beam:beam-runners-direct-java": "2.29.0",
     "org.apache.beam:beam-sdks-java-core": "2.29.0",
+    "org.apache.beam:beam-sdks-java-extensions-protobuf": "2.29.0",
+    "org.hamcrest:hamcrest-library": "1.3",
+    "org.hamcrest:hamcrest-core": "1.3",
+    "org.slf4j:slf4j-simple": "1.7.9",
 })
 
 maven_install(
