@@ -152,9 +152,9 @@ MAVEN_ARTIFACTS.update({
     "org.mockito.kotlin:mockito-kotlin": "3.2.0",
     "info.picocli:picocli": "4.4.0",
     "junit:junit": "4.13",
-    "org.apache.beam:beam-runners-direct-java": "2.29.0",
-    "org.apache.beam:beam-sdks-java-core": "2.29.0",
-    "org.apache.beam:beam-sdks-java-extensions-protobuf": "2.29.0",
+    "org.apache.beam:beam-runners-direct-java": "2.31.0",
+    "org.apache.beam:beam-sdks-java-core": "2.31.0",
+    "org.apache.beam:beam-sdks-java-extensions-protobuf": "2.31.0",
     "org.hamcrest:hamcrest-library": "1.3",
     "org.hamcrest:hamcrest-core": "1.3",
     "org.slf4j:slf4j-simple": "1.7.9",
@@ -317,9 +317,9 @@ tink_cc_deps_init()
 # Common-cpp
 http_archive(
     name = "wfa_common_cpp",
-    sha256 = "fc33c81ade972199fde949a18f8b8483b67e5458ee6a08dc7d905bfdbade41d4",
-    strip_prefix = "common-cpp-ec6e107b0509f074145b1b7751c22f5f9e0e2117",
-    url = "https://github.com/world-federation-of-advertisers/common-cpp/archive/ec6e107b0509f074145b1b7751c22f5f9e0e2117.tar.gz",
+    sha256 = "e0e1f5eed832ef396109354a64c6c1306bf0fb5ea0b449ce6ee1e8edc6fe279d",
+    strip_prefix = "common-cpp-43c75acc3394e19bcfd2cfe8e8e2454365d26d60",
+    url = "https://github.com/world-federation-of-advertisers/common-cpp/archive/43c75acc3394e19bcfd2cfe8e8e2454365d26d60.tar.gz",
 )
 
 load("@wfa_common_cpp//build:deps.bzl", "common_cpp_deps")
