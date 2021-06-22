@@ -38,31 +38,31 @@ import org.wfanet.panelmatch.client.storage.Storage
  * @param storage the Storage class to store the intermediary steps
  * @return mapped output.
  */
-class ExchangeTaskMapper(
+class ExchangeTaskExecutor(
   private val apiClient: ApiClient,
   private val timeoutDuration: Duration = Duration.ofDays(1),
-  private val preferredSharedStorage: Storage,
-  private val preferredPrivateStorage: Storage,
-  private val getExchangeTaskForStep: (ExchangeWorkflow.Step) -> ExchangeTask
+  private val sharedStorage: Storage,
+  private val privateStorage: Storage,
+  private val getExchangeTaskForStep: suspend (ExchangeWorkflow.Step) -> ExchangeTask
 ) {
 
   /**
    * Reads private and shared task input from different storage based on [exchangeKey] and
    * [ExchangeStep] and returns Map<String, ByteString> of different input
    */
-  suspend fun getAllInputForStep(
-    preferredSharedStorage: Storage,
-    preferredPrivateStorage: Storage,
+  private suspend fun getAllInputForStep(
+    sharedStorage: Storage,
+    privateStorage: Storage,
     step: ExchangeWorkflow.Step
   ): Map<String, ByteString> = coroutineScope {
     val privateInputLabels = step.getPrivateInputLabelsMap()
     val sharedInputLabels = step.getSharedInputLabelsMap()
     awaitAll(
       async(start = CoroutineStart.DEFAULT) {
-        preferredPrivateStorage.batchRead(inputLabels = privateInputLabels)
+        privateStorage.batchRead(inputLabels = privateInputLabels)
       },
       async(start = CoroutineStart.DEFAULT) {
-        preferredSharedStorage.batchRead(inputLabels = sharedInputLabels)
+        sharedStorage.batchRead(inputLabels = sharedInputLabels)
       }
     )
       .reduce { a, b -> a.toMutableMap().apply { putAll(b) } }
@@ -73,19 +73,15 @@ class ExchangeTaskMapper(
    * and [ExchangeStep].
    */
   private suspend fun writeAllOutputForStep(
-    preferredSharedStorage: Storage,
-    preferredPrivateStorage: Storage,
+    sharedStorage: Storage,
+    privateStorage: Storage,
     step: ExchangeWorkflow.Step,
     taskOutput: Map<String, ByteString>
   ) = coroutineScope {
     val privateOutputLabels = step.getPrivateOutputLabelsMap()
     val sharedOutputLabels = step.getSharedOutputLabelsMap()
-    async {
-      preferredPrivateStorage.batchWrite(outputLabels = privateOutputLabels, data = taskOutput)
-    }
-    async {
-      preferredSharedStorage.batchWrite(outputLabels = sharedOutputLabels, data = taskOutput)
-    }
+    async { privateStorage.batchWrite(outputLabels = privateOutputLabels, data = taskOutput) }
+    async { sharedStorage.batchWrite(outputLabels = sharedOutputLabels, data = taskOutput) }
   }
 
   suspend fun execute(attemptKey: ExchangeStepAttempt.Key, step: ExchangeWorkflow.Step) =
@@ -99,14 +95,14 @@ class ExchangeTaskMapper(
         } else {
           val taskInput: Map<String, ByteString> =
             getAllInputForStep(
-              preferredSharedStorage = preferredSharedStorage,
-              preferredPrivateStorage = preferredPrivateStorage,
+              sharedStorage = sharedStorage,
+              privateStorage = privateStorage,
               step = step
             )
           val taskOutput: Map<String, ByteString> = exchangeTask.execute(taskInput)
           writeAllOutputForStep(
-            preferredSharedStorage = preferredSharedStorage,
-            preferredPrivateStorage = preferredPrivateStorage,
+            sharedStorage = sharedStorage,
+            privateStorage = privateStorage,
             step = step,
             taskOutput = taskOutput
           )

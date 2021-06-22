@@ -30,16 +30,14 @@ import org.wfanet.panelmatch.client.launcher.ApiClient
 import org.wfanet.panelmatch.client.launcher.testing.MP_0_SECRET_KEY
 import org.wfanet.panelmatch.client.launcher.testing.SINGLE_BLINDED_KEYS
 import org.wfanet.panelmatch.client.launcher.testing.TestStep
-import org.wfanet.panelmatch.client.storage.FileSystemStorage
+import org.wfanet.panelmatch.client.storage.InMemoryStorage
 import org.wfanet.panelmatch.protocol.common.makeSerializedSharedInputs
 
 @RunWith(JUnit4::class)
 class InputTaskTest {
   private val apiClient: ApiClient = mock()
-  private val preferredPrivateStorage =
-    FileSystemStorage(baseDir = "${System.getenv("TEST_TMPDIR")}/private")
-  private val preferredSharedStorage =
-    FileSystemStorage(baseDir = "${System.getenv("TEST_TMPDIR")}/shared")
+  private val privateStorage = InMemoryStorage(keyPrefix = "private")
+  private val sharedStorage = InMemoryStorage(keyPrefix = "shared")
   @Test
   fun `wait on private input`() = runBlocking {
     val EXCHANGE_KEY = java.util.UUID.randomUUID().toString()
@@ -53,13 +51,13 @@ class InputTaskTest {
         stepType = ExchangeWorkflow.Step.StepCase.INPUT_STEP,
         timeoutDuration = Duration.ofMillis(500),
         retryDuration = Duration.ofMillis(100),
-        preferredPrivateStorage = preferredPrivateStorage,
-        preferredSharedStorage = preferredSharedStorage
+        privateStorage = privateStorage,
+        sharedStorage = sharedStorage
       )
     val output = coroutineScope {
-      var buildJob = async { testStep.buildAndExecute() }
+      var buildJob = async { testStep.buildAndExecuteTask() }
       delay(300)
-      preferredPrivateStorage.batchWrite(
+      privateStorage.batchWrite(
         outputLabels = mapOf("output" to "$EXCHANGE_KEY-mp-crypto-key"),
         data = mapOf("output" to MP_0_SECRET_KEY)
       )
@@ -80,13 +78,13 @@ class InputTaskTest {
         stepType = ExchangeWorkflow.Step.StepCase.INPUT_STEP,
         timeoutDuration = Duration.ofMillis(500),
         retryDuration = Duration.ofMillis(100),
-        preferredPrivateStorage = preferredPrivateStorage,
-        preferredSharedStorage = preferredSharedStorage
+        privateStorage = privateStorage,
+        sharedStorage = sharedStorage
       )
     val output = coroutineScope {
-      val job = async { testStep.buildAndExecute() }
+      val job = async { testStep.buildAndExecuteTask() }
       delay(300)
-      preferredSharedStorage.batchWrite(
+      sharedStorage.batchWrite(
         outputLabels = mapOf("output" to "$EXCHANGE_KEY-mp-single-blinded-keys"),
         data = mapOf("output" to makeSerializedSharedInputs(SINGLE_BLINDED_KEYS))
       )
@@ -107,13 +105,13 @@ class InputTaskTest {
         stepType = ExchangeWorkflow.Step.StepCase.INPUT_STEP,
         timeoutDuration = Duration.ofMillis(500),
         retryDuration = Duration.ofMillis(100),
-        preferredPrivateStorage = preferredPrivateStorage,
-        preferredSharedStorage = preferredSharedStorage
+        privateStorage = privateStorage,
+        sharedStorage = sharedStorage
       )
     val argumentException =
       assertFailsWith(TimeoutCancellationException::class) {
         val output = coroutineScope {
-          val job = async { testStep.buildAndExecute() }
+          val job = async { testStep.buildAndExecuteTask() }
           job.await()
         }
       }
@@ -132,15 +130,15 @@ class InputTaskTest {
         stepType = ExchangeWorkflow.Step.StepCase.INPUT_STEP,
         timeoutDuration = Duration.ofMillis(500),
         retryDuration = Duration.ofMillis(100),
-        preferredPrivateStorage = preferredPrivateStorage,
-        preferredSharedStorage = preferredSharedStorage
+        privateStorage = privateStorage,
+        sharedStorage = sharedStorage
       )
     val argumentException =
       assertFailsWith(TimeoutCancellationException::class) {
         val output = coroutineScope {
-          val job = async { testStep.buildAndExecute() }
+          val job = async { testStep.buildAndExecuteTask() }
           delay(600)
-          preferredSharedStorage.batchWrite(
+          sharedStorage.batchWrite(
             outputLabels = mapOf("output" to "$EXCHANGE_KEY-mp-single-blinded-keys"),
             data = mapOf("output" to makeSerializedSharedInputs(SINGLE_BLINDED_KEYS))
           )

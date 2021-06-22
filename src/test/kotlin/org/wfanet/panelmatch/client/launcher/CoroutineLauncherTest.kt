@@ -22,7 +22,9 @@ import com.nhaarman.mockitokotlin2.times
 import com.nhaarman.mockitokotlin2.verify
 import com.nhaarman.mockitokotlin2.whenever
 import kotlin.test.assertFailsWith
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.TimeoutCancellationException
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -34,60 +36,68 @@ import org.wfanet.panelmatch.client.launcher.testing.JOIN_KEYS
 import org.wfanet.panelmatch.client.launcher.testing.MP_0_SECRET_KEY
 import org.wfanet.panelmatch.client.launcher.testing.SINGLE_BLINDED_KEYS
 import org.wfanet.panelmatch.client.launcher.testing.TestStep
-import org.wfanet.panelmatch.client.storage.FileSystemStorage
+import org.wfanet.panelmatch.client.storage.InMemoryStorage
 import org.wfanet.panelmatch.protocol.common.makeSerializedSharedInputs
 
 @RunWith(JUnit4::class)
 class CoroutineLauncherTest {
-  private val preferredPrivateStorage =
-    FileSystemStorage(baseDir = "${System.getenv("TEST_TMPDIR")}/private")
-  private val preferredSharedStorage =
-    FileSystemStorage(baseDir = "${System.getenv("TEST_TMPDIR")}/shared")
   private val apiClient: ApiClient = mock()
+  private val privateStorage = InMemoryStorage(keyPrefix = "private")
+  private val sharedStorage = InMemoryStorage(keyPrefix = "shared")
 
   @Test
   fun `test input task`() {
     val EXCHANGE_KEY = java.util.UUID.randomUUID().toString()
     val ATTEMPT_KEY = java.util.UUID.randomUUID().toString()
     runBlocking {
-      whenever(apiClient.finishExchangeStepAttempt(any(), any(), any())).thenReturn(Unit)
-      val outputLabels = mapOf("output" to "$EXCHANGE_KEY-mp-crypto-key")
-      val testStep =
-        TestStep(
-          apiClient = apiClient,
-          exchangeKey = EXCHANGE_KEY,
-          exchangeStepAttemptKey = ATTEMPT_KEY,
-          privateInputLabels = mapOf("input" to "$EXCHANGE_KEY-encryption-key"),
-          privateOutputLabels = outputLabels,
-          stepType = ExchangeWorkflow.Step.StepCase.INPUT_STEP,
-          preferredPrivateStorage = preferredPrivateStorage,
-          preferredSharedStorage = preferredSharedStorage
-        )
-      testStep.buildAndExecuteJob()
-      val argumentException =
-        assertFailsWith(IllegalArgumentException::class) {
-          preferredPrivateStorage.batchRead(
-            inputLabels = mapOf("input" to "$EXCHANGE_KEY-mp-crypto-key")
+      coroutineScope {
+        whenever(apiClient.finishExchangeStepAttempt(any(), any(), any())).thenReturn(Unit)
+        val outputLabels = mapOf("output" to "$EXCHANGE_KEY-mp-crypto-key")
+        val testStep =
+          TestStep(
+            apiClient = apiClient,
+            exchangeKey = EXCHANGE_KEY,
+            exchangeStepAttemptKey = ATTEMPT_KEY,
+            privateOutputLabels = outputLabels,
+            stepType = ExchangeWorkflow.Step.StepCase.INPUT_STEP,
+            privateStorage = privateStorage,
+            sharedStorage = sharedStorage
+          )
+        // Launch Job Asynchronously
+        testStep.buildAndExecuteJob()
+        // Model Provider asynchronously writes data
+        launch {
+          privateStorage.batchWrite(
+            outputLabels = outputLabels,
+            data = mapOf("output" to MP_0_SECRET_KEY)
           )
         }
-      verify(apiClient, times(0)).finishExchangeStepAttempt(any(), any(), any())
-      // Model Provider asynchronously writes data
-      preferredPrivateStorage.batchWrite(
-        outputLabels = outputLabels,
-        data = mapOf("output" to MP_0_SECRET_KEY)
-      )
-      delay(1000)
-      val readValues =
-        requireNotNull(
-          preferredPrivateStorage.batchRead(
-            inputLabels = mapOf("input" to "$EXCHANGE_KEY-mp-crypto-key")
-          )["input"]
-        )
-      assertThat(readValues).isEqualTo(MP_0_SECRET_KEY)
-      verify(apiClient, times(0))
-        .finishExchangeStepAttempt(any(), eq(ExchangeStepAttempt.State.FAILED), any())
-      verify(apiClient, times(1))
-        .finishExchangeStepAttempt(any(), eq(ExchangeStepAttempt.State.SUCCEEDED), any())
+        val waitStep =
+          TestStep(
+            apiClient = apiClient,
+            exchangeKey = EXCHANGE_KEY,
+            exchangeStepAttemptKey = ATTEMPT_KEY,
+            privateInputLabels = mapOf("input" to "$EXCHANGE_KEY-encryption-key"),
+            privateOutputLabels = outputLabels,
+            stepType = ExchangeWorkflow.Step.StepCase.INPUT_STEP,
+            privateStorage = privateStorage,
+            sharedStorage = sharedStorage
+          )
+        // Wait for things to finish synchronously
+        waitStep.buildAndExecuteTask()
+        val readValues =
+          requireNotNull(
+            privateStorage.batchRead(inputLabels = mapOf("input" to "$EXCHANGE_KEY-mp-crypto-key"))[
+              "input"]
+          )
+        assertThat(readValues).isEqualTo(MP_0_SECRET_KEY)
+        verify(apiClient, times(0))
+          .finishExchangeStepAttempt(any(), eq(ExchangeStepAttempt.State.FAILED), any())
+        // There should be two successes. One for the initial job and another when we
+        // wait
+        verify(apiClient, times(2))
+          .finishExchangeStepAttempt(any(), eq(ExchangeStepAttempt.State.SUCCEEDED), any())
+      }
     }
   }
 
@@ -111,35 +121,41 @@ class CoroutineLauncherTest {
           privateOutputLabels =
             mapOf("encrypted-data" to "$EXCHANGE_KEY-mp-single-blinded-joinkeys"),
           stepType = ExchangeWorkflow.Step.StepCase.ENCRYPT_STEP,
-          preferredPrivateStorage = preferredPrivateStorage,
-          preferredSharedStorage = preferredSharedStorage
+          privateStorage = privateStorage,
+          sharedStorage = sharedStorage
         )
-      preferredPrivateStorage.batchWrite(
+      privateStorage.batchWrite(
         outputLabels = mapOf("output" to "$EXCHANGE_KEY-mp-crypto-key"),
         data = mapOf("output" to MP_0_SECRET_KEY)
       )
-      preferredPrivateStorage.batchWrite(
+      privateStorage.batchWrite(
         outputLabels = mapOf("output" to "$EXCHANGE_KEY-mp-joinkeys"),
         data = mapOf("output" to makeSerializedSharedInputs(JOIN_KEYS))
       )
+      // Launch Job Asynchronously
       testStep.buildAndExecuteJob()
-      val argumentException =
-        assertFailsWith(IllegalArgumentException::class) {
-          preferredPrivateStorage.batchRead(
-            inputLabels = mapOf("input" to "$EXCHANGE_KEY-mp-single-blinded-joinkeys")
-          )
-        }
-      verify(apiClient, times(0)).finishExchangeStepAttempt(any(), any(), any())
-      delay(1000)
+      val waitStep =
+        TestStep(
+          apiClient = apiClient,
+          exchangeKey = EXCHANGE_KEY,
+          exchangeStepAttemptKey = ATTEMPT_KEY,
+          privateOutputLabels = mapOf("output" to "$EXCHANGE_KEY-mp-single-blinded-joinkeys"),
+          stepType = ExchangeWorkflow.Step.StepCase.INPUT_STEP,
+          privateStorage = privateStorage,
+          sharedStorage = sharedStorage
+        )
+      // Wait for things to finish synchronously
+      waitStep.buildAndExecuteTask()
       val readValues =
         requireNotNull(
-          preferredPrivateStorage.batchRead(
+          privateStorage.batchRead(
             inputLabels = mapOf("input" to "$EXCHANGE_KEY-mp-single-blinded-joinkeys")
           )["input"]
         )
       verify(apiClient, times(0))
         .finishExchangeStepAttempt(any(), eq(ExchangeStepAttempt.State.FAILED), any())
-      verify(apiClient, times(1))
+      // There should be two successes. One for the initial job and another when we wait
+      verify(apiClient, times(2))
         .finishExchangeStepAttempt(any(), eq(ExchangeStepAttempt.State.SUCCEEDED), any())
     }
   }
@@ -163,41 +179,48 @@ class CoroutineLauncherTest {
           sharedOutputLabels =
             mapOf("reencrypted-data" to "$EXCHANGE_KEY-dp-mp-double-blinded-joinkeys"),
           stepType = ExchangeWorkflow.Step.StepCase.REENCRYPT_STEP,
-          preferredPrivateStorage = preferredPrivateStorage,
-          preferredSharedStorage = preferredSharedStorage
+          privateStorage = privateStorage,
+          sharedStorage = sharedStorage
         )
-      preferredPrivateStorage.batchWrite(
+      privateStorage.batchWrite(
         outputLabels = mapOf("output" to "$EXCHANGE_KEY-dp-crypto-key"),
         data = mapOf("output" to DP_0_SECRET_KEY)
       )
-      preferredSharedStorage.batchWrite(
+      sharedStorage.batchWrite(
         outputLabels = mapOf("output" to "$EXCHANGE_KEY-mp-single-blinded-joinkeys"),
         data = mapOf("output" to makeSerializedSharedInputs(SINGLE_BLINDED_KEYS))
       )
+      // Launch Job Asynchronously
       testStep.buildAndExecuteJob()
-      val argumentException =
-        assertFailsWith(IllegalArgumentException::class) {
-          preferredPrivateStorage.batchRead(
-            inputLabels = mapOf("input" to "$EXCHANGE_KEY-dp-mp-double-blinded-joinkeys")
-          )
-        }
-      verify(apiClient, times(0)).finishExchangeStepAttempt(any(), any(), any())
-      delay(1000)
+      val waitStep =
+        TestStep(
+          apiClient = apiClient,
+          exchangeKey = EXCHANGE_KEY,
+          exchangeStepAttemptKey = ATTEMPT_KEY,
+          privateOutputLabels = mapOf("output" to "$EXCHANGE_KEY-dp-mp-double-blinded-joinkeys"),
+          sharedOutputLabels = mapOf("output" to "$EXCHANGE_KEY-dp-mp-double-blinded-joinkeys"),
+          stepType = ExchangeWorkflow.Step.StepCase.INPUT_STEP,
+          privateStorage = privateStorage,
+          sharedStorage = sharedStorage
+        )
+      // Wait for things to finish synchronously
+      waitStep.buildAndExecuteTask()
       val privateReadValues =
         requireNotNull(
-          preferredPrivateStorage.batchRead(
+          privateStorage.batchRead(
             inputLabels = mapOf("input" to "$EXCHANGE_KEY-dp-mp-double-blinded-joinkeys")
           )["input"]
         )
       val sharedReadValues =
         requireNotNull(
-          preferredSharedStorage.batchRead(
+          sharedStorage.batchRead(
             inputLabels = mapOf("input" to "$EXCHANGE_KEY-dp-mp-double-blinded-joinkeys")
           )["input"]
         )
       verify(apiClient, times(0))
         .finishExchangeStepAttempt(any(), eq(ExchangeStepAttempt.State.FAILED), any())
-      verify(apiClient, times(1))
+      // There should be two successes. One for the initial job and another when we wait
+      verify(apiClient, times(2))
         .finishExchangeStepAttempt(any(), eq(ExchangeStepAttempt.State.SUCCEEDED), any())
     }
   }
@@ -221,22 +244,39 @@ class CoroutineLauncherTest {
           sharedOutputLabels =
             mapOf("reencrypted-data" to "$EXCHANGE_KEY-dp-mp-double-blinded-joinkeys"),
           stepType = ExchangeWorkflow.Step.StepCase.REENCRYPT_STEP,
-          preferredPrivateStorage = preferredPrivateStorage,
-          preferredSharedStorage = preferredSharedStorage
+          privateStorage = privateStorage,
+          sharedStorage = sharedStorage
         )
-      preferredPrivateStorage.batchWrite(
+      privateStorage.batchWrite(
         outputLabels = mapOf("output" to "$EXCHANGE_KEY-dp-crypto-key"),
         data = mapOf("output" to DP_0_SECRET_KEY)
       )
+      // Launch Job Asynchronously
       testStep.buildAndExecuteJob()
-      delay(1000)
-      verify(apiClient, times(1))
+      val waitStep =
+        TestStep(
+          apiClient = apiClient,
+          exchangeKey = EXCHANGE_KEY,
+          exchangeStepAttemptKey = ATTEMPT_KEY,
+          privateOutputLabels = mapOf("output" to "$EXCHANGE_KEY-dp-mp-double-blinded-joinkeys"),
+          sharedOutputLabels = mapOf("output" to "$EXCHANGE_KEY-dp-mp-double-blinded-joinkeys"),
+          stepType = ExchangeWorkflow.Step.StepCase.INPUT_STEP,
+          privateStorage = privateStorage,
+          sharedStorage = sharedStorage
+        )
+      val argumentException1 =
+        assertFailsWith(TimeoutCancellationException::class) {
+          // Wait for things to finish synchronously
+          waitStep.buildAndExecuteTask()
+        }
+      // There should be two failures. One for the initial job and another when we wait
+      verify(apiClient, times(2))
         .finishExchangeStepAttempt(any(), eq(ExchangeStepAttempt.State.FAILED), any())
       verify(apiClient, times(0))
         .finishExchangeStepAttempt(any(), eq(ExchangeStepAttempt.State.SUCCEEDED), any())
-      val argumentException1 =
+      val argumentException2 =
         assertFailsWith(IllegalArgumentException::class) {
-          preferredPrivateStorage.batchRead(
+          privateStorage.batchRead(
             inputLabels = mapOf("input" to "$EXCHANGE_KEY-dp-mp-double-blinded-joinkeys")
           )
         }

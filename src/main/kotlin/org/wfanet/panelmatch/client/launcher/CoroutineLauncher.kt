@@ -20,30 +20,18 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import org.wfanet.measurement.api.v2alpha.ExchangeStep
 import org.wfanet.measurement.api.v2alpha.ExchangeStepAttempt
-import org.wfanet.measurement.api.v2alpha.ExchangeWorkflow
-import org.wfanet.panelmatch.client.exchangetasks.ExchangeTask
 import org.wfanet.panelmatch.client.logger.loggerFor
-import org.wfanet.panelmatch.client.storage.Storage
 
 /** Executes an [ExchangeStep] using a couroutine. */
 class CoroutineLauncher(
-  private val apiClient: ApiClient,
   private val scope: CoroutineScope = CoroutineScope(Dispatchers.Default),
-  private val preferredSharedStorage: Storage,
-  private val preferredPrivateStorage: Storage,
-  private val getExchangeTaskForStep: (ExchangeWorkflow.Step) -> ExchangeTask
+  private val exchangeTaskExecutor: ExchangeTaskExecutor
 ) : JobLauncher {
 
   override suspend fun execute(exchangeStep: ExchangeStep, attemptKey: ExchangeStepAttempt.Key) {
     val exchangeStepAttemptKey: String = attemptKey.exchangeStepAttemptId
     scope.launch(CoroutineName(exchangeStepAttemptKey) + Dispatchers.Default) {
-      ExchangeTaskMapper(
-          apiClient = apiClient,
-          preferredSharedStorage = preferredSharedStorage,
-          preferredPrivateStorage = preferredPrivateStorage,
-          getExchangeTaskForStep = getExchangeTaskForStep
-        )
-        .execute(attemptKey, exchangeStep.step)
+      exchangeTaskExecutor.execute(attemptKey, exchangeStep.step)
     }
   }
 

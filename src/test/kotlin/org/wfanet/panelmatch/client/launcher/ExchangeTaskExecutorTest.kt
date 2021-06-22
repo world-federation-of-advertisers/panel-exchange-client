@@ -34,10 +34,10 @@ import org.wfanet.panelmatch.protocol.common.makeSerializedSharedInputs
 import org.wfanet.panelmatch.protocol.common.parseSerializedSharedInputs
 
 @RunWith(JUnit4::class)
-class ExchangeTaskMapperTest {
+class ExchangeTaskExecutorTest {
   private val apiClient: ApiClient = mock()
-  private val preferredPrivateStorage = InMemoryStorage(keyPrefix = "private")
-  private val preferredSharedStorage = InMemoryStorage(keyPrefix = "shared")
+  private val privateStorage = InMemoryStorage(keyPrefix = "private")
+  private val sharedStorage = InMemoryStorage(keyPrefix = "shared")
 
   @Test
   fun `test encrypt exchange step`() = runBlocking {
@@ -55,23 +55,23 @@ class ExchangeTaskMapperTest {
           ),
         sharedOutputLabels = mapOf("encrypted-data" to "$EXCHANGE_KEY-mp-single-blinded-joinkeys"),
         stepType = ExchangeWorkflow.Step.StepCase.ENCRYPT_STEP,
-        preferredPrivateStorage = preferredPrivateStorage,
-        preferredSharedStorage = preferredSharedStorage
+        privateStorage = privateStorage,
+        sharedStorage = sharedStorage
       )
-    preferredPrivateStorage.batchWrite(
+    privateStorage.batchWrite(
       outputLabels = mapOf("output" to "$EXCHANGE_KEY-mp-crypto-key"),
       data = mapOf("output" to MP_0_SECRET_KEY)
     )
-    preferredPrivateStorage.batchWrite(
+    privateStorage.batchWrite(
       outputLabels = mapOf("output" to "$EXCHANGE_KEY-mp-joinkeys"),
       data = mapOf("output" to makeSerializedSharedInputs(JOIN_KEYS))
     )
 
-    testStep.buildAndExecute()
+    testStep.buildAndExecuteTask()
 
     val singleBlindedKeys =
       requireNotNull(
-        preferredSharedStorage.batchRead(
+        sharedStorage.batchRead(
           inputLabels = mapOf("input" to "$EXCHANGE_KEY-mp-single-blinded-joinkeys")
         )["input"]
       )
@@ -92,23 +92,23 @@ class ExchangeTaskMapperTest {
         sharedOutputLabels =
           mapOf("reencrypted-data" to "$EXCHANGE_KEY-dp-mp-double-blinded-joinkeys"),
         stepType = ExchangeWorkflow.Step.StepCase.REENCRYPT_STEP,
-        preferredPrivateStorage = preferredPrivateStorage,
-        preferredSharedStorage = preferredSharedStorage
+        privateStorage = privateStorage,
+        sharedStorage = sharedStorage
       )
-    preferredPrivateStorage.batchWrite(
+    privateStorage.batchWrite(
       outputLabels = mapOf("output" to "$EXCHANGE_KEY-dp-crypto-key"),
       data = mapOf("output" to DP_0_SECRET_KEY)
     )
-    preferredSharedStorage.batchWrite(
+    sharedStorage.batchWrite(
       outputLabels = mapOf("output" to "$EXCHANGE_KEY-mp-single-blinded-joinkeys"),
       data = mapOf("output" to makeSerializedSharedInputs(SINGLE_BLINDED_KEYS))
     )
 
-    testStep.buildAndExecute()
+    testStep.buildAndExecuteTask()
 
     val doubleBlindedKeys =
       requireNotNull(
-        preferredSharedStorage.batchRead(
+        sharedStorage.batchRead(
           inputLabels = mapOf("input" to "$EXCHANGE_KEY-dp-mp-double-blinded-joinkeys")
         )["input"]
       )
@@ -129,31 +129,28 @@ class ExchangeTaskMapperTest {
           mapOf("encrypted-data" to "$EXCHANGE_KEY-dp-mp-double-blinded-joinkeys"),
         privateOutputLabels = mapOf("decrypted-data" to "$EXCHANGE_KEY-decrypted-data"),
         stepType = ExchangeWorkflow.Step.StepCase.DECRYPT_STEP,
-        preferredPrivateStorage = preferredPrivateStorage,
-        preferredSharedStorage = preferredSharedStorage
+        privateStorage = privateStorage,
+        sharedStorage = sharedStorage
       )
-    preferredPrivateStorage.batchWrite(
+    privateStorage.batchWrite(
       outputLabels = mapOf("output" to "$EXCHANGE_KEY-mp-crypto-key"),
       data = mapOf("output" to MP_0_SECRET_KEY)
     )
-    preferredSharedStorage.batchWrite(
+    sharedStorage.batchWrite(
       outputLabels = mapOf("output" to "$EXCHANGE_KEY-dp-mp-double-blinded-joinkeys"),
       data = mapOf("output" to makeSerializedSharedInputs(DOUBLE_BLINDED_KEYS))
     )
 
-    testStep.buildAndExecute()
+    testStep.buildAndExecuteTask()
 
     val argumentException =
       assertFailsWith(IllegalArgumentException::class) {
-        preferredSharedStorage.batchRead(
-          inputLabels = mapOf("input" to "$EXCHANGE_KEY-decrypted-data")
-        )
+        sharedStorage.batchRead(inputLabels = mapOf("input" to "$EXCHANGE_KEY-decrypted-data"))
       }
     val lookupKeys =
       requireNotNull(
-        preferredPrivateStorage.batchRead(
-          inputLabels = mapOf("input" to "$EXCHANGE_KEY-decrypted-data")
-        )["input"]
+        privateStorage.batchRead(inputLabels = mapOf("input" to "$EXCHANGE_KEY-decrypted-data"))[
+          "input"]
       )
     assertThat(parseSerializedSharedInputs(lookupKeys)).isEqualTo(LOOKUP_KEYS)
   }

@@ -26,12 +26,10 @@ import kotlinx.coroutines.runBlocking
 import org.wfanet.measurement.api.v2alpha.ExchangeStep
 import org.wfanet.measurement.api.v2alpha.ExchangeStepAttempt
 import org.wfanet.measurement.api.v2alpha.ExchangeWorkflow
-import org.wfanet.panelmatch.client.exchangetasks.CryptorExchangeTask
-import org.wfanet.panelmatch.client.exchangetasks.ExchangeTask
-import org.wfanet.panelmatch.client.exchangetasks.InputTask
+import org.wfanet.panelmatch.client.exchangetasks.ExchangeTaskMapperForJoinKeyExchange
 import org.wfanet.panelmatch.client.launcher.ApiClient
 import org.wfanet.panelmatch.client.launcher.CoroutineLauncher
-import org.wfanet.panelmatch.client.launcher.ExchangeTaskMapper
+import org.wfanet.panelmatch.client.launcher.ExchangeTaskExecutor
 import org.wfanet.panelmatch.client.storage.Storage
 import org.wfanet.panelmatch.protocol.common.Cryptor
 
@@ -70,6 +68,14 @@ val LOOKUP_KEYS =
     ByteString.copyFromUtf8("some lookup4")
   )
 
+fun buildMockCryptor(): Cryptor {
+  val mockCryptor: Cryptor = mock<Cryptor>()
+  whenever(mockCryptor.encrypt(any(), any())).thenReturn(SINGLE_BLINDED_KEYS)
+  whenever(mockCryptor.reEncrypt(any(), any())).thenReturn(DOUBLE_BLINDED_KEYS)
+  whenever(mockCryptor.decrypt(any(), any())).thenReturn(LOOKUP_KEYS)
+  return mockCryptor
+}
+
 class TestStep(
   val apiClient: ApiClient,
   val exchangeKey: String,
@@ -79,11 +85,11 @@ class TestStep(
   val sharedInputLabels: Map<String, String> = emptyMap<String, String>(),
   val sharedOutputLabels: Map<String, String> = emptyMap<String, String>(),
   val stepType: ExchangeWorkflow.Step.StepCase,
-  val deterministicCommutativeCryptor: Cryptor = mock<Cryptor>(),
+  val deterministicCommutativeCryptor: Cryptor = buildMockCryptor(),
   val timeoutDuration: Duration = Duration.ofMillis(1000),
   val retryDuration: Duration = Duration.ofMillis(100),
-  val preferredSharedStorage: Storage,
-  val preferredPrivateStorage: Storage,
+  val sharedStorage: Storage,
+  val privateStorage: Storage,
   val attemptKey: ExchangeStepAttempt.Key =
     ExchangeStepAttempt.Key.newBuilder()
       .apply {
@@ -92,28 +98,21 @@ class TestStep(
       }
       .build()
 ) {
-  init {}
-
-  fun getExchangeTaskForStep(step: ExchangeWorkflow.Step): ExchangeTask {
-    return when (step.getStepCase()) {
-      ExchangeWorkflow.Step.StepCase.ENCRYPT_STEP ->
-        CryptorExchangeTask.forEncryption(deterministicCommutativeCryptor)
-      ExchangeWorkflow.Step.StepCase.REENCRYPT_STEP ->
-        CryptorExchangeTask.forReEncryption(deterministicCommutativeCryptor)
-      ExchangeWorkflow.Step.StepCase.DECRYPT_STEP ->
-        CryptorExchangeTask.forDecryption(deterministicCommutativeCryptor)
-      ExchangeWorkflow.Step.StepCase.INPUT_STEP ->
-        InputTask(
-          preferredSharedStorage = preferredSharedStorage,
-          preferredPrivateStorage = preferredPrivateStorage,
-          step = step,
-          retryDuration = retryDuration
-        )
-      else -> error("Unsupported step type")
-    }
-  }
-
-  suspend fun build(): ExchangeWorkflow.Step {
+  private val exchangeTaskExecutor =
+    ExchangeTaskExecutor(
+      apiClient = apiClient,
+      sharedStorage = sharedStorage,
+      privateStorage = privateStorage,
+      timeoutDuration = timeoutDuration,
+      getExchangeTaskForStep =
+        ExchangeTaskMapperForJoinKeyExchange(
+          deterministicCommutativeCryptor = deterministicCommutativeCryptor,
+          retryDuration = retryDuration,
+          sharedStorage = sharedStorage,
+          privateStorage = privateStorage
+        )::getExchangeTaskForStep
+    )
+  suspend fun buildStep(): ExchangeWorkflow.Step {
     return ExchangeWorkflow.Step.newBuilder()
       .putAllPrivateInputLabels(privateInputLabels)
       .putAllPrivateOutputLabels(privateOutputLabels)
@@ -135,28 +134,17 @@ class TestStep(
       .build()
   }
 
-  suspend fun buildAndExecute() = runBlocking {
-    val builtStep: ExchangeWorkflow.Step = build()
-    whenever(deterministicCommutativeCryptor.encrypt(any(), any())).thenReturn(SINGLE_BLINDED_KEYS)
-    whenever(deterministicCommutativeCryptor.reEncrypt(any(), any()))
-      .thenReturn(DOUBLE_BLINDED_KEYS)
-    whenever(deterministicCommutativeCryptor.decrypt(any(), any())).thenReturn(LOOKUP_KEYS)
+  suspend fun buildAndExecuteTask() = runBlocking {
+    val builtStep: ExchangeWorkflow.Step = buildStep()
     val job =
       async(CoroutineName(attemptKey.exchangeId) + Dispatchers.Default) {
-        ExchangeTaskMapper(
-            apiClient = apiClient,
-            preferredSharedStorage = preferredSharedStorage,
-            preferredPrivateStorage = preferredPrivateStorage,
-            timeoutDuration = timeoutDuration,
-            getExchangeTaskForStep = ::getExchangeTaskForStep
-          )
-          .execute(attemptKey = attemptKey, step = builtStep)
+        exchangeTaskExecutor.execute(attemptKey = attemptKey, step = builtStep)
       }
     job.await()
   }
 
   suspend fun buildAndExecuteJob() {
-    val builtStep: ExchangeWorkflow.Step = build()
+    val builtStep: ExchangeWorkflow.Step = buildStep()
     val exchangeStep =
       ExchangeStep.newBuilder()
         .apply {
@@ -164,16 +152,7 @@ class TestStep(
           state = ExchangeStep.State.READY_FOR_RETRY
         }
         .build()
-    whenever(deterministicCommutativeCryptor.encrypt(any(), any())).thenReturn(SINGLE_BLINDED_KEYS)
-    whenever(deterministicCommutativeCryptor.reEncrypt(any(), any()))
-      .thenReturn(DOUBLE_BLINDED_KEYS)
-    whenever(deterministicCommutativeCryptor.decrypt(any(), any())).thenReturn(LOOKUP_KEYS)
-    CoroutineLauncher(
-        apiClient = apiClient,
-        preferredSharedStorage = preferredSharedStorage,
-        preferredPrivateStorage = preferredPrivateStorage,
-        getExchangeTaskForStep = this::getExchangeTaskForStep
-      )
+    CoroutineLauncher(exchangeTaskExecutor = exchangeTaskExecutor)
       .execute(exchangeStep = exchangeStep, attemptKey = attemptKey)
   }
 }
