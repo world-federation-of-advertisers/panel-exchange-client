@@ -89,8 +89,7 @@ class CoroutineLauncherTest {
     }
     val readValues =
       privateStorage.batchRead(inputLabels = mapOf("input" to "$exchangeKey-mp-crypto-key"))
-    val readInput = requireNotNull(readValues["input"])
-    assertThat(readInput).isEqualTo(MP_0_SECRET_KEY)
+    assertThat(readValues["input"]).isEqualTo(MP_0_SECRET_KEY)
     verify(apiClient, times(0))
       .finishExchangeStepAttempt(any(), eq(ExchangeStepAttempt.State.FAILED), any())
     // There should be two successes. One for the initial job and another when we wait
@@ -147,8 +146,8 @@ class CoroutineLauncherTest {
         privateStorage.batchRead(
           inputLabels = mapOf("input" to "$exchangeKey-mp-single-blinded-joinkeys")
         )
-      val readInput = requireNotNull(readValues["input"])
-      assertThat(parseSerializedSharedInputs(readInput)).isEqualTo(SINGLE_BLINDED_KEYS)
+      assertThat(parseSerializedSharedInputs(requireNotNull(readValues["input"])))
+        .isEqualTo(SINGLE_BLINDED_KEYS)
       verify(apiClient, times(0))
         .finishExchangeStepAttempt(any(), eq(ExchangeStepAttempt.State.FAILED), any())
       // There should be two successes. One for the initial job and another when we wait
@@ -207,14 +206,14 @@ class CoroutineLauncherTest {
         privateStorage.batchRead(
           inputLabels = mapOf("input" to "$exchangeKey-dp-mp-double-blinded-joinkeys")
         )
-      val privateInput = requireNotNull(privateReadValues["input"])
-      assertThat(parseSerializedSharedInputs(privateInput)).isEqualTo(DOUBLE_BLINDED_KEYS)
+      assertThat(parseSerializedSharedInputs(requireNotNull(privateReadValues["input"])))
+        .isEqualTo(DOUBLE_BLINDED_KEYS)
       val sharedReadValues =
         sharedStorage.batchRead(
           inputLabels = mapOf("input" to "$exchangeKey-dp-mp-double-blinded-joinkeys")
         )
-      val sharedInput = requireNotNull(sharedReadValues["input"])
-      assertThat(parseSerializedSharedInputs(sharedInput)).isEqualTo(DOUBLE_BLINDED_KEYS)
+      assertThat(parseSerializedSharedInputs(requireNotNull(sharedReadValues["input"])))
+        .isEqualTo(DOUBLE_BLINDED_KEYS)
       verify(apiClient, times(0))
         .finishExchangeStepAttempt(any(), eq(ExchangeStepAttempt.State.FAILED), any())
       // There should be two successes. One for the initial job and another when we wait
