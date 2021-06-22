@@ -24,8 +24,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
 import org.wfanet.measurement.api.v2alpha.ExchangeStep
-import org.wfanet.measurement.api.v2alpha.ExchangeStepAttempt
 import org.wfanet.measurement.api.v2alpha.ExchangeWorkflow
+import org.wfanet.measurement.api.v2alpha.SignedData
+import org.wfanet.measurement.kingdom.service.api.v2alpha.ExchangeStepAttemptKey
 import org.wfanet.panelmatch.client.exchangetasks.ExchangeTaskMapperForJoinKeyExchange
 import org.wfanet.panelmatch.client.launcher.ApiClient
 import org.wfanet.panelmatch.client.launcher.CoroutineLauncher
@@ -90,13 +91,13 @@ class TestStep(
   val retryDuration: Duration = Duration.ofMillis(100),
   val sharedStorage: Storage,
   val privateStorage: Storage,
-  val attemptKey: ExchangeStepAttempt.Key =
-    ExchangeStepAttempt.Key.newBuilder()
-      .apply {
-        exchangeId = exchangeKey
-        exchangeStepAttemptId = exchangeStepAttemptKey
-      }
-      .build()
+  val attemptKey: ExchangeStepAttemptKey =
+    ExchangeStepAttemptKey(
+      exchangeId = exchangeKey,
+      exchangeStepAttemptId = exchangeStepAttemptKey,
+      recurringExchangeId = "some-recurring-exchange-id-0",
+      exchangeStepId = "some-exchange-step-id-0"
+    )
 ) {
   private val exchangeTaskExecutor =
     ExchangeTaskExecutor(
@@ -134,21 +135,26 @@ class TestStep(
       .build()
   }
 
+  suspend fun signStep(step: ExchangeWorkflow.Step): SignedData {
+    return SignedData.newBuilder().setData(step.toByteString()).build()
+  }
+
   suspend fun buildAndExecuteTask() = runBlocking {
-    val builtStep: ExchangeWorkflow.Step = buildStep()
+    val step = buildStep()
     val job =
       async(CoroutineName(attemptKey.exchangeId) + Dispatchers.Default) {
-        exchangeTaskExecutor.execute(attemptKey = attemptKey, step = builtStep)
+        exchangeTaskExecutor.execute(attemptKey = attemptKey, step = step)
       }
     job.await()
   }
 
   suspend fun buildAndExecuteJob() {
     val builtStep: ExchangeWorkflow.Step = buildStep()
+    val signedStep = signStep(builtStep)
     val exchangeStep =
       ExchangeStep.newBuilder()
         .apply {
-          keyBuilder.apply { step = builtStep }
+          signedExchangeWorkflow = signedStep
           state = ExchangeStep.State.READY_FOR_RETRY
         }
         .build()

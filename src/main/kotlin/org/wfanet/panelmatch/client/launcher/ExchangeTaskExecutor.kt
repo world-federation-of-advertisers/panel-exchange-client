@@ -23,6 +23,7 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.withTimeout
 import org.wfanet.measurement.api.v2alpha.ExchangeStepAttempt
 import org.wfanet.measurement.api.v2alpha.ExchangeWorkflow
+import org.wfanet.measurement.kingdom.service.api.v2alpha.ExchangeStepAttemptKey
 import org.wfanet.panelmatch.client.exchangetasks.ExchangeTask
 import org.wfanet.panelmatch.client.logger.addToTaskLog
 import org.wfanet.panelmatch.client.logger.getAndClearTaskLog
@@ -84,7 +85,7 @@ class ExchangeTaskExecutor(
     async { sharedStorage.batchWrite(outputLabels = sharedOutputLabels, data = taskOutput) }
   }
 
-  suspend fun execute(attemptKey: ExchangeStepAttempt.Key, step: ExchangeWorkflow.Step) =
+  suspend fun execute(attemptKey: ExchangeStepAttemptKey, step: ExchangeWorkflow.Step) =
       coroutineScope {
     try {
       logger.addToTaskLog("Executing $step with attempt $attemptKey")

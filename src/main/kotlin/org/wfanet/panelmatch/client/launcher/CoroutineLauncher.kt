@@ -19,7 +19,8 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import org.wfanet.measurement.api.v2alpha.ExchangeStep
-import org.wfanet.measurement.api.v2alpha.ExchangeStepAttempt
+import org.wfanet.measurement.api.v2alpha.ExchangeWorkflow.Step
+import org.wfanet.measurement.kingdom.service.api.v2alpha.ExchangeStepAttemptKey
 import org.wfanet.panelmatch.client.logger.loggerFor
 
 /** Executes an [ExchangeStep] using a couroutine. */
@@ -27,11 +28,13 @@ class CoroutineLauncher(
   private val scope: CoroutineScope = CoroutineScope(Dispatchers.Default),
   private val exchangeTaskExecutor: ExchangeTaskExecutor
 ) : JobLauncher {
-
-  override suspend fun execute(exchangeStep: ExchangeStep, attemptKey: ExchangeStepAttempt.Key) {
-    val exchangeStepAttemptKey: String = attemptKey.exchangeStepAttemptId
-    scope.launch(CoroutineName(exchangeStepAttemptKey) + Dispatchers.Default) {
-      exchangeTaskExecutor.execute(attemptKey, exchangeStep.step)
+  override suspend fun execute(exchangeStep: ExchangeStep, attemptKey: ExchangeStepAttemptKey) {
+    val exchangeStepAttemptId: String = attemptKey.exchangeStepAttemptId
+    scope.launch(CoroutineName(exchangeStepAttemptId) + Dispatchers.Default) {
+      exchangeTaskExecutor.execute(
+        attemptKey = attemptKey,
+        step = Step.parseFrom(exchangeStep.signedExchangeWorkflow.data)
+      )
     }
   }
 
