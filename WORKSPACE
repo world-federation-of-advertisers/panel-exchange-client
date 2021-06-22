@@ -45,17 +45,17 @@ load("//build/com_google_truth:repo.bzl", "com_google_truth_artifact_dict")
 # Measurement system.
 http_archive(
     name = "wfa_measurement_system",
-    sha256 = "50dcfbbd95eb7585c3e1faf66c6c1f3101d05012477f084e055348b963aeef40",
-    strip_prefix = "cross-media-measurement-04da26b2fb351b857114ba44df2b992c80ad9ec3",
-    url = "https://github.com/world-federation-of-advertisers/cross-media-measurement/archive/04da26b2fb351b857114ba44df2b992c80ad9ec3.tar.gz",
+    sha256 = "275c6e44b8f15097acb52b547b1f95b0a7e0e47c4b625bf3bc9d29d21234ac23",
+    strip_prefix = "cross-media-measurement-8399fe4c23a13c459bab09e7f869f4f8e89bd8df",
+    url = "https://github.com/world-federation-of-advertisers/cross-media-measurement/archive/8399fe4c23a13c459bab09e7f869f4f8e89bd8df.tar.gz",
 )
 
 # Measurement proto.
 http_archive(
     name = "wfa_measurement_proto",
-    sha256 = "c7d87a438a446ebeacdcae8bcfed270c513ae5c5d26bccd36fb179d47e7d3365",
-    strip_prefix = "cross-media-measurement-api-ab647fffd78f29769611f05ef131ec1f1feed820",
-    url = "https://github.com/world-federation-of-advertisers/cross-media-measurement-api/archive/ab647fffd78f29769611f05ef131ec1f1feed820.tar.gz",
+    sha256 = "12f231fe7c8f75e3170ee9c6e308d355eccc354ed60ef4505f6f537812652626",
+    strip_prefix = "cross-media-measurement-api-584b40ca7b4275d194cc4cedfb877c05ec5ab24e",
+    url = "https://github.com/world-federation-of-advertisers/cross-media-measurement-api/archive/584b40ca7b4275d194cc4cedfb877c05ec5ab24e.tar.gz",
 )
 
 # @io_bazel_rules_kotlin
