@@ -51,19 +51,29 @@ class CoroutineLauncherTest {
   fun `test input task`() = runBlocking {
     val exchangeKey = java.util.UUID.randomUUID().toString()
     val attemptKey = java.util.UUID.randomUUID().toString()
+    val outputLabels = mapOf("output" to "$exchangeKey-mp-crypto-key")
+    val testStep =
+      TestStep(
+        apiClient = apiClient,
+        exchangeKey = exchangeKey,
+        exchangeStepAttemptKey = attemptKey,
+        privateOutputLabels = outputLabels,
+        stepType = ExchangeWorkflow.Step.StepCase.INPUT_STEP,
+        privateStorage = privateStorage,
+        sharedStorage = sharedStorage
+      )
+    val waitStep =
+      TestStep(
+        apiClient = apiClient,
+        exchangeKey = exchangeKey,
+        exchangeStepAttemptKey = attemptKey,
+        privateOutputLabels = outputLabels,
+        stepType = ExchangeWorkflow.Step.StepCase.INPUT_STEP,
+        privateStorage = privateStorage,
+        sharedStorage = sharedStorage
+      )
+    whenever(apiClient.finishExchangeStepAttempt(any(), any(), any())).thenReturn(Unit)
     val output = coroutineScope {
-      whenever(apiClient.finishExchangeStepAttempt(any(), any(), any())).thenReturn(Unit)
-      val outputLabels = mapOf("output" to "$exchangeKey-mp-crypto-key")
-      val testStep =
-        TestStep(
-          apiClient = apiClient,
-          exchangeKey = exchangeKey,
-          exchangeStepAttemptKey = attemptKey,
-          privateOutputLabels = outputLabels,
-          stepType = ExchangeWorkflow.Step.StepCase.INPUT_STEP,
-          privateStorage = privateStorage,
-          sharedStorage = sharedStorage
-        )
       // Launch Job Asynchronously
       testStep.buildAndExecuteJob()
       // Model Provider asynchronously writes data
@@ -73,20 +83,9 @@ class CoroutineLauncherTest {
           data = mapOf("output" to MP_0_SECRET_KEY)
         )
       }
-      val waitStep =
-        TestStep(
-          apiClient = apiClient,
-          exchangeKey = exchangeKey,
-          exchangeStepAttemptKey = attemptKey,
-          privateInputLabels = mapOf("input" to "$exchangeKey-encryption-key"),
-          privateOutputLabels = outputLabels,
-          stepType = ExchangeWorkflow.Step.StepCase.INPUT_STEP,
-          privateStorage = privateStorage,
-          sharedStorage = sharedStorage
-        )
-      // Wait for things to finish synchronously
-      waitStep.buildAndExecuteTask()
     }
+    // Wait for things to finish synchronously
+    waitStep.buildAndExecuteTask()
     val readValues =
       privateStorage.batchRead(inputLabels = mapOf("input" to "$exchangeKey-mp-crypto-key"))
     assertThat(readValues["input"]).isEqualTo(MP_0_SECRET_KEY)

@@ -22,6 +22,7 @@ import java.time.Duration
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import org.wfanet.measurement.api.v2alpha.ExchangeStep
 import org.wfanet.measurement.api.v2alpha.ExchangeWorkflow
@@ -87,8 +88,11 @@ class TestStep(
   val sharedOutputLabels: Map<String, String> = emptyMap<String, String>(),
   val stepType: ExchangeWorkflow.Step.StepCase,
   val deterministicCommutativeCryptor: Cryptor = buildMockCryptor(),
-  val timeoutDuration: Duration = Duration.ofMillis(1000),
-  val retryDuration: Duration = Duration.ofMillis(100),
+  // If you are running a high number of runs_per_test in bazel, you need a longer timeout
+  val timeoutDuration: Duration = Duration.ofMillis(10000),
+  // If the retry is too high the tests will be flaky because it will try to finish the test before
+  // the job finishes
+  val retryDuration: Duration = Duration.ofMillis(10),
   val sharedStorage: Storage,
   val privateStorage: Storage,
   val attemptKey: ExchangeStepAttemptKey =
@@ -146,6 +150,8 @@ class TestStep(
         exchangeTaskExecutor.execute(attemptKey = attemptKey, step = step)
       }
     job.await()
+    // This delay should be higher than the retryDelay
+    delay(20)
   }
 
   suspend fun buildAndExecuteJob() {
@@ -160,5 +166,7 @@ class TestStep(
         .build()
     CoroutineLauncher(exchangeTaskExecutor = exchangeTaskExecutor)
       .execute(exchangeStep = exchangeStep, attemptKey = attemptKey)
+    // This delay should be higher than the retryDelay
+    delay(20)
   }
 }
