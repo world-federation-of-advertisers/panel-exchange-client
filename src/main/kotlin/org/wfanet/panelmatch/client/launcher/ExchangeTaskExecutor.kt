@@ -90,6 +90,8 @@ class ExchangeTaskExecutor(
       logger.addToTaskLog("Executing $step with attempt $attemptKey")
       val exchangeTask: ExchangeTask = getExchangeTaskForStep(step)
       withTimeout(timeoutDuration.toMillis()) {
+        // TODO - get rid of this extra if and fold the INPUT_STEP into the normal process for all
+        // steps
         if (step.getStepCase() == ExchangeWorkflow.Step.StepCase.INPUT_STEP) {
           exchangeTask.execute(emptyMap<String, ByteString>())
         } else {
