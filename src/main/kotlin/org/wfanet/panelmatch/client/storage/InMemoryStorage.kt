@@ -22,11 +22,11 @@ private var inMemoryStorage = ConcurrentHashMap<String, ByteString>()
  * Stores everything in memory. Nothing is persistent. Use with caution. Uses a simple hashmap to
  * storage everything where path is the key.
  */
-class InMemoryStorage(keyPrefix: String) : Storage {
-  private val keyPrefix = keyPrefix
+class InMemoryStorage(private val keyPrefix: String) : Storage {
   private fun getKey(keyPrefix: String, path: String): String {
     return "$keyPrefix$path"
   }
+
   override suspend fun read(path: String): ByteString {
     val key = getKey(keyPrefix = keyPrefix, path = path)
     return requireNotNull(inMemoryStorage[key]) { "Key does not exist in storage: $key" }
@@ -34,7 +34,15 @@ class InMemoryStorage(keyPrefix: String) : Storage {
 
   override suspend fun write(path: String, data: ByteString) {
     val key = getKey(keyPrefix = keyPrefix, path = path)
-    require(!inMemoryStorage.containsKey(key)) { "Cannot write to an existing key: $key" }
-    inMemoryStorage.put(key, data)
+    require(inMemoryStorage.putIfAbsent(key, data) == null) {
+      "Cannot write to an existing key: $key"
+    }
+  }
+
+  companion object {
+    /** Deletes all existing stored items. */
+    fun clear() {
+      inMemoryStorage.clear()
+    }
   }
 }

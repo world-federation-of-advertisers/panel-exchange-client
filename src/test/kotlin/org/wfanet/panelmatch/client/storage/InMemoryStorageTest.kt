@@ -14,9 +14,15 @@
 
 package org.wfanet.panelmatch.client.storage
 
+import org.junit.Before
 import org.wfanet.panelmatch.client.storage.testing.AbstractStorageTest
 
 class InMemoryStorageTest : AbstractStorageTest() {
   override val privateStorage = InMemoryStorage(keyPrefix = "private")
   override val sharedStorage = InMemoryStorage(keyPrefix = "shared")
+
+  @Before
+  fun clearStorage() {
+    InMemoryStorage.clear()
+  }
 }
