@@ -168,6 +168,7 @@ inline fun <InT, reified SideT, reified OutT> PCollection<InT>.parDoWithSideInpu
   return apply(name, ParDo.of(doFn).withSideInputs(sideInput))
 }
 
+/** Groups receiver by key and then combines all values into one with [block]. */
 inline fun <KeyT, reified ValueT> PCollection<KV<KeyT, ValueT>>.combinePerKey(
   name: String = "CombinePerKey",
   crossinline block: (Iterable<ValueT>) -> ValueT
@@ -175,5 +176,6 @@ inline fun <KeyT, reified ValueT> PCollection<KV<KeyT, ValueT>>.combinePerKey(
   return apply(name, Combine.perKey<KeyT, ValueT>(SerializableFunction { block(it) }))
 }
 
+/** Convenient way to get a [TypeDescriptor] for the receiver. */
 val <T : Any> KClass<T>.typeDescriptor: TypeDescriptor<T>
   get() = TypeDescriptor.of(this.java)
