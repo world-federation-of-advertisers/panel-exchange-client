@@ -36,7 +36,7 @@ class IntersectValidateTask(val maxSize: Int, val minimumOverlap: Float) : Excha
     require(currentDataSize > 0)
     val currentOverlap: Float = overlapItemsCount.toFloat() / currentDataSize
     require(currentOverlap > minimumOverlap) {
-      "Overlap of ${currentOverlap} is less than $minimumOverlap"
+      "Overlap of $currentOverlap is less than $minimumOverlap"
     }
     return mapOf("current-data" to requireNotNull(input["current-data"])).toMap()
   }

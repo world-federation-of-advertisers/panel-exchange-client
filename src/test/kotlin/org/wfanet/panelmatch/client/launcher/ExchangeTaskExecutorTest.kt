@@ -15,12 +15,17 @@
 package org.wfanet.panelmatch.client.launcher
 
 import com.google.common.truth.Truth.assertThat
+import com.nhaarman.mockitokotlin2.any
+import com.nhaarman.mockitokotlin2.eq
 import com.nhaarman.mockitokotlin2.mock
+import com.nhaarman.mockitokotlin2.times
+import com.nhaarman.mockitokotlin2.verify
 import kotlin.test.assertFailsWith
 import kotlinx.coroutines.runBlocking
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
+import org.wfanet.measurement.api.v2alpha.ExchangeStepAttempt
 import org.wfanet.measurement.api.v2alpha.ExchangeWorkflow
 import org.wfanet.panelmatch.client.launcher.testing.DOUBLE_BLINDED_KEYS
 import org.wfanet.panelmatch.client.launcher.testing.DP_0_SECRET_KEY
@@ -76,10 +81,12 @@ class ExchangeTaskExecutorTest {
         )["input"]
       )
     assertThat(parseSerializedSharedInputs(singleBlindedKeys)).isEqualTo(SINGLE_BLINDED_KEYS)
+    verify(apiClient, times(1))
+      .finishExchangeStepAttempt(any(), eq(ExchangeStepAttempt.State.SUCCEEDED), any())
   }
 
   @Test
-  fun `test intersect and validate exchange step`() = runBlocking {
+  fun `test intersect and validate exchange step passes`() = runBlocking {
     val exchangeKey = java.util.UUID.randomUUID().toString()
     val attemptKey = java.util.UUID.randomUUID().toString()
     val testStep =
@@ -87,9 +94,11 @@ class ExchangeTaskExecutorTest {
         apiClient = apiClient,
         exchangeKey = exchangeKey,
         exchangeStepAttemptKey = attemptKey,
-        sharedInputLabels = mapOf("current-data" to "mp-single-blinded-joinkeys"),
-        privateInputLabels = mapOf("previous-data" to "previous-mp-single-blinded-joinkeys"),
-        privateOutputLabels = mapOf("current-data" to "copy-mp-single-blinded-joinkeys"),
+        sharedInputLabels = mapOf("current-data" to "$exchangeKey-mp-single-blinded-joinkeys"),
+        privateInputLabels =
+          mapOf("previous-data" to "$exchangeKey-previous-mp-single-blinded-joinkeys"),
+        privateOutputLabels =
+          mapOf("current-data" to "$exchangeKey-copy-mp-single-blinded-joinkeys"),
         stepType = ExchangeWorkflow.Step.StepCase.INTERSECT_AND_VALIDATE_STEP,
         intersectMaxSize = 100000,
         intersectMinimumOverlap = 0.99f,
@@ -97,19 +106,59 @@ class ExchangeTaskExecutorTest {
         sharedStorage = sharedStorage
       )
     sharedStorage.batchWrite(
-      outputLabels = mapOf("output" to "mp-single-blinded-joinkeys"),
+      outputLabels = mapOf("output" to "$exchangeKey-mp-single-blinded-joinkeys"),
       data = mapOf("output" to makeSerializedSharedInputs(SINGLE_BLINDED_KEYS))
     )
     privateStorage.batchWrite(
-      outputLabels = mapOf("output" to "previous-mp-single-blinded-joinkeys"),
+      outputLabels = mapOf("output" to "$exchangeKey-previous-mp-single-blinded-joinkeys"),
       data = mapOf("output" to makeSerializedSharedInputs(SINGLE_BLINDED_KEYS))
     )
     testStep.buildAndExecuteTask()
     val singleBlindedKeysCopy =
-      privateStorage.batchRead(inputLabels = mapOf("input" to "copy-mp-single-blinded-joinkeys"))[
-        "input"]
+      privateStorage.batchRead(
+        inputLabels = mapOf("input" to "$exchangeKey-copy-mp-single-blinded-joinkeys")
+      )["input"]
     assertThat(parseSerializedSharedInputs(requireNotNull(singleBlindedKeysCopy)))
       .isEqualTo(SINGLE_BLINDED_KEYS)
+    verify(apiClient, times(1))
+      .finishExchangeStepAttempt(any(), eq(ExchangeStepAttempt.State.SUCCEEDED), any())
+  }
+
+  @Test
+  fun `test intersect and validate exchange step fails`() = runBlocking {
+    val exchangeKey = java.util.UUID.randomUUID().toString()
+    val attemptKey = java.util.UUID.randomUUID().toString()
+    val testStep =
+      TestStep(
+        apiClient = apiClient,
+        exchangeKey = exchangeKey,
+        exchangeStepAttemptKey = attemptKey,
+        sharedInputLabels = mapOf("current-data" to "$exchangeKey-mp-single-blinded-joinkeys"),
+        privateInputLabels =
+          mapOf("previous-data" to "$exchangeKey-previous-mp-single-blinded-joinkeys"),
+        privateOutputLabels =
+          mapOf("current-data" to "$exchangeKey-copy-mp-single-blinded-joinkeys"),
+        stepType = ExchangeWorkflow.Step.StepCase.INTERSECT_AND_VALIDATE_STEP,
+        intersectMaxSize = 100000,
+        intersectMinimumOverlap = 0.99f,
+        privateStorage = privateStorage,
+        sharedStorage = sharedStorage
+      )
+    sharedStorage.batchWrite(
+      outputLabels = mapOf("output" to "$exchangeKey-mp-single-blinded-joinkeys"),
+      data = mapOf("output" to makeSerializedSharedInputs(SINGLE_BLINDED_KEYS))
+    )
+    privateStorage.batchWrite(
+      outputLabels = mapOf("output" to "$exchangeKey-previous-mp-single-blinded-joinkeys"),
+      data = mapOf("output" to makeSerializedSharedInputs(SINGLE_BLINDED_KEYS.dropLast(2)))
+    )
+    val argumentException0 =
+      assertFailsWith(IllegalArgumentException::class) { testStep.buildAndExecuteTask() }
+    privateStorage.batchRead(
+      inputLabels = mapOf("input" to "$exchangeKey-copy-mp-single-blinded-joinkeys")
+    )["input"]
+    verify(apiClient, times(1))
+      .finishExchangeStepAttempt(any(), eq(ExchangeStepAttempt.State.FAILED), any())
   }
 
   @Test
@@ -147,6 +196,8 @@ class ExchangeTaskExecutorTest {
         )["input"]
       )
     assertThat(parseSerializedSharedInputs(doubleBlindedKeys)).isEqualTo(DOUBLE_BLINDED_KEYS)
+    verify(apiClient, times(1))
+      .finishExchangeStepAttempt(any(), eq(ExchangeStepAttempt.State.SUCCEEDED), any())
   }
 
   @Test
@@ -186,5 +237,7 @@ class ExchangeTaskExecutorTest {
           "input"]
       )
     assertThat(parseSerializedSharedInputs(lookupKeys)).isEqualTo(LOOKUP_KEYS)
+    verify(apiClient, times(1))
+      .finishExchangeStepAttempt(any(), eq(ExchangeStepAttempt.State.SUCCEEDED), any())
   }
 }
