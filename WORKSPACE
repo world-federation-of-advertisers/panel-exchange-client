@@ -13,6 +13,22 @@ http_archive(
     ],
 )
 
+
+load("@bazel_skylib//:workspace.bzl", "bazel_skylib_workspace")
+
+bazel_skylib_workspace()
+
+# @platforms
+
+http_archive(
+    name = "platforms",
+    sha256 = "079945598e4b6cc075846f7fd6a9d0857c33a7afc0de868c2ccb96405225135d",
+    urls = [
+        "https://mirror.bazel.build/github.com/bazelbuild/platforms/releases/download/0.0.4/platforms-0.0.4.tar.gz",
+        "https://github.com/bazelbuild/platforms/releases/download/0.0.4/platforms-0.0.4.tar.gz",
+    ],
+)
+
 http_archive(
     name = "com_google_protobuf",
     sha256 = "65e020a42bdab44a66664d34421995829e9e79c60e5adaa08282fd14ca552f57",
@@ -53,9 +69,9 @@ http_archive(
 # Measurement proto.
 http_archive(
     name = "wfa_measurement_proto",
-    sha256 = "12f231fe7c8f75e3170ee9c6e308d355eccc354ed60ef4505f6f537812652626",
-    strip_prefix = "cross-media-measurement-api-584b40ca7b4275d194cc4cedfb877c05ec5ab24e",
-    url = "https://github.com/world-federation-of-advertisers/cross-media-measurement-api/archive/584b40ca7b4275d194cc4cedfb877c05ec5ab24e.tar.gz",
+    sha256 = "94b6ed87c4c9917da80fc4f5803b2c62a93767f433bfd7f25e5c6c9dc355aa38",
+    strip_prefix = "cross-media-measurement-api-640987b5196e26fe717a47875f603360d6c11346",
+    url = "https://github.com/world-federation-of-advertisers/cross-media-measurement-api/archive/640987b5196e26fe717a47875f603360d6c11346.tar.gz",
 )
 
 # @io_bazel_rules_kotlin
@@ -155,6 +171,44 @@ maven_install(
 load("@maven//:compat.bzl", "compat_repositories")
 
 compat_repositories()
+
+# @io_bazel_rules_docker
+
+load("//build/io_bazel_rules_docker:repo.bzl", "rules_docker_repo")
+
+rules_docker_repo(
+    name = "io_bazel_rules_docker",
+    commit = "f929d80c5a4363994968248d87a892b1c2ef61d4",
+    sha256 = "efda18e39a63ee3c1b187b1349f61c48c31322bf84227d319b5dece994380bb6",
+)
+
+load(
+    "@io_bazel_rules_docker//repositories:repositories.bzl",
+    container_repositories = "repositories",
+)
+
+container_repositories()
+
+load("@io_bazel_rules_docker//repositories:deps.bzl", container_deps = "deps")
+
+container_deps()
+
+load("//build/io_bazel_rules_docker:base_images.bzl", "base_java_images")
+
+
+# Defualt base images for java_image targets. Must come before
+# java_image_repositories().
+base_java_images(
+    # gcr.io/distroless/java:11-debug
+    debug_digest = "sha256:c3fe781de55d375de2675c3f23beb3e76f007e53fed9366ba931cc6d1df4b457",
+    # gcr.io/distroless/java:11
+    digest = "sha256:7fc091e8686df11f7bf0b7f67fd7da9862b2b9a3e49978d1184f0ff62cb673cc",
+)
+
+load(
+    "@io_bazel_rules_docker//java:image.bzl",
+    java_image_repositories = "repositories",
+)
 
 # Run after compat_repositories to ensure the maven_install-selected
 # dependencies are used.
