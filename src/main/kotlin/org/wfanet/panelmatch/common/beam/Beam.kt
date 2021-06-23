@@ -34,8 +34,8 @@ import org.apache.beam.sdk.values.TupleTag
 import org.apache.beam.sdk.values.TypeDescriptor
 
 /** Kotlin convenience helper for making [KV]s. */
-infix fun <KeyT, ValueT> KeyT.toKv(value: ValueT): KV<KeyT, ValueT> {
-  return KV.of(this, value)
+fun <KeyT, ValueT> kvOf(key: KeyT, value: ValueT): KV<KeyT, ValueT> {
+  return KV.of(key, value)
 }
 
 /** Returns the keys of a [PCollection] of [KV]s. */
@@ -89,7 +89,7 @@ inline fun <InputT, reified KeyT> PCollection<InputT>.keyBy(
   name: String = "KeyBy",
   crossinline keySelector: (InputT) -> KeyT
 ): PCollection<KV<KeyT, InputT>> {
-  return map(name) { keySelector(it) toKv it }
+  return map(name) { kvOf(keySelector(it), it) }
 }
 
 /** Kotlin convenience helper for transforming only the keys of a [PCollection] of [KV]s. */
@@ -97,7 +97,7 @@ inline fun <InKeyT, reified OutKeyT, reified ValueT> PCollection<KV<InKeyT, Valu
   name: String = "MapKeys",
   crossinline processKey: (InKeyT) -> OutKeyT
 ): PCollection<KV<OutKeyT, ValueT>> {
-  return map(name) { processKey(it.key) toKv it.value }
+  return map(name) { kvOf(processKey(it.key), it.value) }
 }
 
 /** Kotlin convenience helper for transforming only the keys of a [PCollection] of [KV]s. */
@@ -105,7 +105,7 @@ inline fun <KeyT, reified InValueT, reified OutValueT> PCollection<KV<KeyT, InVa
   name: String = "MapValues",
   crossinline processValue: (InValueT) -> OutValueT
 ): PCollection<KV<KeyT, OutValueT>> {
-  return map(name) { it.key toKv processValue(it.value) }
+  return map(name) { kvOf(it.key, processValue(it.value)) }
 }
 
 /** Kotlin convenience helper for partitioning a [PCollection]. */
