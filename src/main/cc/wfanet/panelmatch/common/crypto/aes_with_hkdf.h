@@ -23,7 +23,6 @@ namespace wfanet::panelmatch::common::crypto {
 
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
-#include "tink/util/secret_data.h"
 
 // Implements HMAC-based Extract-and-Expand Key Derivation Function (HKDF)
 // from RFC5869 and an AES encryption

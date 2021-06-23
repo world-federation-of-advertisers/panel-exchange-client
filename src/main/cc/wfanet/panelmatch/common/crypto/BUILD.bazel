@@ -77,3 +77,21 @@ cc_library(
         "@tink_cc//subtle",
     ],
 )
+
+cc_library(
+    name = "peppered_fingerprinter",
+    srcs = [
+        "peppered_fingerprinter.cc",
+    ],
+    hdrs = [
+        "peppered_fingerprinter.h",
+    ],
+    strip_include_prefix = _INCLUDE_PREFIX,
+    deps = [
+        "@any_sketch//src/main/cc/any_sketch/fingerprinters",
+        "@com_github_glog_glog//:glog",
+        "@com_google_absl//absl/memory",
+        "@com_google_absl//absl/status",
+        "@tink_base//cc/util:secret_data",
+    ],
+)
