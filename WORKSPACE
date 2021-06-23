@@ -294,3 +294,32 @@ wfa_repo_archive(
     repo = "rules_swig",
     sha256 = "34c15134d7293fc38df6ed254b55ee912c7479c396178b7f6499b7e5351aeeec",
 )
+
+# Tink
+http_archive(
+    name = "tink_base",
+    strip_prefix = "tink-master/",
+    urls = ["https://github.com/google/tink/archive/master.zip"],
+)
+
+http_archive(
+    name = "tink_cc",
+    strip_prefix = "tink-master/cc",
+    urls = ["https://github.com/google/tink/archive/master.zip"],
+)
+
+load("@tink_base//:tink_base_deps.bzl", "tink_base_deps")
+
+tink_base_deps()
+
+load("@tink_base//:tink_base_deps_init.bzl", "tink_base_deps_init")
+
+tink_base_deps_init()
+
+load("@tink_cc//:tink_cc_deps.bzl", "tink_cc_deps")
+
+tink_cc_deps()
+
+load("@tink_cc//:tink_cc_deps_init.bzl", "tink_cc_deps_init")
+
+tink_cc_deps_init()
