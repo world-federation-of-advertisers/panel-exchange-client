@@ -33,20 +33,17 @@ class StorageTest {
 
   @Test
   fun `get error for invalid key from inMemoryStorage`() = runBlocking {
-    val valueToStore = ByteString.copyFromUtf8("random-edp-string-0")
     val key = "some-key"
     val storage = InMemoryStorage()
-    val reencryptException = assertFailsWith(IllegalArgumentException::class) { storage.read(key) }
+    assertFailsWith(IllegalArgumentException::class) { storage.read(key) }
   }
 
   @Test
   fun `get error for rewriting to same key 2x in inMemoryStorage`() = runBlocking {
-    val valueToStore1 = ByteString.copyFromUtf8("random-edp-string-1")
-    val valueToStore2 = ByteString.copyFromUtf8("random-edp-string-2")
+    val valueToStore = ByteString.copyFromUtf8("random-edp-string-1")
     val key = "some-key"
     val storage = InMemoryStorage()
-    storage.write(key, valueToStore1)
-    val doubleWriteException =
-      assertFailsWith(IllegalArgumentException::class) { storage.write(key, valueToStore1) }
+    storage.write(key, valueToStore)
+    assertFailsWith(IllegalArgumentException::class) { storage.write(key, valueToStore) }
   }
 }
