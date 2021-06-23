@@ -42,16 +42,17 @@ import org.wfanet.panelmatch.client.storage.InMemoryStorage
 import org.wfanet.panelmatch.protocol.common.makeSerializedSharedInputs
 import org.wfanet.panelmatch.protocol.common.parseSerializedSharedInputs
 
+const val exchangeKey = "some-exchange-key-00"
+const val attemptKey = "some-attempt-key-01"
+
 @RunWith(JUnit4::class)
 class CoroutineLauncherTest {
-  private val apiClient: ApiClient = mock()
-  private val privateStorage = InMemoryStorage(keyPrefix = "private")
-  private val sharedStorage = InMemoryStorage(keyPrefix = "shared")
 
   @Test
   fun `test input task`() = runBlocking {
-    val exchangeKey = java.util.UUID.randomUUID().toString()
-    val attemptKey = java.util.UUID.randomUUID().toString()
+    val apiClient: ApiClient = mock()
+    val privateStorage = InMemoryStorage(keyPrefix = "private")
+    val sharedStorage = InMemoryStorage(keyPrefix = "shared")
     val outputLabels = mapOf("output" to "$exchangeKey-mp-crypto-key")
     val testStep =
       TestStep(
@@ -74,7 +75,7 @@ class CoroutineLauncherTest {
         sharedStorage = sharedStorage
       )
     whenever(apiClient.finishExchangeStepAttempt(any(), any(), any())).thenReturn(Unit)
-    val output = coroutineScope {
+    coroutineScope {
       // Launch Job Asynchronously
       testStep.buildAndExecuteJob()
       // Model Provider asynchronously writes data
@@ -100,8 +101,8 @@ class CoroutineLauncherTest {
   @Test
   fun `test crypto task with private inputs and private output`() {
     val apiClient: ApiClient = mock()
-    val exchangeKey = java.util.UUID.randomUUID().toString()
-    val attemptKey = java.util.UUID.randomUUID().toString()
+    val privateStorage = InMemoryStorage(keyPrefix = "private")
+    val sharedStorage = InMemoryStorage(keyPrefix = "shared")
     runBlocking {
       whenever(apiClient.finishExchangeStepAttempt(any(), any(), any())).thenReturn(Unit)
       val testStep =
@@ -160,8 +161,8 @@ class CoroutineLauncherTest {
   fun `test crypto task with private and shared inputs and outputs`() =
     runBlocking<Unit> {
       val apiClient: ApiClient = mock()
-      val exchangeKey = java.util.UUID.randomUUID().toString()
-      val attemptKey = java.util.UUID.randomUUID().toString()
+      val privateStorage = InMemoryStorage(keyPrefix = "private")
+      val sharedStorage = InMemoryStorage(keyPrefix = "shared")
 
       whenever(apiClient.finishExchangeStepAttempt(any(), any(), any())).thenReturn(Unit)
       val testStep =
@@ -224,8 +225,8 @@ class CoroutineLauncherTest {
   @Test
   fun `test crypto task with missing shared inputs`() {
     val apiClient: ApiClient = mock()
-    val exchangeKey = java.util.UUID.randomUUID().toString()
-    val attemptKey = java.util.UUID.randomUUID().toString()
+    val privateStorage = InMemoryStorage(keyPrefix = "private")
+    val sharedStorage = InMemoryStorage(keyPrefix = "shared")
     runBlocking {
       whenever(apiClient.finishExchangeStepAttempt(any(), any(), any())).thenReturn(Unit)
       val testStep =
@@ -260,22 +261,20 @@ class CoroutineLauncherTest {
           privateStorage = privateStorage,
           sharedStorage = sharedStorage
         )
-      val argumentException1 =
-        assertFailsWith(TimeoutCancellationException::class) {
-          // Wait for things to finish synchronously
-          waitStep.buildAndExecuteTask()
-        }
+      assertFailsWith(TimeoutCancellationException::class) {
+        // Wait for things to finish synchronously
+        waitStep.buildAndExecuteTask()
+      }
       // There should be two failures. One for the initial job and another when we wait
       verify(apiClient, times(2))
         .finishExchangeStepAttempt(any(), eq(ExchangeStepAttempt.State.FAILED), any())
       verify(apiClient, times(0))
         .finishExchangeStepAttempt(any(), eq(ExchangeStepAttempt.State.SUCCEEDED), any())
-      val argumentException2 =
-        assertFailsWith(IllegalArgumentException::class) {
-          privateStorage.batchRead(
-            inputLabels = mapOf("input" to "$exchangeKey-dp-mp-double-blinded-joinkeys")
-          )
-        }
+      assertFailsWith(IllegalArgumentException::class) {
+        privateStorage.batchRead(
+          inputLabels = mapOf("input" to "$exchangeKey-dp-mp-double-blinded-joinkeys")
+        )
+      }
     }
   }
 }

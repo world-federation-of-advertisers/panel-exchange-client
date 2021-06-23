@@ -17,13 +17,13 @@ package org.wfanet.panelmatch.client.storage
 import com.google.protobuf.ByteString
 import java.util.concurrent.ConcurrentHashMap
 
-private var inMemoryStorage = ConcurrentHashMap<String, ByteString>()
 /**
  * Stores everything in memory. Nothing is persistent. Use with caution. Uses a simple hashmap to
  * storage everything where path is the key.
  */
 class InMemoryStorage(keyPrefix: String) : Storage {
   private val keyPrefix = keyPrefix
+  private var inMemoryStorage = ConcurrentHashMap<String, ByteString>()
   private fun getKey(keyPrefix: String, path: String): String {
     return "$keyPrefix$path"
   }

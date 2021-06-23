@@ -33,15 +33,16 @@ import org.wfanet.panelmatch.client.launcher.testing.TestStep
 import org.wfanet.panelmatch.client.storage.InMemoryStorage
 import org.wfanet.panelmatch.protocol.common.makeSerializedSharedInputs
 
+const val exchangeKey = "some-exchange-key-00"
+const val attemptKey = "some-attempt-key-01"
+
 @RunWith(JUnit4::class)
 class InputTaskTest {
-  private val apiClient: ApiClient = mock()
-  private val privateStorage = InMemoryStorage(keyPrefix = "private")
-  private val sharedStorage = InMemoryStorage(keyPrefix = "shared")
   @Test
   fun `wait on private input`() = runBlocking {
-    val exchangeKey = java.util.UUID.randomUUID().toString()
-    val attemptKey = java.util.UUID.randomUUID().toString()
+    val apiClient: ApiClient = mock()
+    val privateStorage = InMemoryStorage(keyPrefix = "private")
+    val sharedStorage = InMemoryStorage(keyPrefix = "shared")
     val testStep =
       TestStep(
         apiClient = apiClient,
@@ -54,7 +55,7 @@ class InputTaskTest {
         privateStorage = privateStorage,
         sharedStorage = sharedStorage
       )
-    val output = coroutineScope {
+    coroutineScope {
       var buildJob = async { testStep.buildAndExecuteTask() }
       delay(300)
       privateStorage.batchWrite(
@@ -67,8 +68,9 @@ class InputTaskTest {
 
   @Test
   fun `wait on shared input`() = runBlocking {
-    val exchangeKey = java.util.UUID.randomUUID().toString()
-    val attemptKey = java.util.UUID.randomUUID().toString()
+    val apiClient: ApiClient = mock()
+    val privateStorage = InMemoryStorage(keyPrefix = "private")
+    val sharedStorage = InMemoryStorage(keyPrefix = "shared")
     val testStep =
       TestStep(
         apiClient = apiClient,
@@ -81,7 +83,7 @@ class InputTaskTest {
         privateStorage = privateStorage,
         sharedStorage = sharedStorage
       )
-    val output = coroutineScope {
+    coroutineScope {
       val job = async { testStep.buildAndExecuteTask() }
       delay(300)
       sharedStorage.batchWrite(
@@ -93,49 +95,51 @@ class InputTaskTest {
   }
 
   @Test
-  fun `wait on private input fails after timeout`() = runBlocking {
-    val exchangeKey = java.util.UUID.randomUUID().toString()
-    val attemptKey = java.util.UUID.randomUUID().toString()
-    val testStep =
-      TestStep(
-        apiClient = apiClient,
-        exchangeKey = exchangeKey,
-        exchangeStepAttemptKey = attemptKey,
-        privateOutputLabels = mapOf("input" to "$exchangeKey-mp-crypto-key"),
-        stepType = ExchangeWorkflow.Step.StepCase.INPUT_STEP,
-        timeoutDuration = Duration.ofMillis(500),
-        retryDuration = Duration.ofMillis(100),
-        privateStorage = privateStorage,
-        sharedStorage = sharedStorage
-      )
-    val argumentException =
+  fun `wait on private input fails after timeout`() =
+    runBlocking<Unit> {
+      val apiClient: ApiClient = mock()
+      val privateStorage = InMemoryStorage(keyPrefix = "private")
+      val sharedStorage = InMemoryStorage(keyPrefix = "shared")
+      val testStep =
+        TestStep(
+          apiClient = apiClient,
+          exchangeKey = exchangeKey,
+          exchangeStepAttemptKey = attemptKey,
+          privateOutputLabels = mapOf("input" to "$exchangeKey-mp-crypto-key"),
+          stepType = ExchangeWorkflow.Step.StepCase.INPUT_STEP,
+          timeoutDuration = Duration.ofMillis(500),
+          retryDuration = Duration.ofMillis(100),
+          privateStorage = privateStorage,
+          sharedStorage = sharedStorage
+        )
       assertFailsWith(TimeoutCancellationException::class) {
-        val output = coroutineScope {
+        coroutineScope {
           val job = async { testStep.buildAndExecuteTask() }
           job.await()
         }
       }
-  }
+    }
 
   @Test
-  fun `wait on shared input fails if party takes too long to write`() = runBlocking {
-    val exchangeKey = java.util.UUID.randomUUID().toString()
-    val attemptKey = java.util.UUID.randomUUID().toString()
-    val testStep =
-      TestStep(
-        apiClient = apiClient,
-        exchangeKey = exchangeKey,
-        exchangeStepAttemptKey = attemptKey,
-        sharedOutputLabels = mapOf("input" to "$exchangeKey-mp-single-blinded-keys"),
-        stepType = ExchangeWorkflow.Step.StepCase.INPUT_STEP,
-        timeoutDuration = Duration.ofMillis(500),
-        retryDuration = Duration.ofMillis(100),
-        privateStorage = privateStorage,
-        sharedStorage = sharedStorage
-      )
-    val argumentException =
+  fun `wait on shared input fails if party takes too long to write`() =
+    runBlocking<Unit> {
+      val apiClient: ApiClient = mock()
+      val privateStorage = InMemoryStorage(keyPrefix = "private")
+      val sharedStorage = InMemoryStorage(keyPrefix = "shared")
+      val testStep =
+        TestStep(
+          apiClient = apiClient,
+          exchangeKey = exchangeKey,
+          exchangeStepAttemptKey = attemptKey,
+          sharedOutputLabels = mapOf("input" to "$exchangeKey-mp-single-blinded-keys"),
+          stepType = ExchangeWorkflow.Step.StepCase.INPUT_STEP,
+          timeoutDuration = Duration.ofMillis(500),
+          retryDuration = Duration.ofMillis(100),
+          privateStorage = privateStorage,
+          sharedStorage = sharedStorage
+        )
       assertFailsWith(TimeoutCancellationException::class) {
-        val output = coroutineScope {
+        coroutineScope {
           val job = async { testStep.buildAndExecuteTask() }
           delay(600)
           sharedStorage.batchWrite(
@@ -145,5 +149,5 @@ class InputTaskTest {
           job.await()
         }
       }
-  }
+    }
 }

@@ -42,8 +42,8 @@ class IntersectValidateTaskTest {
   }
 
   @Test
-  fun `test data greater than max size fails to validate`() = runBlocking {
-    val argumentException =
+  fun `test data greater than max size fails to validate`() =
+    runBlocking<Unit> {
       assertFailsWith(IllegalArgumentException::class) {
         IntersectValidateTask(maxSize = 1, minimumOverlap = 0.99f)
           .execute(
@@ -53,11 +53,11 @@ class IntersectValidateTaskTest {
             )
           )
       }
-  }
+    }
 
   @Test
-  fun `test data with overlap below minimum overlap fails to validate`() = runBlocking {
-    val argumentException =
+  fun `test data with overlap below minimum overlap fails to validate`() =
+    runBlocking<Unit> {
       assertFailsWith(IllegalArgumentException::class) {
         IntersectValidateTask(maxSize = 10, minimumOverlap = 0.85f)
           .execute(
@@ -67,5 +67,5 @@ class IntersectValidateTaskTest {
             )
           )
       }
-  }
+    }
 }

@@ -19,9 +19,9 @@ import kotlin.test.assertFailsWith
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.junit.Test
@@ -80,33 +80,32 @@ class LoggerTest {
   }
 
   @Test
-  fun `multiple jobs have separate task logs`() = runBlocking {
-    val attemptKey0 = java.util.UUID.randomUUID().toString()
-    val attemptKey1 = java.util.UUID.randomUUID().toString()
-    val job1 =
-      async(CoroutineName(attemptKey0) + Dispatchers.Default) {
-        logger.addToTaskLog("Log Message 0")
-        JobTestClass1().logWithDelay()
-        val log = logger.getAndClearTaskLog()
-        assertThat(log).hasSize(3)
-        log.forEach { assertThat(it).contains(attemptKey0) }
-      }
-    val job2 =
-      async(CoroutineName(attemptKey1) + Dispatchers.Default) {
-        JobTestClass1().logWithDelay()
-        val log = logger.getAndClearTaskLog()
-        assertThat(log).hasSize(2)
-        log.forEach { assertThat(it).contains(attemptKey1) }
-      }
-    val jobs = listOf(job1, job2)
-    jobs.joinAll()
-  }
+  fun `multiple jobs have separate task logs`() =
+    runBlocking<Unit> {
+      val attemptKey0 = java.util.UUID.randomUUID().toString()
+      val attemptKey1 = java.util.UUID.randomUUID().toString()
+      awaitAll(
+        async(CoroutineName(attemptKey0) + Dispatchers.Default) {
+          logger.addToTaskLog("Log Message 0")
+          JobTestClass1().logWithDelay()
+          val log = logger.getAndClearTaskLog()
+          assertThat(log).hasSize(3)
+          log.forEach { assertThat(it).contains(attemptKey0) }
+        },
+        async(CoroutineName(attemptKey1) + Dispatchers.Default) {
+          JobTestClass1().logWithDelay()
+          val log = logger.getAndClearTaskLog()
+          assertThat(log).hasSize(2)
+          log.forEach { assertThat(it).contains(attemptKey1) }
+        }
+      )
+    }
 
   @Test
-  fun `cannot add to a task log unless you are in a job`() = runBlocking {
-    val outsideCoroutineException =
+  fun `cannot add to a task log unless you are in a job`() =
+    runBlocking<Unit> {
       assertFailsWith(IllegalArgumentException::class) { logger.addToTaskLog("Log Message 0") }
-  }
+    }
 
   @Test
   fun `jobs inside of jobs use the same log`() = runBlocking {

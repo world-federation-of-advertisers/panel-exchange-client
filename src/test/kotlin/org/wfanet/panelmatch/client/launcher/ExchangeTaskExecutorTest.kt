@@ -38,16 +38,17 @@ import org.wfanet.panelmatch.client.storage.InMemoryStorage
 import org.wfanet.panelmatch.protocol.common.makeSerializedSharedInputs
 import org.wfanet.panelmatch.protocol.common.parseSerializedSharedInputs
 
+const val exchangeKey = "some-exchange-key-00"
+const val attemptKey = "some-attempt-key-01"
+
 @RunWith(JUnit4::class)
 class ExchangeTaskExecutorTest {
-  private val apiClient: ApiClient = mock()
-  private val privateStorage = InMemoryStorage(keyPrefix = "private")
-  private val sharedStorage = InMemoryStorage(keyPrefix = "shared")
 
   @Test
   fun `test encrypt exchange step`() = runBlocking {
-    val exchangeKey = java.util.UUID.randomUUID().toString()
-    val attemptKey = java.util.UUID.randomUUID().toString()
+    val apiClient: ApiClient = mock()
+    val privateStorage = InMemoryStorage(keyPrefix = "private")
+    val sharedStorage = InMemoryStorage(keyPrefix = "shared")
     val testStep =
       TestStep(
         apiClient = apiClient,
@@ -87,8 +88,9 @@ class ExchangeTaskExecutorTest {
 
   @Test
   fun `test intersect and validate exchange step passes`() = runBlocking {
-    val exchangeKey = java.util.UUID.randomUUID().toString()
-    val attemptKey = java.util.UUID.randomUUID().toString()
+    val apiClient: ApiClient = mock()
+    val privateStorage = InMemoryStorage(keyPrefix = "private")
+    val sharedStorage = InMemoryStorage(keyPrefix = "shared")
     val testStep =
       TestStep(
         apiClient = apiClient,
@@ -126,8 +128,9 @@ class ExchangeTaskExecutorTest {
 
   @Test
   fun `test intersect and validate exchange step fails`() = runBlocking {
-    val exchangeKey = java.util.UUID.randomUUID().toString()
-    val attemptKey = java.util.UUID.randomUUID().toString()
+    val apiClient: ApiClient = mock()
+    val privateStorage = InMemoryStorage(keyPrefix = "private")
+    val sharedStorage = InMemoryStorage(keyPrefix = "shared")
     val testStep =
       TestStep(
         apiClient = apiClient,
@@ -167,8 +170,9 @@ class ExchangeTaskExecutorTest {
 
   @Test
   fun `test reencrypt exchange task`() = runBlocking {
-    val exchangeKey = java.util.UUID.randomUUID().toString()
-    val attemptKey = java.util.UUID.randomUUID().toString()
+    val apiClient: ApiClient = mock()
+    val privateStorage = InMemoryStorage(keyPrefix = "private")
+    val sharedStorage = InMemoryStorage(keyPrefix = "shared")
     val testStep =
       TestStep(
         apiClient = apiClient,
@@ -206,8 +210,9 @@ class ExchangeTaskExecutorTest {
 
   @Test
   fun `test decrypt exchange step that only mp has access to lookup keys`() = runBlocking {
-    val exchangeKey = java.util.UUID.randomUUID().toString()
-    val attemptKey = java.util.UUID.randomUUID().toString()
+    val apiClient: ApiClient = mock()
+    val privateStorage = InMemoryStorage(keyPrefix = "private")
+    val sharedStorage = InMemoryStorage(keyPrefix = "shared")
     val testStep =
       TestStep(
         apiClient = apiClient,
