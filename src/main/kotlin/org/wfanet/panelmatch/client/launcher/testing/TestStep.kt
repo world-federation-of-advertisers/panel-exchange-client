@@ -22,7 +22,6 @@ import java.time.Duration
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import org.wfanet.measurement.api.v2alpha.ExchangeStep
 import org.wfanet.measurement.api.v2alpha.ExchangeWorkflow
@@ -150,8 +149,6 @@ class TestStep(
         exchangeTaskExecutor.execute(attemptKey = attemptKey, step = step)
       }
     job.await()
-    // This delay should be higher than the retryDelay
-    delay(20)
   }
 
   suspend fun buildAndExecuteJob() {
@@ -166,7 +163,5 @@ class TestStep(
         .build()
     CoroutineLauncher(exchangeTaskExecutor = exchangeTaskExecutor)
       .execute(exchangeStep = exchangeStep, attemptKey = attemptKey)
-    // This delay should be higher than the retryDelay
-    delay(20)
   }
 }

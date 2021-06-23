@@ -18,6 +18,7 @@ import com.google.common.truth.Truth.assertThat
 import com.nhaarman.mockitokotlin2.any
 import com.nhaarman.mockitokotlin2.eq
 import com.nhaarman.mockitokotlin2.mock
+import com.nhaarman.mockitokotlin2.timeout
 import com.nhaarman.mockitokotlin2.times
 import com.nhaarman.mockitokotlin2.verify
 import com.nhaarman.mockitokotlin2.whenever
@@ -89,10 +90,10 @@ class CoroutineLauncherTest {
     val readValues =
       privateStorage.batchRead(inputLabels = mapOf("input" to "$exchangeKey-mp-crypto-key"))
     assertThat(readValues["input"]).isEqualTo(MP_0_SECRET_KEY)
-    verify(apiClient, times(0))
+    verify(apiClient, timeout(100).times(0))
       .finishExchangeStepAttempt(any(), eq(ExchangeStepAttempt.State.FAILED), any())
     // There should be two successes. One for the initial job and another when we wait
-    verify(apiClient, times(2))
+    verify(apiClient, timeout(100).times(2))
       .finishExchangeStepAttempt(any(), eq(ExchangeStepAttempt.State.SUCCEEDED), any())
   }
 
@@ -147,10 +148,10 @@ class CoroutineLauncherTest {
         )
       assertThat(parseSerializedSharedInputs(requireNotNull(readValues["input"])))
         .isEqualTo(SINGLE_BLINDED_KEYS)
-      verify(apiClient, times(0))
+      verify(apiClient, timeout(100).times(0))
         .finishExchangeStepAttempt(any(), eq(ExchangeStepAttempt.State.FAILED), any())
       // There should be two successes. One for the initial job and another when we wait
-      verify(apiClient, times(2))
+      verify(apiClient, timeout(100).times(2))
         .finishExchangeStepAttempt(any(), eq(ExchangeStepAttempt.State.SUCCEEDED), any())
     }
   }
@@ -213,10 +214,10 @@ class CoroutineLauncherTest {
         )
       assertThat(parseSerializedSharedInputs(requireNotNull(sharedReadValues["input"])))
         .isEqualTo(DOUBLE_BLINDED_KEYS)
-      verify(apiClient, times(0))
+      verify(apiClient, timeout(100).times(0))
         .finishExchangeStepAttempt(any(), eq(ExchangeStepAttempt.State.FAILED), any())
       // There should be two successes. One for the initial job and another when we wait
-      verify(apiClient, times(2))
+      verify(apiClient, timeout(100).times(2))
         .finishExchangeStepAttempt(any(), eq(ExchangeStepAttempt.State.SUCCEEDED), any())
     }
 
