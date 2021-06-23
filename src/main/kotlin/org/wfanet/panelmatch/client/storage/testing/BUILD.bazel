@@ -11,5 +11,6 @@ kt_jvm_library(
         "@wfa_measurement_system//imports/java/com/google/common/truth",
         "@wfa_measurement_system//imports/java/org/junit",
         "@wfa_measurement_system//imports/kotlin/kotlin/test",
+        "@wfa_measurement_system//imports/kotlin/kotlinx/coroutines/test",
     ],
 )
