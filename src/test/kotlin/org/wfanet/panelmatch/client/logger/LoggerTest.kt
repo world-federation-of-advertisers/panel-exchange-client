@@ -52,8 +52,8 @@ class JobTestClass2 {
 
 class JobTestClass3 {
   suspend fun logWithDelay() = coroutineScope {
-    val ATTEMPT_KEY = java.util.UUID.randomUUID().toString()
-    async(CoroutineName(ATTEMPT_KEY) + Dispatchers.Default) {
+    val attemptKey = java.util.UUID.randomUUID().toString()
+    async(CoroutineName(attemptKey) + Dispatchers.Default) {
       logger.addToTaskLog("logWithDelay: Log Message C")
       delay(100)
       logger.addToTaskLog("logWithDelay: Log Message D")
@@ -67,36 +67,36 @@ class JobTestClass3 {
 class LoggerTest {
   @Test
   fun `write single task log from coroutine and suspend function`() = runBlocking {
-    val ATTEMPT_KEY = java.util.UUID.randomUUID().toString()
+    val attemptKey = java.util.UUID.randomUUID().toString()
     val job =
-      async(CoroutineName(ATTEMPT_KEY) + Dispatchers.Default) {
+      async(CoroutineName(attemptKey) + Dispatchers.Default) {
         logger.addToTaskLog("Log Message 0")
         JobTestClass1().logWithDelay()
         val log = logger.getAndClearTaskLog()
         assertThat(log).hasSize(3)
-        log.forEach { assertThat(it).contains(ATTEMPT_KEY) }
+        log.forEach { assertThat(it).contains(attemptKey) }
       }
     job.join()
   }
 
   @Test
   fun `multiple jobs have separate task logs`() = runBlocking {
-    val ATTEMPT_KEY_0 = java.util.UUID.randomUUID().toString()
-    val ATTEMPT_KEY_1 = java.util.UUID.randomUUID().toString()
+    val attemptKey0 = java.util.UUID.randomUUID().toString()
+    val attemptKey1 = java.util.UUID.randomUUID().toString()
     val job1 =
-      async(CoroutineName(ATTEMPT_KEY_0) + Dispatchers.Default) {
+      async(CoroutineName(attemptKey0) + Dispatchers.Default) {
         logger.addToTaskLog("Log Message 0")
         JobTestClass1().logWithDelay()
         val log = logger.getAndClearTaskLog()
         assertThat(log).hasSize(3)
-        log.forEach { assertThat(it).contains(ATTEMPT_KEY_0) }
+        log.forEach { assertThat(it).contains(attemptKey0) }
       }
     val job2 =
-      async(CoroutineName(ATTEMPT_KEY_1) + Dispatchers.Default) {
+      async(CoroutineName(attemptKey1) + Dispatchers.Default) {
         JobTestClass1().logWithDelay()
         val log = logger.getAndClearTaskLog()
         assertThat(log).hasSize(2)
-        log.forEach { assertThat(it).contains(ATTEMPT_KEY_1) }
+        log.forEach { assertThat(it).contains(attemptKey1) }
       }
     val jobs = listOf(job1, job2)
     jobs.joinAll()
@@ -110,31 +110,31 @@ class LoggerTest {
 
   @Test
   fun `jobs inside of jobs use the same log`() = runBlocking {
-    val ATTEMPT_KEY = java.util.UUID.randomUUID().toString()
+    val attemptKey = java.util.UUID.randomUUID().toString()
     val job =
-      async(CoroutineName(ATTEMPT_KEY) + Dispatchers.Default) {
+      async(CoroutineName(attemptKey) + Dispatchers.Default) {
         logger.addToTaskLog("Log Message 0")
         val subJob = launch { JobTestClass2().logWithDelay() }
         JobTestClass1().logWithDelay()
         subJob.join()
         val log = logger.getAndClearTaskLog()
         assertThat(log).hasSize(5)
-        log.forEach { assertThat(it).contains(ATTEMPT_KEY) }
+        log.forEach { assertThat(it).contains(attemptKey) }
       }
     job.join()
   }
   @Test
   fun `jobs inside of jobs with different coroutine names use the different logs`() = runBlocking {
-    val ATTEMPT_KEY = java.util.UUID.randomUUID().toString()
+    val attemptKey = java.util.UUID.randomUUID().toString()
     val job =
-      async(CoroutineName(ATTEMPT_KEY) + Dispatchers.Default) {
+      async(CoroutineName(attemptKey) + Dispatchers.Default) {
         logger.addToTaskLog("Log Message 0")
         val subJob = launch { JobTestClass3().logWithDelay() }
         JobTestClass1().logWithDelay()
         subJob.join()
         val log = logger.getAndClearTaskLog()
         assertThat(log).hasSize(3)
-        log.forEach { assertThat(it).contains(ATTEMPT_KEY) }
+        log.forEach { assertThat(it).contains(attemptKey) }
       }
     job.join()
   }

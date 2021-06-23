@@ -17,7 +17,6 @@ package org.wfanet.panelmatch.client.exchangetasks
 import com.google.common.truth.Truth.assertThat
 import com.google.protobuf.ByteString
 import com.nhaarman.mockitokotlin2.any
-import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.times
 import com.nhaarman.mockitokotlin2.verifyZeroInteractions
 import com.nhaarman.mockitokotlin2.whenever
@@ -29,53 +28,35 @@ import kotlinx.coroutines.runBlocking
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
-import org.wfanet.panelmatch.protocol.common.Cryptor
+import org.wfanet.panelmatch.client.launcher.testing.DOUBLE_BLINDED_KEYS
+import org.wfanet.panelmatch.client.launcher.testing.JOIN_KEYS
+import org.wfanet.panelmatch.client.launcher.testing.LOOKUP_KEYS
+import org.wfanet.panelmatch.client.launcher.testing.MP_0_SECRET_KEY
+import org.wfanet.panelmatch.client.launcher.testing.SINGLE_BLINDED_KEYS
+import org.wfanet.panelmatch.client.launcher.testing.buildMockCryptor
 import org.wfanet.panelmatch.protocol.common.makeSerializedSharedInputs
 
-private val KEY = ByteString.copyFromUtf8("some-key")
-
-private val PLAINTEXTS =
-  listOf<ByteString>(
-    ByteString.copyFromUtf8("plaintext1"),
-    ByteString.copyFromUtf8("plaintext2"),
-    ByteString.copyFromUtf8("plaintext3")
-  )
-
-private val CIPHERTEXTS =
-  listOf<ByteString>(
-    ByteString.copyFromUtf8("ciphertext1"),
-    ByteString.copyFromUtf8("ciphertext2"),
-    ByteString.copyFromUtf8("ciphertext3")
-  )
-
-private val DOUBLE_CIPHERTEXTS: List<ByteString> =
-  listOf<ByteString>(
-    ByteString.copyFromUtf8("twice-encrypted-ciphertext1"),
-    ByteString.copyFromUtf8("twice-encrypted-ciphertext2"),
-    ByteString.copyFromUtf8("twice-encrypted-ciphertext3")
-  )
+private val MP_0_SECRET_KEY = ByteString.copyFromUtf8("some-key")
 
 @RunWith(JUnit4::class)
 class DeterministicCommutativeCryptorExchangeTaskTest {
-  val deterministicCommutativeCryptor = mock<Cryptor>()
+  val deterministicCommutativeCryptor = buildMockCryptor()
   val ATTEMPT_KEY = java.util.UUID.randomUUID().toString()
 
   @Test
   fun `decrypt with valid inputs`() =
     runBlocking<Unit> {
-      whenever(deterministicCommutativeCryptor.decrypt(any(), any())).thenReturn(PLAINTEXTS)
-
       async(CoroutineName(ATTEMPT_KEY) + Dispatchers.Default) {
           val result =
             CryptorExchangeTask.forDecryption(deterministicCommutativeCryptor)
               .execute(
                 mapOf(
-                  "encryption-key" to KEY,
-                  "encrypted-data" to makeSerializedSharedInputs(CIPHERTEXTS)
+                  "encryption-key" to MP_0_SECRET_KEY,
+                  "encrypted-data" to makeSerializedSharedInputs(DOUBLE_BLINDED_KEYS)
                 )
               )
           assertThat(result)
-            .containsExactly("decrypted-data", makeSerializedSharedInputs(PLAINTEXTS))
+            .containsExactly("decrypted-data", makeSerializedSharedInputs(LOOKUP_KEYS))
         }
         .await()
     }
@@ -92,8 +73,8 @@ class DeterministicCommutativeCryptorExchangeTaskTest {
               CryptorExchangeTask.forDecryption(deterministicCommutativeCryptor)
                 .execute(
                   mapOf(
-                    "encryption-key" to KEY,
-                    "encrypted-data" to makeSerializedSharedInputs(CIPHERTEXTS)
+                    "encryption-key" to MP_0_SECRET_KEY,
+                    "encrypted-data" to makeSerializedSharedInputs(SINGLE_BLINDED_KEYS)
                   )
                 )
             }
@@ -108,11 +89,11 @@ class DeterministicCommutativeCryptorExchangeTaskTest {
       async(CoroutineName(ATTEMPT_KEY) + Dispatchers.Default) {
           assertFailsWith(IllegalArgumentException::class) {
             CryptorExchangeTask.forDecryption(deterministicCommutativeCryptor)
-              .execute(mapOf("encrypted-data" to makeSerializedSharedInputs(CIPHERTEXTS)))
+              .execute(mapOf("encrypted-data" to makeSerializedSharedInputs(SINGLE_BLINDED_KEYS)))
           }
           assertFailsWith(IllegalArgumentException::class) {
             CryptorExchangeTask.forDecryption(deterministicCommutativeCryptor)
-              .execute(mapOf("encryption-key" to KEY))
+              .execute(mapOf("encryption-key" to MP_0_SECRET_KEY))
           }
           verifyZeroInteractions(deterministicCommutativeCryptor)
         }
@@ -122,19 +103,17 @@ class DeterministicCommutativeCryptorExchangeTaskTest {
   @Test
   fun `encrypt with valid inputs`() =
     runBlocking<Unit> {
-      whenever(deterministicCommutativeCryptor.encrypt(any(), any())).thenReturn(CIPHERTEXTS)
-
       async(CoroutineName(ATTEMPT_KEY) + Dispatchers.Default) {
           val result =
             CryptorExchangeTask.forEncryption(deterministicCommutativeCryptor)
               .execute(
                 mapOf(
-                  "encryption-key" to KEY,
-                  "unencrypted-data" to makeSerializedSharedInputs(PLAINTEXTS)
+                  "encryption-key" to MP_0_SECRET_KEY,
+                  "unencrypted-data" to makeSerializedSharedInputs(JOIN_KEYS)
                 )
               )
           assertThat(result)
-            .containsExactly("encrypted-data", makeSerializedSharedInputs(CIPHERTEXTS))
+            .containsExactly("encrypted-data", makeSerializedSharedInputs(SINGLE_BLINDED_KEYS))
         }
         .await()
     }
@@ -151,8 +130,8 @@ class DeterministicCommutativeCryptorExchangeTaskTest {
               CryptorExchangeTask.forEncryption(deterministicCommutativeCryptor)
                 .execute(
                   mapOf(
-                    "encryption-key" to KEY,
-                    "unencrypted-data" to makeSerializedSharedInputs(PLAINTEXTS)
+                    "encryption-key" to MP_0_SECRET_KEY,
+                    "unencrypted-data" to makeSerializedSharedInputs(JOIN_KEYS)
                   )
                 )
             }
@@ -168,11 +147,11 @@ class DeterministicCommutativeCryptorExchangeTaskTest {
         async(CoroutineName(ATTEMPT_KEY) + Dispatchers.Default) {
           assertFailsWith(IllegalArgumentException::class) {
             CryptorExchangeTask.forEncryption(deterministicCommutativeCryptor)
-              .execute(mapOf("unencrypted-data" to makeSerializedSharedInputs(PLAINTEXTS)))
+              .execute(mapOf("unencrypted-data" to makeSerializedSharedInputs(JOIN_KEYS)))
           }
           assertFailsWith(IllegalArgumentException::class) {
             CryptorExchangeTask.forEncryption(deterministicCommutativeCryptor)
-              .execute(mapOf("encryption-key" to KEY))
+              .execute(mapOf("encryption-key" to MP_0_SECRET_KEY))
           }
           verifyZeroInteractions(deterministicCommutativeCryptor)
         }
@@ -183,19 +162,19 @@ class DeterministicCommutativeCryptorExchangeTaskTest {
   fun `reEncryptTask with valid inputs`() =
     runBlocking<Unit> {
       whenever(deterministicCommutativeCryptor.reEncrypt(any(), any()))
-        .thenReturn(DOUBLE_CIPHERTEXTS)
+        .thenReturn(DOUBLE_BLINDED_KEYS)
 
       async(CoroutineName(ATTEMPT_KEY) + Dispatchers.Default) {
           val result =
             CryptorExchangeTask.forReEncryption(deterministicCommutativeCryptor)
               .execute(
                 mapOf(
-                  "encryption-key" to KEY,
-                  "encrypted-data" to makeSerializedSharedInputs(CIPHERTEXTS)
+                  "encryption-key" to MP_0_SECRET_KEY,
+                  "encrypted-data" to makeSerializedSharedInputs(SINGLE_BLINDED_KEYS)
                 )
               )
           assertThat(result)
-            .containsExactly("reencrypted-data", makeSerializedSharedInputs(DOUBLE_CIPHERTEXTS))
+            .containsExactly("reencrypted-data", makeSerializedSharedInputs(DOUBLE_BLINDED_KEYS))
         }
         .await()
     }
@@ -212,8 +191,8 @@ class DeterministicCommutativeCryptorExchangeTaskTest {
               CryptorExchangeTask.forReEncryption(deterministicCommutativeCryptor)
                 .execute(
                   mapOf(
-                    "encryption-key" to KEY,
-                    "encrypted-data" to makeSerializedSharedInputs(CIPHERTEXTS)
+                    "encryption-key" to MP_0_SECRET_KEY,
+                    "encrypted-data" to makeSerializedSharedInputs(SINGLE_BLINDED_KEYS)
                   )
                 )
             }
@@ -228,11 +207,11 @@ class DeterministicCommutativeCryptorExchangeTaskTest {
       async(CoroutineName(ATTEMPT_KEY) + Dispatchers.Default) {
           assertFailsWith(IllegalArgumentException::class) {
             CryptorExchangeTask.forReEncryption(deterministicCommutativeCryptor)
-              .execute(mapOf("encrypted-data" to makeSerializedSharedInputs(CIPHERTEXTS)))
+              .execute(mapOf("encrypted-data" to makeSerializedSharedInputs(SINGLE_BLINDED_KEYS)))
           }
           assertFailsWith(IllegalArgumentException::class) {
             CryptorExchangeTask.forReEncryption(deterministicCommutativeCryptor)
-              .execute(mapOf("encryption-key" to KEY))
+              .execute(mapOf("encryption-key" to MP_0_SECRET_KEY))
           }
           verifyZeroInteractions(deterministicCommutativeCryptor)
         }

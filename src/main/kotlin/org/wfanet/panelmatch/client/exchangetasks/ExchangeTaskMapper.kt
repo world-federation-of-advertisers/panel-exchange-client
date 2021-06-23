@@ -12,12 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package org.wfanet.panelmatch.client.storage
+package org.wfanet.panelmatch.client.exchangetasks
 
-import org.wfanet.panelmatch.client.storage.testing.AbstractStorageTest
+import org.wfanet.measurement.api.v2alpha.ExchangeWorkflow
 
-class FileSystemStorageTest : AbstractStorageTest() {
-  private val baseDir = System.getenv("TEST_TMPDIR")
-  override val privateStorage = FileSystemStorage(baseDir = "$baseDir/private")
-  override val sharedStorage = FileSystemStorage(baseDir = "$baseDir/shared")
+/** Maps ExchangeWorkflow.Step to respective task. */
+interface ExchangeTaskMapper {
+  suspend fun getExchangeTaskForStep(step: ExchangeWorkflow.Step): ExchangeTask
 }

@@ -36,27 +36,27 @@ import org.wfanet.panelmatch.client.storage.Storage
 class InputTask(
   val step: ExchangeWorkflow.Step,
   val retryDuration: Duration,
-  val preferredSharedStorage: Storage,
-  val preferredPrivateStorage: Storage
+  val sharedStorage: Storage,
+  val privateStorage: Storage
 ) : ExchangeTask {
 
   /**
-   * Waits for all private and shared task input from different storage based on [exchangeKey] and
+   * Waits for all private and shared task input from shared and private storage based on for an
    * [ExchangeStep] and returns when ready
    */
   suspend fun waitForOutputsToBeReady(
-    preferredSharedStorage: Storage,
-    preferredPrivateStorage: Storage,
+    sharedStorage: Storage,
+    privateStorage: Storage,
     step: ExchangeWorkflow.Step
-  ) = coroutineScope {
+  ): List<Map<String, ByteString>> = coroutineScope {
     val privateOutputLabels = step.getPrivateOutputLabelsMap()
     val sharedOutputLabels = step.getSharedOutputLabelsMap()
     awaitAll(
       async(start = CoroutineStart.DEFAULT) {
-        preferredPrivateStorage.batchRead(inputLabels = privateOutputLabels)
+        privateStorage.batchRead(inputLabels = privateOutputLabels)
       },
       async(start = CoroutineStart.DEFAULT) {
-        preferredSharedStorage.batchRead(inputLabels = sharedOutputLabels)
+        sharedStorage.batchRead(inputLabels = sharedOutputLabels)
       }
     )
   }
@@ -64,8 +64,8 @@ class InputTask(
   override suspend fun execute(input: Map<String, ByteString>): Map<String, ByteString> {
     flow<Boolean> {
         waitForOutputsToBeReady(
-          preferredSharedStorage = preferredSharedStorage,
-          preferredPrivateStorage = preferredPrivateStorage,
+          sharedStorage = sharedStorage,
+          privateStorage = privateStorage,
           step = step
         )
         emit(true)
