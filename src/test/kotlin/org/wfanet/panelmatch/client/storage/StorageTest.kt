@@ -32,18 +32,20 @@ class StorageTest {
   }
 
   @Test
-  fun `get error for invalid key from inMemoryStorage`() = runBlocking {
+  fun `get error for invalid key from inMemoryStorage`() {
     val key = "some-key"
     val storage = InMemoryStorage()
-    assertFailsWith(IllegalArgumentException::class) { storage.read(key) }
+    assertFailsWith(IllegalArgumentException::class) { runBlocking { storage.read(key) } }
   }
 
   @Test
-  fun `get error for rewriting to same key 2x in inMemoryStorage`() = runBlocking {
+  fun `get error for rewriting to same key 2x in inMemoryStorage`() {
     val valueToStore = ByteString.copyFromUtf8("random-edp-string-1")
     val key = "some-key"
     val storage = InMemoryStorage()
-    storage.write(key, valueToStore)
-    assertFailsWith(IllegalArgumentException::class) { storage.write(key, valueToStore) }
+    runBlocking {
+      storage.write(key, valueToStore)
+      assertFailsWith(IllegalArgumentException::class) { storage.write(key, valueToStore) }
+    }
   }
 }
