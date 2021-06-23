@@ -25,10 +25,10 @@ namespace wfanet::panelmatch::common::crypto {
 class Aes {
  public:
   virtual ~Aes() = default;
-  virtual absl::StatusOr < std::string >>
-      Encrypt(absl::string_view input, absl::string_view key) = 0;
-  virtual absl::StatusOr < std::string >>
-      Decrypt(absl::string_view input, absl::string_view key) = 0;
+  virtual absl::StatusOr<std::string> Encrypt(absl::string_view input,
+                                              absl::string_view key) = 0;
+  virtual absl::StatusOr<std::string> Decrypt(absl::string_view input,
+                                              absl::string_view key) = 0;
 };
 
 }  // namespace wfanet::panelmatch::common::crypto
