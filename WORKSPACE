@@ -135,6 +135,8 @@ MAVEN_ARTIFACTS.update({
     "com.nhaarman.mockitokotlin2:mockito-kotlin": "2.2.0",
     "info.picocli:picocli": "4.4.0",
     "junit:junit": "4.13",
+    "org.apache.beam:beam-runners-direct-java": "2.29.0",
+    "org.apache.beam:beam-sdks-java-core": "2.29.0",
 })
 
 maven_install(
