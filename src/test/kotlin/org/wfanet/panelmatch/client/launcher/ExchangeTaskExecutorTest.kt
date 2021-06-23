@@ -154,9 +154,13 @@ class ExchangeTaskExecutorTest {
     )
     val argumentException0 =
       assertFailsWith(IllegalArgumentException::class) { testStep.buildAndExecuteTask() }
-    privateStorage.batchRead(
-      inputLabels = mapOf("input" to "$exchangeKey-copy-mp-single-blinded-joinkeys")
-    )["input"]
+    // Copy is not available if validate fails
+    val argumentException1 =
+      assertFailsWith(IllegalArgumentException::class) {
+        privateStorage.batchRead(
+          inputLabels = mapOf("input" to "$exchangeKey-copy-mp-single-blinded-joinkeys")
+        )["input"]
+      }
     verify(apiClient, times(1))
       .finishExchangeStepAttempt(any(), eq(ExchangeStepAttempt.State.FAILED), any())
   }
