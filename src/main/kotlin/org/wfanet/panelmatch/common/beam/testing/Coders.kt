@@ -14,11 +14,12 @@
 
 package org.wfanet.panelmatch.common.beam.testing
 
+import com.google.protobuf.ByteString
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import org.apache.beam.sdk.coders.Coder
 
-class CoderResult<T>(val encodedData: ByteArray, val result: T)
+data class CoderResult<T>(val encodedData: ByteString, val result: T)
 
 fun <T> Coder<T>.roundtrip(item: T): CoderResult<T> {
   val output = ByteArrayOutputStream()
@@ -27,5 +28,5 @@ fun <T> Coder<T>.roundtrip(item: T): CoderResult<T> {
   val bytes = output.toByteArray()
   val input = ByteArrayInputStream(bytes)
 
-  return CoderResult(bytes, decode(input))
+  return CoderResult(ByteString.copyFrom(bytes), decode(input))
 }
