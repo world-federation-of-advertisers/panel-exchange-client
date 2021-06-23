@@ -53,7 +53,7 @@ fun <KeyT, ValueT> PCollection<KV<KeyT, ValueT>>.values(
 /** Kotlin convenience helper for [ParDo]. */
 inline fun <InT, reified OutT> PCollection<InT>.parDo(
   name: String = "ParDo",
-  crossinline block: suspend SequenceScope<OutT>.(InT) -> Unit
+  crossinline processElement: suspend SequenceScope<OutT>.(InT) -> Unit
 ): PCollection<OutT> {
   return apply(
     name,
@@ -61,7 +61,7 @@ inline fun <InT, reified OutT> PCollection<InT>.parDo(
       object : DoFn<InT, OutT>() {
         @ProcessElement
         fun processElement(@Element element: InT, output: OutputReceiver<OutT>) {
-          sequence<OutT> { block(element) }.forEach(output::output)
+          sequence<OutT> { processElement(element) }.forEach(output::output)
         }
       }
     )
@@ -71,17 +71,17 @@ inline fun <InT, reified OutT> PCollection<InT>.parDo(
 /** Kotlin convenience helper for a [ParDo] that has a single output per input. */
 inline fun <InT, reified OutT> PCollection<InT>.map(
   name: String = "Map",
-  crossinline block: (InT) -> OutT
+  crossinline processElement: (InT) -> OutT
 ): PCollection<OutT> {
-  return parDo(name) { yield(block(it)) }
+  return parDo(name) { yield(processElement(it)) }
 }
 
 /** Kotlin convenience helper for a [ParDo] that yields an [Iterable] of outputs. */
 inline fun <InT, reified OutT> PCollection<InT>.flatMap(
   name: String = "FlatMap",
-  crossinline block: (InT) -> Iterable<OutT>
+  crossinline processElement: (InT) -> Iterable<OutT>
 ): PCollection<OutT> {
-  return parDo(name) { yieldAll(block(it)) }
+  return parDo(name) { yieldAll(processElement(it)) }
 }
 
 /** Kotlin convenience helper for keying a [PCollection] by some function of the inputs. */
@@ -95,26 +95,26 @@ inline fun <InputT, reified KeyT> PCollection<InputT>.keyBy(
 /** Kotlin convenience helper for transforming only the keys of a [PCollection] of [KV]s. */
 inline fun <InKeyT, reified OutKeyT, reified ValueT> PCollection<KV<InKeyT, ValueT>>.mapKeys(
   name: String = "MapKeys",
-  crossinline block: (InKeyT) -> OutKeyT
+  crossinline processKey: (InKeyT) -> OutKeyT
 ): PCollection<KV<OutKeyT, ValueT>> {
-  return map(name) { block(it.key) toKv it.value }
+  return map(name) { processKey(it.key) toKv it.value }
 }
 
 /** Kotlin convenience helper for transforming only the keys of a [PCollection] of [KV]s. */
 inline fun <KeyT, reified InValueT, reified OutValueT> PCollection<KV<KeyT, InValueT>>.mapValues(
   name: String = "MapValues",
-  crossinline block: (InValueT) -> OutValueT
+  crossinline processValue: (InValueT) -> OutValueT
 ): PCollection<KV<KeyT, OutValueT>> {
-  return map(name) { it.key toKv block(it.value) }
+  return map(name) { it.key toKv processValue(it.value) }
 }
 
 /** Kotlin convenience helper for partitioning a [PCollection]. */
 fun <T> PCollection<T>.partition(
   numParts: Int,
   name: String = "Partition",
-  block: (T) -> Int
+  partitionBy: (T) -> Int
 ): PCollectionList<T> {
-  return apply(name, Partition.of(numParts) { value: T, _ -> block(value) })
+  return apply(name, Partition.of(numParts) { value: T, _ -> partitionBy(value) })
 }
 
 /** Kotlin convenience helper for a join between two [PCollection]s. */
@@ -152,7 +152,7 @@ fun <T> PCollectionList<T>.flatten(name: String = "Flatten"): PCollection<T> {
 inline fun <InT, reified SideT, reified OutT> PCollection<InT>.parDoWithSideInput(
   sideInput: PCollectionView<SideT>,
   name: String = "ParDoWithSideInput",
-  crossinline block: suspend SequenceScope<OutT>.(InT, SideT) -> Unit
+  crossinline processElement: suspend SequenceScope<OutT>.(InT, SideT) -> Unit
 ): PCollection<OutT> {
   val doFn =
     object : DoFn<InT, OutT>() {
@@ -162,18 +162,19 @@ inline fun <InT, reified SideT, reified OutT> PCollection<InT>.parDoWithSideInpu
         out: OutputReceiver<OutT>,
         context: ProcessContext
       ) {
-        sequence<OutT> { block(element, context.sideInput(sideInput)) }.forEach(out::output)
+        sequence<OutT> { processElement(element, context.sideInput(sideInput)) }
+          .forEach(out::output)
       }
     }
   return apply(name, ParDo.of(doFn).withSideInputs(sideInput))
 }
 
-/** Groups receiver by key and then combines all values into one with [block]. */
+/** Groups receiver by key and then combines all values into one with [combiner]. */
 inline fun <KeyT, reified ValueT> PCollection<KV<KeyT, ValueT>>.combinePerKey(
   name: String = "CombinePerKey",
-  crossinline block: (Iterable<ValueT>) -> ValueT
+  crossinline combiner: (Iterable<ValueT>) -> ValueT
 ): PCollection<KV<KeyT, ValueT>> {
-  return apply(name, Combine.perKey<KeyT, ValueT>(SerializableFunction { block(it) }))
+  return apply(name, Combine.perKey<KeyT, ValueT>(SerializableFunction { combiner(it) }))
 }
 
 /** Convenient way to get a [TypeDescriptor] for the receiver. */
