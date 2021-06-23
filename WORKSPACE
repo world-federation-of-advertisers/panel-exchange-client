@@ -1,6 +1,7 @@
 workspace(name = "panel_exchange_client")
 
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive", "http_file")
+load("@bazel_tools//tools/build_defs/repo:git.bzl", "new_git_repository")
 
 # @bazel_skylib
 
@@ -325,3 +326,25 @@ tink_cc_deps()
 load("@tink_cc//:tink_cc_deps_init.bzl", "tink_cc_deps_init")
 
 tink_cc_deps_init()
+
+wfa_repo_archive(
+    name = "any_sketch",
+    commit = "a9384c6030b73a536c972f5033ab324a682cdf57",
+    repo = "any-sketch",
+    sha256 = "37b0fed385c4d547ba25e08aeabb7ef5f3575efa9a9fe7e816616bd23a26c17b",
+)
+
+new_git_repository(
+    name = "farmhash",
+    build_file_content = """
+package(default_visibility = ["//visibility:public"])
+cc_library(
+    name = "farmhash",
+    hdrs = ["src/farmhash.h"],
+    srcs = ["src/farmhash.cc"],
+    deps = [],
+)""",
+    commit = "2f0e005b81e296fa6963e395626137cf729b710c",
+    remote = "https://github.com/google/farmhash.git",
+    shallow_since = "1509400690 -0700",
+)
