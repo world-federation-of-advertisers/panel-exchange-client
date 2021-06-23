@@ -27,7 +27,7 @@ import org.wfanet.panelmatch.common.beam.testing.assertThat
 @RunWith(JUnit4::class)
 class BeamTest : BeamTestBase() {
   private val collection: PCollection<KV<Int, String>> by lazy {
-    pcollectionOf("collection", 1 toKv "A", 2 toKv "B", 3 toKv "C")
+    pcollectionOf("collection", kvOf(1, "A"), kvOf(2, "B"), kvOf(3, "C"))
   }
 
   @Test
@@ -65,49 +65,50 @@ class BeamTest : BeamTestBase() {
   @Test
   fun keyBy() {
     assertThat(pcollectionOf("unkeyed-items", 1, 2, 3).keyBy { it + 10 })
-      .containsInAnyOrder(11 toKv 1, 12 toKv 2, 13 toKv 3)
+      .containsInAnyOrder(kvOf(11, 1), kvOf(12, 2), kvOf(13, 3))
   }
 
   @Test
   fun mapKeys() {
-    assertThat(collection.mapKeys { -it }).containsInAnyOrder(-1 toKv "A", -2 toKv "B", -3 toKv "C")
+    assertThat(collection.mapKeys { -it })
+      .containsInAnyOrder(kvOf(-1, "A"), kvOf(-2, "B"), kvOf(-3, "C"))
   }
 
   @Test
   fun mapValues() {
     assertThat(collection.mapValues { it.toLowerCase() })
-      .containsInAnyOrder(1 toKv "a", 2 toKv "b", 3 toKv "c")
+      .containsInAnyOrder(kvOf(1, "a"), kvOf(2, "b"), kvOf(3, "c"))
   }
 
   @Test
   fun partition() {
     val parts: PCollectionList<KV<Int, String>> = collection.partition(2) { it.key % 2 }
     assertThat(parts.size()).isEqualTo(2)
-    assertThat(parts[0]).containsInAnyOrder(2 toKv "B")
-    assertThat(parts[1]).containsInAnyOrder(1 toKv "A", 3 toKv "C")
+    assertThat(parts[0]).containsInAnyOrder(kvOf(2, "B"))
+    assertThat(parts[1]).containsInAnyOrder(kvOf(1, "A"), kvOf(3, "C"))
   }
 
   @Test
   fun join() {
-    val rightHandSide = pcollectionOf("right-hand side", 1 toKv 'a', 1 toKv 'b', 4 toKv 'c')
+    val rightHandSide = pcollectionOf("right-hand side", kvOf(1, 'a'), kvOf(1, 'b'), kvOf(4, 'c'))
     val result: PCollection<KV<Int, String>> =
       collection.join(rightHandSide) { key, lefts, rights ->
         val leftString = lefts.sorted().joinToString(", ")
         val rightString = rights.sorted().joinToString(", ")
-        yield(key toKv "[$leftString] and [$rightString]")
+        yield(kvOf(key, "[$leftString] and [$rightString]"))
       }
     assertThat(result)
       .containsInAnyOrder(
-        1 toKv "[A] and [a, b]",
-        2 toKv "[B] and []",
-        3 toKv "[C] and []",
-        4 toKv "[] and [c]"
+        kvOf(1, "[A] and [a, b]"),
+        kvOf(2, "[B] and []"),
+        kvOf(3, "[C] and []"),
+        kvOf(4, "[] and [c]")
       )
   }
 
   @Test
   fun joinIgnoringArguments() {
-    val rightHandSide = pcollectionOf("right-hand side", 1 toKv 'a', 1 toKv 'b', 4 toKv 'c')
+    val rightHandSide = pcollectionOf("right-hand side", kvOf(1, 'a'), kvOf(1, 'b'), kvOf(4, 'c'))
     val result: PCollection<Int> = collection.join(rightHandSide) { _, _, _ -> yield(1) }
     assertThat(result).containsInAnyOrder(1, 1, 1, 1)
   }
@@ -137,7 +138,7 @@ class BeamTest : BeamTestBase() {
   fun parDoWithSideInput() {
     val sideInput = collection.count()
     val result: PCollection<KV<Int, Long>> =
-      collection.parDoWithSideInput(sideInput) { element, count -> yield(element.key toKv count) }
-    assertThat(result).containsInAnyOrder(1 toKv 3L, 2 toKv 3L, 3 toKv 3L)
+      collection.parDoWithSideInput(sideInput) { element, count -> yield(kvOf(element.key, count)) }
+    assertThat(result).containsInAnyOrder(kvOf(1, 3L), kvOf(2, 3L), kvOf(3, 3L))
   }
 }
