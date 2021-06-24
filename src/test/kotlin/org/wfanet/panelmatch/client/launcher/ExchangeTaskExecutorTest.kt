@@ -38,8 +38,8 @@ import org.wfanet.panelmatch.client.storage.InMemoryStorage
 import org.wfanet.panelmatch.protocol.common.makeSerializedSharedInputs
 import org.wfanet.panelmatch.protocol.common.parseSerializedSharedInputs
 
-const val EXCHANGE_KEY = "some-exchange-key-00"
-const val ATTEMPT_KEY = "some-attempt-key-01"
+private const val EXCHANGE_KEY = "some-exchange-key-00"
+private const val ATTEMPT_KEY = "some-attempt-key-01"
 
 @RunWith(JUnit4::class)
 class ExchangeTaskExecutorTest {
