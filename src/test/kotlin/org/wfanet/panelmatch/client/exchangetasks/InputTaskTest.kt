@@ -33,22 +33,23 @@ import org.wfanet.panelmatch.client.launcher.testing.TestStep
 import org.wfanet.panelmatch.client.storage.InMemoryStorage
 import org.wfanet.panelmatch.protocol.common.makeSerializedSharedInputs
 
-const val exchangeKey = "some-exchange-key-00"
-const val attemptKey = "some-attempt-key-01"
+const val EXCHANGE_KEY = "some-exchange-key-00"
+const val ATTEMPT_KEY = "some-attempt-key-01"
 
 @RunWith(JUnit4::class)
 class InputTaskTest {
+  private val apiClient: ApiClient = mock()
+  private val privateStorage = InMemoryStorage(keyPrefix = "private")
+  private val sharedStorage = InMemoryStorage(keyPrefix = "shared")
+
   @Test
   fun `wait on private input`() = runBlocking {
-    val apiClient: ApiClient = mock()
-    val privateStorage = InMemoryStorage(keyPrefix = "private")
-    val sharedStorage = InMemoryStorage(keyPrefix = "shared")
     val testStep =
       TestStep(
         apiClient = apiClient,
-        exchangeKey = exchangeKey,
-        exchangeStepAttemptKey = attemptKey,
-        privateOutputLabels = mapOf("input" to "$exchangeKey-mp-crypto-key"),
+        exchangeKey = EXCHANGE_KEY,
+        exchangeStepAttemptKey = ATTEMPT_KEY,
+        privateOutputLabels = mapOf("input" to "$EXCHANGE_KEY-mp-crypto-key"),
         stepType = ExchangeWorkflow.Step.StepCase.INPUT_STEP,
         timeoutDuration = Duration.ofMillis(500),
         retryDuration = Duration.ofMillis(100),
@@ -59,7 +60,7 @@ class InputTaskTest {
       var buildJob = async { testStep.buildAndExecuteTask() }
       delay(300)
       privateStorage.batchWrite(
-        outputLabels = mapOf("output" to "$exchangeKey-mp-crypto-key"),
+        outputLabels = mapOf("output" to "$EXCHANGE_KEY-mp-crypto-key"),
         data = mapOf("output" to MP_0_SECRET_KEY)
       )
       buildJob.await()
@@ -68,15 +69,12 @@ class InputTaskTest {
 
   @Test
   fun `wait on shared input`() = runBlocking {
-    val apiClient: ApiClient = mock()
-    val privateStorage = InMemoryStorage(keyPrefix = "private")
-    val sharedStorage = InMemoryStorage(keyPrefix = "shared")
     val testStep =
       TestStep(
         apiClient = apiClient,
-        exchangeKey = exchangeKey,
-        exchangeStepAttemptKey = attemptKey,
-        sharedOutputLabels = mapOf("input" to "$exchangeKey-mp-single-blinded-keys"),
+        exchangeKey = EXCHANGE_KEY,
+        exchangeStepAttemptKey = ATTEMPT_KEY,
+        sharedOutputLabels = mapOf("input" to "$EXCHANGE_KEY-mp-single-blinded-keys"),
         stepType = ExchangeWorkflow.Step.StepCase.INPUT_STEP,
         timeoutDuration = Duration.ofMillis(500),
         retryDuration = Duration.ofMillis(100),
@@ -87,7 +85,7 @@ class InputTaskTest {
       val job = async { testStep.buildAndExecuteTask() }
       delay(300)
       sharedStorage.batchWrite(
-        outputLabels = mapOf("output" to "$exchangeKey-mp-single-blinded-keys"),
+        outputLabels = mapOf("output" to "$EXCHANGE_KEY-mp-single-blinded-keys"),
         data = mapOf("output" to makeSerializedSharedInputs(SINGLE_BLINDED_KEYS))
       )
       job.await()
@@ -97,15 +95,12 @@ class InputTaskTest {
   @Test
   fun `wait on private input fails after timeout`() =
     runBlocking<Unit> {
-      val apiClient: ApiClient = mock()
-      val privateStorage = InMemoryStorage(keyPrefix = "private")
-      val sharedStorage = InMemoryStorage(keyPrefix = "shared")
       val testStep =
         TestStep(
           apiClient = apiClient,
-          exchangeKey = exchangeKey,
-          exchangeStepAttemptKey = attemptKey,
-          privateOutputLabels = mapOf("input" to "$exchangeKey-mp-crypto-key"),
+          exchangeKey = EXCHANGE_KEY,
+          exchangeStepAttemptKey = ATTEMPT_KEY,
+          privateOutputLabels = mapOf("input" to "$EXCHANGE_KEY-mp-crypto-key"),
           stepType = ExchangeWorkflow.Step.StepCase.INPUT_STEP,
           timeoutDuration = Duration.ofMillis(500),
           retryDuration = Duration.ofMillis(100),
@@ -123,15 +118,12 @@ class InputTaskTest {
   @Test
   fun `wait on shared input fails if party takes too long to write`() =
     runBlocking<Unit> {
-      val apiClient: ApiClient = mock()
-      val privateStorage = InMemoryStorage(keyPrefix = "private")
-      val sharedStorage = InMemoryStorage(keyPrefix = "shared")
       val testStep =
         TestStep(
           apiClient = apiClient,
-          exchangeKey = exchangeKey,
-          exchangeStepAttemptKey = attemptKey,
-          sharedOutputLabels = mapOf("input" to "$exchangeKey-mp-single-blinded-keys"),
+          exchangeKey = EXCHANGE_KEY,
+          exchangeStepAttemptKey = ATTEMPT_KEY,
+          sharedOutputLabels = mapOf("input" to "$EXCHANGE_KEY-mp-single-blinded-keys"),
           stepType = ExchangeWorkflow.Step.StepCase.INPUT_STEP,
           timeoutDuration = Duration.ofMillis(500),
           retryDuration = Duration.ofMillis(100),
@@ -143,7 +135,7 @@ class InputTaskTest {
           val job = async { testStep.buildAndExecuteTask() }
           delay(600)
           sharedStorage.batchWrite(
-            outputLabels = mapOf("output" to "$exchangeKey-mp-single-blinded-keys"),
+            outputLabels = mapOf("output" to "$EXCHANGE_KEY-mp-single-blinded-keys"),
             data = mapOf("output" to makeSerializedSharedInputs(SINGLE_BLINDED_KEYS))
           )
           job.await()

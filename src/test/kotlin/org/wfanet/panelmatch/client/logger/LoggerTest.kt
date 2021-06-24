@@ -24,6 +24,7 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import org.junit.Before
 import org.junit.Test
 
 class JobTestClass1 {
@@ -65,6 +66,11 @@ class JobTestClass3 {
 }
 
 class LoggerTest {
+  @Before
+  fun clearLogsForTesting() {
+    clearLogs()
+  }
+
   @Test
   fun `write single task log from coroutine and suspend function`() = runBlocking {
     val attemptKey = java.util.UUID.randomUUID().toString()

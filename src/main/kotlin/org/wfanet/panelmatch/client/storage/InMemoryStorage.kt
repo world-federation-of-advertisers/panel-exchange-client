@@ -21,12 +21,13 @@ import java.util.concurrent.ConcurrentHashMap
  * Stores everything in memory. Nothing is persistent. Use with caution. Uses a simple hashmap to
  * storage everything where path is the key.
  */
-class InMemoryStorage(keyPrefix: String) : Storage {
-  private val keyPrefix = keyPrefix
+class InMemoryStorage(private val keyPrefix: String) : Storage {
   private var inMemoryStorage = ConcurrentHashMap<String, ByteString>()
+
   private fun getKey(keyPrefix: String, path: String): String {
     return "$keyPrefix$path"
   }
+
   override suspend fun read(path: String): ByteString {
     val key = getKey(keyPrefix = keyPrefix, path = path)
     return requireNotNull(inMemoryStorage[key]) { "Key does not exist in storage: $key" }
