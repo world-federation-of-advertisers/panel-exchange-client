@@ -23,18 +23,23 @@ namespace wfanet::panelmatch::common::crypto {
 
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
+#include "tink/util/secret_data.h"
 
-// An interface to ensure the Aes scheme used has an encrypt and decrypt method
-// that takes a key and an input
+// Implements AesSivBoringSsl from AES-SIV-CMAC as defined in
+// https://tools.ietf.org/html/rfc5297
 class Aes {
  public:
   virtual ~Aes() = default;
-  // An encryption method that uses an AES Key to encrypt an input
-  virtual absl::StatusOr<std::string> Encrypt(absl::string_view input,
-                                              absl::string_view key) = 0;
-  // A decryption method that uses an AES Key to decrypt an input
-  virtual absl::StatusOr<std::string> Decrypt(absl::string_view input,
-                                              absl::string_view key) = 0;
+  // Encrypts input using AES key key
+  // This will return an error status if the key is the wrong size for the
+  // given AES implementation
+  virtual absl::StatusOr<std::string> Encrypt(
+      absl::string_view input, const crypto::tink::util::SecretData key) = 0;
+  // Decrypts input using AES key key
+  // This will return an error status if the key is the wrong size for the
+  // given AES implementation
+  virtual absl::StatusOr<std::string> Decrypt(
+      absl::string_view input, const crypto::tink::util::SecretData key) = 0;
 };
 
 }  // namespace wfanet::panelmatch::common::crypto

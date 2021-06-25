@@ -22,14 +22,14 @@ namespace wfanet::panelmatch::common::crypto {
 #include "absl/status/statusor.h"
 #include "tink/util/secret_data.h"
 
-// An interface to ensure the Hkdf scheme used has a ComputerHkdf method that
-// will generate an encryption key from a SecretData input
+// Implements HMAC-based Extract-and-Expand Key Derivation Function (HKDF)
+// from RFC5869 (https://tools.ietf.org/html/rfc5869)
 class Hkdf {
  public:
   virtual ~Hkdf() = default;
   // Generates an encryption key from a SecretData input
-  virtual absl::StatusOr<util::SecretData> ComputeHkdf(
-      const util::SecretData& ikm) = 0;
+  virtual absl::StatusOr<crypto::tink::util::SecretData> ComputeHkdf(
+      const crypto::tink::util::SecretData& ikm) = 0;
 };
 
 }  // namespace wfanet::panelmatch::common::crypto
