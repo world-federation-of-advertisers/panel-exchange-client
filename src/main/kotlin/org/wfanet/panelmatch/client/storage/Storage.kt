@@ -15,6 +15,7 @@
 package org.wfanet.panelmatch.client.storage
 
 import com.google.protobuf.ByteString
+import java.lang.Exception
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -24,13 +25,14 @@ import kotlinx.coroutines.withContext
 
 /** Interface for Storage adapter. */
 interface Storage {
+  class NotFoundException(filename: String) : Exception("$filename not found")
 
   /**
    * Reads input data from given path.
    *
    * @param path String location of input data to read from.
    * @return Input data.
-   * @throws IllegalArgumentException if no such blob exists.
+   * @throws NotFoundException if no such blob exists.
    */
   suspend fun read(path: String): ByteString
 
