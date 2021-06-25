@@ -60,8 +60,6 @@ class InputTask(
   }
 
   override suspend fun execute(input: Map<String, ByteString>): Map<String, ByteString> {
-    require(input.isEmpty())
-
     while (true) {
       if (throttler.onReady { isReady() }) {
         // This function only returns that input is ready. It does not return actual values.
