@@ -23,21 +23,21 @@ namespace wfanet::panelmatch::common::crypto {
 
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
+#include "tink/util/secret_data.h"
 
-// An interface which encrypts or decrypts an input and key using hkdf and aes
+// Implements HMAC-based Extract-and-Expand Key Derivation Function (HKDF)
+// from RFC5869 and AesSivBoringSsl from AES-SIV-CMAC
 class AesWithHkdf {
  public:
   virtual ~AesWithHkdf() = default;
-  // An encryption method that encrypts an input with a key value using
-  // an hkdf to generate an aes key and an aes method to encrypt the input
-  // with the aes key
-  virtual absl::StatusOr<std::string> Encrypt(absl::string_view input,
-                                              absl::string_view key) = 0;
-  // A decryption method that decrypts an input with a key value using
-  // an hkdf to generate an aes key and an aes method to decrypt the input
-  // with the aes key
-  virtual absl::StatusOr<std::string> Decrypt(absl::string_view input,
-                                              absl::string_view key) = 0;
+  // Encrypts input with a SecretData key using an hkdf to generate an
+  // aes key and an aes method to encrypt the input with the aes key
+  virtual absl::StatusOr<std::string> Encrypt(
+      absl::string_view input, const crypto::tink::util::SecretData key) = 0;
+  // Decrypts input with a SecretData key using an hkdf to generate an
+  // aes key and an aes method to decrypt the input with the aes key
+  virtual absl::StatusOr<std::string> Decrypt(
+      absl::string_view input, const crypto::tink::util::SecretData key) = 0;
 };
 
 }  // namespace wfanet::panelmatch::common::crypto

@@ -13,6 +13,7 @@ cc_library(
     deps = [
         "@com_google_absl//absl/status:statusor",
         "@com_google_absl//absl/strings",
+        "@tink_base//cc/util:secret_data",
     ],
 )
 
@@ -25,6 +26,7 @@ cc_library(
     deps = [
         "@com_google_absl//absl/status:statusor",
         "@com_google_absl//absl/strings",
+        "@tink_base//cc/util:secret_data",
     ],
 )
 
@@ -52,17 +54,6 @@ cc_library(
     strip_include_prefix = _INCLUDE_PREFIX,
     deps = [
         "@com_google_absl//absl/status:statusor",
-    ],
-)
-
-cc_library(
-    name = "fingerprinter",
-    hdrs = [
-        "fingerprinter.h",
-    ],
-    strip_include_prefix = _INCLUDE_PREFIX,
-    deps = [
-        "@com_google_absl//absl/strings",
     ],
 )
 

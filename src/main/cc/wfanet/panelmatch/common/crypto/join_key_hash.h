@@ -22,7 +22,7 @@ namespace wfanet::panelmatch::common::crypto {
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 
-// An interface that uses a sha256 hash on an identifier
+// Implements a subclass of Fingerprinter, PepperedFingerprinter
 class JoinKeyHash {
  public:
   virtual ~JoinKeyHash() = default;

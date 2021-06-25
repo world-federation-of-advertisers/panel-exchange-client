@@ -38,9 +38,9 @@ cc_library(
 )
 
 cc_library(
-    name = "event_data_processor",
+    name = "event_data_preprocessor",
     hdrs = [
-        "event_data_processor.h",
+        "event_data_preprocessor.h",
     ],
     strip_include_prefix = _INCLUDE_PREFIX,
     deps = [
