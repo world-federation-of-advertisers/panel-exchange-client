@@ -22,6 +22,7 @@ import com.nhaarman.mockitokotlin2.times
 import com.nhaarman.mockitokotlin2.verify
 import com.nhaarman.mockitokotlin2.verifyNoMoreInteractions
 import com.nhaarman.mockitokotlin2.whenever
+import java.lang.IllegalArgumentException
 import kotlin.test.assertFailsWith
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -32,6 +33,7 @@ import org.wfanet.measurement.common.throttler.Throttler
 import org.wfanet.panelmatch.client.launcher.testing.MP_0_SECRET_KEY
 import org.wfanet.panelmatch.client.launcher.testing.buildStep
 import org.wfanet.panelmatch.client.storage.Storage
+import org.wfanet.panelmatch.client.storage.Storage.NotFoundException
 import org.wfanet.panelmatch.common.testing.runBlockingTest
 
 @RunWith(JUnit4::class)
@@ -52,10 +54,10 @@ class InputTaskTest {
     val task = InputTask(step, throttler, sharedStorage, privateStorage)
 
     whenever(privateStorage.batchRead(any()))
-      .thenThrow(IllegalArgumentException("File not found"))
-      .thenThrow(IllegalArgumentException("File not found"))
-      .thenThrow(IllegalArgumentException("File not found"))
-      .thenThrow(IllegalArgumentException("File not found"))
+      .thenThrow(NotFoundException("File not found"))
+      .thenThrow(NotFoundException("File not found"))
+      .thenThrow(NotFoundException("File not found"))
+      .thenThrow(NotFoundException("File not found"))
       .thenReturn(mapOf("input" to MP_0_SECRET_KEY))
 
     val result: Map<String, ByteString> = task.execute(emptyMap())
@@ -74,10 +76,10 @@ class InputTaskTest {
     val task = InputTask(step, throttler, sharedStorage, privateStorage)
 
     whenever(sharedStorage.batchRead(any()))
-      .thenThrow(IllegalArgumentException("File not found"))
-      .thenThrow(IllegalArgumentException("File not found"))
-      .thenThrow(IllegalArgumentException("File not found"))
-      .thenThrow(IllegalArgumentException("File not found"))
+      .thenThrow(NotFoundException("File not found"))
+      .thenThrow(NotFoundException("File not found"))
+      .thenThrow(NotFoundException("File not found"))
+      .thenThrow(NotFoundException("File not found"))
       .thenReturn(mapOf("input" to MP_0_SECRET_KEY))
 
     val result: Map<String, ByteString> = task.execute(emptyMap())

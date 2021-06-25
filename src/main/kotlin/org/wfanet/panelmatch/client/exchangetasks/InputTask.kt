@@ -15,10 +15,10 @@
 package org.wfanet.panelmatch.client.exchangetasks
 
 import com.google.protobuf.ByteString
-import java.lang.IllegalArgumentException
 import org.wfanet.measurement.api.v2alpha.ExchangeWorkflow
 import org.wfanet.measurement.common.throttler.Throttler
 import org.wfanet.panelmatch.client.storage.Storage
+import org.wfanet.panelmatch.client.storage.Storage.NotFoundException
 
 /**
  * Input task waits for output labels to be present. Clients should not pass in the actual required
@@ -54,7 +54,7 @@ class InputTask(
     return try {
       readValue()
       true
-    } catch (e: IllegalArgumentException) {
+    } catch (e: NotFoundException) {
       false
     }
   }

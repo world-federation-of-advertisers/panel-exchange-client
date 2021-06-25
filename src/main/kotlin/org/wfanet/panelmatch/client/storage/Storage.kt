@@ -15,6 +15,7 @@
 package org.wfanet.panelmatch.client.storage
 
 import com.google.protobuf.ByteString
+import java.lang.Exception
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -24,15 +25,15 @@ import kotlinx.coroutines.withContext
 
 /** Interface for Storage adapter. */
 interface Storage {
+  class NotFoundException(filename: String) : Exception("$filename not found")
 
   /**
    * Reads input data from given path.
    *
    * @param path String location of input data to read from.
    * @return Input data.
-   * @throws IllegalArgumentException if no such blob exists.
    */
-  suspend fun read(path: String): ByteString
+  @Throws(NotFoundException::class) suspend fun read(path: String): ByteString
 
   /**
    * Writes output data into given path.
@@ -41,7 +42,12 @@ interface Storage {
    */
   suspend fun write(path: String, data: ByteString)
 
-  /** Transforms values of [inputLabels] into the underlying blobs. */
+  /**
+   * Transforms values of [inputLabels] into the underlying blobs.
+   *
+   * If any blob can't be found, it throws [NotFoundException].
+   */
+  @Throws(NotFoundException::class)
   suspend fun batchRead(inputLabels: Map<String, String>): Map<String, ByteString> =
     withContext(Dispatchers.IO) {
       coroutineScope {

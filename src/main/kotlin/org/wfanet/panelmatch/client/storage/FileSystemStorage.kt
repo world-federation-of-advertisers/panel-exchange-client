@@ -42,7 +42,8 @@ class FileSystemStorage(baseDir: String) : Storage {
 
   override suspend fun read(path: String): ByteString {
     logger.fine("Read:${path}\n")
-    return requireNotNull(storageClient.getBlob(path)).read(4096).reduce { a, b -> a.concat(b) }
+    val blob = storageClient.getBlob(path) ?: throw Storage.NotFoundException(path)
+    return blob.read(4096).reduce { a, b -> a.concat(b) }
   }
 
   override suspend fun write(path: String, data: ByteString) {
