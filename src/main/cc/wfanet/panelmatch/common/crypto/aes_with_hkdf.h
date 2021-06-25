@@ -26,15 +26,15 @@ namespace wfanet::panelmatch::common::crypto {
 #include "tink/util/secret_data.h"
 
 // Implements HMAC-based Extract-and-Expand Key Derivation Function (HKDF)
-// from RFC5869 and AesSivBoringSsl from AES-SIV-CMAC
+// from RFC5869 and an AES encryption
 class AesWithHkdf {
  public:
   virtual ~AesWithHkdf() = default;
-  // Encrypts input with a SecretData key using an hkdf to generate an
+  // Encrypts `input` with a SecretData `key` using an hkdf to generate an
   // aes key and an aes method to encrypt the input with the aes key
   virtual absl::StatusOr<std::string> Encrypt(
       absl::string_view input, const crypto::tink::util::SecretData key) = 0;
-  // Decrypts input with a SecretData key using an hkdf to generate an
+  // Decrypts `input` with a SecretData `key` using an hkdf to generate an
   // aes key and an aes method to decrypt the input with the aes key
   virtual absl::StatusOr<std::string> Decrypt(
       absl::string_view input, const crypto::tink::util::SecretData key) = 0;
