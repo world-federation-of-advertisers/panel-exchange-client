@@ -11,20 +11,20 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-
-//
-// Created by juliamorrissey on 6/24/21.
-//
-
+#include <string>
 #include "src/main/cc/wfanet/panelmatch/client/eventpreprocessing/encrypt_original_data_wrapper.h"
-namespace wfanet::panelmatch::client::eventprocessing {
+#include "absl/status/statusor.h"
+#include "src/main/proto/wfanet/panelmatch/client/eventpreprocessing/preprocess_events.pb.h"
+#inclue "src/main/cc/wfanet/panelmatch/client/eventpreprocessing/encrypt_original_data.h"
+
+namespace wfanet::panelmatch::client::eventpreprocessing {
 absl::StatusOr<std::string> Convert(const std::string& serialized_request) {
-  Convert request_proto;
+  PreprocessEventsRequest request_proto;
 
   RETURN_IF_ERROR(ParseRequestFromString(request_proto, serialized_request));
-  ASSIGN_OR_RETURN(CompleteSetupPhaseResponse result,
-                   CompleteSetupPhase(request_proto));
+  ASSIGN_OR_RETURN(PreprocessEventsResponse result,
+                   EventDataPreprocessor(request_proto));
   return result.SerializeAsString();
 }
 
-}  // namespace wfanet::panelmatch::client::eventprocessing
+}  // namespace wfanet::panelmatch::client::eventpreprocessing
