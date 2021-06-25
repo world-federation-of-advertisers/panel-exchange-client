@@ -38,9 +38,9 @@ cc_library(
 )
 
 cc_library(
-    name = "encrypt_original_data",
+    name = "event_data_processor",
     hdrs = [
-        "encrypt_original_data.h",
+        "event_data_processor.h",
     ],
     strip_include_prefix = _INCLUDE_PREFIX,
     deps = [

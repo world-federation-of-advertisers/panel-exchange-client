@@ -14,22 +14,32 @@
  * limitations under the License.
  */
 
-#ifndef SRC_MAIN_CC_WFANET_PANELMATCH_COMMON_CRYPTO_ENCRYPT_PAYLOAD_H_
-#define SRC_MAIN_CC_WFANET_PANELMATCH_COMMON_CRYPTO_ENCRYPT_PAYLOAD_H_
+#ifndef SRC_MAIN_CC_WFANET_PANELMATCH_COMMON_CRYPTO_AES_WITH_HKDF_H_
+#define SRC_MAIN_CC_WFANET_PANELMATCH_COMMON_CRYPTO_AES_WITH_HKDF_H_
 
 namespace wfanet::panelmatch::common::crypto {
 
+#include <string>
+
+#include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 
-class EncryptPayload {
+// An interface which encrypts or decrypts an input and key using hkdf and aes
+class AesWithHkdf {
  public:
-  virtual ~EncryptPayload() = default;
-  virtual absl::StatusOr<std::string> Encrypt(absl::string_view event,
+  virtual ~AesWithHkdf() = default;
+  // An encryption method that encrypts an input with a key value using
+  // an hkdf to generate an aes key and an aes method to encrypt the input
+  // with the aes key
+  virtual absl::StatusOr<std::string> Encrypt(absl::string_view input,
                                               absl::string_view key) = 0;
-  virtual absl::StatusOr<std::string> Decrypt(absl::string_view event,
+  // A decryption method that decrypts an input with a key value using
+  // an hkdf to generate an aes key and an aes method to decrypt the input
+  // with the aes key
+  virtual absl::StatusOr<std::string> Decrypt(absl::string_view input,
                                               absl::string_view key) = 0;
 };
 
 }  // namespace wfanet::panelmatch::common::crypto
 
-#endif  // SRC_MAIN_CC_WFANET_PANELMATCH_COMMON_CRYPTO_ENCRYPT_PAYLOAD_H_
+#endif  // SRC_MAIN_CC_WFANET_PANELMATCH_COMMON_CRYPTO_AES_WITH_HKDF_H_

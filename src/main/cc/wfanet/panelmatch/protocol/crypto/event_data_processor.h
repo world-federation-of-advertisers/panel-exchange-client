@@ -14,26 +14,28 @@
  * limitations under the License.
  */
 
-#ifndef SRC_MAIN_CC_WFANET_PANELMATCH_PROTOCOL_CRYPTO_ENCRYPT_ORIGINAL_DATA_H_
-#define SRC_MAIN_CC_WFANET_PANELMATCH_PROTOCOL_CRYPTO_ENCRYPT_ORIGINAL_DATA_H_
+#ifndef SRC_MAIN_CC_WFANET_PANELMATCH_PROTOCOL_CRYPTO_EVENT_DATA_PROCESSOR_H_
+#define SRC_MAIN_CC_WFANET_PANELMATCH_PROTOCOL_CRYPTO_EVENT_DATA_PROCESSOR_H_
 
 namespace wfanet::panelmatch::protocol::crypto {
 
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 
-struct EncryptedData {
+struct ProcessedData {
   absl::string_view encrypted_identifier;
-  absl::string_view encrypted_event;
+  absl::string_view encrypted_events;
 };
 
-class EncryptOriginalData {
+// An interface which encrypts an identifier and event data
+class EventDataProcessor {
  public:
-  virtual ~ConvertData() = default;
-  virtual absl::StatusOr<EncryptedData> Convert(absl::string_view identifier,
+  virtual ~EventDataProcessor() = default;
+  // Encrypts an identifier and event data
+  virtual absl::StatusOr<ProcessedData> Process(absl::string_view identifier,
                                                 absl::string_view event) = 0;
 };
 
 }  // namespace wfanet::panelmatch::protocol::crypto
 
-#endif  // SRC_MAIN_CC_WFANET_PANELMATCH_PROTOCOL_CRYPTO_ENCRYPT_ORIGINAL_DATA_H_
+#endif  // SRC_MAIN_CC_WFANET_PANELMATCH_PROTOCOL_CRYPTO_EVENT_DATA_PROCESSOR_H_
