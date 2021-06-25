@@ -25,17 +25,16 @@ namespace wfanet::panelmatch::common::crypto {
 #include "absl/strings/string_view.h"
 #include "tink/util/secret_data.h"
 
-// Implements AesSivBoringSsl from AES-SIV-CMAC as defined in
-// https://tools.ietf.org/html/rfc5297
+// Implements an AES encryption scheme
 class Aes {
  public:
   virtual ~Aes() = default;
-  // Encrypts input using AES key key
+  // Encrypts `input` using AES key `key`
   // This will return an error status if the key is the wrong size for the
   // given AES implementation
   virtual absl::StatusOr<std::string> Encrypt(
       absl::string_view input, const crypto::tink::util::SecretData key) = 0;
-  // Decrypts input using AES key key
+  // Decrypts `input` using AES key `key`
   // This will return an error status if the key is the wrong size for the
   // given AES implementation
   virtual absl::StatusOr<std::string> Decrypt(
