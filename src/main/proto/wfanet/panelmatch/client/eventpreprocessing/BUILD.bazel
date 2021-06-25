@@ -7,17 +7,17 @@ package(default_visibility = [
 ])
 
 proto_library(
-    name = "cryptor_proto",
-    srcs = ["cryptor.proto"],
+    name = "preprocess_events_proto",
+    srcs = ["preprocess_events.proto"],
     strip_import_prefix = "/src/main/proto",
 )
 
 cc_proto_library(
-    name = "cryptor_cc_proto",
-    deps = [":cryptor_proto"],
+    name = "preprocess_events_cc_proto",
+    deps = [":preprocess_events_proto"],
 )
 
 java_proto_library(
-    name = "cryptor_java_proto",
-    deps = [":cryptor_proto"],
+    name = "preprocess_events_proto_java_proto",
+    deps = [":preprocess_events_proto"],
 )

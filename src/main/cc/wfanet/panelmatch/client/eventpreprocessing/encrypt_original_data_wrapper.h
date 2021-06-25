@@ -14,13 +14,12 @@
  * limitations under the License.
  */
 
-//
-// Created by juliamorrissey on 6/24/21.
-//
-
 #ifndef SRC_MAIN_CC_WFANET_PANELMATCH_CLIENT_EVENTPREPROCESSING_ENCRYPT_ORIGINAL_DATA_WRAPPER_H_
 #define SRC_MAIN_CC_WFANET_PANELMATCH_CLIENT_EVENTPREPROCESSING_ENCRYPT_ORIGINAL_DATA_WRAPPER_H_
-namespace wfanet::panelmatch::client::eventprocessing {
+
+#include "absl/status/statusor.h"
+
+namespace wfanet::panelmatch::client::eventpreocessing {
 absl::StatusOr<std::string> Convert(const std::string& serialized_request);
 }
 #endif  // SRC_MAIN_CC_WFANET_PANELMATCH_CLIENT_EVENTPREPROCESSING_ENCRYPT_ORIGINAL_DATA_WRAPPER_H_
