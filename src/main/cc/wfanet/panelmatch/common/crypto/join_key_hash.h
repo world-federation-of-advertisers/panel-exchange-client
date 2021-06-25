@@ -14,20 +14,23 @@
  * limitations under the License.
  */
 
-#ifndef SRC_MAIN_CC_WFANET_PANELMATCH_COMMON_CRYPTO_ENCRYPT_IDENTIFIER_H_
-#define SRC_MAIN_CC_WFANET_PANELMATCH_COMMON_CRYPTO_ENCRYPT_IDENTIFIER_H_
+#ifndef SRC_MAIN_CC_WFANET_PANELMATCH_COMMON_CRYPTO_JOIN_KEY_HASH_H_
+#define SRC_MAIN_CC_WFANET_PANELMATCH_COMMON_CRYPTO_JOIN_KEY_HASH_H_
 
 namespace wfanet::panelmatch::common::crypto {
 
+#include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 
-class EncryptIdentifier {
+// An interface that uses a sha256 hash on an identifier
+class JoinKeyHash {
  public:
-  virtual ~EncryptIdentifier() = default;
-  virtual std::string Encrypt(absl::string_view identifier,
-                              absl::string_view cryptokey) = 0;
+  virtual ~JoinKeyHash() = default;
+  // Concatenates a pepper to the identifier then hashes it with a Sha256
+  // hash function
+  virtual absl::StatusOr<uint64_t> Hash(absl::string_view identifier) = 0;
 };
 
 }  // namespace wfanet::panelmatch::common::crypto
 
-#endif  // SRC_MAIN_CC_WFANET_PANELMATCH_COMMON_CRYPTO_ENCRYPT_IDENTIFIER_H_
+#endif  // SRC_MAIN_CC_WFANET_PANELMATCH_COMMON_CRYPTO_JOIN_KEY_HASH_H_

@@ -17,13 +17,14 @@ cc_library(
 )
 
 cc_library(
-    name = "encryption_utility_helper",
+    name = "aes_with_hkdf",
     hdrs = [
-        "encryption_utility_helper.h",
+        "aes_with_hkdf.h",
     ],
     strip_include_prefix = _INCLUDE_PREFIX,
     deps = [
         "@com_google_absl//absl/status:statusor",
+        "@com_google_absl//absl/strings",
     ],
 )
 
@@ -44,24 +45,13 @@ cc_library(
 )
 
 cc_library(
-    name = "encrypt_identifier",
+    name = "encryption_utility_helper",
     hdrs = [
-        "encrypt_identifier.h",
+        "encryption_utility_helper.h",
     ],
     strip_include_prefix = _INCLUDE_PREFIX,
     deps = [
-        "@com_google_absl//absl/strings",
-    ],
-)
-
-cc_library(
-    name = "encrypt_payload",
-    hdrs = [
-        "encrypt_payload.h",
-    ],
-    strip_include_prefix = _INCLUDE_PREFIX,
-    deps = [
-        "@com_google_absl//absl/strings",
+        "@com_google_absl//absl/status:statusor",
     ],
 )
 
@@ -77,18 +67,6 @@ cc_library(
 )
 
 cc_library(
-    name = "generate_hashkey",
-    hdrs = [
-        "generate_hashkey.h",
-    ],
-    strip_include_prefix = _INCLUDE_PREFIX,
-    deps = [
-        "@com_google_absl//absl/status:statusor",
-        "@com_google_absl//absl/strings",
-    ],
-)
-
-cc_library(
     name = "hkdf",
     hdrs = [
         "hkdf.h",
@@ -97,5 +75,17 @@ cc_library(
     deps = [
         "@com_google_absl//absl/status:statusor",
         "@tink_base//cc/util:secret_data",
+    ],
+)
+
+cc_library(
+    name = "join_key_hash",
+    hdrs = [
+        "join_key_hash.h",
+    ],
+    strip_include_prefix = _INCLUDE_PREFIX,
+    deps = [
+        "@com_google_absl//absl/status:statusor",
+        "@com_google_absl//absl/strings",
     ],
 )

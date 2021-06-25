@@ -21,9 +21,12 @@ namespace wfanet::panelmatch::common::crypto {
 
 #include "absl/strings/string_view.h"
 
+// An interface to ensure that the Sha256 scheme used has a fingerprint method
+// that will hash an item to a 64 bit integer
 class Fingerprinter {
  public:
   virtual ~Fingerprinter() = default;
+  // Applies a Sha256 hash to an item
   virtual uint64_t Fingerprint(absl::string_view item) = 0;
 };
 

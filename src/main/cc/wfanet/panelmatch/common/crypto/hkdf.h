@@ -22,9 +22,12 @@ namespace wfanet::panelmatch::common::crypto {
 #include "absl/status/statusor.h"
 #include "tink/util/secret_data.h"
 
+// An interface to ensure the Hkdf scheme used has a ComputerHkdf method that
+// will generate an encryption key from a SecretData input
 class Hkdf {
  public:
   virtual ~Hkdf() = default;
+  // Generates an encryption key from a SecretData input
   virtual absl::StatusOr<util::SecretData> ComputeHkdf(
       const util::SecretData& ikm) = 0;
 };
