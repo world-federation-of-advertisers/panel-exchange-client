@@ -30,6 +30,14 @@ class BeamTest : BeamTestBase() {
     pcollectionOf("collection", kvOf(1, "A"), kvOf(2, "B"), kvOf(3, "C"))
   }
 
+  private val anotherCollection by lazy {
+    pcollectionOf("right-hand side", kvOf(1, 'a'), kvOf(1, 'b'), kvOf(4, 'c'))
+  }
+
+  private val listOfCollections by lazy {
+    listOf(pcollectionOf("first", 1, 2, 3), pcollectionOf("second", 4, 5, 6))
+  }
+
   @Test
   fun keys() {
     assertThat(collection.keys()).containsInAnyOrder(1, 2, 3)
@@ -90,9 +98,8 @@ class BeamTest : BeamTestBase() {
 
   @Test
   fun join() {
-    val rightHandSide = pcollectionOf("right-hand side", kvOf(1, 'a'), kvOf(1, 'b'), kvOf(4, 'c'))
     val result: PCollection<KV<Int, String>> =
-      collection.join(rightHandSide) { key, lefts, rights ->
+      collection.join(anotherCollection) { key, lefts, rights ->
         val leftString = lefts.sorted().joinToString(", ")
         val rightString = rights.sorted().joinToString(", ")
         yield(kvOf(key, "[$leftString] and [$rightString]"))
@@ -108,8 +115,7 @@ class BeamTest : BeamTestBase() {
 
   @Test
   fun joinIgnoringArguments() {
-    val rightHandSide = pcollectionOf("right-hand side", kvOf(1, 'a'), kvOf(1, 'b'), kvOf(4, 'c'))
-    val result: PCollection<Int> = collection.join(rightHandSide) { _, _, _ -> yield(1) }
+    val result: PCollection<Int> = collection.join(anotherCollection) { _, _, _ -> yield(1) }
     assertThat(result).containsInAnyOrder(1, 1, 1, 1)
   }
 
@@ -120,8 +126,7 @@ class BeamTest : BeamTestBase() {
 
   @Test
   fun toPCollectionList() {
-    val list =
-      listOf(pcollectionOf("first", 1, 2, 3), pcollectionOf("second", 4, 5, 6)).toPCollectionList()
+    val list = listOfCollections.toPCollectionList()
     assertThat(list.size()).isEqualTo(2)
     assertThat(list[0]).containsInAnyOrder(1, 2, 3)
     assertThat(list[1]).containsInAnyOrder(4, 5, 6)
@@ -129,8 +134,7 @@ class BeamTest : BeamTestBase() {
 
   @Test
   fun flatten() {
-    val list =
-      listOf(pcollectionOf("first", 1, 2, 3), pcollectionOf("second", 4, 5, 6)).toPCollectionList()
+    val list = listOfCollections.toPCollectionList()
     assertThat(list.flatten()).containsInAnyOrder(1, 2, 3, 4, 5, 6)
   }
 
