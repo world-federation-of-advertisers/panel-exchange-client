@@ -3,7 +3,9 @@
 
 # Bazel IntelliJ projects.
 .ijwb
+.clwb
 
 # IntelliJ projects.
 .idea/
 *.iml
+

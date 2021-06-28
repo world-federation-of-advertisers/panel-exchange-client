@@ -12,19 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 #include <string>
-#include "src/main/cc/wfanet/panelmatch/client/eventpreprocessing/encrypt_original_data_wrapper.h"
+#include "wfa/measurement/common/crypto/encryption_utility_helper.h"
+#include "wfanet/panelmatch/client/eventpreprocessing/preprocess_events_wrapper.h"
 #include "absl/status/statusor.h"
-#include "src/main/proto/wfanet/panelmatch/client/eventpreprocessing/preprocess_events.pb.h"
-#inclue "src/main/cc/wfanet/panelmatch/client/eventpreprocessing/encrypt_original_data.h"
+#include "wfanet/panelmatch/client/eventpreprocessing/preprocess_events.pb.h"
+#include "wfanet/panelmatch/client/eventpreprocessing/preprocess_events.h"
 
-namespace wfanet::panelmatch::client::eventpreprocessing {
+namespace wfanet::panelmatch::client::PreprocessEvents {
 absl::StatusOr<std::string> Convert(const std::string& serialized_request) {
-  PreprocessEventsRequest request_proto;
+  const wfanet::panelmatch::client::PreprocessEventsRequest request_proto;
 
-  RETURN_IF_ERROR(ParseRequestFromString(request_proto, serialized_request));
-  ASSIGN_OR_RETURN(PreprocessEventsResponse result,
-                   EventDataPreprocessor(request_proto));
+  RETURN_IF_ERROR(wfa::measurement::common::crypto::ParseRequestFromString(request_proto, serialized_request));
+  ASSIGN_OR_RETURN(PreprocessEventsResponse result, Convert(request_proto));
   return result.SerializeAsString();
 }
 
-}  // namespace wfanet::panelmatch::client::eventpreprocessing
+}

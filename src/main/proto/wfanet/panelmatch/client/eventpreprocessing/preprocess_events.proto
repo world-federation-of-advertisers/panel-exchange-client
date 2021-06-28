@@ -14,27 +14,28 @@
 
 syntax = "proto3";
 
-package wfanet.panelmatch.protocol.protobuf;
+package wfanet.panelmatch.client;
 
-option java_package = "wfanet.panelmatch.protocol.protobuf";
+option java_package = "wfanet.panelmatch.client";
 option java_multiple_files = true;
 
 //Request to preprocess event data
 message PreprocessEventsRequest {
-  repeated IdAndPayload id_and_payloads = 1;
-  message IdAndPayload {
+  repeated UnprocessedEvent unprocessed_event = 1;
+  message UnprocessedEvent {
     bytes id = 1;
-    bytes payload = 2;
+    bytes data = 2;
   }
   bytes crypto_key = 2;
   bytes pepper = 3;
 }
 
+
 //Response of the PreprocessEventsRequest method
 message PreprocessEventsResponse {
-  repeated IdAndPayload id_and_payloads = 1;
-  message IdAndPayload {
-    bytes id = 1;
-    bytes payload = 2;
+  repeated ProcessedEvent processed_event = 1;
+  message ProcessedEvent {
+    bytes encrypted_id = 1;
+    bytes encrypted_data = 2;
   }
 }

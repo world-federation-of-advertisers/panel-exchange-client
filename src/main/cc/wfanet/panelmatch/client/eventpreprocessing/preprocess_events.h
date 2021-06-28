@@ -15,13 +15,15 @@
  */
 
 
-#ifndef SRC_MAIN_CC_WFANET_PANELMATCH_CLIENT_EVENTPREPROCESSING_ENCRYPT_ORIGINAL_DATA_H_
-#define SRC_MAIN_CC_WFANET_PANELMATCH_CLIENT_EVENTPREPROCESSING_ENCRYPT_ORIGINAL_DATA_H_
+#ifndef SRC_MAIN_CC_WFANET_PANELMATCH_CLIENT_EVENTPREPROCESSING_PREPROCESS_EVENTS_H_
+#define SRC_MAIN_CC_WFANET_PANELMATCH_CLIENT_EVENTPREPROCESSING_PREPROCESS_EVENTS_H_
 
+#include <string>
 #include "absl/status/statusor.h"
-#include "src/main/proto/wfanet/panelmatch/client/eventpreprocessing/preprocess_events.pb.h"
+#include "wfanet/panelmatch/client/eventpreprocessing/preprocess_events.pb.h"
 
-namespace wfanet::panelmatch::client::eventpreprocessing {
-absl::StatusOr<PreprocessEventsResponse> Convert(const PreprocessEventsRequest& request);
+namespace wfanet::panelmatch::client::PreprocessEvents {
+  absl::StatusOr<wfanet::panelmatch::client::PreprocessEventsResponse> Convert(const wfanet::panelmatch::client::PreprocessEventsRequest& request);
 }
-#endif  // SRC_MAIN_CC_WFANET_PANELMATCH_CLIENT_EVENTPREPROCESSING_ENCRYPT_ORIGINAL_DATA_H_
+#endif
+// SRC_MAIN_CC_WFANET_PANELMATCH_CLIENT_EVENTPREPROCESSING_PREPROCESS_EVENTS_H_
