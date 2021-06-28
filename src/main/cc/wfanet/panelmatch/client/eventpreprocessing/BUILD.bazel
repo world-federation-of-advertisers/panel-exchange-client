@@ -3,11 +3,10 @@ cc_library(
     hdrs = ["preprocess_events.h"],
     strip_include_prefix = "/src/main/cc",
     deps = [
+        "//src/main/proto/wfanet/panelmatch/client/eventpreprocessing:preprocess_events_cc_proto",
+        "@com_google_absl//absl/algorithm:container",
         "@com_google_absl//absl/status:statusor",
         "@com_google_absl//absl/strings",
-        "@com_google_absl//absl/algorithm:container",
-        "//src/main/proto/wfanet/panelmatch/client/eventpreprocessing:preprocess_events_cc_proto",
-        #"//src/main/cc/wfanet/panelmatch/protocol/crypto/preprocess_events.h:PreprocessEvents",
     ],
 )
 

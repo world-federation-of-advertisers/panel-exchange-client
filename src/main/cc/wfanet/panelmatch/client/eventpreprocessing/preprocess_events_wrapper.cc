@@ -20,14 +20,16 @@
 #include "wfanet/panelmatch/client/eventpreprocessing/preprocess_events.h"
 #include "wfanet/panelmatch/client/eventpreprocessing/preprocess_events.pb.h"
 
-namespace wfanet::panelmatch::client::PreprocessEvents {
-absl::StatusOr<std::string> Convert(const std::string& serialized_request) {
+namespace wfanet::panelmatch::client {
+absl::StatusOr<std::string> PreprocessEvents(
+    const std::string& serialized_request) {
   const wfanet::panelmatch::client::PreprocessEventsRequest request_proto;
 
   RETURN_IF_ERROR(wfa::measurement::common::crypto::ParseRequestFromString(
       request_proto, serialized_request));
-  ASSIGN_OR_RETURN(PreprocessEventsResponse result, Convert(request_proto));
+  ASSIGN_OR_RETURN(PreprocessEventsResponse result,
+                   PreprocessEvents(request_proto));
   return result.SerializeAsString();
 }
 
-}  // namespace wfanet::panelmatch::client::PreprocessEvents
+}  // namespace wfanet::panelmatch::client

@@ -22,8 +22,9 @@
 #include "absl/status/statusor.h"
 #include "wfanet/panelmatch/client/eventpreprocessing/preprocess_events.pb.h"
 
-namespace wfanet::panelmatch::client::PreprocessEvents {
-absl::StatusOr<std::string> Convert(const std::string& serialized_request);
+namespace wfanet::panelmatch::client {
+absl::StatusOr<std::string> PreprocessEvents(
+    const std::string& serialized_request);
 }
 #endif
 // SRC_MAIN_CC_WFANET_PANELMATCH_CLIENT_EVENTPREPROCESSING_PREPROCESS_EVENTS_WRAPPER_H_
