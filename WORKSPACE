@@ -337,9 +337,9 @@ tink_cc_deps_init()
 # Common-cpp
 http_archive(
     name = "wfa_common_cpp",
-    sha256 = "8a3b5da5eeb496361970de1dcf4a09c66ed5cebbba3da78d96ed685ec5ce5521",
-    strip_prefix = "common-cpp-06bf4f4644bfa59aefc79dc4a92c2ed6d96f4055",
-    url = "https://github.com/world-federation-of-advertisers/common-cpp/archive/06bf4f4644bfa59aefc79dc4a92c2ed6d96f4055.tar.gz",
+    sha256 = "548dddf7163dfd30b65702d2c99ae788ffbdccb6bb93c583a4200e8d54e2e34e",
+    strip_prefix = "common-cpp-338bf6ee2c0e3ff68c80f1b183d424646f392310",
+    url = "https://github.com/world-federation-of-advertisers/common-cpp/archive/338bf6ee2c0e3ff68c80f1b183d424646f392310.tar.gz",
 )
 
 load("@wfa_common_cpp//build:deps.bzl", "common_cpp_deps")
