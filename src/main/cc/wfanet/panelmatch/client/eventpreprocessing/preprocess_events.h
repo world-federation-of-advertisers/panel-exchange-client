@@ -26,6 +26,5 @@ namespace wfanet::panelmatch::client {
 absl::StatusOr<wfanet::panelmatch::client::PreprocessEventsResponse>
 PreprocessEvents(
     const wfanet::panelmatch::client::PreprocessEventsRequest& request);
-}
-#endif
-// SRC_MAIN_CC_WFANET_PANELMATCH_CLIENT_EVENTPREPROCESSING_PREPROCESS_EVENTS_H_
+}  // namespace wfanet::panelmatch::client
+#endif  // SRC_MAIN_CC_WFANET_PANELMATCH_CLIENT_EVENTPREPROCESSING_PREPROCESS_EVENTS_H_

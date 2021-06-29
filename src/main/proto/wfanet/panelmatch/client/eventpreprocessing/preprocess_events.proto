@@ -30,7 +30,7 @@ message PreprocessEventsRequest {
   bytes pepper = 3;
 }
 
-// Response of the PreprocessEventsRequest method
+// Response of the PreprocessEvents method
 message PreprocessEventsResponse {
   repeated ProcessedEvent processed_event = 1;
   message ProcessedEvent {

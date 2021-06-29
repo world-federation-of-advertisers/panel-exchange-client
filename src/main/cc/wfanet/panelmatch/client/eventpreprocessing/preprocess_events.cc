@@ -12,18 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include "wfanet/panelmatch/client/eventpreprocessing/preprocess_events.h"
+
 #include <string>
 
 #include "absl/status/statusor.h"
 #include "wfanet/panelmatch/client/eventpreprocessing/preprocess_events.pb.h"
 #include "wfanet/panelmatch/client/eventpreprocessing/preprocess_events_wrapper.h"
-#inclue \
-    "src/main/cc/wfanet/panelmatch/client/eventpreprocessing/preprocess_events.h"
 
 namespace wfanet::panelmatch::client {
 absl::StatusOr<PreprocessEventsResponse> PreprocessEvents(
     const PreprocessEventsRequest& request) {
-  // TODO: call Erin's library
+  // TODO(juliamorrissey): call Erin's library
   return absl::UnimplementedError("Not implemented");
 }
 }  // namespace wfanet::panelmatch::client
