@@ -45,7 +45,6 @@ class Sha256Hkdf : public Hkdf {
 };
 }  // namespace
 
-// Returns an instance of the Sha256Hkdf class
 const Hkdf& GetSha256Hkdf() {
   static const auto* const hkdf = new Sha256Hkdf();
   return *hkdf;

@@ -31,7 +31,7 @@ class Hkdf {
       const ::crypto::tink::util::SecretData& ikm, int length) const = 0;
 };
 
-// Returns an instance of the Sha256Hkdf class
+// Returns an Hkdf that uses SHA-256 as the hash function
 const Hkdf& GetSha256Hkdf();
 
 }  // namespace wfanet::panelmatch::common::crypto
