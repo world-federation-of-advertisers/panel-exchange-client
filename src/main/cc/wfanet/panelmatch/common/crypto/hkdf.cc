@@ -19,6 +19,7 @@
 #include "tink/subtle/hkdf.h"
 
 namespace wfanet::panelmatch::common::crypto {
+namespace {
 
 using ::crypto::tink::util::SecretData;
 
@@ -42,8 +43,10 @@ class Sha256Hkdf : public Hkdf {
         ::crypto::tink::subtle::SHA256, ikm, "", "", length);
   }
 };
+}  // namespace
 
-const Hkdf& GetHkdf() {
+// Returns an instance of the Sha256Hkdf class
+const Hkdf& GetSha256Hkdf() {
   static const auto* const hkdf = new Sha256Hkdf();
   return *hkdf;
 }
