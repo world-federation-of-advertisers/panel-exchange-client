@@ -13,7 +13,6 @@ http_archive(
     ],
 )
 
-
 load("@bazel_skylib//:workspace.bzl", "bazel_skylib_workspace")
 
 bazel_skylib_workspace()
@@ -198,7 +197,6 @@ load("@io_bazel_rules_docker//repositories:deps.bzl", container_deps = "deps")
 container_deps()
 
 load("//build/io_bazel_rules_docker:base_images.bzl", "base_java_images")
-
 
 # Defualt base images for java_image targets. Must come before
 # java_image_repositories().
