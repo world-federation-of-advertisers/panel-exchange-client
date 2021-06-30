@@ -51,10 +51,10 @@ TEST(PreprocessEventsTest, ReturnsUnimplemented) {
   std::string test_pepper = "random-pepper-1";
 
   PreprocessEventsRequest test_request;
-
-  PreprocessEventsRequest_UnprocessedEvent test_unprocessed;
-  test_unprocessed.set_id(test_id);
-  test_unprocessed.set_data(test_data);
+  PreprocessEventsRequest::UnprocessedEvent* unprocessed_event =
+      test_request.add_unprocessed_events();
+  unprocessed_event->set_id(test_id);
+  unprocessed_event->set_data(test_data);
 
   test_request.set_crypto_key(test_crypto_key);
   test_request.set_pepper(test_pepper);
