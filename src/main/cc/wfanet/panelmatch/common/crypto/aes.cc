@@ -25,7 +25,7 @@ class AesSiv : public Aes {
  public:
   AesSiv() = default;
 
-  absl::StatusOr<std::string> Encrypt(string_view input,
+  absl::StatusOr<std::string> Encrypt(absl::string_view input,
                                       const SecretData& key) const override {
     //    AesSivBoringSsl implementation = new AesSivBoringSsl(key);
     //    return implementation.EncryptDeterministically(input, "");
@@ -33,7 +33,7 @@ class AesSiv : public Aes {
     return absl::UnimplementedError("Not implemented");
   }
 
-  absl::StatusOr<std::string> Decrypt(string_view input,
+  absl::StatusOr<std::string> Decrypt(absl::string_view input,
                                       const SecretData& key) const override {
     //    AesSivBoringSsl implementation = new AesSivBoringSsl(key);
     //    return implementation.DecryptDeterministically(input, "");
