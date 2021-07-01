@@ -19,7 +19,6 @@
 namespace wfanet::panelmatch::common::crypto {
 namespace {
 
-using absl::string_view;
 using ::crypto::tink::util::SecretData;
 
 class AesSiv : public Aes {
