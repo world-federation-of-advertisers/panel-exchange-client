@@ -13,7 +13,7 @@
 // limitations under the License.
 
 #include "wfanet/panelmatch/common/crypto/aes.h"
-//#include "tink/cc/subtle/aes_siv_boringssl.h"
+// #include "tink/cc/subtle/aes_siv_boringssl.h"
 #include "absl/status/status.h"
 
 namespace wfanet::panelmatch::common::crypto {

@@ -18,7 +18,7 @@
 
 #include "gtest/gtest.h"
 #include "src/test/cc/testutil/matchers.h"
-//#include "tink/util/secret_data.h"
+// #include "tink/util/secret_data.h"
 
 namespace wfanet::panelmatch::common::crypto {
 namespace {
