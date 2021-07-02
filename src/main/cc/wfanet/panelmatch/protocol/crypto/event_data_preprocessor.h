@@ -24,16 +24,20 @@ namespace wfanet::panelmatch::protocol::crypto {
 
 struct ProcessedData {
   absl::string_view encrypted_identifier;
-  absl::string_view encrypted_events;
+  absl::string_view encrypted_event_data;
 };
 
-// Implements AES, HKDF, and Sha256 to encrypt event data
+// Implements several encryption schemes to encrypt event data and an
+// identifier. A deterministic commutative encryption scheme is used to encrypt
+// the identifier, which is hashed using a Sha256 method.  The encrypted
+// identifier is also used in an HKDF method to create an AES key, which is used
+// for an AES encryption/decryption of event data.
 class EventDataPreprocessor {
  public:
   virtual ~EventDataPreprocessor() = default;
   // Encrypts 'identifier' and 'event' data
-  virtual absl::StatusOr<ProcessedData> Process(absl::string_view identifier,
-                                                absl::string_view event) = 0;
+  virtual absl::StatusOr<ProcessedData> Process(
+      absl::string_view identifier, absl::string_view event_data) = 0;
 };
 
 }  // namespace wfanet::panelmatch::protocol::crypto

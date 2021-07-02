@@ -43,7 +43,10 @@ class Aes {
       const ::crypto::tink::util::SecretData& key) const = 0;
 };
 
-const Aes& GetAesSiv();
+// Return Aes encryption scheme with a key size of 64 bytes and implements
+// AEAD_AES_SIV_CMAC_512 as defined by
+// https://datatracker.ietf.org/doc/html/rfc5297#section-6.3.
+const Aes& GetAesSivCmac512();
 
 }  // namespace wfanet::panelmatch::common::crypto
 

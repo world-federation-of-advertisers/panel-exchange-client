@@ -13,7 +13,7 @@
 // limitations under the License.
 
 #include "wfanet/panelmatch/common/crypto/aes.h"
-// #include "tink/cc/subtle/aes_siv_boringssl.h"
+
 #include "absl/status/status.h"
 
 namespace wfanet::panelmatch::common::crypto {
@@ -21,29 +21,25 @@ namespace {
 
 using ::crypto::tink::util::SecretData;
 
+// Implements an Aes SIV encryption scheme defined in
+// https://datatracker.ietf.org/doc/html/rfc5297
 class AesSiv : public Aes {
  public:
   AesSiv() = default;
 
   absl::StatusOr<std::string> Encrypt(absl::string_view input,
                                       const SecretData& key) const override {
-    //    AesSivBoringSsl implementation = new AesSivBoringSsl(key);
-    //    return implementation.EncryptDeterministically(input, "");
-
     return absl::UnimplementedError("Not implemented");
   }
 
   absl::StatusOr<std::string> Decrypt(absl::string_view input,
                                       const SecretData& key) const override {
-    //    AesSivBoringSsl implementation = new AesSivBoringSsl(key);
-    //    return implementation.DecryptDeterministically(input, "");
-
     return absl::UnimplementedError("Not implemented");
   }
 };
 }  // namespace
 
-const Aes& GetAesSiv() {
+const Aes& GetAesSivCmac512() {
   static const auto* const aes = new AesSiv();
   return *aes;
 }
