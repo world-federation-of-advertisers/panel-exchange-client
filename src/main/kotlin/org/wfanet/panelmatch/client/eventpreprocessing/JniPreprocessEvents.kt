@@ -14,38 +14,29 @@
 
 package org.wfanet.panelmatch.client.eventpreprocessing
 
-import java.lang.RuntimeException
 import java.nio.file.Paths
 import org.wfanet.panelmatch.common.loadLibrary
+import org.wfanet.panelmatch.common.wrapJniException
 import wfanet.panelmatch.client.PreprocessEventsRequest
 import wfanet.panelmatch.client.PreprocessEventsResponse
 
 /** A [PreprocessEvents] implementation using the JNI [PreprocessEvents]. */
 class JniPreprocessEvents : PreprocessEvents {
-  /** Indicates something went wrong in C++. */
-  class JniException(cause: Throwable) : RuntimeException(cause)
 
-  private fun <T> wrapJniException(block: () -> T): T {
-    return try {
-      block()
-    } catch (e: RuntimeException) {
-      throw JniException(e)
+  override fun preprocess(request: PreprocessEventsRequest): PreprocessEventsResponse {
+    return wrapJniException {
+      PreprocessEventsResponse.parseFrom(
+        EventPreprocessing.preprocessEventsWrapper(request.toByteArray())
+      )
     }
   }
 
-  override fun PreprocessEvents(request: PreprocessEventsRequest): PreprocessEventsResponse {
-    return PreprocessEventsResponse.parseFrom((PreprocessEvents(request)).toByteString())
-  }
-
   companion object {
+
     init {
-      loadLibrary(
-        name = "preprocess_events",
-        directoryPath =
-          Paths.get(
-            "panel_exchange_client/src/main/swig/wfanet/panelmatch/client/eventpreprocessing"
-          )
-      )
+      val swigPath =
+        "panel_exchange_client/src/main/swig/wfanet/panelmatch/client/eventpreprocessing"
+      loadLibrary(name = "preprocess_events", directoryPath = Paths.get(swigPath))
     }
   }
 }
