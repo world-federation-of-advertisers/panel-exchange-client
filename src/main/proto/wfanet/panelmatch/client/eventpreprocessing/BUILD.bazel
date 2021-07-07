@@ -18,6 +18,6 @@ cc_proto_library(
 )
 
 java_proto_library(
-    name = "preprocess_events_proto_java_proto",
+    name = "preprocess_events_java_proto",
     deps = [":preprocess_events_proto"],
 )
