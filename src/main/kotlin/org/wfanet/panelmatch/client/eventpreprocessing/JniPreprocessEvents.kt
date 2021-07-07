@@ -34,7 +34,7 @@ class JniPreprocessEvents : PreprocessEvents {
   companion object {
 
     init {
-      private const val SWIG_PATH =
+      val SWIG_PATH =
         "panel_exchange_client/src/main/swig/wfanet/panelmatch/client/eventpreprocessing"
       loadLibrary(name = "preprocess_events", directoryPath = Paths.get(SWIG_PATH))
     }
