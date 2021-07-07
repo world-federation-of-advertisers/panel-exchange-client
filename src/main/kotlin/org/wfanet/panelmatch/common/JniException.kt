@@ -19,7 +19,10 @@ import java.lang.RuntimeException
 /** Indicates something went wrong in C++. */
 class JniException(cause: Throwable) : RuntimeException(cause)
 
-public fun <T> wrapJniException(block: () -> T): T {
+/**
+ * Catches runtime exceptions due to C++ code and throws Jni Exception to indicate this accordingly
+ */
+fun <T> wrapJniException(block: () -> T): T {
   return try {
     block()
   } catch (e: RuntimeException) {

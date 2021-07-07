@@ -24,24 +24,29 @@ import wfanet.panelmatch.client.PreprocessEventsRequest
 
 /** Abstract base class for testing implementations of [PreprocessEvents]. */
 abstract class AbstractPreprocessEventsTest {
-  abstract val PreprocessEvents: PreprocessEvents
+  abstract val preprocessEvents: PreprocessEvents
 
   @Test
   fun testPreprocessEvents() {
-    val randomID: ByteString = ByteString.copyFromUtf8("random-id")
-    val randomData: ByteString = ByteString.copyFromUtf8("random-data")
-    val randomCryptoKey: ByteString = ByteString.copyFromUtf8("random-crypto-key")
-    val randomPepper: ByteString = ByteString.copyFromUtf8("random-pepper")
+    val arbitraryId: ByteString = ByteString.copyFromUtf8("arbitrary-id")
+    val arbitraryData: ByteString = ByteString.copyFromUtf8("arbitrary-data")
+    val arbitraryCryptoKey: ByteString = ByteString.copyFromUtf8("arbitrary-crypto-key")
+    val arbitraryPepper: ByteString = ByteString.copyFromUtf8("arbitrary-pepper")
 
+    val request =
+      PreprocessEventsRequest.newBuilder()
+        .apply {
+          cryptoKey = arbitraryCryptoKey
+          pepper = arbitraryPepper
+          addUnprocessedEventsBuilder().apply {
+            id = arbitraryId
+            data = arbitraryData
+          }
+        }
+        .build()
     val unImplementedException =
-      assertFailsWith(RuntimeException::class) {
-        val request = PreprocessEventsRequest.newBuilder().setCryptoKey(randomCryptoKey)
-        request.setPepper(randomPepper)
-        val unprocessedEvent = request.addUnprocessedEventsBuilder()
-        unprocessedEvent.setId(randomID)
-        unprocessedEvent.setData(randomData)
-        PreprocessEvents.preprocess(request.build())
-      }
+      assertFailsWith(RuntimeException::class) { preprocessEvents.preprocess(request) }
+
     assertThat(unImplementedException.message).contains("UNIMPLEMENTED: Not implemented")
   }
 }

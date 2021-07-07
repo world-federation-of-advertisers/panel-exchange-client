@@ -25,14 +25,14 @@ import wfanet.panelmatch.client.PreprocessEventsRequest
 
 @RunWith(JUnit4::class)
 class JniPreprocessEventsTest : AbstractPreprocessEventsTest() {
-  override val PreprocessEvents: PreprocessEvents = JniPreprocessEvents()
+  override val preprocessEvents: PreprocessEvents = JniPreprocessEvents()
 
   @Test
   fun `Status kUnimplemented`() {
     val unImplemented =
       assertFailsWith(JniException::class) {
         val request = PreprocessEventsRequest.getDefaultInstance()
-        PreprocessEvents.preprocess(request)
+        preprocessEvents.preprocess(request)
       }
     assertThat(unImplemented.message).contains("UNIMPLEMENTED: Not implemented")
   }

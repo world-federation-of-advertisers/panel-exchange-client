@@ -18,12 +18,12 @@ import wfanet.panelmatch.client.PreprocessEventsRequest
 import wfanet.panelmatch.client.PreprocessEventsResponse
 
 /**
- * Implements several encryption schemes to encrypt event data and an identifier. // A deterministic
- * commutative encryption scheme is used to encrypt the identifier, // which is hashed using a
- * Sha256 method. The encrypted identifier is also used // in an HKDF to create an AES key, which is
- * used for an AES encryption/decryption // of event data.
+ * Implements several encryption schemes to encrypt event data and an identifier. A deterministic
+ * commutative encryption scheme is used to encrypt the identifier, which is hashed using a Sha256
+ * method. The encrypted identifier is also used in an HKDF to create an AES key, which is used for
+ * an AES encryption/decryption of event data.
  */
 interface PreprocessEvents {
-  /** Applies deterministic commutative encryption scheme */
+  /** Preprocesses each of the events in [request] as described above */
   fun preprocess(request: PreprocessEventsRequest): PreprocessEventsResponse
 }
