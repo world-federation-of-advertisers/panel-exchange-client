@@ -90,7 +90,6 @@ cc_library(
     deps = [
         "@any_sketch//src/main/cc/any_sketch/fingerprinters",
         "@com_github_glog_glog//:glog",
-        "@com_google_absl//absl/memory",
         "@com_google_absl//absl/status",
         "@tink_base//cc/util:secret_data",
     ],
