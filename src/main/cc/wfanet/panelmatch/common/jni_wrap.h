@@ -25,8 +25,8 @@
 
 namespace wfanet::panelmatch::common {
 
-// Deseriales `serialized_request`, then calls `inner_function` on the resulting
-// proto, then serializes and returns the result.
+// Deserializes `serialized_request`, then calls `inner_function` on the
+// resulting proto, then serializes and returns the result.
 template <typename Request, typename Response>
 absl::StatusOr<std::string> JniWrap(
     const std::string& serialized_request,

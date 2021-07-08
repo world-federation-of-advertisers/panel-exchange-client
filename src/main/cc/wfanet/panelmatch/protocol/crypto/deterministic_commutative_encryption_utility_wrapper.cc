@@ -21,12 +21,6 @@
 
 namespace wfanet::panelmatch::protocol::crypto {
 using ::wfanet::panelmatch::common::JniWrap;
-using ::wfanet::panelmatch::protocol::protobuf::CryptorDecryptRequest;
-using ::wfanet::panelmatch::protocol::protobuf::CryptorDecryptResponse;
-using ::wfanet::panelmatch::protocol::protobuf::CryptorEncryptRequest;
-using ::wfanet::panelmatch::protocol::protobuf::CryptorEncryptResponse;
-using ::wfanet::panelmatch::protocol::protobuf::CryptorReEncryptRequest;
-using ::wfanet::panelmatch::protocol::protobuf::CryptorReEncryptResponse;
 
 absl::StatusOr<std::string> DeterministicCommutativeEncryptWrapper(
     const std::string& serialized_request) {
