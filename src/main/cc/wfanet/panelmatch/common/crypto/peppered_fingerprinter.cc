@@ -30,7 +30,7 @@ using ::wfa::Fingerprinter;
 
 // A hashfunction that concatenates a pepper to an input, then uses
 // a specified hashfunction.
-class PepperedFingerprinter : public wfa::Fingerprinter {
+class PepperedFingerprinter : public Fingerprinter {
  public:
   ~PepperedFingerprinter() override = default;
 
