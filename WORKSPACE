@@ -328,10 +328,10 @@ load("@tink_cc//:tink_cc_deps_init.bzl", "tink_cc_deps_init")
 tink_cc_deps_init()
 
 wfa_repo_archive(
-    name = "any_sketch",
-    commit = "a9384c6030b73a536c972f5033ab324a682cdf57",
-    repo = "any-sketch",
-    sha256 = "37b0fed385c4d547ba25e08aeabb7ef5f3575efa9a9fe7e816616bd23a26c17b",
+    name = "wfa_common_cpp",
+    commit = "2c7242ca721a4c10c4a7680d6ff0bc63929deeb0",
+    repo = "common-cpp",
+    sha256 = "6f7b89901fbadc9aa664739ea2a3a9a43783a428882549f2a84fda2c7784f1fb",
 )
 
 new_git_repository(

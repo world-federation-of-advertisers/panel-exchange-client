@@ -15,7 +15,7 @@
 #include "wfanet/panelmatch/common/crypto/peppered_fingerprinter.h"
 
 #include "gtest/gtest.h"
-#include "src/main/cc/any_sketch/fingerprinters/fingerprinters.h"
+#include "src/main/cc/common_cpp/fingerprinters/fingerprinters.h"
 #include "tink/util/secret_data.h"
 
 namespace wfanet::panelmatch::common::crypto {
@@ -23,13 +23,13 @@ namespace {
 
 using ::crypto::tink::util::SecretData;
 using ::crypto::tink::util::SecretDataFromStringView;
-using ::wfa::any_sketch::Fingerprinter;
-using ::wfa::any_sketch::GetFarmFingerprinter;
-using ::wfa::any_sketch::GetSha256Fingerprinter;
+using ::wfa::Fingerprinter;
+using ::wfa::GetFarmFingerprinter;
+using ::wfa::GetSha256Fingerprinter;
 
 // Test PepperedFingerprinter with Sha256Fingerprinter delegate
 // Test values from
-// any-sketch/src/test/cc/any_sketch/fingerprinters/fingerprinters_test.cc
+// common-cpp/src/test/cc/common_cpp/fingerprinters/fingerprinters_test.cc
 TEST(FingerprintersTest, PepperedFingerprinterWithSha256) {
   const Fingerprinter& sha = GetSha256Fingerprinter();
   uint64_t compare = 0x141cfc9842c4b0e3;
@@ -49,7 +49,7 @@ TEST(FingerprintersTest, PepperedFingerprinterWithSha256) {
 
 // Test PepperedFingerprinter with FarmHashFingerprinter delegate
 // Test values from
-// any-sketch/src/test/cc/any_sketch/fingerprinters/fingerprinters_test.cc
+// common-cpp/src/test/cc/common_cpp/fingerprinters/fingerprinters_test.cc
 TEST(FingerprintersTest, PepperedFingerprinterWithFarm) {
   const Fingerprinter& farm = GetFarmFingerprinter();
   uint64_t compare = 0x9ae16a3b2f90404f;

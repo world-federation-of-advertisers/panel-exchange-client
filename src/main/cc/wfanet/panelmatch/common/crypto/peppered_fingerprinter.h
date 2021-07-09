@@ -19,14 +19,14 @@
 
 #include <memory>
 
-#include "src/main/cc/any_sketch/fingerprinters/fingerprinters.h"
+#include "src/main/cc/common_cpp/fingerprinters/fingerprinters.h"
 #include "tink/util/secret_data.h"
 
 namespace wfanet::panelmatch::common::crypto {
 
 // Returns a Fingerprinter with a hashfunction 'delegate' and pepper 'pepper'
-std::unique_ptr<wfa::any_sketch::Fingerprinter> GetPepperedFingerprinter(
-    const wfa::any_sketch::Fingerprinter* delegate,
+std::unique_ptr<wfa::Fingerprinter> GetPepperedFingerprinter(
+    const wfa::Fingerprinter* delegate,
     const ::crypto::tink::util::SecretData& pepper);
 
 }  // namespace wfanet::panelmatch::common::crypto
