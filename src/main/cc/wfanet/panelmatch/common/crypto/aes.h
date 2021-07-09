@@ -41,12 +41,14 @@ class Aes {
   virtual absl::StatusOr<std::string> Decrypt(
       absl::string_view input,
       const ::crypto::tink::util::SecretData& key) const = 0;
+
+  virtual int32_t key_size_bytes() const = 0;
 };
 
 // Return Aes encryption scheme with a key size of 64 bytes and implements
 // AEAD_AES_SIV_CMAC_512 as defined by
 // https://datatracker.ietf.org/doc/html/rfc5297#section-6.3.
-const Aes& GetAesSivCmac512();
+const std::unique_ptr<Aes> GetAesSivCmac512();
 
 }  // namespace wfanet::panelmatch::common::crypto
 

@@ -32,7 +32,7 @@ class Hkdf {
 };
 
 // Returns an Hkdf that uses SHA-256 as the hash function
-const Hkdf& GetSha256Hkdf();
+const std::unique_ptr<Hkdf> GetSha256Hkdf();
 
 }  // namespace wfanet::panelmatch::common::crypto
 
