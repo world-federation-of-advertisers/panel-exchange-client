@@ -75,8 +75,8 @@ cc_test(
     ],
     deps = [
         "//src/main/cc/wfanet/panelmatch/common/crypto:peppered_fingerprinter",
-        "@any_sketch//src/main/cc/any_sketch/fingerprinters",
         "@googletest//:gtest_main",
         "@tink_base//cc/util:secret_data",
+        "@wfa_common_cpp//src/main/cc/common_cpp/fingerprinters",
     ],
 )

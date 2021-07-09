@@ -26,6 +26,7 @@ namespace {
 
 using ::crypto::tink::util::SecretData;
 using ::crypto::tink::util::SecretDataAsStringView;
+using ::wfa::Fingerprinter;
 
 // A hashfunction that concatenates a pepper to an input, then uses
 // a specified hashfunction.
