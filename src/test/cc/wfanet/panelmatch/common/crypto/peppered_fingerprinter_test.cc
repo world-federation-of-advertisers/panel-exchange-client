@@ -32,18 +32,19 @@ using ::wfa::any_sketch::GetSha256Fingerprinter;
 // any-sketch/src/test/cc/any_sketch/fingerprinters/fingerprinters_test.cc
 TEST(FingerprintersTest, PepperedFingerprinterWithSha256) {
   const Fingerprinter& sha = GetSha256Fingerprinter();
+  uint64_t compare = 0x141cfc9842c4b0e3;
 
   // Test that correct hash value is given
   SecretData pepper = SecretDataFromStringView("");
   std::unique_ptr<Fingerprinter> empty_fingerprinter =
       GetPepperedFingerprinter(&sha, pepper);
-  EXPECT_EQ(empty_fingerprinter->Fingerprint(""), 0x141cfc9842c4b0e3);
+  EXPECT_EQ(empty_fingerprinter->Fingerprint(""), compare);
 
   // Verify that different strings give different results
   pepper = SecretDataFromStringView("-str");
   std::unique_ptr<Fingerprinter> fingerprinter =
       GetPepperedFingerprinter(&sha, pepper);
-  EXPECT_NE(fingerprinter->Fingerprint("a-dfferent"), 0x141cfc9842c4b0e3);
+  EXPECT_NE(fingerprinter->Fingerprint("a-dfferent"), compare);
 }
 
 // Test PepperedFingerprinter with FarmHashFingerprinter delegate
@@ -51,18 +52,19 @@ TEST(FingerprintersTest, PepperedFingerprinterWithSha256) {
 // any-sketch/src/test/cc/any_sketch/fingerprinters/fingerprinters_test.cc
 TEST(FingerprintersTest, PepperedFingerprinterWithFarm) {
   const Fingerprinter& farm = GetFarmFingerprinter();
+  uint64_t compare = 0x9ae16a3b2f90404f;
 
   // Test that correct hash value is given
   SecretData pepper = SecretDataFromStringView("");
   std::unique_ptr<Fingerprinter> empty_fingerprinter =
       GetPepperedFingerprinter(&farm, pepper);
-  EXPECT_EQ(empty_fingerprinter->Fingerprint(""), 0x9ae16a3b2f90404f);
+  EXPECT_EQ(empty_fingerprinter->Fingerprint(""), compare);
 
   // Verify that different strings give different results
   pepper = SecretDataFromStringView("-str");
   std::unique_ptr<Fingerprinter> fingerprinter =
       GetPepperedFingerprinter(&farm, pepper);
-  EXPECT_NE(fingerprinter->Fingerprint("not-an-empty"), 0x9ae16a3b2f90404f);
+  EXPECT_NE(fingerprinter->Fingerprint("not-an-empty"), compare);
 }
 
 // Test PepperedFingerprinter with null delegate
