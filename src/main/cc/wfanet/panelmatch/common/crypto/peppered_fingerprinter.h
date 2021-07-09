@@ -27,7 +27,7 @@ namespace wfanet::panelmatch::common::crypto {
 // Returns a Fingerprinter with a hashfunction 'delegate' and pepper 'pepper'
 std::unique_ptr<wfa::any_sketch::Fingerprinter> GetPepperedFingerprinter(
     const wfa::any_sketch::Fingerprinter* delegate,
-    const crypto::tink::util::SecretData& pepper);
+    const ::crypto::tink::util::SecretData& pepper);
 
 }  // namespace wfanet::panelmatch::common::crypto
 
