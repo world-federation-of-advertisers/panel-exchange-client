@@ -18,7 +18,7 @@
 
 #include "absl/status/status.h"
 #include "glog/logging.h"
-#include "src/main/cc/any_sketch/fingerprinters/fingerprinters.h"
+#include "src/main/cc/common_cpp/fingerprinters/fingerprinters.h"
 #include "tink/util/secret_data.h"
 
 namespace wfanet::panelmatch::common::crypto {
@@ -26,11 +26,11 @@ namespace {
 
 using ::crypto::tink::util::SecretData;
 using ::crypto::tink::util::SecretDataAsStringView;
-using ::wfa::any_sketch::Fingerprinter;
+using ::wfa::Fingerprinter;
 
 // A hashfunction that concatenates a pepper to an input, then uses
 // a specified hashfunction.
-class PepperedFingerprinter : public Fingerprinter {
+class PepperedFingerprinter : public wfa::Fingerprinter {
  public:
   ~PepperedFingerprinter() override = default;
 
