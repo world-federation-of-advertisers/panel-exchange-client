@@ -15,7 +15,7 @@
 package org.wfanet.panelmatch.protocol.common
 
 import com.google.protobuf.ByteString
-import wfanet.panelmatch.protocol.protobuf.SharedInputs
+import org.wfanet.panelmatch.protocol.SharedInputs
 
 /** Insert [data] into a [SharedInputs] proto and then serializes it. */
 fun makeSerializedSharedInputs(data: List<ByteString>): ByteString {

@@ -22,12 +22,12 @@
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "absl/types/span.h"
-#include "wfanet/panelmatch/client/eventpreprocessing/preprocess_events.pb.h"
+#include "wfa/panelmatch/client/eventpreprocessing/preprocess_events.pb.h"
 
-namespace wfanet::panelmatch::client {
+namespace org::wfanet::panelmatch::client {
 absl::StatusOr<PreprocessEventsResponse> PreprocessEvents(
     const PreprocessEventsRequest& request) {
   // TODO(juliamorrissey): call Erin's library
   return absl::UnimplementedError("Not implemented");
 }
-}  // namespace wfanet::panelmatch::client
+}  // namespace org::wfanet::panelmatch::client
