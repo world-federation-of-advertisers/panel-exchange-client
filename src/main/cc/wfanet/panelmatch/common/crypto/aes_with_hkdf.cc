@@ -14,6 +14,8 @@
 
 #include "wfanet/panelmatch/common/crypto/aes_with_hkdf.h"
 
+#include <utility>
+
 namespace wfanet::panelmatch::common::crypto {
 
 AesWithHkdf::AesWithHkdf(std::unique_ptr<Hkdf> hkdf, std::unique_ptr<Aes> aes)
