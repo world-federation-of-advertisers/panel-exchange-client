@@ -31,4 +31,4 @@ PreprocessEvents(
   // TODO(juliamorrissey): call Erin's library
   return absl::UnimplementedError("Not implemented");
 }
-}  // namespace org::wfa::panelmatch::client
+}  // namespace wfa::panelmatch::client
