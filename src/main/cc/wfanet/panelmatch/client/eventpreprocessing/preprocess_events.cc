@@ -24,9 +24,9 @@
 #include "absl/types/span.h"
 #include "wfa/panelmatch/client/eventpreprocessing/preprocess_events.pb.h"
 
-namespace org::wfanet::panelmatch::client {
-absl::StatusOr<PreprocessEventsResponse> PreprocessEvents(
-    const PreprocessEventsRequest& request) {
+namespace wfanet::panelmatch::client {
+absl::StatusOr<wfa::panelmatch::client::PreprocessEventsResponse> PreprocessEvents(
+    const wfa::panelmatch::client::PreprocessEventsRequest& request) {
   // TODO(juliamorrissey): call Erin's library
   return absl::UnimplementedError("Not implemented");
 }

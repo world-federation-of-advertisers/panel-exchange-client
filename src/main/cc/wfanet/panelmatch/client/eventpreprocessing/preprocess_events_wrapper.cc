@@ -20,7 +20,7 @@
 #include "wfanet/panelmatch/client/eventpreprocessing/preprocess_events.h"
 #include "wfanet/panelmatch/common/jni_wrap.h"
 
-namespace org::wfanet::panelmatch::client {
+namespace wfanet::panelmatch::client {
 absl::StatusOr<std::string> PreprocessEventsWrapper(
     const std::string& serialized_request) {
   return ::wfanet::panelmatch::common::JniWrap(serialized_request,

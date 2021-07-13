@@ -41,8 +41,8 @@ using ::wfanet::IsOk;
 using ::wfanet::IsOkAndHolds;
 using ::wfanet::StatusIs;
 
-using org::wfanet::panelmatch::client::PreprocessEventsRequest;
-using org::wfanet::panelmatch::client::PreprocessEventsResponse;
+using wfa::panelmatch::client::PreprocessEventsRequest;
+using wfa::panelmatch::client::PreprocessEventsResponse;
 
 TEST(PreprocessEventsTest, ReturnsUnimplemented) {
   std::string test_id = "random-id-1";

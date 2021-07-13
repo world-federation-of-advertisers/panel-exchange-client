@@ -21,7 +21,7 @@
 
 #include "absl/status/statusor.h"
 
-namespace org::wfanet::panelmatch::client {
+namespace wfanet::panelmatch::client {
 absl::StatusOr<std::string> PreprocessEventsWrapper(
     const std::string& serialized_request);
 }  // namespace org::wfanet::panelmatch::client
