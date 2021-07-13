@@ -17,6 +17,8 @@
 #ifndef SRC_MAIN_CC_WFANET_PANELMATCH_COMMON_CRYPTO_HKDF_H_
 #define SRC_MAIN_CC_WFANET_PANELMATCH_COMMON_CRYPTO_HKDF_H_
 
+#include <memory>
+
 #include "absl/status/statusor.h"
 #include "tink/util/secret_data.h"
 

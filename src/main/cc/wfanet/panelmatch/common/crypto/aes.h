@@ -17,6 +17,7 @@
 #ifndef SRC_MAIN_CC_WFANET_PANELMATCH_COMMON_CRYPTO_AES_H_
 #define SRC_MAIN_CC_WFANET_PANELMATCH_COMMON_CRYPTO_AES_H_
 
+#include <memory>
 #include <string>
 
 #include "absl/status/statusor.h"
