@@ -26,11 +26,10 @@ namespace {
 
 using ::crypto::tink::util::SecretData;
 using ::crypto::tink::util::SecretDataAsStringView;
-using ::wfa::Fingerprinter;
 
 // A hashfunction that concatenates a pepper to an input, then uses
 // a specified hashfunction.
-class PepperedFingerprinter : public Fingerprinter {
+class PepperedFingerprinter : public wfa::Fingerprinter {
  public:
   ~PepperedFingerprinter() override = default;
 
@@ -51,8 +50,8 @@ class PepperedFingerprinter : public Fingerprinter {
 };
 }  // namespace
 
-std::unique_ptr<Fingerprinter> GetPepperedFingerprinter(
-    const Fingerprinter* delegate, const SecretData& pepper) {
+std::unique_ptr<wfa::Fingerprinter> GetPepperedFingerprinter(
+    const wfa::Fingerprinter* delegate, const SecretData& pepper) {
   return absl::make_unique<PepperedFingerprinter>(delegate, pepper);
 }
 }  // namespace wfanet::panelmatch::common::crypto
