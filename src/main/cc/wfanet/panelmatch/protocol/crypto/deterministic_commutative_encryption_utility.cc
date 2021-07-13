@@ -36,11 +36,11 @@ using ::wfanet::panelmatch::common::crypto::Action;
 using ::wfanet::panelmatch::common::crypto::CreateCryptorFromKey;
 }  // namespace
 
-absl::StatusOr<wfa::panelmatch::client::CryptorEncryptResponse>
+absl::StatusOr<wfa::panelmatch::protocol::CryptorEncryptResponse>
 DeterministicCommutativeEncrypt(
-    const wfa::panelmatch::client::CryptorEncryptRequest& request) {
+    const wfa::panelmatch::protocol::CryptorEncryptRequest& request) {
   wfa::measurement::common::crypto::StartedThreadCpuTimer timer;
-  wfa::panelmatch::client::CryptorEncryptResponse response;
+  wfa::panelmatch::protocol::CryptorEncryptResponse response;
   ASSIGN_OR_RETURN_ERROR(auto cryptor,
                          CreateCryptorFromKey(request.encryption_key()),
                          "Failed to create the protocol cipher");
@@ -51,11 +51,11 @@ DeterministicCommutativeEncrypt(
   return response;
 }
 
-absl::StatusOr<wfa::panelmatch::client::CryptorDecryptResponse>
+absl::StatusOr<wfa::panelmatch::protocol::CryptorDecryptResponse>
 DeterministicCommutativeDecrypt(
-    const wfa::panelmatch::client::CryptorDecryptRequest& request) {
+    const wfa::panelmatch::protocol::CryptorDecryptRequest& request) {
   wfa::measurement::common::crypto::StartedThreadCpuTimer timer;
-  wfa::panelmatch::client::CryptorDecryptResponse response;
+  wfa::panelmatch::protocol::CryptorDecryptResponse response;
   ASSIGN_OR_RETURN_ERROR(auto cryptor,
                          CreateCryptorFromKey(request.encryption_key()),
                          "Failed to create the protocol cipher");
@@ -66,11 +66,11 @@ DeterministicCommutativeDecrypt(
   return response;
 }
 
-absl::StatusOr<wfa::panelmatch::client::CryptorReEncryptResponse>
+absl::StatusOr<wfa::panelmatch::protocol::CryptorReEncryptResponse>
 DeterministicCommutativeReEncrypt(
-    const wfa::panelmatch::client::CryptorReEncryptRequest& request) {
+    const wfa::panelmatch::protocol::CryptorReEncryptRequest& request) {
   wfa::measurement::common::crypto::StartedThreadCpuTimer timer;
-  wfa::panelmatch::client::CryptorReEncryptResponse response;
+  wfa::panelmatch::protocol::CryptorReEncryptResponse response;
   ASSIGN_OR_RETURN_ERROR(auto cryptor,
                          CreateCryptorFromKey(request.encryption_key()),
                          "Failed to create the protocol cipher");

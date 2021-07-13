@@ -37,12 +37,11 @@ using ::testing::Eq;
 using ::testing::Ne;
 using ::testing::Not;
 using ::testing::Pointwise;
+using ::wfa::panelmatch::client::PreprocessEventsRequest;
+using ::wfa::panelmatch::client::PreprocessEventsResponse;
 using ::wfanet::IsOk;
 using ::wfanet::IsOkAndHolds;
 using ::wfanet::StatusIs;
-
-using wfa::panelmatch::client::PreprocessEventsRequest;
-using wfa::panelmatch::client::PreprocessEventsResponse;
 
 TEST(PreprocessEventsTest, ReturnsUnimplemented) {
   std::string test_id = "random-id-1";
