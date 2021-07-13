@@ -37,18 +37,17 @@ using ::testing::Eq;
 using ::testing::Ne;
 using ::testing::Not;
 using ::testing::Pointwise;
+using ::wfa::panelmatch::protocol::CryptorDecryptRequest;
+using ::wfa::panelmatch::protocol::CryptorDecryptResponse;
+using ::wfa::panelmatch::protocol::CryptorEncryptRequest;
+using ::wfa::panelmatch::protocol::CryptorEncryptResponse;
+using ::wfa::panelmatch::protocol::CryptorReEncryptRequest;
+using ::wfa::panelmatch::protocol::CryptorReEncryptResponse;
 using ::wfanet::IsOk;
 using ::wfanet::IsOkAndHolds;
 using ::wfanet::panelmatch::protocol::crypto::DeterministicCommutativeDecrypt;
 using ::wfanet::panelmatch::protocol::crypto::DeterministicCommutativeEncrypt;
 using ::wfanet::panelmatch::protocol::crypto::DeterministicCommutativeReEncrypt;
-
-using wfa::panelmatch::client::CryptorDecryptRequest;
-using wfa::panelmatch::client::CryptorDecryptResponse;
-using wfa::panelmatch::client::CryptorEncryptRequest;
-using wfa::panelmatch::client::CryptorEncryptResponse;
-using wfa::panelmatch::client::CryptorReEncryptRequest;
-using wfa::panelmatch::client::CryptorReEncryptResponse;
 
 TEST(PanelMatchTest, DeterministicCommutativeEncryptionUtility) {
   std::vector<std::string> plaintexts{"some plaintext0", "some plaintext1",
