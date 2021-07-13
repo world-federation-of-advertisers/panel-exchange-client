@@ -22,9 +22,9 @@
 #include "absl/status/statusor.h"
 #include "wfa/panelmatch/client/eventpreprocessing/preprocess_events.pb.h"
 
-namespace org::wfanet::panelmatch::client {
-absl::StatusOr<wfanet::panelmatch::client::PreprocessEventsResponse>
+namespace wfanet::panelmatch::client {
+absl::StatusOr<wfa::panelmatch::client::PreprocessEventsResponse>
 PreprocessEvents(
-    const wfanet::panelmatch::client::PreprocessEventsRequest& request);
-}  // namespace org::wfanet::panelmatch::client
+    const wfa::panelmatch::client::PreprocessEventsRequest& request);
+}  // namespace wfanet::panelmatch::client
 #endif  // SRC_MAIN_CC_WFANET_PANELMATCH_CLIENT_EVENTPREPROCESSING_PREPROCESS_EVENTS_H_

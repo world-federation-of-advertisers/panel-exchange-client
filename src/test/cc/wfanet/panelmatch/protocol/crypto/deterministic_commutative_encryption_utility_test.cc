@@ -43,12 +43,12 @@ using ::wfanet::panelmatch::protocol::crypto::DeterministicCommutativeDecrypt;
 using ::wfanet::panelmatch::protocol::crypto::DeterministicCommutativeEncrypt;
 using ::wfanet::panelmatch::protocol::crypto::DeterministicCommutativeReEncrypt;
 
-using org::wfanet::panelmatch::protocol::CryptorDecryptRequest;
-using org::wfanet::panelmatch::protocol::CryptorDecryptResponse;
-using org::wfanet::panelmatch::protocol::CryptorEncryptRequest;
-using org::wfanet::panelmatch::protocol::CryptorEncryptResponse;
-using org::wfanet::panelmatch::protocol::CryptorReEncryptRequest;
-using org::wfanet::panelmatch::protocol::CryptorReEncryptResponse;
+using wfa::panelmatch::client::CryptorDecryptRequest;
+using wfa::panelmatch::client::CryptorDecryptResponse;
+using wfa::panelmatch::client::CryptorEncryptRequest;
+using wfa::panelmatch::client::CryptorEncryptResponse;
+using wfa::panelmatch::client::CryptorReEncryptRequest;
+using wfa::panelmatch::client::CryptorReEncryptResponse;
 
 TEST(PanelMatchTest, DeterministicCommutativeEncryptionUtility) {
   std::vector<std::string> plaintexts{"some plaintext0", "some plaintext1",

@@ -20,17 +20,17 @@
 
 namespace wfanet::panelmatch::protocol::crypto {
 
-absl::StatusOr<org::wfanet::panelmatch::protocol::CryptorEncryptResponse>
+absl::StatusOr<wfa::panelmatch::client::CryptorEncryptResponse>
 DeterministicCommutativeEncrypt(
-    const org::wfanet::panelmatch::protocol::CryptorEncryptRequest& request);
+    const wfa::panelmatch::client::CryptorEncryptRequest& request);
 
-absl::StatusOr<org::wfanet::panelmatch::protocol::CryptorReEncryptResponse>
+absl::StatusOr<wfa::panelmatch::client::CryptorReEncryptResponse>
 DeterministicCommutativeReEncrypt(
-    const org::wfanet::panelmatch::protocol::CryptorReEncryptRequest& request);
+    const wfa::panelmatch::client::CryptorReEncryptRequest& request);
 
-absl::StatusOr<org::wfanet::panelmatch::protocol::CryptorDecryptResponse>
+absl::StatusOr<wfa::panelmatch::client::CryptorDecryptResponse>
 DeterministicCommutativeDecrypt(
-    const org::wfanet::panelmatch::protocol::CryptorDecryptRequest& request);
+    const wfa::panelmatch::client::CryptorDecryptRequest& request);
 
 }  // namespace wfanet::panelmatch::protocol::crypto
 
