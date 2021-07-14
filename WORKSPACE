@@ -300,14 +300,14 @@ wfa_repo_archive(
 # Tink
 http_archive(
     name = "tink_base",
-    strip_prefix = "tink-master/",
-    urls = ["https://github.com/google/tink/archive/master.zip"],
+    strip_prefix = "tink-7c93a224b8fa6a3babfaf71c18c5610052dcbd61/",
+    urls = ["https://github.com/google/tink/archive/7c93a224b8fa6a3babfaf71c18c5610052dcbd61.zip"],
 )
 
 http_archive(
     name = "tink_cc",
-    strip_prefix = "tink-master/cc",
-    urls = ["https://github.com/google/tink/archive/master.zip"],
+    strip_prefix = "tink-7c93a224b8fa6a3babfaf71c18c5610052dcbd61/cc",
+    urls = ["https://github.com/google/tink/archive/7c93a224b8fa6a3babfaf71c18c5610052dcbd61.zip"],
 )
 
 load("@tink_base//:tink_base_deps.bzl", "tink_base_deps")
@@ -325,3 +325,13 @@ tink_cc_deps()
 load("@tink_cc//:tink_cc_deps_init.bzl", "tink_cc_deps_init")
 
 tink_cc_deps_init()
+
+# Common-cpp
+http_archive(
+    name = "wfa_common_cpp",
+    sha256 = "8a3b5da5eeb496361970de1dcf4a09c66ed5cebbba3da78d96ed685ec5ce5521",
+    strip_prefix = "common-cpp-06bf4f4644bfa59aefc79dc4a92c2ed6d96f4055",
+    url = "https://github.com/world-federation-of-advertisers/common-cpp/archive/06bf4f4644bfa59aefc79dc4a92c2ed6d96f4055.tar.gz",
+)
+
+load("@wfa_common_cpp//build:deps.bzl", "common_cpp_deps")
