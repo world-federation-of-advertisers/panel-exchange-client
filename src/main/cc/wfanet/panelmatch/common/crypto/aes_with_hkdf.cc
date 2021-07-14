@@ -34,15 +34,15 @@ AesWithHkdf::AesWithHkdf(std::unique_ptr<Hkdf> hkdf, std::unique_ptr<Aes> aes)
 
 absl::StatusOr<std::string> AesWithHkdf::Encrypt(absl::string_view input,
                                                  const SecretData& key) const {
-  SecretData result;
-  ASSIGN_OR_RETURN(result, hkdf_->ComputeHkdf(key, aes_->key_size_bytes()));
+  ASSIGN_OR_RETURN(SecretData result,
+                   hkdf_->ComputeHkdf(key, aes_->key_size_bytes()));
   return aes_->Encrypt(input, result);
 }
 
 absl::StatusOr<std::string> AesWithHkdf::Decrypt(absl::string_view input,
                                                  const SecretData& key) const {
-  SecretData result;
-  ASSIGN_OR_RETURN(result, hkdf_->ComputeHkdf(key, aes_->key_size_bytes()));
+  ASSIGN_OR_RETURN(SecretData result,
+                   hkdf_->ComputeHkdf(key, aes_->key_size_bytes()));
   return aes_->Decrypt(input, result);
 }
 
