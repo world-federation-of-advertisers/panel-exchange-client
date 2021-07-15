@@ -14,7 +14,7 @@
 
 """Common macros."""
 
-load("@wfa_measurement_system//build:defs.bzl", "to_label")
+load("@wfa_common_jvm//build:defs.bzl", "to_label")
 load("@rules_java//java:defs.bzl", "java_library", "java_proto_library")
 load(
     "@com_github_grpc_grpc_kotlin//:kt_jvm_grpc.bzl",
@@ -58,7 +58,7 @@ def kt_jvm_grpc_library(
         name = name,
         exports = [
             internal_name,
-            "@wfa_measurement_system//imports/java/io/grpc/stub",
+            "@wfa_common_jvm//imports/java/io/grpc/stub",
         ] + deps,
         visibility = visibility,
         **kwargs

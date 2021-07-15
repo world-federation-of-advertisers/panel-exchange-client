@@ -57,6 +57,14 @@ http_archive(
 # @com_google_truth_truth
 load("//build/com_google_truth:repo.bzl", "com_google_truth_artifact_dict")
 
+# Common JVM
+http_archive(
+    name = "wfa_common_jvm",
+    sha256 = "40cd367ee9b4a8371534f6a8111f4608918d2cf1e955b9ba01e6ae3cfac86b05",
+    strip_prefix = "common-jvm-1fe0854c130467f940da0f66a0ff186aa31ea8a3",
+    url = "https://github.com/world-federation-of-advertisers/common-jvm/archive/1fe0854c130467f940da0f66a0ff186aa31ea8a3.tar.gz",
+)
+
 # Measurement system.
 http_archive(
     name = "wfa_measurement_system",
@@ -75,14 +83,14 @@ http_archive(
 
 # @io_bazel_rules_kotlin
 
-load("@wfa_measurement_system//build/io_bazel_rules_kotlin:repo.bzl", "kotlinc_release", "rules_kotlin_repo")
+load("@wfa_common_jvm//build/io_bazel_rules_kotlin:repo.bzl", "kotlinc_release", "rules_kotlin_repo")
 
 rules_kotlin_repo(
     sha256 = "9cc0e4031bcb7e8508fd9569a81e7042bbf380604a0157f796d06d511cff2769",
     version = "legacy-1.4.0-rc4",
 )
 
-load("@wfa_measurement_system//build/io_bazel_rules_kotlin:deps.bzl", "rules_kotlin_deps")
+load("@wfa_common_jvm//build/io_bazel_rules_kotlin:deps.bzl", "rules_kotlin_deps")
 
 rules_kotlin_deps(compiler_release = kotlinc_release(
     sha256 = "ccd0db87981f1c0e3f209a1a4acb6778f14e63fe3e561a98948b5317e526cc6c",
@@ -90,7 +98,7 @@ rules_kotlin_deps(compiler_release = kotlinc_release(
 ))
 
 # kotlinx.coroutines
-load("@wfa_measurement_system//build/kotlinx_coroutines:repo.bzl", "kotlinx_coroutines_artifact_dict")
+load("@wfa_common_jvm//build/kotlinx_coroutines:repo.bzl", "kotlinx_coroutines_artifact_dict")
 
 # @com_github_grpc_grpc_kotlin
 
@@ -128,7 +136,7 @@ http_archive(
 )
 
 load("@rules_jvm_external//:defs.bzl", "maven_install")
-load("@wfa_measurement_system//build/maven:artifacts.bzl", "artifacts")
+load("@wfa_common_jvm//build/maven:artifacts.bzl", "artifacts")
 
 MAVEN_ARTIFACTS = artifacts.list_to_dict(
     IO_GRPC_GRPC_JAVA_ARTIFACTS +
@@ -147,7 +155,7 @@ MAVEN_ARTIFACTS.update({
     "com.google.cloud:google-cloud-spanner": "3.0.3",
     "com.google.code.gson:gson": "2.8.6",
     "com.google.guava:guava": "30.0-jre",
-    "com.nhaarman.mockitokotlin2:mockito-kotlin": "2.2.0",
+    "org.mockito.kotlin:mockito-kotlin": "3.2.0",
     "info.picocli:picocli": "4.4.0",
     "junit:junit": "4.13",
     "org.apache.beam:beam-runners-direct-java": "2.29.0",
@@ -252,18 +260,18 @@ http_archive(
 )
 
 # @com_google_truth_truth
-load("@wfa_measurement_system//build/com_google_truth:repo.bzl", "com_google_truth_artifact_dict")
+load("@wfa_common_jvm//build/com_google_truth:repo.bzl", "com_google_truth_artifact_dict")
 
 # @io_bazel_rules_kotlin
 
-load("@wfa_measurement_system//build/io_bazel_rules_kotlin:repo.bzl", "kotlinc_release", "rules_kotlin_repo")
+load("@wfa_common_jvm//build/io_bazel_rules_kotlin:repo.bzl", "kotlinc_release", "rules_kotlin_repo")
 
 rules_kotlin_repo(
     sha256 = "9cc0e4031bcb7e8508fd9569a81e7042bbf380604a0157f796d06d511cff2769",
     version = "legacy-1.4.0-rc4",
 )
 
-load("@wfa_measurement_system//build/io_bazel_rules_kotlin:deps.bzl", "rules_kotlin_deps")
+load("@wfa_common_jvm//build/io_bazel_rules_kotlin:deps.bzl", "rules_kotlin_deps")
 
 rules_kotlin_deps(compiler_release = kotlinc_release(
     sha256 = "ccd0db87981f1c0e3f209a1a4acb6778f14e63fe3e561a98948b5317e526cc6c",
@@ -288,7 +296,7 @@ switched_rules_by_language(
     java = True,
 )
 
-load("@wfa_measurement_system//build/wfa:repositories.bzl", "wfa_repo_archive")
+load("@wfa_common_jvm//build/wfa:repositories.bzl", "wfa_repo_archive")
 
 wfa_repo_archive(
     name = "wfa_rules_swig",
