@@ -343,3 +343,5 @@ http_archive(
 )
 
 load("@wfa_common_cpp//build:deps.bzl", "common_cpp_deps")
+
+common_cpp_deps()
