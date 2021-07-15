@@ -1,0 +1,13 @@
+load("@rules_cc//cc:defs.bzl", "cc_test")
+
+cc_test(
+    name = "deterministic_commutative_encryption_utility_test",
+    srcs = ["deterministic_commutative_encryption_utility_test.cc"],
+    deps = [
+        "//src/main/cc/wfa/panelmatch/protocol/crypto:deterministic_commutative_encryption_utility",
+        "//src/main/proto/wfa/panelmatch/protocol/crypto:cryptor_cc_proto",
+        "//src/test/cc/testutil:matchers",
+        "//src/test/cc/testutil:status_macros",
+        "@googletest//:gtest_main",
+    ],
+)
