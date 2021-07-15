@@ -60,17 +60,17 @@ load("//build/com_google_truth:repo.bzl", "com_google_truth_artifact_dict")
 # Common JVM
 http_archive(
     name = "wfa_common_jvm",
-    sha256 = "40cd367ee9b4a8371534f6a8111f4608918d2cf1e955b9ba01e6ae3cfac86b05",
-    strip_prefix = "common-jvm-1fe0854c130467f940da0f66a0ff186aa31ea8a3",
-    url = "https://github.com/world-federation-of-advertisers/common-jvm/archive/1fe0854c130467f940da0f66a0ff186aa31ea8a3.tar.gz",
+    sha256 = "b4f410343536bb11bb0a8a868e611be792e1cb0d493d329b9ad2fe4c4dbb7c35",
+    strip_prefix = "common-jvm-a2b9bae790fc84205499bed09bd1ac22e9cf7328",
+    url = "https://github.com/world-federation-of-advertisers/common-jvm/archive/a2b9bae790fc84205499bed09bd1ac22e9cf7328.tar.gz",
 )
 
 # Measurement system.
 http_archive(
     name = "wfa_measurement_system",
-    sha256 = "275c6e44b8f15097acb52b547b1f95b0a7e0e47c4b625bf3bc9d29d21234ac23",
-    strip_prefix = "cross-media-measurement-8399fe4c23a13c459bab09e7f869f4f8e89bd8df",
-    url = "https://github.com/world-federation-of-advertisers/cross-media-measurement/archive/8399fe4c23a13c459bab09e7f869f4f8e89bd8df.tar.gz",
+    sha256 = "8bdf195106415769d36c4375403a736606cd73f16d5da4f406a6209b03ac6256",
+    strip_prefix = "cross-media-measurement-86da71ae3b177755fdbe8b28ddf1463bcc48ba4c",
+    url = "https://github.com/world-federation-of-advertisers/cross-media-measurement/archive/86da71ae3b177755fdbe8b28ddf1463bcc48ba4c.tar.gz",
 )
 
 # Measurement proto.
@@ -83,19 +83,13 @@ http_archive(
 
 # @io_bazel_rules_kotlin
 
-load("@wfa_common_jvm//build/io_bazel_rules_kotlin:repo.bzl", "kotlinc_release", "rules_kotlin_repo")
+load("@wfa_common_jvm//build/io_bazel_rules_kotlin:repo.bzl", "rules_kotlin_repo")
 
-rules_kotlin_repo(
-    sha256 = "9cc0e4031bcb7e8508fd9569a81e7042bbf380604a0157f796d06d511cff2769",
-    version = "legacy-1.4.0-rc4",
-)
+rules_kotlin_repo()
 
 load("@wfa_common_jvm//build/io_bazel_rules_kotlin:deps.bzl", "rules_kotlin_deps")
 
-rules_kotlin_deps(compiler_release = kotlinc_release(
-    sha256 = "ccd0db87981f1c0e3f209a1a4acb6778f14e63fe3e561a98948b5317e526cc6c",
-    version = "1.3.72",
-))
+rules_kotlin_deps()
 
 # kotlinx.coroutines
 load("@wfa_common_jvm//build/kotlinx_coroutines:repo.bzl", "kotlinx_coroutines_artifact_dict")
@@ -259,26 +253,10 @@ http_archive(
     ],
 )
 
+load("@com_google_protobuf//:protobuf_deps.bzl", "protobuf_deps")  # From gRPC.
+
 # @com_google_truth_truth
 load("@wfa_common_jvm//build/com_google_truth:repo.bzl", "com_google_truth_artifact_dict")
-
-# @io_bazel_rules_kotlin
-
-load("@wfa_common_jvm//build/io_bazel_rules_kotlin:repo.bzl", "kotlinc_release", "rules_kotlin_repo")
-
-rules_kotlin_repo(
-    sha256 = "9cc0e4031bcb7e8508fd9569a81e7042bbf380604a0157f796d06d511cff2769",
-    version = "legacy-1.4.0-rc4",
-)
-
-load("@wfa_common_jvm//build/io_bazel_rules_kotlin:deps.bzl", "rules_kotlin_deps")
-
-rules_kotlin_deps(compiler_release = kotlinc_release(
-    sha256 = "ccd0db87981f1c0e3f209a1a4acb6778f14e63fe3e561a98948b5317e526cc6c",
-    version = "1.3.72",
-))
-
-load("@com_google_protobuf//:protobuf_deps.bzl", "protobuf_deps")  # From gRPC.
 
 # Google API protos
 http_archive(
@@ -337,9 +315,9 @@ tink_cc_deps_init()
 # Common-cpp
 http_archive(
     name = "wfa_common_cpp",
-    sha256 = "8a3b5da5eeb496361970de1dcf4a09c66ed5cebbba3da78d96ed685ec5ce5521",
-    strip_prefix = "common-cpp-06bf4f4644bfa59aefc79dc4a92c2ed6d96f4055",
-    url = "https://github.com/world-federation-of-advertisers/common-cpp/archive/06bf4f4644bfa59aefc79dc4a92c2ed6d96f4055.tar.gz",
+    sha256 = "fc33c81ade972199fde949a18f8b8483b67e5458ee6a08dc7d905bfdbade41d4",
+    strip_prefix = "common-cpp-ec6e107b0509f074145b1b7751c22f5f9e0e2117",
+    url = "https://github.com/world-federation-of-advertisers/common-cpp/archive/ec6e107b0509f074145b1b7751c22f5f9e0e2117.tar.gz",
 )
 
 load("@wfa_common_cpp//build:deps.bzl", "common_cpp_deps")
