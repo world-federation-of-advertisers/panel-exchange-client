@@ -22,7 +22,7 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 
-namespace wfanet {
+namespace wfa {
 
 MATCHER(IsOk, "") {
   return testing::ExplainMatchResult(true, arg.ok(), result_listener);
@@ -54,6 +54,6 @@ MATCHER_P2(StatusIs, code, message, "") {
       testing::HasSubstr(message), std::string(arg.message()), result_listener);
 }
 
-}  // namespace wfanet
+}  // namespace wfa
 
 #endif  // SRC_TEST_CC_TESTUTIL_MATCHERS_H_
