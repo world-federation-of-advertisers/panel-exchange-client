@@ -23,7 +23,7 @@ class BatchingDoFn<T>(
   private val maxByteSize: Int,
   private val getElementByteSize: SerializableFunction<T, Int>
 ) : DoFn<T, MutableList<T>>() {
-  var buffer = mutableListOf<T>()
+  val buffer = mutableListOf<T>()
   var size: Int = 0
 
   @ProcessElement
@@ -48,6 +48,8 @@ class BatchingDoFn<T>(
   fun FinishBundle(context: FinishBundleContext) {
     if (!buffer.isEmpty()) {
       context.output(buffer, Instant.now(), GlobalWindow.INSTANCE)
+      buffer.clear()
+      size = 0
     }
   }
 }
