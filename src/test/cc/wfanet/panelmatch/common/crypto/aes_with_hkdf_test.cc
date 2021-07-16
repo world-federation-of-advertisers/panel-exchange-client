@@ -25,18 +25,18 @@ namespace {
 using ::crypto::tink::util::SecretData;
 using ::crypto::tink::util::SecretDataFromStringView;
 
-// Tests that a value encrypted then decrypted returns that original value
+// Tests that a value cyphertext then decrypted returns that original value
 TEST(AesWithHkdfTest, testEncryptDecrypt) {
   std::unique_ptr<Hkdf> hkdf = GetSha256Hkdf();
   std::unique_ptr<Aes> aes = GetAesSivCmac512();
   SecretData key = SecretDataFromStringView("key");
-  std::string_view message = "Some data to encrypt.";
+  std::string_view plaintext = "Some data to encrypt.";
   AesWithHkdf aes_hkdf(std::move(hkdf), std::move(aes));
-  auto encrypted = aes_hkdf.Encrypt(message, key);
-  ASSERT_TRUE(encrypted.ok()) << encrypted.status();
-  auto decrypted = aes_hkdf.Decrypt(*encrypted, key);
-  ASSERT_TRUE(decrypted.ok()) << decrypted.status();
-  EXPECT_EQ(*decrypted, message);
+  ASSERT_OK_AND_ASSIGN(std::string cyphertext,
+                       aes_hkdf.Encrypt(plaintext, key));
+  ASSERT_OK_AND_ASSIGN(std::string recovered_plaintext,
+                       aes_hkdf.Decrypt(cyphertext, key));
+  EXPECT_EQ(recovered_plaintext, plaintext);
 }
 
 // Tests that the result of AesWithHkdf Encrypt is the same as the result
@@ -45,14 +45,15 @@ TEST(AesWithHkdfTest, compareEncrypt) {
   std::unique_ptr<Hkdf> hkdf = GetSha256Hkdf();
   std::unique_ptr<Aes> aes = GetAesSivCmac512();
   SecretData key = SecretDataFromStringView("key");
-  std::string_view message = "Some data to encrypt.";
-  auto result = hkdf->ComputeHkdf(key, aes->key_size_bytes());
-  ASSERT_TRUE(result.ok()) << result.status();
-  auto encrypted_other = aes->Encrypt(message, *result);
+  std::string_view plaintext = "Some data to encrypt.";
+  ASSERT_OK_AND_ASSIGN(SecretData result,
+                       hkdf->ComputeHkdf(key, aes->key_size_bytes()));
+  ASSERT_OK_AND_ASSIGN(std::string cyphertext_other,
+                       aes->Encrypt(plaintext, result));
   AesWithHkdf aes_hkdf(std::move(hkdf), std::move(aes));
-  auto encrypted_this = aes_hkdf.Encrypt(message, key);
-  ASSERT_TRUE(encrypted_this.ok()) << encrypted_this.status();
-  EXPECT_EQ(*encrypted_this, *encrypted_other);
+  ASSERT_OK_AND_ASSIGN(std::string cyphertext_this,
+                       aes_hkdf.Encrypt(plaintext, key));
+  EXPECT_EQ(cyphertext_this, cyphertext_other);
 }
 
 // Tests that the result of AesWithHkdf Decrypt is the same as the result
@@ -61,18 +62,19 @@ TEST(AesWithHkdfTest, compareDecrypt) {
   std::unique_ptr<Hkdf> hkdf = GetSha256Hkdf();
   std::unique_ptr<Aes> aes = GetAesSivCmac512();
   SecretData key = SecretDataFromStringView("key");
-  std::string_view message = "Some data to encrypt.";
-  auto result = hkdf->ComputeHkdf(key, aes->key_size_bytes());
-  ASSERT_TRUE(result.ok()) << result.status();
-  auto encrypted_other = aes->Encrypt(message, *result);
-  auto decrypted_other = aes->Decrypt(*encrypted_other, *result);
-  ASSERT_TRUE(decrypted_other.ok()) << decrypted_other.status();
+  std::string_view plaintext = "Some data to encrypt.";
+  ASSERT_OK_AND_ASSIGN(SecretData result,
+                       hkdf->ComputeHkdf(key, aes->key_size_bytes()));
+  ASSERT_OK_AND_ASSIGN(std::string cyphertext_other,
+                       aes->Encrypt(plaintext, result));
+  ASSERT_OK_AND_ASSIGN(std::string decrypted_other,
+                       aes->Decrypt(cyphertext_other, result));
   AesWithHkdf aes_hkdf(std::move(hkdf), std::move(aes));
-  auto encrypted_this = aes_hkdf.Encrypt(message, key);
-  ASSERT_TRUE(encrypted_this.ok()) << encrypted_this.status();
-  auto decrypted_this = aes_hkdf.Decrypt(*encrypted_this, key);
-  ASSERT_TRUE(decrypted_this.ok()) << decrypted_this.status();
-  EXPECT_EQ(*decrypted_this, *decrypted_other);
+  ASSERT_OK_AND_ASSIGN(std::string cyphertext_this,
+                       aes_hkdf.Encrypt(plaintext, key));
+  ASSERT_OK_AND_ASSIGN(std::string decrypted_this,
+                       aes_hkdf.Decrypt(cyphertext_this, key));
+  EXPECT_EQ(decrypted_this, decrypted_other);
 }
 
 // Test with empty key and proper input - Encrypt
@@ -101,13 +103,13 @@ TEST(AesTest, differentKeySameStringEncrypt) {
   std::unique_ptr<Aes> aes = GetAesSivCmac512();
   SecretData key_1 = SecretDataFromStringView("key1");
   SecretData key_2 = SecretDataFromStringView("key2");
-  std::string_view message = "Some data to encrypt.";
+  std::string_view plaintext = "Some data to encrypt.";
   AesWithHkdf aes_hkdf(std::move(hkdf), std::move(aes));
-  auto encrypted_1 = aes_hkdf.Encrypt(message, key_1);
-  auto encrypted_2 = aes_hkdf.Encrypt(message, key_2);
-  ASSERT_TRUE(encrypted_1.ok()) << encrypted_1.status();
-  ASSERT_TRUE(encrypted_2.ok()) << encrypted_2.status();
-  EXPECT_NE(*encrypted_1, *encrypted_2);
+  ASSERT_OK_AND_ASSIGN(std::string cyphertext_1,
+                       aes_hkdf.Encrypt(plaintext, key_1));
+  ASSERT_OK_AND_ASSIGN(std::string cyphertext_2,
+                       aes_hkdf.Encrypt(plaintext, key_2));
+  EXPECT_NE(cyphertext_1, cyphertext_2);
 }
 
 // Tests that decrypting with a different key than encryption gives an error
@@ -116,47 +118,47 @@ TEST(AesTest, differentKeyDecrypt) {
   std::unique_ptr<Aes> aes = GetAesSivCmac512();
   SecretData key_1 = SecretDataFromStringView("key1");
   SecretData key_2 = SecretDataFromStringView("key2");
-  std::string_view message = "Some data to encrypt.";
+  std::string_view plaintext = "Some data to encrypt.";
   AesWithHkdf aes_hkdf(std::move(hkdf), std::move(aes));
-  auto encrypted = aes_hkdf.Encrypt(message, key_1);
-  ASSERT_TRUE(encrypted.ok()) << encrypted.status();
-  auto decrypted = aes_hkdf.Decrypt(*encrypted, key_2);
+  ASSERT_OK_AND_ASSIGN(std::string cyphertext,
+                       aes_hkdf.Encrypt(plaintext, key_1));
+  auto decrypted = aes_hkdf.Decrypt(cyphertext, key_2);
   EXPECT_THAT(decrypted.status(),
               StatusIs(absl::StatusCode::kInvalidArgument, ""));
 }
 
 // Tests that the same key with different strings return different values
-TEST(AesTest, sameKeyDiffernetStringEncrypt) {
+TEST(AesTest, sameKeyDifferentStringEncrypt) {
   std::unique_ptr<Hkdf> hkdf = GetSha256Hkdf();
   std::unique_ptr<Aes> aes = GetAesSivCmac512();
   SecretData key = SecretDataFromStringView("key");
-  std::string_view message_1 = "Some data to encrypt.";
-  std::string_view message_2 = "Additional data to encrypt.";
+  std::string_view plaintext_1 = "Some data to encrypt.";
+  std::string_view plaintext_2 = "Additional data to encrypt.";
   AesWithHkdf aes_hkdf(std::move(hkdf), std::move(aes));
-  auto encrypted_1 = aes_hkdf.Encrypt(message_1, key);
-  auto encrypted_2 = aes_hkdf.Encrypt(message_2, key);
-  EXPECT_TRUE(encrypted_1.ok()) << encrypted_1.status();
-  EXPECT_TRUE(encrypted_2.ok()) << encrypted_2.status();
-  EXPECT_NE(*encrypted_1, *encrypted_2);
+  ASSERT_OK_AND_ASSIGN(std::string cyphertext_1,
+                       aes_hkdf.Encrypt(plaintext_1, key));
+  ASSERT_OK_AND_ASSIGN(std::string cyphertext_2,
+                       aes_hkdf.Encrypt(plaintext_2, key));
+  EXPECT_NE(cyphertext_1, cyphertext_2);
 }
 
 // Tests that the same key with different strings return different values
-TEST(AesTest, sameKeyDiffernetStringDecrypt) {
+TEST(AesTest, sameKeyDifferentStringDecrypt) {
   std::unique_ptr<Hkdf> hkdf = GetSha256Hkdf();
   std::unique_ptr<Aes> aes = GetAesSivCmac512();
   SecretData key = SecretDataFromStringView("key");
-  std::string_view message_1 = "Some data to encrypt.";
-  std::string_view message_2 = "Additional data to encrypt.";
+  std::string_view plaintext_1 = "Some data to encrypt.";
+  std::string_view plaintext_2 = "Additional data to encrypt.";
   AesWithHkdf aes_hkdf(std::move(hkdf), std::move(aes));
-  auto encrypted_1 = aes_hkdf.Encrypt(message_1, key);
-  auto encrypted_2 = aes_hkdf.Encrypt(message_2, key);
-  ASSERT_TRUE(encrypted_1.ok()) << encrypted_1.status();
-  ASSERT_TRUE(encrypted_2.ok()) << encrypted_2.status();
-  auto decrypted_1 = aes_hkdf.Decrypt(*encrypted_1, key);
-  auto decrypted_2 = aes_hkdf.Decrypt(*encrypted_2, key);
-  ASSERT_TRUE(decrypted_1.ok()) << decrypted_1.status();
-  ASSERT_TRUE(decrypted_2.ok()) << decrypted_2.status();
-  EXPECT_NE(*decrypted_1, *decrypted_2);
+  ASSERT_OK_AND_ASSIGN(std::string cyphertext_1,
+                       aes_hkdf.Encrypt(plaintext_1, key));
+  ASSERT_OK_AND_ASSIGN(std::string cyphertext_2,
+                       aes_hkdf.Encrypt(plaintext_2, key));
+  ASSERT_OK_AND_ASSIGN(std::string decrypted_1,
+                       aes_hkdf.Decrypt(cyphertext_1, key));
+  ASSERT_OK_AND_ASSIGN(std::string decrypted_2,
+                       aes_hkdf.Decrypt(cyphertext_2, key));
+  EXPECT_NE(decrypted_1, decrypted_2);
 }
 
 }  // namespace
