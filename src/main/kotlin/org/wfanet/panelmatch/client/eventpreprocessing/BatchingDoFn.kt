@@ -15,41 +15,39 @@
 package org.wfanet.panelmatch.client.eventpreprocessing
 
 import org.apache.beam.sdk.transforms.DoFn
-import org.apache.beam.sdk.transforms.DoFn.FinishBundle
-import org.apache.beam.sdk.transforms.DoFn.FinishBundleContext
-import org.apache.beam.sdk.transforms.DoFn.ProcessContext
-import org.apache.beam.sdk.transforms.DoFn.ProcessElement
 import org.apache.beam.sdk.transforms.SerializableFunction
+import org.apache.beam.sdk.transforms.windowing.GlobalWindow
+import org.joda.time.Instant
 
 class BatchingDoFn<T>(
-  private val maxByteSize: Long,
-  private val getElementByteSize: SerializableFunction<T, Long>
-) : DoFn<T, List<T>>() {
+  private val maxByteSize: Int,
+  private val getElementByteSize: SerializableFunction<T, Int>
+) : DoFn<T, MutableList<T>>() {
   var buffer = mutableListOf<T>()
-  var size: Long = 0L
+  var size: Int = 0
 
   @ProcessElement
-  fun process(
-    element: T,
-    context: ProcessContext,
-  ) {
-    size += getElementByteSize(element)
-    if (size >= maxByteSize) {
-      context.output(buffer)
+  fun process(c: ProcessContext) {
+    val currElementSize: Int = getElementByteSize.apply(c.element())
+    if (currElementSize > maxByteSize) {
+      c.output(mutableListOf(c.element()))
+      return
+    }
+    if (size + currElementSize > maxByteSize) {
+      c.output(buffer)
       buffer.clear()
       size = 0
     }
-    buffer.add(element)
+    buffer.add(c.element())
+    size += currElementSize
   }
-  // Do I Implement this here?
-  private fun getElementByteSize(element: T): Byte {}
-}
 
-@FinishBundle
-@Synchronized
-@Throws(Exception::class)
-fun finishBundle(context: FinishBundleContext) {
-  if (batchCells > 0) {
-    // Confused what I am supposed to put here
+  @FinishBundle
+  @Synchronized
+  @Throws(Exception::class)
+  fun FinishBundle(context: FinishBundleContext) {
+    if (!buffer.isEmpty()) {
+      context.output(buffer, Instant.now(), GlobalWindow.INSTANCE)
+    }
   }
 }

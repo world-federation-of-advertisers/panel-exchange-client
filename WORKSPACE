@@ -151,6 +151,7 @@ MAVEN_ARTIFACTS.update({
     "com.google.guava:guava": "30.0-jre",
     "org.mockito.kotlin:mockito-kotlin": "3.2.0",
     "info.picocli:picocli": "4.4.0",
+    "joda-time:joda-time": "2.10.3",
     "junit:junit": "4.13",
     "org.apache.beam:beam-runners-direct-java": "2.29.0",
     "org.apache.beam:beam-sdks-java-core": "2.29.0",
