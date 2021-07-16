@@ -45,7 +45,7 @@ class Aes {
       absl::string_view input,
       const ::crypto::tink::util::SecretData& key) const = 0;
 
-  // Returns byte size for Aes key
+  // Returns required byte size for Aes key
   virtual int32_t key_size_bytes() const = 0;
 };
 
