@@ -29,7 +29,7 @@ class BatchingDoFn<T>(
   @ProcessElement
   fun process(c: ProcessContext) {
     val currElementSize: Int = getElementByteSize.apply(c.element())
-    if (currElementSize > maxByteSize) {
+    if (currElementSize >= maxByteSize) {
       c.output(mutableListOf(c.element()))
       return
     }
