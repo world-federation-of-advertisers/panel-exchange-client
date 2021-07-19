@@ -14,17 +14,21 @@
  * limitations under the License.
  */
 
-#ifndef SRC_MAIN_CC_WFA_PANELMATCH_PROTOCOL_CRYPTO_EVENT_DATA_PREPROCESSOR_H_
-#define SRC_MAIN_CC_WFA_PANELMATCH_PROTOCOL_CRYPTO_EVENT_DATA_PREPROCESSOR_H_
+#ifndef SRC_MAIN_CC_WFANET_PANELMATCH_PROTOCOL_CRYPTO_EVENT_DATA_PREPROCESSOR_H_
+#define SRC_MAIN_CC_WFANET_PANELMATCH_PROTOCOL_CRYPTO_EVENT_DATA_PREPROCESSOR_H_
 
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
+#include "common_cpp/fingerprinters/fingerprinters.h"
+#include "tink/util/secret_data.h"
+#include "wfa/panelmatch/common/crypto/aes_with_hkdf.h"
+#include "wfa/panelmatch/common/crypto/cryptor.h"
 
 namespace wfa::panelmatch::protocol::crypto {
 
 struct ProcessedData {
-  absl::string_view encrypted_identifier;
-  absl::string_view encrypted_event_data;
+  uint64_t encrypted_identifier;
+  std::string encrypted_event_data;
 };
 
 // Implements several encryption schemes to encrypt event data and an
@@ -34,12 +38,24 @@ struct ProcessedData {
 // for an AES encryption/decryption of event data.
 class EventDataPreprocessor {
  public:
-  virtual ~EventDataPreprocessor() = default;
-  // Encrypts 'identifier' and 'event' data
-  virtual absl::StatusOr<ProcessedData> Process(
-      absl::string_view identifier, absl::string_view event_data) = 0;
+  EventDataPreprocessor(
+      std::unique_ptr<common::crypto::Cryptor> cryptor,
+      const ::crypto::tink::util::SecretData& pepper,
+      const wfa::Fingerprinter* delegate,
+      const wfa::panelmatch::common::crypto::AesWithHkdf& aes_hkdf);
+  ~EventDataPreprocessor() = default;
+
+  // Encrypts 'identifier' and 'event_data' data
+  absl::StatusOr<ProcessedData> Process(absl::string_view identifier,
+                                        absl::string_view event_data) const;
+
+ private:
+  std::unique_ptr<common::crypto::Cryptor> cryptor_;
+  const ::crypto::tink::util::SecretData& pepper_;
+  const ::wfa::Fingerprinter* delegate_;
+  const ::wfa::panelmatch::common::crypto::AesWithHkdf& aes_hkdf_;
 };
 
 }  // namespace wfa::panelmatch::protocol::crypto
 
-#endif  // SRC_MAIN_CC_WFA_PANELMATCH_PROTOCOL_CRYPTO_EVENT_DATA_PREPROCESSOR_H_
+#endif  // SRC_MAIN_CC_WFANET_PANELMATCH_PROTOCOL_CRYPTO_EVENT_DATA_PREPROCESSOR_H_
