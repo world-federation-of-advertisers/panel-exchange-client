@@ -17,10 +17,9 @@
 #include <string>
 
 #include "absl/strings/escaping.h"
+#include "common_cpp/testing/status_macros.h"
+#include "common_cpp/testing/status_matchers.h"
 #include "gtest/gtest.h"
-#include "src/main/cc/common_cpp/testing/status_matchers.h"
-//#include "src/test/cc/testutil/matchers.h"
-#include "src/main/cc/common_cpp/testing/status_macros.h"
 #include "tink/subtle/aes_siv_boringssl.h"
 #include "tink/util/secret_data.h"
 
@@ -48,8 +47,7 @@ TEST(AesTest, testEncryptDecrypt) {
   std::unique_ptr<Aes> aes = GetAesSivCmac512();
   SecretData key = GetTestKey();
   std::string plaintext = "Some data to encrypt.";
-  std::string ciphertext;
-  ASSERT_OK_AND_ASSIGN(ciphertext, aes->Encrypt(plaintext, key));
+  ASSERT_OK_AND_ASSIGN(std::string ciphertext, aes->Encrypt(plaintext, key));
   ASSERT_OK_AND_ASSIGN(std::string recovered_plaintext,
                        aes->Decrypt(ciphertext, key));
   EXPECT_EQ(recovered_plaintext, plaintext);
@@ -123,8 +121,8 @@ TEST(AesTest, emptyKeyDecrypt) {
   SecretData key = GetTestKey();
   std::string plaintext = "Some data to encrypt.";
   ASSERT_OK_AND_ASSIGN(std::string ciphertext, aes->Encrypt(plaintext, key));
-  key = SecretDataFromStringView(absl::HexStringToBytes(""));
-  auto result = aes->Decrypt(ciphertext, key);
+  SecretData empty_key = SecretDataFromStringView(absl::HexStringToBytes(""));
+  auto result = aes->Decrypt(ciphertext, empty_key);
   EXPECT_THAT(result.status(),
               wfa::StatusIs(absl::StatusCode::kInvalidArgument, ""));
 }
@@ -136,6 +134,7 @@ TEST(AesTest, differentKeySameStringEncrypt) {
       "990102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f"
       "99112233445566778899aabbccddeefff0f1f2f3f4f5f6f7f8f9fafbfcfdfeff"));
   SecretData key_2 = GetTestKey();
+  ASSERT_NE(key_1, key_2);
   std::string plaintext = "Some data to encrypt.";
   ASSERT_OK_AND_ASSIGN(std::string ciphertext_1,
                        aes->Encrypt(plaintext, key_1));
@@ -151,6 +150,7 @@ TEST(AesTest, differentKeyDecrypt) {
       "990102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f"
       "99112233445566778899aabbccddeefff0f1f2f3f4f5f6f7f8f9fafbfcfdfeff"));
   SecretData key_2 = GetTestKey();
+  ASSERT_NE(key_1, key_2);
   std::string plaintext = "Some data to encrypt.";
   ASSERT_OK_AND_ASSIGN(std::string ciphertext, aes->Encrypt(plaintext, key_1));
   auto decrypted = aes->Decrypt(ciphertext, key_2);
