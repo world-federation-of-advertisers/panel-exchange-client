@@ -7,7 +7,6 @@ kt_jvm_library(
     testonly = True,
     srcs = glob(["*.kt"]),
     deps = [
-        "//imports/java/org/apache/beam:protobuf",
         "//src/main/kotlin/org/wfanet/panelmatch/client/eventpreprocessing",
         "//src/main/kotlin/org/wfanet/panelmatch/common",
         "@wfa_common_jvm//imports/java/com/google/common/truth",
