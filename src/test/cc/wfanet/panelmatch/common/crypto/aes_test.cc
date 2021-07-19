@@ -18,8 +18,9 @@
 
 #include "absl/strings/escaping.h"
 #include "gtest/gtest.h"
-#include "src/test/cc/testutil/matchers.h"
-#include "src/test/cc/testutil/status_macros.h"
+#include "src/main/cc/common_cpp/testing/status_matchers.h"
+//#include "src/test/cc/testutil/matchers.h"
+#include "src/main/cc/common_cpp/testing/status_macros.h"
 #include "tink/subtle/aes_siv_boringssl.h"
 #include "tink/util/secret_data.h"
 
@@ -46,8 +47,9 @@ SecretData GetTestKey() {
 TEST(AesTest, testEncryptDecrypt) {
   std::unique_ptr<Aes> aes = GetAesSivCmac512();
   SecretData key = GetTestKey();
-  std::string_view plaintext = "Some data to encrypt.";
-  ASSERT_OK_AND_ASSIGN(std::string ciphertext, aes->Encrypt(plaintext, key));
+  std::string plaintext = "Some data to encrypt.";
+  std::string ciphertext;
+  ASSERT_OK_AND_ASSIGN(ciphertext, aes->Encrypt(plaintext, key));
   ASSERT_OK_AND_ASSIGN(std::string recovered_plaintext,
                        aes->Decrypt(ciphertext, key));
   EXPECT_EQ(recovered_plaintext, plaintext);
@@ -58,20 +60,15 @@ TEST(AesTest, testEncryptDecrypt) {
 TEST(AesTest, compareEncrypt) {
   std::unique_ptr<Aes> aes_this = GetAesSivCmac512();
   SecretData key = GetTestKey();
-  // auto aes_other = AesSivBoringSsl::New(key);
-  // ASSERT_TRUE(aes_other.ok()) << aes_other.status();
   ASSERT_OK_AND_ASSIGN(
       std::unique_ptr<::crypto::tink::DeterministicAead> aes_other,
       AesSivBoringSsl::New(key));
   std::string plaintext = "Some data to encrypt.";
-  // auto result_this = aes_this->Encrypt(plaintext, key);
   ASSERT_OK_AND_ASSIGN(std::string result_this,
                        aes_this->Encrypt(plaintext, key));
-  // auto result_other = (*aes_other)->EncryptDeterministically(plaintext, "");
-  // ASSERT_TRUE(result_other.ok()) << result_other.status();
   ASSERT_OK_AND_ASSIGN(std::string result_other,
                        (*aes_other).EncryptDeterministically(plaintext, ""));
-  EXPECT_THAT(result_this, result_other);
+  EXPECT_EQ(result_this, result_other);
 }
 
 // Tests that AesSiv Decrypt returns the same value as AesSivBoringSsl
@@ -79,18 +76,15 @@ TEST(AesTest, compareEncrypt) {
 TEST(AesTest, compareDecrypt) {
   std::unique_ptr<Aes> aes_this = GetAesSivCmac512();
   SecretData key = GetTestKey();
-  auto aes_other = AesSivBoringSsl::New(key);
-  ASSERT_TRUE(aes_other.ok()) << aes_other.status();
+  ASSERT_OK_AND_ASSIGN(auto aes_other, AesSivBoringSsl::New(key));
   std::string plaintext = "Some data to encrypt.";
-  ASSERT_OK_AND_ASSIGN(std::string cyphertext,
+  ASSERT_OK_AND_ASSIGN(std::string ciphertext,
                        aes_this->Encrypt(plaintext, key));
   ASSERT_OK_AND_ASSIGN(std::string result_this,
-                       aes_this->Decrypt(cyphertext, key));
-  auto result_other = (*aes_other)->DecryptDeterministically(cyphertext, "");
-  ASSERT_TRUE(result_other.ok()) << result_other.status();
-  // ASSERT_OK_AND_ASSIGN(auto result_other,
-  // (*aes_other)->DecryptDeterministically(cyphertext, ""));
-  EXPECT_THAT(result_this, *result_other);
+                       aes_this->Decrypt(ciphertext, key));
+  ASSERT_OK_AND_ASSIGN(auto result_other,
+                       aes_other->DecryptDeterministically(ciphertext, ""));
+  EXPECT_EQ(result_this, result_other);
 }
 
 // Tests that AesSiv Encrypt returns an error with the wrong key size
@@ -99,7 +93,7 @@ TEST(AesTest, wrongKeySizeEncrypt) {
   SecretData key = SecretDataFromStringView(absl::HexStringToBytes("01"));
   auto result = aes->Encrypt("input", key);
   EXPECT_THAT(result.status(),
-              StatusIs(absl::StatusCode::kInvalidArgument, ""));
+              wfa::StatusIs(absl::StatusCode::kInvalidArgument, ""));
 }
 
 // Tests that AesSiv Decrypt returns an error with the wrong key size
@@ -107,11 +101,11 @@ TEST(AesTest, wrongKeySizeDecrypt) {
   std::unique_ptr<Aes> aes = GetAesSivCmac512();
   SecretData key = GetTestKey();
   std::string plaintext = "Some data to encrypt.";
-  auto cyphertext = aes->Encrypt(plaintext, key);
+  ASSERT_OK_AND_ASSIGN(std::string ciphertext, aes->Encrypt(plaintext, key));
   key = SecretDataFromStringView(absl::HexStringToBytes("01"));
-  auto result = aes->Decrypt(*cyphertext, key);
+  auto result = aes->Decrypt(ciphertext, key);
   EXPECT_THAT(result.status(),
-              StatusIs(absl::StatusCode::kInvalidArgument, ""));
+              wfa::StatusIs(absl::StatusCode::kInvalidArgument, ""));
 }
 
 // Tests that AesSiv Encrypt returns an error with an empty key
@@ -120,7 +114,7 @@ TEST(AesTest, emptyKeyEncrypt) {
   SecretData key = SecretDataFromStringView(absl::HexStringToBytes(""));
   auto result = aes->Encrypt("input", key);
   EXPECT_THAT(result.status(),
-              StatusIs(absl::StatusCode::kInvalidArgument, ""));
+              wfa::StatusIs(absl::StatusCode::kInvalidArgument, ""));
 }
 
 // Tests that AesSiv Decrypt returns an error with an empty key
@@ -128,11 +122,11 @@ TEST(AesTest, emptyKeyDecrypt) {
   std::unique_ptr<Aes> aes = GetAesSivCmac512();
   SecretData key = GetTestKey();
   std::string plaintext = "Some data to encrypt.";
-  auto cyphertext = aes->Encrypt(plaintext, key);
+  ASSERT_OK_AND_ASSIGN(std::string ciphertext, aes->Encrypt(plaintext, key));
   key = SecretDataFromStringView(absl::HexStringToBytes(""));
-  auto result = aes->Decrypt(*cyphertext, key);
+  auto result = aes->Decrypt(ciphertext, key);
   EXPECT_THAT(result.status(),
-              StatusIs(absl::StatusCode::kInvalidArgument, ""));
+              wfa::StatusIs(absl::StatusCode::kInvalidArgument, ""));
 }
 
 // Tests that different keys with the same string return different values
@@ -142,12 +136,12 @@ TEST(AesTest, differentKeySameStringEncrypt) {
       "990102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f"
       "99112233445566778899aabbccddeefff0f1f2f3f4f5f6f7f8f9fafbfcfdfeff"));
   SecretData key_2 = GetTestKey();
-  std::string_view plaintext = "Some data to encrypt.";
-  ASSERT_OK_AND_ASSIGN(std::string cyphertext_1,
+  std::string plaintext = "Some data to encrypt.";
+  ASSERT_OK_AND_ASSIGN(std::string ciphertext_1,
                        aes->Encrypt(plaintext, key_1));
-  ASSERT_OK_AND_ASSIGN(std::string cyphertext_2,
+  ASSERT_OK_AND_ASSIGN(std::string ciphertext_2,
                        aes->Encrypt(plaintext, key_2));
-  EXPECT_NE(cyphertext_1, cyphertext_2);
+  EXPECT_NE(ciphertext_1, ciphertext_2);
 }
 
 // Tests that decrypting with a different key than encryption gives an error
@@ -157,40 +151,42 @@ TEST(AesTest, differentKeyDecrypt) {
       "990102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f"
       "99112233445566778899aabbccddeefff0f1f2f3f4f5f6f7f8f9fafbfcfdfeff"));
   SecretData key_2 = GetTestKey();
-  std::string_view plaintext = "Some data to encrypt.";
-  ASSERT_OK_AND_ASSIGN(std::string cyphertext, aes->Encrypt(plaintext, key_1));
-  auto decrypted = aes->Decrypt(cyphertext, key_2);
+  std::string plaintext = "Some data to encrypt.";
+  ASSERT_OK_AND_ASSIGN(std::string ciphertext, aes->Encrypt(plaintext, key_1));
+  auto decrypted = aes->Decrypt(ciphertext, key_2);
   EXPECT_THAT(decrypted.status(),
-              StatusIs(absl::StatusCode::kInvalidArgument, ""));
+              wfa::StatusIs(absl::StatusCode::kInvalidArgument, ""));
 }
 
-// Tests that the same key with different strings return different values
+// Tests that the same key with different strings return different values for
+// Encrypt
 TEST(AesTest, sameKeyDifferentStringEncrypt) {
   std::unique_ptr<Aes> aes = GetAesSivCmac512();
   SecretData key = GetTestKey();
-  std::string_view plaintext_1 = "Some data to encrypt.";
-  std::string_view plaintext_2 = "Additional data to encrypt.";
-  ASSERT_OK_AND_ASSIGN(std::string cyphertext_1,
+  std::string plaintext_1 = "Some data to encrypt.";
+  std::string plaintext_2 = "Additional data to encrypt.";
+  ASSERT_OK_AND_ASSIGN(std::string ciphertext_1,
                        aes->Encrypt(plaintext_1, key));
-  ASSERT_OK_AND_ASSIGN(std::string cyphertext_2,
+  ASSERT_OK_AND_ASSIGN(std::string ciphertext_2,
                        aes->Encrypt(plaintext_2, key));
-  EXPECT_NE(cyphertext_1, cyphertext_2);
+  EXPECT_NE(ciphertext_1, ciphertext_2);
 }
 
-// Tests that the same key with different strings return different values
+// Tests that the same key with different strings return different values for
+// Decrypt
 TEST(AesTest, sameKeyDifferentStringDecrypt) {
   std::unique_ptr<Aes> aes = GetAesSivCmac512();
   SecretData key = GetTestKey();
-  std::string_view plaintext_1 = "Some data to encrypt.";
-  std::string_view plaintext_2 = "Additional data to encrypt.";
-  ASSERT_OK_AND_ASSIGN(std::string cyphertext_1,
+  std::string plaintext_1 = "Some data to encrypt.";
+  std::string plaintext_2 = "Additional data to encrypt.";
+  ASSERT_OK_AND_ASSIGN(std::string ciphertext_1,
                        aes->Encrypt(plaintext_1, key));
-  ASSERT_OK_AND_ASSIGN(std::string cyphertext_2,
+  ASSERT_OK_AND_ASSIGN(std::string ciphertext_2,
                        aes->Encrypt(plaintext_2, key));
   ASSERT_OK_AND_ASSIGN(std::string decrypted_1,
-                       aes->Decrypt(cyphertext_1, key));
+                       aes->Decrypt(ciphertext_1, key));
   ASSERT_OK_AND_ASSIGN(std::string decrypted_2,
-                       aes->Decrypt(cyphertext_2, key));
+                       aes->Decrypt(ciphertext_2, key));
   EXPECT_NE(decrypted_1, decrypted_2);
 }
 
