@@ -36,15 +36,20 @@ import org.wfanet.panelmatch.common.beam.testing.assertThat
 @RunWith(JUnit4::class)
 class EncryptionEventsDoFnTest : BeamTestBase() {
   val arbitraryUnprocessedEvents: MutableList<KV<ByteString, ByteString>> =
-    mutableListOf(
-      KV.of(ByteString.copyFromUtf8("1"), ByteString.copyFromUtf8("2")),
-      KV.of(ByteString.copyFromUtf8("3"), ByteString.copyFromUtf8("4"))
-    )
+    mutableListOf(byteStringKvOf("1", "2"), byteStringKvOf("3", "4"))
+  val emptyUnprocessedEvents: MutableList<KV<ByteString, ByteString>> = mutableListOf()
 
   private val collection: PCollection<MutableList<KV<ByteString, ByteString>>> by lazy {
     pcollectionOf(
       "collection1",
       arbitraryUnprocessedEvents,
+      coder = ListCoder.of(KvCoder.of(ByteStringCoder.of(), ByteStringCoder.of()))
+    )
+  }
+  private val emptycollection: PCollection<MutableList<KV<ByteString, ByteString>>> by lazy {
+    pcollectionOf(
+      "collection1",
+      emptyUnprocessedEvents,
       coder = ListCoder.of(KvCoder.of(ByteStringCoder.of(), ByteStringCoder.of()))
     )
   }
@@ -59,6 +64,13 @@ class EncryptionEventsDoFnTest : BeamTestBase() {
         byteStringKvOf("1abcdefg", "2hijklmnop"),
         byteStringKvOf("3abcdefg", "4hijklmnop")
       )
+  }
+  @Test
+  fun testEmptyEncrypt() {
+    val doFn: DoFn<MutableList<KV<ByteString, ByteString>>, KV<ByteString, ByteString>> =
+      EncryptionEventsDoFn(FakeEncryptEvents)
+    val result: PCollection<KV<ByteString, ByteString>> = emptycollection.apply(ParDo.of(doFn))
+    assertThat(result).empty()
   }
 }
 

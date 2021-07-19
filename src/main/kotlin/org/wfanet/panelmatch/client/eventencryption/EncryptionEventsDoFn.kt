@@ -22,8 +22,7 @@ import org.wfanet.panelmatch.client.PreprocessEventsRequest
 import org.wfanet.panelmatch.client.PreprocessEventsResponse
 
 /**
- * DoFn to pack, apply a specified encryption protocol, and unpack PreprocessEvents protocol
- * bufffers
+ * DoFn to pack, apply a specified encryption protocol, and unpack PreprocessEvents protocol buffers
  */
 class EncryptionEventsDoFn(
   private val encryptEvents: SerializableFunction<PreprocessEventsRequest, PreprocessEventsResponse>
