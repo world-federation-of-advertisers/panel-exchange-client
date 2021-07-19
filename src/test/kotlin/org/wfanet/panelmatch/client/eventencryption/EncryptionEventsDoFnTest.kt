@@ -15,6 +15,7 @@
 package org.wfanet.panelmatch.client.eventencryption
 
 import com.google.protobuf.ByteString
+import org.apache.beam.sdk.coders.Coder
 import org.apache.beam.sdk.coders.KvCoder
 import org.apache.beam.sdk.coders.ListCoder
 import org.apache.beam.sdk.extensions.protobuf.ByteStringCoder
@@ -35,23 +36,16 @@ import org.wfanet.panelmatch.common.beam.testing.assertThat
 /** Unit tests for [EncryptionEventsDoFn]. */
 @RunWith(JUnit4::class)
 class EncryptionEventsDoFnTest : BeamTestBase() {
-  val arbitraryUnprocessedEvents: MutableList<KV<ByteString, ByteString>> =
-    mutableListOf(byteStringKvOf("1", "2"), byteStringKvOf("3", "4"))
-  val emptyUnprocessedEvents: MutableList<KV<ByteString, ByteString>> = mutableListOf()
-
+  private val coder: Coder<MutableList<KV<ByteString, ByteString>>> =
+    ListCoder.of(KvCoder.of(ByteStringCoder.of(), ByteStringCoder.of()))
   private val collection: PCollection<MutableList<KV<ByteString, ByteString>>> by lazy {
-    pcollectionOf(
-      "collection1",
-      arbitraryUnprocessedEvents,
-      coder = ListCoder.of(KvCoder.of(ByteStringCoder.of(), ByteStringCoder.of()))
-    )
+    val arbitraryUnprocessedEvents: MutableList<KV<ByteString, ByteString>> =
+      mutableListOf(byteStringKvOf("1", "2"), byteStringKvOf("3", "4"))
+    pcollectionOf("collection1", arbitraryUnprocessedEvents, coder = coder)
   }
   private val emptycollection: PCollection<MutableList<KV<ByteString, ByteString>>> by lazy {
-    pcollectionOf(
-      "collection1",
-      emptyUnprocessedEvents,
-      coder = ListCoder.of(KvCoder.of(ByteStringCoder.of(), ByteStringCoder.of()))
-    )
+    val emptyUnprocessedEvents: MutableList<KV<ByteString, ByteString>> = mutableListOf()
+    pcollectionOf("collection1", emptyUnprocessedEvents, coder = coder)
   }
 
   @Test
