@@ -21,6 +21,10 @@ import org.apache.beam.sdk.values.KV
 import org.wfanet.panelmatch.client.PreprocessEventsRequest
 import org.wfanet.panelmatch.client.PreprocessEventsResponse
 
+/**
+ * DoFn to pack, apply a specified encryption protocol, and unpack PreprocessEvents protocol
+ * bufffers
+ */
 class EncryptionEventsDoFn(
   private val encryptEvents: SerializableFunction<PreprocessEventsRequest, PreprocessEventsResponse>
 ) : DoFn<MutableList<KV<ByteString, ByteString>>, KV<ByteString, ByteString>>() {
@@ -30,10 +34,10 @@ class EncryptionEventsDoFn(
     val request =
       PreprocessEventsRequest.newBuilder()
         .apply {
-          for (pairs in list) {
+          for (pair in list) {
             addUnprocessedEventsBuilder().apply {
-              this.id = pairs.key
-              this.data = pairs.value
+              this.id = pair.key
+              this.data = pair.value
             }
           }
         }

@@ -37,8 +37,8 @@ import org.wfanet.panelmatch.common.beam.testing.assertThat
 class EncryptionEventsDoFnTest : BeamTestBase() {
   val arbitraryUnprocessedEvents: MutableList<KV<ByteString, ByteString>> =
     mutableListOf(
-      KV.of(ByteString.copyFromUtf8("1"), ByteString.copyFromUtf8("1")),
-      KV.of(ByteString.copyFromUtf8("2"), ByteString.copyFromUtf8("2"))
+      KV.of(ByteString.copyFromUtf8("1"), ByteString.copyFromUtf8("2")),
+      KV.of(ByteString.copyFromUtf8("3"), ByteString.copyFromUtf8("4"))
     )
 
   private val collection: PCollection<MutableList<KV<ByteString, ByteString>>> by lazy {
@@ -52,17 +52,21 @@ class EncryptionEventsDoFnTest : BeamTestBase() {
   @Test
   fun testEncrypt() {
     val doFn: DoFn<MutableList<KV<ByteString, ByteString>>, KV<ByteString, ByteString>> =
-      EncryptionEventsDoFn(encryptEvents)
+      EncryptionEventsDoFn(FakeEncryptEvents)
     val result: PCollection<KV<ByteString, ByteString>> = collection.apply(ParDo.of(doFn))
     assertThat(result)
       .containsInAnyOrder(
-        KV.of(ByteString.copyFromUtf8("1abcdefg"), ByteString.copyFromUtf8("1hijklmnop")),
-        KV.of(ByteString.copyFromUtf8("2abcdefg"), ByteString.copyFromUtf8("2hijklmnop"))
+        byteStringKvOf("1abcdefg", "2hijklmnop"),
+        byteStringKvOf("3abcdefg", "4hijklmnop")
       )
   }
 }
 
-private object encryptEvents :
+fun byteStringKvOf(key: String, value: String): KV<ByteString, ByteString> {
+  return KV.of(ByteString.copyFromUtf8(key), ByteString.copyFromUtf8(value))
+}
+
+private object FakeEncryptEvents :
   SerializableFunction<PreprocessEventsRequest, PreprocessEventsResponse> {
   override fun apply(request: PreprocessEventsRequest): PreprocessEventsResponse {
     val response =
@@ -70,8 +74,8 @@ private object encryptEvents :
         .apply {
           for (events in request.unprocessedEventsList) {
             addProcessedEventsBuilder().apply {
-              this.setEncryptedId(events.id.concat(ByteString.copyFromUtf8("abcdefg")))
-              this.setEncryptedData(events.data.concat(ByteString.copyFromUtf8("hijklmnop")))
+              this.encryptedId = events.id.concat(ByteString.copyFromUtf8("abcdefg"))
+              this.encryptedData = events.data.concat(ByteString.copyFromUtf8("hijklmnop"))
             }
           }
         }
