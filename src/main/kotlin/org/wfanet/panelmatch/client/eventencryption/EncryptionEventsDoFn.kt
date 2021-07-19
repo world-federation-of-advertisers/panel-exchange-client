@@ -18,32 +18,30 @@ import com.google.protobuf.ByteString
 import org.apache.beam.sdk.transforms.DoFn
 import org.apache.beam.sdk.transforms.SerializableFunction
 import org.apache.beam.sdk.values.KV
-import wfanet.panelmatch.client.PreprocessEventsRequest
-import wfanet.panelmatch.client.PreprocessEventsResponse
+import org.wfanet.panelmatch.client.PreprocessEventsRequest
+import org.wfanet.panelmatch.client.PreprocessEventsResponse
 
-class EncryptEventsDoFn(
-  private val JniEventPreprocessor:
-    SerializableFunction<PreprocessEventsRequest, PreprocessEventsResponse>
-) : DoFn<List<KV<ByteString, ByteString>>, MutableList<KV<ByteString, ByteString>>>() {
+class EncryptionEventsDoFn(
+  private val encryptEvents: SerializableFunction<PreprocessEventsRequest, PreprocessEventsResponse>
+) : DoFn<MutableList<KV<ByteString, ByteString>>, KV<ByteString, ByteString>>() {
+  @ProcessElement
   fun process(c: ProcessContext) {
+    val list: MutableList<KV<ByteString, ByteString>> = c.element()
     val request =
       PreprocessEventsRequest.newBuilder()
         .apply {
-          addUnprocessedEventsBuilder().apply {
-            c.element().forEach { input ->
-              id = input.key
-              data = input.value
+          for (pairs in list) {
+            addUnprocessedEventsBuilder().apply {
+              this.id = pairs.key
+              this.data = pairs.value
             }
           }
         }
         .build()
-    val response: PreprocessEventsResponse = JniEventPreprocessor.apply(request)
-    val processed = mutableListOf<KV<ByteString, ByteString>>()
+    val response: PreprocessEventsResponse = encryptEvents.apply(request)
 
-    val builder: PreprocessEventsResponse.Builder = response.toBuilder()
-    for (events in builder.processedEventsList) {
-      processed.add(KV.of(events.encryptedId, events.encryptedData))
+    for (events in response.processedEventsList) {
+      c.output(KV.of(events.encryptedId, events.encryptedData))
     }
-    c.output(processed)
   }
 }
