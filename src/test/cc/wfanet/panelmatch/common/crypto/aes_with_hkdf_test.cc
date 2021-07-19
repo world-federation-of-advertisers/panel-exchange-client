@@ -15,10 +15,9 @@
 #include "wfanet/panelmatch/common/crypto/aes_with_hkdf.h"
 
 #include "absl/strings/escaping.h"
+#include "common_cpp/testing/status_macros.h"
+#include "common_cpp/testing/status_matchers.h"
 #include "gtest/gtest.h"
-//#include "src/test/cc/testutil/matchers.h"
-#include "src/main/cc/common_cpp/testing/status_macros.h"
-#include "src/main/cc/common_cpp/testing/status_matchers.h"
 
 namespace wfanet::panelmatch::common::crypto {
 namespace {
@@ -105,6 +104,7 @@ TEST(AesTest, differentKeySameStringEncrypt) {
   std::unique_ptr<Aes> aes = GetAesSivCmac512();
   SecretData key_1 = SecretDataFromStringView("key1");
   SecretData key_2 = SecretDataFromStringView("key2");
+  ASSERT_NE(key_1, key_2);
   std::string_view plaintext = "Some data to encrypt.";
   AesWithHkdf aes_hkdf(std::move(hkdf), std::move(aes));
   ASSERT_OK_AND_ASSIGN(std::string ciphertext_1,
@@ -120,6 +120,7 @@ TEST(AesTest, differentKeyDecrypt) {
   std::unique_ptr<Aes> aes = GetAesSivCmac512();
   SecretData key_1 = SecretDataFromStringView("key1");
   SecretData key_2 = SecretDataFromStringView("key2");
+  ASSERT_NE(key_1, key_2);
   std::string_view plaintext = "Some data to encrypt.";
   AesWithHkdf aes_hkdf(std::move(hkdf), std::move(aes));
   ASSERT_OK_AND_ASSIGN(std::string ciphertext,
