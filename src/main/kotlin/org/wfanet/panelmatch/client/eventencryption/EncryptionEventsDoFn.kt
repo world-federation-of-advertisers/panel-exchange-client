@@ -24,7 +24,7 @@ import org.wfanet.panelmatch.client.PreprocessEventsResponse
 /**
  * Takes in a MutableList<KV<ByteString,ByteString>>, packs them into PreprocessedEventRequest
  * protos, encrypts the identifier and event data using several encryption schemes, and unpacks them
- * from PreprocessedEventResponse protos back into a PCollection<KV<ByteString,ByteString>>
+ * from PreprocessedEventResponse protos and emits them as KV<ByteString,ByteString> pairs
  */
 class EncryptionEventsDoFn(
   private val encryptEvents: SerializableFunction<PreprocessEventsRequest, PreprocessEventsResponse>
