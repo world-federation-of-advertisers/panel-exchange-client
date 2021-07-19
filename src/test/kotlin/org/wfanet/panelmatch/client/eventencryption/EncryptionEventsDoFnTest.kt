@@ -41,11 +41,9 @@ class EncryptionEventsDoFnTest : BeamTestBase() {
 
   @Test
   fun testEncrypt() {
-    val collection: PCollection<MutableList<KV<ByteString, ByteString>>> by lazy {
-      val arbitraryUnprocessedEvents: MutableList<KV<ByteString, ByteString>> =
-        mutableListOf(byteStringKvOf("1", "2"), byteStringKvOf("3", "4"))
-      pcollectionOf("collection1", arbitraryUnprocessedEvents, coder = coder)
-    }
+    val arbitraryUnprocessedEvents: MutableList<KV<ByteString, ByteString>> =
+      mutableListOf(byteStringKvOf("1", "2"), byteStringKvOf("3", "4"))
+    val collection = pcollectionOf("collection1", arbitraryUnprocessedEvents, coder = coder)
     val doFn: DoFn<MutableList<KV<ByteString, ByteString>>, KV<ByteString, ByteString>> =
       EncryptionEventsDoFn(FakeEncryptEvents)
     val result: PCollection<KV<ByteString, ByteString>> = collection.apply(ParDo.of(doFn))
@@ -57,10 +55,9 @@ class EncryptionEventsDoFnTest : BeamTestBase() {
   }
   @Test
   fun testEmptyEncrypt() {
-    val emptycollection: PCollection<MutableList<KV<ByteString, ByteString>>> by lazy {
-      val emptyUnprocessedEvents: MutableList<KV<ByteString, ByteString>> = mutableListOf()
-      pcollectionOf("collection1", emptyUnprocessedEvents, coder = coder)
-    }
+    val emptyUnprocessedEvents: MutableList<KV<ByteString, ByteString>> = mutableListOf()
+    val emptycollection = pcollectionOf("collection1", emptyUnprocessedEvents, coder = coder)
+
     val doFn: DoFn<MutableList<KV<ByteString, ByteString>>, KV<ByteString, ByteString>> =
       EncryptionEventsDoFn(FakeEncryptEvents)
     val result: PCollection<KV<ByteString, ByteString>> = emptycollection.apply(ParDo.of(doFn))
