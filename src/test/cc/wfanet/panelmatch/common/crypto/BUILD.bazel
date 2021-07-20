@@ -20,6 +20,8 @@ cc_test(
         "//src/test/cc/testutil:matchers",
         "@com_google_absl//absl/strings",
         "@googletest//:gtest_main",
+        "@tink_base//cc/util:secret_data",
+        "@tink_cc//subtle",
     ],
 )
 
@@ -49,6 +51,7 @@ cc_test(
         "//src/main/cc/wfanet/panelmatch/common/crypto:aes_with_hkdf",
         "//src/test/cc/testutil:matchers",
         "//src/test/cc/testutil:status_macros",
+        "@com_google_absl//absl/strings",
         "@googletest//:gtest_main",
     ],
 )
