@@ -19,11 +19,15 @@ import org.apache.beam.sdk.transforms.SerializableFunction
 import org.apache.beam.sdk.transforms.windowing.GlobalWindow
 import org.joda.time.Instant
 
+/**
+ * Takes in elements <T>, whose size is determined by SerializableFunction<T,Int>, and batches them
+ * into MutableList<T> of size maxByteSize
+ */
 class BatchingDoFn<T>(
   private val maxByteSize: Int,
   private val getElementByteSize: SerializableFunction<T, Int>
 ) : DoFn<T, MutableList<T>>() {
-  private val buffer = mutableListOf<T>()
+  private var buffer = mutableListOf<T>()
   var size: Int = 0
 
   @ProcessElement
@@ -34,9 +38,8 @@ class BatchingDoFn<T>(
       return
     }
     if (size + currElementSize > maxByteSize) {
-      val buffercopy = buffer
-      c.output(buffercopy)
-      buffer.clear()
+      c.output(buffer)
+      buffer = mutableListOf()
       size = 0
     }
     buffer.add(c.element())
@@ -48,8 +51,8 @@ class BatchingDoFn<T>(
   @Throws(Exception::class)
   fun FinishBundle(context: FinishBundleContext) {
     if (!buffer.isEmpty()) {
-      val buffercopy = buffer
-      context.output(buffercopy, Instant.now(), GlobalWindow.INSTANCE)
+      context.output(buffer, Instant.now(), GlobalWindow.INSTANCE)
+      buffer = mutableListOf()
       size = 0
     }
   }
