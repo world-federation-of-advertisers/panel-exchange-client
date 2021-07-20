@@ -34,7 +34,7 @@ message GenerateKeysResponse {
 }
 
 // Used in the request to encrypt a set of queries
-message ShardQueryBucketIdTriplet {
+message UnencryptedQuery {
   int64 shard_id = 1;
   int64 query_id = 2;
   int64 bucket_id = 3;
@@ -45,18 +45,18 @@ message EncryptQueriesRequest {
   Parameters parameters = 1;
   bytes public_key = 2;
   bytes private_key = 3;
-  repeated ShardQueryBucketIdTriplet shard_query_bucket_triplet = 4;
+  repeated UnencryptedQuery unencrypted_query = 4;
 }
 
 // Used in the response to encrypt a set of queries
-message ShardQueryIdPair {
+message EncryptedQuery {
   int64 shard_id = 1;
   int64 query_id = 2;
 }
 
 message EncryptQueriesResponse {
   repeated bytes ciphertexts = 1;
-  repeated ShardQueryIdPair shard_query_pair = 2;
+  repeated EncryptedQuery encrypted_query = 2;
 }
 
 // A request to remove RLWE-encryption from a set of results.
