@@ -32,57 +32,71 @@ class BatchingDoFnTest : BeamTestBase() {
 
   @Test
   fun testBatching() {
-    val result = makeSingleBundleParDoDoFn(1, "1", "2", "3")
+    val result = batchSingleBundle(1, "1", "2", "3")
     assertThat(result)
       .containsInAnyOrder(mutableListOf("1"), mutableListOf("2"), mutableListOf("3"))
   }
 
   @Test
   fun testSingleBatch() {
-    val result = makeSingleBundleParDoDoFn(3, "1", "2", "3")
+    val result = batchSingleBundle(3, "1", "2", "3")
     assertThat(result).containsInAnyOrder(mutableListOf("1", "2", "3"))
   }
 
   @Test
   fun testMaxByteSizeElement() {
-    val result = makeSingleBundleParDoDoFn(3, "1", "234", "5")
+    val result = batchSingleBundle(3, "1", "234", "5")
     assertThat(result).containsInAnyOrder(mutableListOf("1", "5"), mutableListOf("234"))
   }
 
   @Test
   fun testExceedsMaxByteSizeElement() {
-    val result = makeSingleBundleParDoDoFn(2, "1", "234", "5")
+    val result = batchSingleBundle(2, "1", "234", "5")
     assertThat(result).containsInAnyOrder(mutableListOf("1", "5"), mutableListOf("234"))
   }
 
   @Test
   fun emptyElements() {
-    val result = makeEmptyBundleParDoDoFn(2)
+    val testStream = makeTestStream().advanceWatermarkToInfinity()
+    val result = pipeline.apply(testStream).apply(makeParDo(2))
     assertThat(result).empty()
   }
 
   @Test
   fun multipleBundles() {
-    val result1 = makeSingleBundleParDoDoFn(2, "1", "23", "1")
-    val result2 = makeEmptyBundleParDoDoFn(4)
-    val result3 = makeSingleBundleParDoDoFn(5, "1", "234", "5")
-    assertThat(result1).containsInAnyOrder(mutableListOf("1", "1"), mutableListOf("23"))
-    assertThat(result2).empty()
-    assertThat(result3).containsInAnyOrder(mutableListOf("1", "234", "5"))
+    val testStream =
+      makeTestStream()
+        .addElements("1", "11", "111", "1")
+        .addElements("2222", "2", "22", "2")
+        .addElements("33", "3", "3", "3")
+        .advanceWatermarkToInfinity()
+    val result = pipeline.apply(testStream).apply(makeParDo(2))
+    assertThat(result)
+      .containsInAnyOrder(
+        mutableListOf("1", "1"),
+        mutableListOf("11"),
+        mutableListOf("111"),
+        mutableListOf("2222"),
+        mutableListOf("2", "2"),
+        mutableListOf("22"),
+        mutableListOf("33"),
+        mutableListOf("3", "3"),
+        mutableListOf("3")
+      )
   }
-
-  private fun makeSingleBundleParDoDoFn(
+  private fun makeParDo(maxByteSize: Int): ParDo.SingleOutput<String, MutableList<String>>? {
+    return ParDo.of(BatchingDoFn(maxByteSize, StringLengthSize))
+  }
+  private fun makeTestStream(): TestStream.Builder<String> {
+    return TestStream.create(StringUtf8Coder.of())
+  }
+  private fun batchSingleBundle(
     batchSize: Int,
     item: String,
     vararg items: String
   ): PCollection<MutableList<String>> {
-    val testStream =
-      TestStream.create(StringUtf8Coder.of()).addElements(item, *items).advanceWatermarkToInfinity()
-    return pipeline.apply(testStream).apply(ParDo.of(BatchingDoFn(batchSize, StringLengthSize)))
-  }
-  private fun makeEmptyBundleParDoDoFn(batchSize: Int): PCollection<MutableList<String>> {
-    val testStream = TestStream.create(StringUtf8Coder.of()).advanceWatermarkToInfinity()
-    return pipeline.apply(testStream).apply(ParDo.of(BatchingDoFn(batchSize, StringLengthSize)))
+    val testStream = makeTestStream().addElements(item, *items).advanceWatermarkToInfinity()
+    return pipeline.apply(testStream).apply(makeParDo(batchSize))
   }
 }
 

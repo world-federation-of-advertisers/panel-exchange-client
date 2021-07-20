@@ -20,8 +20,10 @@ import org.apache.beam.sdk.transforms.windowing.GlobalWindow
 import org.joda.time.Instant
 
 /**
- * Takes in elements <T>, whose size is determined by SerializableFunction<T,Int>, and batches them
- * into MutableList<T> of size maxByteSize
+ * Batches [T]s into MutableLists.
+ *
+ * The sum of [getElementByteSize] involved on each item of an output MutableList is at most
+ * [maxByteSize].
  */
 class BatchingDoFn<T>(
   private val maxByteSize: Int,
