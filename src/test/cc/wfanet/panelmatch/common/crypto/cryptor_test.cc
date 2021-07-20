@@ -21,10 +21,10 @@
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/types/span.h"
+#include "common_cpp/testing/status_macros.h"
+#include "common_cpp/testing/status_matchers.h"
 #include "crypto/ec_commutative_cipher.h"
 #include "gtest/gtest.h"
-#include "src/main/cc/common_cpp/testing/status_macros.h"
-#include "src/main/cc/common_cpp/testing/status_matchers.h"
 
 namespace wfa::panelmatch {
 namespace {
