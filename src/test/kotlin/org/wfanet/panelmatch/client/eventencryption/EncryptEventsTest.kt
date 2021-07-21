@@ -21,7 +21,6 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
 import org.wfanet.panelmatch.client.PreprocessEventsRequest
-import org.wfanet.panelmatch.client.PreprocessEventsResponse
 import org.wfanet.panelmatch.common.JniException
 
 @RunWith(JUnit4::class)
@@ -29,20 +28,18 @@ class EncryptEventsTest {
 
   @Test
   fun kUnimplementedStatus() {
-    val unImplemented =
-      assertFailsWith(JniException::class) {
-        val request =
-          PreprocessEventsRequest.newBuilder()
-            .apply {
-              addUnprocessedEventsBuilder().apply {
-                this.id = ByteString.copyFromUtf8("11111")
-                this.data = ByteString.copyFromUtf8("11111")
-              }
-            }
-            .build()
-        val E: EncryptEvents = EncryptEvents()
-        val response: PreprocessEventsResponse = E.apply(request)
-      }
+    val request =
+      PreprocessEventsRequest.newBuilder()
+        .apply {
+          this.cryptoKey = ByteString.copyFromUtf8("cryptokey")
+          this.pepper = ByteString.copyFromUtf8("pepper")
+          addUnprocessedEventsBuilder().apply {
+            this.id = ByteString.copyFromUtf8("identifier")
+            this.data = ByteString.copyFromUtf8("eventdata")
+          }
+        }
+        .build()
+    val unImplemented = assertFailsWith(JniException::class) { EncryptEvents().apply(request) }
     assertThat(unImplemented.message).contains("UNIMPLEMENTED: Not implemented")
   }
 }
