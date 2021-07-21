@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package org.wfanet.panelmatch.client.eventencryption
+package org.wfanet.panelmatch.client.eventpreprocessing
 
 import com.google.common.truth.Truth.assertThat
 import com.google.protobuf.ByteString
@@ -21,7 +21,6 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
 import org.wfanet.panelmatch.client.PreprocessEventsRequest
-import org.wfanet.panelmatch.client.eventpreprocessing.EncryptEvents
 import org.wfanet.panelmatch.common.JniException
 
 @RunWith(JUnit4::class)
@@ -32,15 +31,16 @@ class EncryptEventsTest {
     val request =
       PreprocessEventsRequest.newBuilder()
         .apply {
-          this.cryptoKey = ByteString.copyFromUtf8("cryptokey")
-          this.pepper = ByteString.copyFromUtf8("pepper")
+          cryptoKey = ByteString.copyFromUtf8("cryptokey")
+          pepper = ByteString.copyFromUtf8("pepper")
           addUnprocessedEventsBuilder().apply {
-            this.id = ByteString.copyFromUtf8("identifier")
-            this.data = ByteString.copyFromUtf8("eventdata")
+            id = ByteString.copyFromUtf8("identifier")
+            data = ByteString.copyFromUtf8("eventdata")
           }
         }
         .build()
-    val unImplemented = assertFailsWith(JniException::class) { EncryptEvents().apply(request) }
+    val encryptEvents = EncryptEvents()
+    val unImplemented = assertFailsWith(JniException::class) { encryptEvents.apply(request) }
     assertThat(unImplemented.message).contains("UNIMPLEMENTED: Not implemented")
   }
 }
