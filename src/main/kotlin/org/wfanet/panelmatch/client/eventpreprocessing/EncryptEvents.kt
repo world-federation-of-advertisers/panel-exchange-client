@@ -12,13 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package org.wfanet.panelmatch.client.eventencryption
+package org.wfanet.panelmatch.client.eventpreprocessing
 
 import org.apache.beam.sdk.transforms.SerializableFunction
 import org.wfanet.panelmatch.client.PreprocessEventsRequest
 import org.wfanet.panelmatch.client.PreprocessEventsResponse
-import org.wfanet.panelmatch.client.eventpreprocessing.JniPreprocessEvents
-import org.wfanet.panelmatch.client.eventpreprocessing.PreprocessEvents
 
 /**
  * Takes in a PreprocessEventsRequest, preprocesses it using JniPreprocessEvents and returns a
