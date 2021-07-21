@@ -116,8 +116,12 @@ class BatchLookupWorkflow(
   private fun shardDatabase(
     database: PCollection<KV<DatabaseKey, Plaintext>>
   ): PCollection<KV<ShardId, DatabaseShard>> {
+    val bucketing = Bucketing(parameters.numShards, parameters.numBucketsPerShard)
     return database
-      .map { kvOf(shard(it.key.id), Bucket(bucket(it.key.id), it.value.data)) }
+      .map {
+        val (shardId, bucketId) = bucketing.apply(it.key.id)
+        kvOf(shardId, Bucket(bucketId, it.value.data))
+      }
       .apply("Group into Batches", GroupByKey.create())
       .parDo {
         // While this might look like exactly what GroupIntoBatches does, it's not. GroupIntoBatches
@@ -141,13 +145,5 @@ class BatchLookupWorkflow(
           yield(kvOf(shardId, DatabaseShard(shardId, buffer)))
         }
       }
-  }
-
-  private fun shard(value: Long): ShardId {
-    return ShardId((value % parameters.numShards).toInt())
-  }
-
-  private fun bucket(value: Long): BucketId {
-    return BucketId(((value / parameters.numShards) % parameters.numBucketsPerShard).toInt())
   }
 }
