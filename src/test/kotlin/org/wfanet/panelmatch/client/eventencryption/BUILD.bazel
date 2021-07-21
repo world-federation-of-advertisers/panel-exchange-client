@@ -1,8 +1,21 @@
 load("@io_bazel_rules_kotlin//kotlin:kotlin.bzl", "kt_jvm_test")
 
 kt_jvm_test(
+    name = "EncryptEventsTest",
+    srcs = ["EncryptEventsTest.kt"],
+    test_class = "org.wfanet.panelmatch.client.eventencryption.EncryptEventsTest",
+    deps = [
+        "//imports/java/com/google/common:guava",
+        "//src/main/kotlin/org/wfanet/panelmatch/client/eventencryption:encryptiondofn",
+        "//src/main/kotlin/org/wfanet/panelmatch/common",
+        "//src/main/proto/wfa/panelmatch/client/eventpreprocessing:preprocess_events_java_proto",
+        "@wfa_common_jvm//imports/java/com/google/common/truth",
+        "@wfa_common_jvm//imports/kotlin/kotlin/test",
+    ],
+)
+
+kt_jvm_test(
     name = "EncryptionEventsDoFnTest",
-    testonly = True,
     srcs = ["EncryptionEventsDoFnTest.kt"],
     test_class = "org.wfanet.panelmatch.client.eventencryption.EncryptionEventsDoFnTest",
     deps = [
