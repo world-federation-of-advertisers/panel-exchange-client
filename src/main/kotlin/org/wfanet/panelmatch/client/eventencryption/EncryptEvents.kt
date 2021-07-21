@@ -20,6 +20,10 @@ import org.wfanet.panelmatch.client.PreprocessEventsResponse
 import org.wfanet.panelmatch.client.eventpreprocessing.JniPreprocessEvents
 import org.wfanet.panelmatch.client.eventpreprocessing.PreprocessEvents
 
+/**
+ * Takes in a PreprocessEventsRequest, preprocesses it using JniPreprocessEvents and returns a
+ * PreprocessEventsResponse
+ */
 class EncryptEvents : SerializableFunction<PreprocessEventsRequest, PreprocessEventsResponse> {
   override fun apply(request: PreprocessEventsRequest): PreprocessEventsResponse {
     val preprocessEvents: PreprocessEvents = JniPreprocessEvents()
