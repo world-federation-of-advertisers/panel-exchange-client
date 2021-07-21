@@ -16,10 +16,10 @@ package org.wfanet.panelmatch.client.batchlookup
 
 import com.google.protobuf.ByteString
 import java.io.Serializable
-import org.apache.beam.sdk.transforms.GroupByKey
 import org.apache.beam.sdk.values.KV
 import org.apache.beam.sdk.values.PCollection
 import org.wfanet.panelmatch.common.beam.combinePerKey
+import org.wfanet.panelmatch.common.beam.groupByKey
 import org.wfanet.panelmatch.common.beam.join
 import org.wfanet.panelmatch.common.beam.keyBy
 import org.wfanet.panelmatch.common.beam.kvOf
@@ -122,7 +122,7 @@ class BatchLookupWorkflow(
         val (shardId, bucketId) = bucketing.apply(it.key.id)
         kvOf(shardId, Bucket(bucketId, it.value.data))
       }
-      .apply("Group into Batches", GroupByKey.create())
+      .groupByKey("Group into Batches")
       .parDo {
         // While this might look like exactly what GroupIntoBatches does, it's not. GroupIntoBatches
         // does not guarantee a strict size limit. We, on the other hand, need a strict size limit
