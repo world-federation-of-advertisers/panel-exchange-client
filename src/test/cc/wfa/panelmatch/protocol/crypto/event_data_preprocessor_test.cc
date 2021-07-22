@@ -27,7 +27,9 @@ namespace wfa::panelmatch::protocol::crypto {
 namespace {
 
 using ::crypto::tink::util::SecretData;
+using ::crypto::tink::util::SecretDataAsStringView;
 using ::crypto::tink::util::SecretDataFromStringView;
+using wfa::panelmatch::common::crypto::Action;
 using ::wfa::panelmatch::common::crypto::Aes;
 using ::wfa::panelmatch::common::crypto::AesWithHkdf;
 using ::wfa::panelmatch::common::crypto::Cryptor;
@@ -40,7 +42,8 @@ class FakeHkdf : public Hkdf {
 
   absl::StatusOr<SecretData> ComputeHkdf(const SecretData& ikm,
                                          int length) const override {
-    return SecretDataFromStringView("hkdf");
+    return SecretDataFromStringView(absl::StrCat(
+        "HKDF with length ", length, " of ", SecretDataAsStringView(ikm)));
   }
 };
 
@@ -51,25 +54,27 @@ class FakeAes : public Aes {
 
   absl::StatusOr<std::string> Encrypt(absl::string_view input,
                                       const SecretData& key) const override {
-    return "Encrypted";
+    return absl::StrCat("Encrypted ", input, " with key ",
+                        SecretDataAsStringView(key));
   }
 
   absl::StatusOr<std::string> Decrypt(absl::string_view input,
                                       const SecretData& key) const override {
-    return "Decrypted";
+    return absl::StrCat("Decrypted ", input, " with key ",
+                        SecretDataAsStringView(key));
   }
 
   int32_t key_size_bytes() const override { return 64; }
 };
 
 // Fake Fingerprinter class for testing purposes only
-class FakeFingerprinter : public wfa::Fingerprinter {
+class FakeFingerprinter : public Fingerprinter {
  public:
   ~FakeFingerprinter() override = default;
   FakeFingerprinter() = default;
 
   uint64_t Fingerprint(absl::Span<const unsigned char> item) const override {
-    return 1;
+    return item.size();
   }
 };
 
@@ -85,14 +90,14 @@ class FakeCryptor : public Cryptor {
 
   absl::StatusOr<std::vector<std::string>> BatchProcess(
       const std::vector<std::string>& plaintexts_or_ciphertexts,
-      wfa::panelmatch::common::crypto::Action action) override {
+      Action action) override {
     return plaintexts_or_ciphertexts;
   }
 
   absl::StatusOr<google::protobuf::RepeatedPtrField<std::string>> BatchProcess(
       const google::protobuf::RepeatedPtrField<std::string>&
           plaintexts_or_ciphertexts,
-      wfa::panelmatch::common::crypto::Action action) override {
+      Action action) override {
     return plaintexts_or_ciphertexts;
   }
 };
@@ -106,8 +111,7 @@ TEST(EventDataPreprocessorTests, properImplementation) {
   const FakeFingerprinter fingerprinter;
   std::unique_ptr<Hkdf> hkdf = absl::make_unique<FakeHkdf>();
   std::unique_ptr<Aes> aes = absl::make_unique<FakeAes>();
-  const AesWithHkdf aes_hkdf =
-      common::crypto::AesWithHkdf(std::move(hkdf), std::move(aes));
+  const AesWithHkdf aes_hkdf(std::move(hkdf), std::move(aes));
   std::unique_ptr<FakeCryptor> cryptor = CreateFakeCryptor();
   EventDataPreprocessor preprocessor(std::move(cryptor),
                                      SecretDataFromStringView("pepper"),
@@ -115,7 +119,8 @@ TEST(EventDataPreprocessorTests, properImplementation) {
   ASSERT_OK_AND_ASSIGN(ProcessedData processed,
                        preprocessor.Process("identifier", "event"));
   EXPECT_EQ(processed.encrypted_identifier, 1);
-  EXPECT_EQ(processed.encrypted_event_data, "Encrypted");
+  EXPECT_EQ(processed.encrypted_event_data,
+            "Encrypted event with key HKDF with length 64 of identifier");
 }
 
 // Tests EventDataPreprocessor with null Fingerprinter
