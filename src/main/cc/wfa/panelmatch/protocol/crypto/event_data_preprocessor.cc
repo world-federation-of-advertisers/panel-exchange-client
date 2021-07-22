@@ -47,8 +47,7 @@ EventDataPreprocessor::EventDataPreprocessor(std::unique_ptr<Cryptor> cryptor,
                                              const wfa::Fingerprinter* delegate,
                                              const AesWithHkdf& aes_hkdf)
     : cryptor_(std::move(cryptor)),
-      pepper_(pepper),
-      delegate_(CHECK_NOTNULL(delegate)),
+      fingerprinter(GetPepperedFingerprinter(CHECK_NOTNULL(delegate), pepper)),
       aes_hkdf_(aes_hkdf) {}
 
 absl::StatusOr<ProcessedData> EventDataPreprocessor::Process(
@@ -65,8 +64,6 @@ absl::StatusOr<ProcessedData> EventDataPreprocessor::Process(
       processed_data.encrypted_event_data,
       aes_hkdf_.Encrypt(event_data, SecretDataFromStringView(processed[0])));
 
-  std::unique_ptr<wfa::Fingerprinter> fingerprinter =
-      GetPepperedFingerprinter(delegate_, pepper_);
   processed_data.encrypted_identifier =
       fingerprinter->Fingerprint(processed[0]);
 
