@@ -44,11 +44,11 @@ using ::wfa::panelmatch::common::crypto::GetPepperedFingerprinter;
 
 EventDataPreprocessor::EventDataPreprocessor(std::unique_ptr<Cryptor> cryptor,
                                              const SecretData& pepper,
-                                             const wfa::Fingerprinter* delegate,
-                                             const AesWithHkdf& aes_hkdf)
+                                             const Fingerprinter* delegate,
+                                             const AesWithHkdf* aes_hkdf)
     : cryptor_(std::move(cryptor)),
-      fingerprinter(GetPepperedFingerprinter(CHECK_NOTNULL(delegate), pepper)),
-      aes_hkdf_(aes_hkdf) {}
+      fingerprinter_(GetPepperedFingerprinter(CHECK_NOTNULL(delegate), pepper)),
+      aes_hkdf_(*CHECK_NOTNULL(aes_hkdf)) {}
 
 absl::StatusOr<ProcessedData> EventDataPreprocessor::Process(
     absl::string_view identifier, absl::string_view event_data) const {
@@ -59,13 +59,13 @@ absl::StatusOr<ProcessedData> EventDataPreprocessor::Process(
   if (processed.size() != 1)
     return absl::InternalError("Incorrect vector size");
 
-  ProcessedData processed_data = ProcessedData();
+  ProcessedData processed_data;
   ASSIGN_OR_RETURN(
       processed_data.encrypted_event_data,
       aes_hkdf_.Encrypt(event_data, SecretDataFromStringView(processed[0])));
 
   processed_data.encrypted_identifier =
-      fingerprinter->Fingerprint(processed[0]);
+      fingerprinter_->Fingerprint(processed[0]);
 
   return processed_data;
 }
