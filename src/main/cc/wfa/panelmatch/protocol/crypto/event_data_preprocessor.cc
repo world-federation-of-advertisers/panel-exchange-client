@@ -15,7 +15,8 @@
 #include "wfa/panelmatch/protocol/crypto/event_data_preprocessor.h"
 
 #include <memory>
-#include <string>
+#include <utility>
+#include <vector>
 
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"

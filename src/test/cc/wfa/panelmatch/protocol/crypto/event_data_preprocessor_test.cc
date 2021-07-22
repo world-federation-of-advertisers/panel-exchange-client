@@ -76,7 +76,7 @@ class FakeFingerprinter : public wfa::Fingerprinter {
 // Fake Cryptor class for testing purposes only
 class FakeCryptor : public Cryptor {
  public:
-  explicit FakeCryptor() = default;
+  FakeCryptor() = default;
   ~FakeCryptor() = default;
   FakeCryptor(FakeCryptor&& other) = delete;
   FakeCryptor& operator=(FakeCryptor&& other) = delete;
