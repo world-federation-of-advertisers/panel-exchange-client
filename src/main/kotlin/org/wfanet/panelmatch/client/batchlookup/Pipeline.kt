@@ -118,11 +118,16 @@ class BatchLookupWorkflow(
   ): PCollection<KV<ShardId, DatabaseShard>> {
     val bucketing = Bucketing(parameters.numShards, parameters.numBucketsPerShard)
     return database
-      .map {
+      .keyBy {
         val (shardId, bucketId) = bucketing.apply(it.key.id)
-        kvOf(shardId, Bucket(bucketId, it.value.data))
+        kvOf(shardId, bucketId)
       }
-      .groupByKey("Group into Batches")
+      .groupByKey("Group by Shard and Bucket")
+      .map {
+        val combinedValues = it.value.fold(ByteString.EMPTY) { acc, e -> acc.concat(e.value.data) }
+        kvOf(it.key.key, Bucket(it.key.value, combinedValues))
+      }
+      .groupByKey("Group by Shard")
       .parDo {
         // While this might look like exactly what GroupIntoBatches does, it's not. GroupIntoBatches
         // does not guarantee a strict size limit. We, on the other hand, need a strict size limit
