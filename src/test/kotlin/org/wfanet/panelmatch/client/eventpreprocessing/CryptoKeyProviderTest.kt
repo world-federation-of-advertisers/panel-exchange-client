@@ -14,8 +14,8 @@
 
 package org.wfanet.panelmatch.client.eventpreprocessing
 
+import com.google.common.truth.Truth.assertThat
 import com.google.protobuf.ByteString
-import kotlin.test.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
@@ -24,9 +24,9 @@ import org.junit.runners.JUnit4
 class CryptoKeyProviderTest {
 
   @Test
-  fun HardCoded() {
+  fun hardCoded() {
     val cryptokey: ByteString = ByteString.copyFromUtf8("testcryptokey")
     val result = HardCodedCryptoKeyProvider(cryptokey).apply(null as Void?)
-    assertEquals(result, cryptokey)
+    assertThat(result).isEqualTo(cryptokey)
   }
 }
