@@ -26,12 +26,12 @@
 namespace wfa::panelmatch::protocol::crypto {
 namespace {
 
-using common::crypto::Aes;
-using common::crypto::AesWithHkdf;
-using common::crypto::Cryptor;
-using common::crypto::Hkdf;
 using ::crypto::tink::util::SecretData;
 using ::crypto::tink::util::SecretDataFromStringView;
+using ::wfa::panelmatch::common::crypto::Aes;
+using ::wfa::panelmatch::common::crypto::AesWithHkdf;
+using ::wfa::panelmatch::common::crypto::Cryptor;
+using ::wfa::panelmatch::common::crypto::Hkdf;
 
 // Fake Hkdf class for testing purposes only
 class FakeHkdf : public Hkdf {
@@ -97,13 +97,13 @@ class FakeCryptor : public Cryptor {
   }
 };
 
-std::unique_ptr<FakeCryptor> CreateFakeCryptor(void) {
+std::unique_ptr<FakeCryptor> CreateFakeCryptor() {
   return absl::make_unique<FakeCryptor>();
 }
 
 // Test using fake classes to ensure proper return values
 TEST(EventDataPreprocessorTests, properImplementation) {
-  const FakeFingerprinter fingerprinter = FakeFingerprinter();
+  const FakeFingerprinter fingerprinter;
   std::unique_ptr<Hkdf> hkdf = absl::make_unique<FakeHkdf>();
   std::unique_ptr<Aes> aes = absl::make_unique<FakeAes>();
   const AesWithHkdf aes_hkdf =
@@ -111,23 +111,35 @@ TEST(EventDataPreprocessorTests, properImplementation) {
   std::unique_ptr<FakeCryptor> cryptor = CreateFakeCryptor();
   EventDataPreprocessor preprocessor(std::move(cryptor),
                                      SecretDataFromStringView("pepper"),
-                                     &fingerprinter, aes_hkdf);
+                                     &fingerprinter, &aes_hkdf);
   ASSERT_OK_AND_ASSIGN(ProcessedData processed,
                        preprocessor.Process("identifier", "event"));
-  ASSERT_EQ(processed.encrypted_identifier, 1);
-  ASSERT_EQ(processed.encrypted_event_data, "Encrypted");
+  EXPECT_EQ(processed.encrypted_identifier, 1);
+  EXPECT_EQ(processed.encrypted_event_data, "Encrypted");
 }
 
 // Tests EventDataPreprocessor with null Fingerprinter
 TEST(EventDataPreprocessorTests, nullFingerpritner) {
   std::unique_ptr<Hkdf> hkdf = absl::make_unique<FakeHkdf>();
   std::unique_ptr<Aes> aes = absl::make_unique<FakeAes>();
-  const AesWithHkdf aes_hkdf =
-      common::crypto::AesWithHkdf(std::move(hkdf), std::move(aes));
+  const AesWithHkdf aes_hkdf(std::move(hkdf), std::move(aes));
   std::unique_ptr<FakeCryptor> cryptor = CreateFakeCryptor();
   ASSERT_DEATH(EventDataPreprocessor preprocessor(
                    std::move(cryptor), SecretDataFromStringView("pepper"),
-                   nullptr, aes_hkdf),
+                   nullptr, &aes_hkdf),
+               "");
+}
+
+// Tests EventDataPreprocessor with null AesWithHkdf
+TEST(EventDataPreprocessorTests, nullAesWithHkdf) {
+  const FakeFingerprinter fingerprinter;
+  std::unique_ptr<Hkdf> hkdf = absl::make_unique<FakeHkdf>();
+  std::unique_ptr<Aes> aes = absl::make_unique<FakeAes>();
+  const AesWithHkdf aes_hkdf(std::move(hkdf), std::move(aes));
+  std::unique_ptr<FakeCryptor> cryptor = CreateFakeCryptor();
+  ASSERT_DEATH(EventDataPreprocessor preprocessor(
+                   std::move(cryptor), SecretDataFromStringView("pepper"),
+                   &fingerprinter, nullptr),
                "");
 }
 
@@ -136,12 +148,11 @@ TEST(EventDataPreprocessorTests, actualValues) {
   const Fingerprinter& sha = GetSha256Fingerprinter();
   std::unique_ptr<Hkdf> hkdf = common::crypto::GetSha256Hkdf();
   std::unique_ptr<Aes> aes = common::crypto::GetAesSivCmac512();
-  const AesWithHkdf aes_hkdf =
-      common::crypto::AesWithHkdf(std::move(hkdf), std::move(aes));
+  const AesWithHkdf aes_hkdf(std::move(hkdf), std::move(aes));
   ASSERT_OK_AND_ASSIGN(std::unique_ptr<Cryptor> cryptor,
                        common::crypto::CreateCryptorWithNewKey());
   EventDataPreprocessor preprocessor(
-      std::move(cryptor), SecretDataFromStringView("pepper"), &sha, aes_hkdf);
+      std::move(cryptor), SecretDataFromStringView("pepper"), &sha, &aes_hkdf);
   ASSERT_OK_AND_ASSIGN(ProcessedData processed,
                        preprocessor.Process("identifier", "event"));
 }

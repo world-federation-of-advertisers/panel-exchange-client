@@ -41,11 +41,10 @@ struct ProcessedData {
 // for an AES encryption/decryption of event data.
 class EventDataPreprocessor {
  public:
-  EventDataPreprocessor(
-      std::unique_ptr<common::crypto::Cryptor> cryptor,
-      const ::crypto::tink::util::SecretData& pepper,
-      const wfa::Fingerprinter* delegate,
-      const wfa::panelmatch::common::crypto::AesWithHkdf& aes_hkdf);
+  EventDataPreprocessor(std::unique_ptr<common::crypto::Cryptor> cryptor,
+                        const ::crypto::tink::util::SecretData& pepper,
+                        const Fingerprinter* delegate,
+                        const common::crypto::AesWithHkdf* aes_hkdf);
   ~EventDataPreprocessor() = default;
 
   // Encrypts 'identifier' and 'event_data' data
@@ -54,8 +53,8 @@ class EventDataPreprocessor {
 
  private:
   std::unique_ptr<common::crypto::Cryptor> cryptor_;
-  std::unique_ptr<wfa::Fingerprinter> fingerprinter;
-  const ::wfa::panelmatch::common::crypto::AesWithHkdf& aes_hkdf_;
+  std::unique_ptr<Fingerprinter> fingerprinter_;
+  const common::crypto::AesWithHkdf& aes_hkdf_;
 };
 
 }  // namespace wfa::panelmatch::protocol::crypto
