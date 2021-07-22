@@ -14,8 +14,11 @@
  * limitations under the License.
  */
 
-#ifndef SRC_MAIN_CC_WFANET_PANELMATCH_PROTOCOL_CRYPTO_EVENT_DATA_PREPROCESSOR_H_
-#define SRC_MAIN_CC_WFANET_PANELMATCH_PROTOCOL_CRYPTO_EVENT_DATA_PREPROCESSOR_H_
+#ifndef SRC_MAIN_CC_WFA_PANELMATCH_PROTOCOL_CRYPTO_EVENT_DATA_PREPROCESSOR_H_
+#define SRC_MAIN_CC_WFA_PANELMATCH_PROTOCOL_CRYPTO_EVENT_DATA_PREPROCESSOR_H_
+
+#include <memory>
+#include <string>
 
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
@@ -58,4 +61,4 @@ class EventDataPreprocessor {
 
 }  // namespace wfa::panelmatch::protocol::crypto
 
-#endif  // SRC_MAIN_CC_WFANET_PANELMATCH_PROTOCOL_CRYPTO_EVENT_DATA_PREPROCESSOR_H_
+#endif  // SRC_MAIN_CC_WFA_PANELMATCH_PROTOCOL_CRYPTO_EVENT_DATA_PREPROCESSOR_H_
