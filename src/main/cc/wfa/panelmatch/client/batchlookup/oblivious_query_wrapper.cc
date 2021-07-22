@@ -24,17 +24,17 @@ namespace wfa::panelmatch::client::batchlookup {
 
 absl::StatusOr<std::string> GenerateKeysWrapper(
     const std::string& serialized_request) {
-  return wfa::JniWrap(serialized_request, GenerateKeys);
+  return JniWrap(serialized_request, GenerateKeys);
 }
 
 absl::StatusOr<std::string> EncryptQueriesWrapper(
     const std::string& serialized_request) {
-  return wfa::JniWrap(serialized_request, EncryptQueries);
+  return JniWrap(serialized_request, EncryptQueries);
 }
 
 absl::StatusOr<std::string> DecryptQueriesWrapper(
     const std::string& serialized_request) {
-  return wfa::JniWrap(serialized_request, DecryptQueries);
+  return JniWrap(serialized_request, DecryptQueries);
 }
 
 }  // namespace wfa::panelmatch::client::batchlookup

@@ -25,23 +25,18 @@
 
 namespace wfa::panelmatch::client::batchlookup {
 
-absl::StatusOr<wfa::panelmatch::client::batchlookup::GenerateKeysResponse>
-GenerateKeys(
-    const wfa::panelmatch::client::batchlookup::GenerateKeysRequest& request) {
+absl::StatusOr<GenerateKeysResponse> GenerateKeys(
+    const GenerateKeysRequest& request) {
   return absl::UnimplementedError("Not implemented");
 }
 
-absl::StatusOr<wfa::panelmatch::client::batchlookup::EncryptQueriesResponse>
-EncryptQueries(
-    const wfa::panelmatch::client::batchlookup::EncryptQueriesRequest&
-        request) {
+absl::StatusOr<EncryptQueriesResponse> EncryptQueries(
+    const EncryptQueriesRequest& request) {
   return absl::UnimplementedError("Not implemented");
 }
 
-absl::StatusOr<wfa::panelmatch::client::batchlookup::DecryptQueriesResponse>
-DecryptQueries(
-    const wfa::panelmatch::client::batchlookup::DecryptQueriesRequest&
-        request) {
+absl::StatusOr<DecryptQueriesResponse> DecryptQueries(
+    const DecryptQueriesRequest& request) {
   return absl::UnimplementedError("Not implemented");
 }
 

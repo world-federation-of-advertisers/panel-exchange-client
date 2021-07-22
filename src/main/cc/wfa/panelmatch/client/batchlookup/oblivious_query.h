@@ -23,17 +23,14 @@
 #include "wfa/panelmatch/client/batchlookup/oblivious_query.pb.h"
 
 namespace wfa::panelmatch::client::batchlookup {
-absl::StatusOr<wfa::panelmatch::client::batchlookup::GenerateKeysResponse>
-GenerateKeys(
-    const wfa::panelmatch::client::batchlookup::GenerateKeysRequest& request);
+absl::StatusOr<GenerateKeysResponse> GenerateKeys(
+    const GenerateKeysRequest& request);
 
-absl::StatusOr<wfa::panelmatch::client::batchlookup::EncryptQueriesResponse>
-EncryptQueries(
-    const wfa::panelmatch::client::batchlookup::EncryptQueriesRequest& request);
+absl::StatusOr<EncryptQueriesResponse> EncryptQueries(
+    const EncryptQueriesRequest& request);
 
-absl::StatusOr<wfa::panelmatch::client::batchlookup::DecryptQueriesResponse>
-DecryptQueries(
-    const wfa::panelmatch::client::batchlookup::DecryptQueriesRequest& request);
+absl::StatusOr<DecryptQueriesResponse> DecryptQueries(
+    const DecryptQueriesRequest& request);
 
 }  // namespace wfa::panelmatch::client::batchlookup
 #endif  // SRC_MAIN_CC_WFA_PANELMATCH_CLIENT_BATCHLOOKUP_OBLIVIOUS_QUERY_H_
