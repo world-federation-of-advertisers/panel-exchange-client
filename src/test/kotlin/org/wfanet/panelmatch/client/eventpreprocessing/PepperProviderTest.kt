@@ -14,8 +14,8 @@
 
 package org.wfanet.panelmatch.client.eventpreprocessing
 
+import com.google.common.truth.Truth.assertThat
 import com.google.protobuf.ByteString
-import kotlin.test.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
@@ -24,9 +24,9 @@ import org.junit.runners.JUnit4
 class PepperProviderTest {
 
   @Test
-  fun HardCoded() {
+  fun hardCoded() {
     val pepper: ByteString = ByteString.copyFromUtf8("testpepper")
     val result = HardCodedCryptoKeyProvider(pepper).apply(null as Void?)
-    assertEquals(result, pepper)
+    assertThat(result).isEqualTo(pepper)
   }
 }
