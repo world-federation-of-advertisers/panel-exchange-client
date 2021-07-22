@@ -54,8 +54,7 @@ class EventDataPreprocessor {
 
  private:
   std::unique_ptr<common::crypto::Cryptor> cryptor_;
-  const ::crypto::tink::util::SecretData& pepper_;
-  const ::wfa::Fingerprinter* delegate_;
+  std::unique_ptr<wfa::Fingerprinter> fingerprinter;
   const ::wfa::panelmatch::common::crypto::AesWithHkdf& aes_hkdf_;
 };
 
