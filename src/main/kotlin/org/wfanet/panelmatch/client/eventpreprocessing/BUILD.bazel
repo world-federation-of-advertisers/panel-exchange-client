@@ -10,8 +10,8 @@ kt_jvm_library(
             "BatchingDoFn.kt",
             "EncryptEvents.kt",
             "EncryptionEventsDoFn.kt",
-            "PepperProvider.kt",
-            "CryptoKeyProvider.kt",
+            "HardCodedPepperProvider.kt",
+            "HardCodedCryptoKeyProvider.kt",
         ],
     ),
     deps = [
@@ -35,10 +35,10 @@ kt_jvm_library(
 kt_jvm_library(
     name = "encryptiondofn",
     srcs = [
-        "CryptoKeyProvider.kt",
         "EncryptEvents.kt",
         "EncryptionEventsDoFn.kt",
-        "PepperProvider.kt",
+        "HardCodedCryptoKeyProvider.kt",
+        "HardCodedPepperProvider.kt",
     ],
     deps = [
         "//imports/java/org/apache/beam:core",
