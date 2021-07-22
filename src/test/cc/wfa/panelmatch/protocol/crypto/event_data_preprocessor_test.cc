@@ -29,7 +29,7 @@ namespace {
 using ::crypto::tink::util::SecretData;
 using ::crypto::tink::util::SecretDataAsStringView;
 using ::crypto::tink::util::SecretDataFromStringView;
-using wfa::panelmatch::common::crypto::Action;
+using ::wfa::panelmatch::common::crypto::Action;
 using ::wfa::panelmatch::common::crypto::Aes;
 using ::wfa::panelmatch::common::crypto::AesWithHkdf;
 using ::wfa::panelmatch::common::crypto::Cryptor;
@@ -74,7 +74,9 @@ class FakeFingerprinter : public Fingerprinter {
   FakeFingerprinter() = default;
 
   uint64_t Fingerprint(absl::Span<const unsigned char> item) const override {
-    return item.size();
+    absl::string_view item_as_string_view(
+        reinterpret_cast<const char*>(item.data()), item.size());
+    return item_as_string_view.length();
   }
 };
 
@@ -118,7 +120,7 @@ TEST(EventDataPreprocessorTests, properImplementation) {
                                      &fingerprinter, &aes_hkdf);
   ASSERT_OK_AND_ASSIGN(ProcessedData processed,
                        preprocessor.Process("identifier", "event"));
-  EXPECT_EQ(processed.encrypted_identifier, 1);
+  EXPECT_EQ(processed.encrypted_identifier, 16);
   EXPECT_EQ(processed.encrypted_event_data,
             "Encrypted event with key HKDF with length 64 of identifier");
 }
