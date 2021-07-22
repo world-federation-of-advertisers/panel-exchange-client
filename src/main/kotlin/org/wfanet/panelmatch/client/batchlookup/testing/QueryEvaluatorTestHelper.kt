@@ -15,13 +15,24 @@
 package org.wfanet.panelmatch.client.batchlookup.testing
 
 import com.google.protobuf.ByteString
+import java.io.Serializable
 import org.wfanet.panelmatch.client.batchlookup.BucketId
 import org.wfanet.panelmatch.client.batchlookup.QueryBundle
 import org.wfanet.panelmatch.client.batchlookup.QueryId
 import org.wfanet.panelmatch.client.batchlookup.Result
 import org.wfanet.panelmatch.client.batchlookup.ShardId
 
-interface QueryEvaluatorTestHelper {
+interface QueryEvaluatorTestHelper : Serializable {
+  data class DecodedResult(val queryId: Int, val data: ByteString) : Serializable {
+    override fun toString(): String {
+      return "DecodedResult(query=$queryId, data=${data.toStringUtf8()}"
+    }
+  }
+
+  fun decodeResult(result: Result): DecodedResult {
+    return DecodedResult(result.queryMetadata.queryId.id, decodeResultData(result))
+  }
+
   fun decodeResultData(result: Result): ByteString
 
   fun makeQueryBundle(shard: ShardId, queries: List<Pair<QueryId, BucketId>>): QueryBundle

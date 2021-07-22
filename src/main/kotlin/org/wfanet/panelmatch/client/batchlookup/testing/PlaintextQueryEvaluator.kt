@@ -47,7 +47,7 @@ object PlaintextQueryEvaluator : QueryEvaluator {
       require(result.queryMetadata.queryId.id == queryId)
     }
 
-    return resultsList.firstOrNull { !it.data.isEmpty } ?: resultsList.first()
+    return resultsList.singleOrNull { !it.data.isEmpty } ?: resultsList.first()
   }
 
   private fun query(shard: DatabaseShard, bundle: QueryBundle): List<Result> {
@@ -55,12 +55,14 @@ object PlaintextQueryEvaluator : QueryEvaluator {
     require(queriedBuckets.valuesCount == bundle.queryMetadata.size)
     val results = mutableListOf<Result>()
     for ((metadata, queriedBucket) in bundle.queryMetadata zip queriedBuckets.valuesList) {
-      val match = shard.buckets.firstOrNull { it.bucketId.id == queriedBucket.stringValue.toInt() }
-      if (match == null) {
-        results.add(Result(metadata, ByteString.EMPTY))
-      } else {
-        results.add(Result(metadata, match.data))
-      }
+      val result =
+        shard
+          .buckets
+          .filter { it.bucketId.id == queriedBucket.stringValue.toInt() }
+          .map { Result(metadata, it.data) }
+          .ifEmpty { listOf(Result(metadata, ByteString.EMPTY)) }
+          .single()
+      results.add(result)
     }
     return results
   }

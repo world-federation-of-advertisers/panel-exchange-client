@@ -27,6 +27,7 @@ import org.wfanet.panelmatch.client.batchlookup.QueryEvaluator
 import org.wfanet.panelmatch.client.batchlookup.QueryId
 import org.wfanet.panelmatch.client.batchlookup.Result
 import org.wfanet.panelmatch.client.batchlookup.ShardId
+import org.wfanet.panelmatch.client.batchlookup.testing.QueryEvaluatorTestHelper.DecodedResult
 
 /** Tests for [QueryEvaluator]s. */
 abstract class AbstractQueryEvaluatorTest {
@@ -73,10 +74,10 @@ abstract class AbstractQueryEvaluatorTest {
       )
 
     val results = evaluator.executeQueries(database, queryBundles)
-    assertThat(results.map { it.queryMetadata.queryId to helper.decodeResultData(it) })
+    assertThat(results.map { helper.decodeResult(it) })
       .containsExactly(
-        QueryId(500) to makeFakeBucketData(bucket = 1, shard = 100),
-        QueryId(501) to makeFakeBucketData(bucket = 1, shard = 101)
+        DecodedResult(500, makeFakeBucketData(bucket = 1, shard = 100)),
+        DecodedResult(501, makeFakeBucketData(bucket = 1, shard = 101))
       )
   }
 
@@ -94,16 +95,18 @@ abstract class AbstractQueryEvaluatorTest {
 
   @Test
   fun `combineResults single result`() {
-    assertThat(runCombineResults(resultOf(5, ByteString.EMPTY)))
-      .isEqualTo(QueryId(5) to ByteString.EMPTY)
+    val someQueryId = 5
 
-    val rawPayload = "abcdef".toByteString()
-    assertThat(runCombineResults(resultOf(5, rawPayload))).isEqualTo(QueryId(5) to rawPayload)
+    assertThat(runCombineResults(resultOf(someQueryId, ByteString.EMPTY)))
+      .isEqualTo(DecodedResult(someQueryId, ByteString.EMPTY))
+
+    val rawPayload = "some-raw-payload".toByteString()
+    assertThat(runCombineResults(resultOf(someQueryId, rawPayload)))
+      .isEqualTo(DecodedResult(someQueryId, rawPayload))
   }
 
-  private fun runCombineResults(vararg results: Result): Pair<QueryId, ByteString> {
-    val result = evaluator.combineResults(results.asSequence())
-    return result.queryMetadata.queryId to helper.decodeResultData(result)
+  private fun runCombineResults(vararg results: Result): DecodedResult {
+    return helper.decodeResult(evaluator.combineResults(results.asSequence()))
   }
 
   private fun queryBundleOf(shard: Int, queries: List<Pair<Int, Int>>): QueryBundle {

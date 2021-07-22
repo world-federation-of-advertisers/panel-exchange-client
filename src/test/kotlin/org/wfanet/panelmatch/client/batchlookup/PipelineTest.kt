@@ -14,6 +14,7 @@
 
 package org.wfanet.panelmatch.client.batchlookup
 
+import com.google.common.truth.Truth.assertThat
 import com.google.protobuf.ByteString
 import org.apache.beam.sdk.values.KV
 import org.apache.beam.sdk.values.PCollection
@@ -30,15 +31,15 @@ import org.wfanet.panelmatch.common.beam.testing.assertThat
 
 @RunWith(JUnit4::class)
 class PipelineTest : BeamTestBase() {
+  private val database by lazy { databaseOf(53 to "abc", 58 to "def", 71 to "hij", 85 to "klm") }
+
   private fun runWorkflow(
     queryBundles: List<QueryBundle>,
-    parameters: Parameters = Parameters(100, 100, 100)
+    parameters: Parameters
   ): PCollection<Result> {
     return BatchLookupWorkflow(parameters, PlaintextQueryEvaluator)
       .batchLookup(database, pcollectionOf("Create Query Bundles", *queryBundles.toTypedArray()))
   }
-
-  private val database by lazy { databaseOf(53 to "abc", 58 to "def", 71 to "hij", 85 to "klm") }
 
   @Before
   fun registerCoders() {
@@ -125,6 +126,22 @@ class PipelineTest : BeamTestBase() {
         resultOf(3, "hij"),
         resultOf(4, "klm")
       )
+  }
+
+  @Test
+  fun `repeated bucket`() {
+    val parameters = Parameters(numShards = 1, numBucketsPerShard = 1, subshardSizeBytes = 1000)
+
+    val queryBundles = listOf(queryBundleOf(shard = 0, listOf(17 to 0)))
+
+    assertThat(runWorkflow(queryBundles, parameters)).satisfies {
+      val list = it.toList()
+      assertThat(list).hasSize(1)
+      assertThat(list[0].queryMetadata).isEqualTo(QueryMetadata(QueryId(17), ByteString.EMPTY))
+      assertThat(list[0].data.toStringUtf8().toList())
+        .containsExactlyElementsIn("abcdefhijklm".toList())
+      null
+    }
   }
 
   private fun databaseOf(
