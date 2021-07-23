@@ -20,6 +20,8 @@ import org.apache.beam.sdk.transforms.SerializableFunction
 /**
  * Takes in a cryptokey as ByteString and outputs the same ByteString
  *
+ * Security concerns this introduces:
+ *
  * The crypto key could get logged. If logs are visible to engineers, this could be vulnerable to
  * insider risk.
  *

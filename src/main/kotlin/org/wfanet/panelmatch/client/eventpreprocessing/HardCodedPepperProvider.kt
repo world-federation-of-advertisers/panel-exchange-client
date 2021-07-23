@@ -20,8 +20,10 @@ import org.apache.beam.sdk.transforms.SerializableFunction
 /**
  * Takes in a pepper as ByteString and outputs the same ByteString
  *
- * Security concerns this introduces: The pepper could get logged. If logs are visible to engineers,
- * this could be vulnerable to insider risk.
+ * Security concerns this introduces:
+ *
+ * The pepper could get logged. If logs are visible to engineers, this could be vulnerable to
+ * insider risk.
  *
  * The pepper will reside in memory for longer. Other processes on the machines executing the Apache
  * Beam could potentially compromise it.
