@@ -118,11 +118,11 @@ TEST(EventDataPreprocessorTests, properImplementation) {
                                      SecretDataFromStringView("pepper"),
                                      &fingerprinter, &aes_hkdf);
   ASSERT_OK_AND_ASSIGN(ProcessedData processed,
-                       preprocessor.Process("identifier", "event"));
-  EXPECT_EQ(processed.encrypted_identifier, 16);
-  EXPECT_EQ(
-      processed.encrypted_event_data,
-      "Encrypted 'event' with key 'HKDF with length '64' of 'identifier''");
+                       preprocessor.Process("some-identifier", "some-event"));
+  EXPECT_EQ(processed.encrypted_identifier, 21);
+  EXPECT_EQ(processed.encrypted_event_data,
+            "Encrypted 'some-event' with key 'HKDF with length '64' of "
+            "'some-identifier''");
 }
 
 // Tests EventDataPreprocessor with null Fingerprinter
@@ -161,7 +161,7 @@ TEST(EventDataPreprocessorTests, actualValues) {
   EventDataPreprocessor preprocessor(
       std::move(cryptor), SecretDataFromStringView("pepper"), &sha, &aes_hkdf);
   ASSERT_OK_AND_ASSIGN(ProcessedData processed,
-                       preprocessor.Process("identifier", "event"));
+                       preprocessor.Process("some-identifier", "some-event"));
 }
 
 }  // namespace
