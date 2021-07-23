@@ -18,7 +18,7 @@ import com.google.protobuf.ByteString
 import org.apache.beam.sdk.transforms.SerializableFunction
 
 /** Takes in a ByteString and returns its size in bytes */
-object MaxByteSize : SerializableFunction<ByteString, Int> {
+object ByteStringSize : SerializableFunction<ByteString, Int> {
   override fun apply(b: ByteString): Int {
     return b.size()
   }

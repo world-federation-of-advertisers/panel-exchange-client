@@ -21,21 +21,21 @@ import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
 
 @RunWith(JUnit4::class)
-class MaxByteSizeTest {
+class ByteStringSizeTest {
   @Test
   fun empty() {
-    val test: ByteString = ByteString.copyFromUtf8("")
-    val result: Int = MaxByteSize.apply(test)
+    val test: ByteString = ByteString.EMPTY
+    val result: Int = ByteStringSize.apply(test)
     assertThat(result).isEqualTo(0)
   }
   fun string() {
     val test: ByteString = ByteString.copyFromUtf8("12345")
-    val result: Int = MaxByteSize.apply(test)
+    val result: Int = ByteStringSize.apply(test)
     assertThat(result).isEqualTo(5)
   }
   fun stringSpaces() {
     val test: ByteString = ByteString.copyFromUtf8("12345 789")
-    val result: Int = MaxByteSize.apply(test)
+    val result: Int = ByteStringSize.apply(test)
     assertThat(result).isEqualTo(9)
   }
 }

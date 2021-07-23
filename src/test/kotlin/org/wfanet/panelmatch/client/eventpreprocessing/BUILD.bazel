@@ -26,16 +26,11 @@ kt_jvm_test(
 )
 
 kt_jvm_test(
-    name = "MaxByteSizeTest",
-    srcs = ["MaxByteSizeTest.kt"],
-    test_class = "org.wfanet.panelmatch.client.eventpreprocessing.MaxByteSizeTest",
+    name = "ByteStringSizeTest",
+    srcs = ["ByteStringSizeTest.kt"],
+    test_class = "org.wfanet.panelmatch.client.eventpreprocessing.ByteStringSizeTest",
     deps = [
-        "//imports/java/com/google/common:guava",
-        "//imports/java/org/apache/beam:core",
         "//src/main/kotlin/org/wfanet/panelmatch/client/eventpreprocessing:batchingdofn",
-        "//src/main/kotlin/org/wfanet/panelmatch/common",
-        "//src/main/kotlin/org/wfanet/panelmatch/common/beam",
-        "//src/main/kotlin/org/wfanet/panelmatch/common/beam/testing",
         "@wfa_common_jvm//imports/java/com/google/common/truth",
     ],
 )
