@@ -54,7 +54,6 @@ EventDataPreprocessor::EventDataPreprocessor(std::unique_ptr<Cryptor> cryptor,
 absl::StatusOr<ProcessedData> EventDataPreprocessor::Process(
     absl::string_view identifier, absl::string_view event_data) const {
   std::vector<std::string> input = {std::string(identifier)};
-  std::cout << "Input = " << input[0] << std::endl;
   ASSIGN_OR_RETURN(std::vector<std::string> processed,
                    cryptor_->BatchProcess(input, Action::kEncrypt));
 
