@@ -22,16 +22,16 @@ import org.wfanet.panelmatch.client.PreprocessEventsRequest
 import org.wfanet.panelmatch.client.PreprocessEventsResponse
 
 /**
- * Takes in a MutableList<KV<Long,ByteString>>, packs them into PreprocessedEventRequest protos,
- * encrypts the identifier and event data using several encryption schemes, and unpacks them from
- * PreprocessedEventResponse protos and emits them as KV<Long,ByteString> pairs
+ * Takes in a MutableList<KV<ByteString,ByteString>>, packs them into PreprocessedEventRequest
+ * protos, encrypts the identifier and event data using several encryption schemes, and unpacks them
+ * from PreprocessedEventResponse protos and emits them as KV<Long,ByteString> pairs
  */
 class EncryptionEventsDoFn(
   private val encryptEvents: SerializableFunction<PreprocessEventsRequest, PreprocessEventsResponse>
-) : DoFn<MutableList<KV<Long, ByteString>>, KV<Long, ByteString>>() {
+) : DoFn<MutableList<KV<ByteString, ByteString>>, KV<Long, ByteString>>() {
   @ProcessElement
   fun process(c: ProcessContext) {
-    val list: MutableList<KV<Long, ByteString>> = c.element()
+    val list: MutableList<KV<ByteString, ByteString>> = c.element()
     val request =
       PreprocessEventsRequest.newBuilder()
         .apply {

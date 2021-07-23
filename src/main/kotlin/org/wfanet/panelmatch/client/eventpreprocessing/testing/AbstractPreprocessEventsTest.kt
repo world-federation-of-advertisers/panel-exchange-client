@@ -28,7 +28,7 @@ abstract class AbstractPreprocessEventsTest {
 
   @Test
   fun testPreprocessEvents() {
-    val arbitraryId: Long = 1111
+    val arbitraryId: ByteString = ByteString.copyFromUtf8("arbitrary-id")
     val arbitraryData: ByteString = ByteString.copyFromUtf8("arbitrary-data")
     val arbitraryCryptoKey: ByteString = ByteString.copyFromUtf8("arbitrary-crypto-key")
     val arbitraryPepper: ByteString = ByteString.copyFromUtf8("arbitrary-pepper")

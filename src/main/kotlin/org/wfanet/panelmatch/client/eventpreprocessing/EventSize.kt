@@ -18,9 +18,9 @@ import com.google.protobuf.ByteString
 import org.apache.beam.sdk.transforms.SerializableFunction
 import org.apache.beam.sdk.values.KV
 
-/** Takes in a KV<Long,ByteString> and returns its size in bytes */
-object KvPairSize : SerializableFunction<KV<Long, ByteString>, Int> {
-  override fun apply(p: KV<Long, ByteString>): Int {
-    return Long.SIZE_BYTES + p.value.size()
+/** Takes in a KV<ByteString,ByteString> and returns its size in bytes */
+object EventSize : SerializableFunction<KV<ByteString, ByteString>, Int> {
+  override fun apply(p: KV<ByteString, ByteString>): Int {
+    return p.key.size() + p.value.size()
   }
 }
