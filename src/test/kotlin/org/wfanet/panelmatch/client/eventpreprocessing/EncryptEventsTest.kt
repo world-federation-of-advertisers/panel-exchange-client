@@ -34,7 +34,7 @@ class EncryptEventsTest {
           cryptoKey = ByteString.copyFromUtf8("cryptokey")
           pepper = ByteString.copyFromUtf8("pepper")
           addUnprocessedEventsBuilder().apply {
-            id = ByteString.copyFromUtf8("identifier")
+            id = 10000
             data = ByteString.copyFromUtf8("eventdata")
           }
         }
