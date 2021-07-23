@@ -70,8 +70,7 @@ TEST(ObliviousQuery, DecryptQueriesTest) {
   DecryptQueriesRequest test_request;
   test_request.set_public_key("some-public-key");
   test_request.set_private_key("some-private-key");
-  std::string some_encrypted_query_result = "some-encrypted-query-result";
-  test_request.add_encrypted_query_results(some_encrypted_query_result);
+  test_request.add_encrypted_query_results("some-encrypted-query-result");
   auto test_response = DecryptQueries(test_request);
   EXPECT_THAT(test_response.status(),
               StatusIs(absl::StatusCode::kUnimplemented, ""));
