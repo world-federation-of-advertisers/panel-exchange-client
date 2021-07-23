@@ -14,6 +14,8 @@
 
 #include "wfa/panelmatch/client/eventpreprocessing/preprocess_events.h"
 
+#include <stdint.h>
+
 #include <string>
 
 #include "absl/base/port.h"
@@ -38,7 +40,7 @@ using ::testing::Not;
 using ::testing::Pointwise;
 
 TEST(PreprocessEventsTest, ReturnsUnimplemented) {
-  std::string test_id = "random-id-1";
+  uint64_t test_id = 1111;
   std::string test_data = "random-data-1";
   std::string test_crypto_key = "random-crypto_key-1";
   std::string test_pepper = "random-pepper-1";

@@ -16,26 +16,31 @@ package org.wfanet.panelmatch.client.eventpreprocessing
 
 import com.google.common.truth.Truth.assertThat
 import com.google.protobuf.ByteString
+import org.apache.beam.sdk.values.KV
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
 
 @RunWith(JUnit4::class)
-class ByteStringSizeTest {
+class KvPairSizeTest {
+  val longBytes = Long.SIZE_BYTES
   @Test
-  fun empty() {
-    val test: ByteString = ByteString.EMPTY
-    val result: Int = ByteStringSize.apply(test)
-    assertThat(result).isEqualTo(0)
+  fun emptyByteString() {
+    val test: KV<Long, ByteString> = KV.of(100, ByteString.EMPTY)
+    val result: Int = KvPairSize.apply(test)
+    assertThat(result).isEqualTo(longBytes)
   }
   fun string() {
-    val test: ByteString = ByteString.copyFromUtf8("12345")
-    val result: Int = ByteStringSize.apply(test)
-    assertThat(result).isEqualTo(5)
+    val test: KV<Long, ByteString> = longByteStringKvOf(200, "12345")
+    val result: Int = KvPairSize.apply(test)
+    assertThat(result).isEqualTo(5 + longBytes)
   }
   fun stringSpaces() {
-    val test: ByteString = ByteString.copyFromUtf8("12345 789")
-    val result: Int = ByteStringSize.apply(test)
-    assertThat(result).isEqualTo(9)
+    val test: KV<Long, ByteString> = longByteStringKvOf(300, "12345 789")
+    val result: Int = KvPairSize.apply(test)
+    assertThat(result).isEqualTo(9 + longBytes)
+  }
+  fun longByteStringKvOf(key: Long, value: String): KV<Long, ByteString> {
+    return KV.of(key, ByteString.copyFromUtf8(value))
   }
 }
