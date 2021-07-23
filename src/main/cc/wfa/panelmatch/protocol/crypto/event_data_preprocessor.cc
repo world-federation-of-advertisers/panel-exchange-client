@@ -15,7 +15,6 @@
 #include "wfa/panelmatch/protocol/crypto/event_data_preprocessor.h"
 
 #include <memory>
-#include <ostream>
 #include <utility>
 #include <vector>
 
