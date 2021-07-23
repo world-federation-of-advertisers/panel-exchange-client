@@ -18,7 +18,6 @@ import com.google.protobuf.ByteString
 import org.apache.beam.sdk.coders.Coder
 import org.apache.beam.sdk.coders.KvCoder
 import org.apache.beam.sdk.coders.ListCoder
-import org.apache.beam.sdk.coders.VarLongCoder
 import org.apache.beam.sdk.extensions.protobuf.ByteStringCoder
 import org.apache.beam.sdk.transforms.DoFn
 import org.apache.beam.sdk.transforms.ParDo
@@ -37,33 +36,37 @@ import org.wfanet.panelmatch.common.beam.testing.assertThat
 /** Unit tests for [EncryptionEventsDoFn]. */
 @RunWith(JUnit4::class)
 class EncryptionEventsDoFnTest : BeamTestBase() {
-  private val coder: Coder<MutableList<KV<Long, ByteString>>> =
-    ListCoder.of(KvCoder.of(VarLongCoder.of(), ByteStringCoder.of()))
+  private val coder: Coder<MutableList<KV<ByteString, ByteString>>> =
+    ListCoder.of(KvCoder.of(ByteStringCoder.of(), ByteStringCoder.of()))
 
   @Test
   fun testEncrypt() {
-    val arbitraryUnprocessedEvents: MutableList<KV<Long, ByteString>> =
-      mutableListOf(longByteStringKvOf(100, "2"), longByteStringKvOf(200, "4"))
+    val arbitraryUnprocessedEvents: MutableList<KV<ByteString, ByteString>> =
+      mutableListOf(byteStringKvOf("1000", "2"), byteStringKvOf("2000", "4"))
     val collection = pcollectionOf("collection1", arbitraryUnprocessedEvents, coder = coder)
-    val doFn: DoFn<MutableList<KV<Long, ByteString>>, KV<Long, ByteString>> =
+    val doFn: DoFn<MutableList<KV<ByteString, ByteString>>, KV<Long, ByteString>> =
       EncryptionEventsDoFn(FakeEncryptEvents)
     val result: PCollection<KV<Long, ByteString>> = collection.apply(ParDo.of(doFn))
     assertThat(result)
       .containsInAnyOrder(
-        longByteStringKvOf(110, "2hijklmnop"),
-        longByteStringKvOf(210, "4hijklmnop")
+        longByteStringKvOf(1001, "2hijklmnop"),
+        longByteStringKvOf(2001, "4hijklmnop")
       )
   }
   @Test
   fun testEmptyEncrypt() {
-    val emptyUnprocessedEvents: MutableList<KV<Long, ByteString>> = mutableListOf()
+    val emptyUnprocessedEvents: MutableList<KV<ByteString, ByteString>> = mutableListOf()
     val emptycollection = pcollectionOf("collection1", emptyUnprocessedEvents, coder = coder)
 
-    val doFn: DoFn<MutableList<KV<Long, ByteString>>, KV<Long, ByteString>> =
+    val doFn: DoFn<MutableList<KV<ByteString, ByteString>>, KV<Long, ByteString>> =
       EncryptionEventsDoFn(FakeEncryptEvents)
     val result: PCollection<KV<Long, ByteString>> = emptycollection.apply(ParDo.of(doFn))
     assertThat(result).empty()
   }
+}
+
+fun byteStringKvOf(key: String, value: String): KV<ByteString, ByteString> {
+  return KV.of(ByteString.copyFromUtf8(key), ByteString.copyFromUtf8(value))
 }
 
 fun longByteStringKvOf(key: Long, value: String): KV<Long, ByteString> {
@@ -78,7 +81,7 @@ private object FakeEncryptEvents :
         .apply {
           for (events in request.unprocessedEventsList) {
             addProcessedEventsBuilder().apply {
-              this.encryptedId = events.id.plus(10)
+              this.encryptedId = events.id.toStringUtf8().toLong().plus(1)
               this.encryptedData = events.data.concat(ByteString.copyFromUtf8("hijklmnop"))
             }
           }
