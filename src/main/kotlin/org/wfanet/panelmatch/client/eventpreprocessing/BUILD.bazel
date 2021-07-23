@@ -10,6 +10,7 @@ kt_jvm_library(
             "BatchingDoFn.kt",
             "EncryptEvents.kt",
             "EncryptionEventsDoFn.kt",
+            "MaxByteSize.kt",
         ],
     ),
     deps = [
@@ -22,11 +23,15 @@ kt_jvm_library(
 
 kt_jvm_library(
     name = "batchingdofn",
-    srcs = ["BatchingDoFn.kt"],
+    srcs = [
+        "BatchingDoFn.kt",
+        "MaxByteSize.kt",
+    ],
     deps = [
         "//imports/java/org/apache/beam:core",
         "//imports/java/org/joda",
         "//src/main/kotlin/org/wfanet/panelmatch/common",
+        "//src/main/kotlin/org/wfanet/panelmatch/common/beam",
     ],
 )
 
