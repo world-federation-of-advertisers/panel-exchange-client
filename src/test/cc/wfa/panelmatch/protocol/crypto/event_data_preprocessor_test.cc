@@ -42,8 +42,9 @@ class FakeHkdf : public Hkdf {
 
   absl::StatusOr<SecretData> ComputeHkdf(const SecretData& ikm,
                                          int length) const override {
-    return SecretDataFromStringView(absl::StrCat(
-        "HKDF with length ", length, " of ", SecretDataAsStringView(ikm)));
+    return SecretDataFromStringView(
+        absl::StrCat("HKDF with length '", length, "' of '",
+                     SecretDataAsStringView(ikm), "'"));
   }
 };
 
@@ -54,14 +55,14 @@ class FakeAes : public Aes {
 
   absl::StatusOr<std::string> Encrypt(absl::string_view input,
                                       const SecretData& key) const override {
-    return absl::StrCat("Encrypted ", input, " with key ",
-                        SecretDataAsStringView(key));
+    return absl::StrCat("Encrypted '", input, "' with key '",
+                        SecretDataAsStringView(key), "'");
   }
 
   absl::StatusOr<std::string> Decrypt(absl::string_view input,
                                       const SecretData& key) const override {
-    return absl::StrCat("Decrypted ", input, " with key ",
-                        SecretDataAsStringView(key));
+    return absl::StrCat("Decrypted '", input, "' with key '",
+                        SecretDataAsStringView(key), "'");
   }
 
   int32_t key_size_bytes() const override { return 64; }
@@ -74,9 +75,7 @@ class FakeFingerprinter : public Fingerprinter {
   FakeFingerprinter() = default;
 
   uint64_t Fingerprint(absl::Span<const unsigned char> item) const override {
-    absl::string_view item_as_string_view(
-        reinterpret_cast<const char*>(item.data()), item.size());
-    return item_as_string_view.length();
+    return item.size();
   }
 };
 
@@ -121,8 +120,9 @@ TEST(EventDataPreprocessorTests, properImplementation) {
   ASSERT_OK_AND_ASSIGN(ProcessedData processed,
                        preprocessor.Process("identifier", "event"));
   EXPECT_EQ(processed.encrypted_identifier, 16);
-  EXPECT_EQ(processed.encrypted_event_data,
-            "Encrypted event with key HKDF with length 64 of identifier");
+  EXPECT_EQ(
+      processed.encrypted_event_data,
+      "Encrypted 'event' with key 'HKDF with length '64' of 'identifier''");
 }
 
 // Tests EventDataPreprocessor with null Fingerprinter
