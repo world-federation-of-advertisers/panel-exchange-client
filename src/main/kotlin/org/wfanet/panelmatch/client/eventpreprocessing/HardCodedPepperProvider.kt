@@ -17,7 +17,15 @@ package org.wfanet.panelmatch.client.eventpreprocessing
 import com.google.protobuf.ByteString
 import org.apache.beam.sdk.transforms.SerializableFunction
 
-/** Takes in a pepper as ByteString and outputs the same ByteString */
+/**
+ * Takes in a pepper as ByteString and outputs the same ByteString
+ *
+ * Security concerns this introduces: The crypto key could get logged. If logs are visible to
+ * engineers, this could be vulnerable to insider risk. The crypto key will reside in memory for
+ * longer. Other processes on the machines executing the Apache Beam could potentially compromise
+ * it. The crypto key will be serialized and sent between Apache Beam workers. This means that
+ * vulnerable temporary files or network connections could leak key material.
+ */
 class HardCodedPepperProvider(private val pepper: ByteString) :
   SerializableFunction<Void?, ByteString> {
   override fun apply(void: Void?): ByteString {
