@@ -40,7 +40,6 @@ class EncryptionEventsDoFn(
         .apply {
           cryptoKey = getCryptoKey.apply(null as Void?)
           pepper = getPepper.apply(null as Void?)
-
           for (pair in list) {
             addUnprocessedEventsBuilder().apply {
               id = pair.key

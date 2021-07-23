@@ -20,20 +20,14 @@ import org.apache.beam.sdk.transforms.SerializableFunction
 /**
  * Takes in a pepper as ByteString and outputs the same ByteString
  *
- * Security concerns this introduces: 1) The pepper could get logged. If logs are visible to
- * ```
- *      engineers, this could be vulnerable to insider risk.
- * ```
- * 2) The pepper will reside in memory for longer. Other
- * ```
- *      processes on the machines executing the Apache Beam could
- *      potentially compromise it.
- * ```
- * 3) The pepper will be serialized and sent between Apache
- * ```
- *      Beam workers. This means that vulnerable temporary files
- *      or network connections could leak key material.
- * ```
+ * Security concerns this introduces: The pepper could get logged. If logs are visible to engineers,
+ * this could be vulnerable to insider risk.
+ *
+ * The pepper will reside in memory for longer. Other processes on the machines executing the Apache
+ * Beam could potentially compromise it.
+ *
+ * The pepper will be serialized and sent between Apache Beam workers. This means that vulnerable
+ * temporary files or network connections could leak key material.
  */
 class HardCodedPepperProvider(private val pepper: ByteString) :
   SerializableFunction<Void?, ByteString> {

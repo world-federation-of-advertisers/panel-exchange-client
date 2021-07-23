@@ -20,20 +20,14 @@ import org.apache.beam.sdk.transforms.SerializableFunction
 /**
  * Takes in a cryptokey as ByteString and outputs the same ByteString
  *
- * Security concerns this introduces: 1) The crypto key could get logged. If logs are visible to
- * ```
- *      engineers, this could be vulnerable to insider risk.
- * ```
- * 2) The crypto key will reside in memory for longer. Other
- * ```
- *      processes on the machines executing the Apache Beam could
- *      potentially compromise it.
- * ```
- * 3) The crypto key will be serialized and sent between Apache
- * ```
- *      Beam workers. This means that vulnerable temporary files
- *      or network connections could leak key material.
- * ```
+ * The crypto key could get logged. If logs are visible to engineers, this could be vulnerable to
+ * insider risk.
+ *
+ * The crypto key will reside in memory for longer. Other processes on the machines executing the
+ * Apache Beam could potentially compromise it.
+ *
+ * The crypto key will be serialized and sent between Apache Beam workers. This means that
+ * vulnerable temporary files or network connections could leak key material.
  */
 class HardCodedCryptoKeyProvider(private val cryptoKey: ByteString) :
   SerializableFunction<Void?, ByteString> {
