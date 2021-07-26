@@ -14,6 +14,8 @@
 
 #include "wfa/panelmatch/client/eventpreprocessing/preprocess_events.h"
 
+#include <wfa/panelmatch/protocol/crypto/event_data_preprocessor.h>
+
 #include <string>
 
 #include "absl/base/port.h"
@@ -27,8 +29,10 @@
 #include "google/protobuf/descriptor.h"
 #include "google/protobuf/message.h"
 #include "gtest/gtest.h"
+#include "src/main/cc/wfa/panelmatch/protocol/crypto/event_data_preprocessor.h"
 #include "wfa/panelmatch/client/eventpreprocessing/preprocess_events.pb.h"
 
+class EventDataPreprocessor;
 namespace wfa::panelmatch::client {
 namespace {
 using ::testing::ContainerEq;
@@ -36,25 +40,30 @@ using ::testing::Eq;
 using ::testing::Ne;
 using ::testing::Not;
 using ::testing::Pointwise;
+using ::wfa::panelmatch::protocol::crypto::EventDataPreprocessor;
+using ::wfa::panelmatch::protocol::crypto::ProcessedData;
 
-TEST(PreprocessEventsTest, ReturnsUnimplemented) {
-  std::string test_id = "random-id-1";
-  std::string test_data = "random-data-1";
-  std::string test_crypto_key = "random-crypto_key-1";
-  std::string test_pepper = "random-pepper-1";
-
-  PreprocessEventsRequest test_request;
+PreprocessEventsRequest makeTestRequest(const char* id, const char* data,
+                                        const char* cryptokey,
+                                        const char* pepper) {
+  PreprocessEventsRequest request;
   PreprocessEventsRequest::UnprocessedEvent* unprocessed_event =
-      test_request.add_unprocessed_events();
-  unprocessed_event->set_id(test_id);
-  unprocessed_event->set_data(test_data);
-
-  test_request.set_crypto_key(test_crypto_key);
-  test_request.set_pepper(test_pepper);
-
-  auto test_response = PreprocessEvents(test_request);
-  EXPECT_THAT(test_response.status(),
-              StatusIs(absl::StatusCode::kUnimplemented, ""));
+      request.add_unprocessed_events();
+  unprocessed_event->set_id(id);
+  unprocessed_event->set_data("some-identifier");
+  request.set_crypto_key("test_crypto_key");
+  request.set_pepper("test_pepper");
+  return request;
 }
+
+// Test using actual implementations to ensure nothing crashes
+TEST(EventDataPreprocessorTests, actualValues) {
+  PreprocessEventsRequest test_request = makeTestRequest(
+      "some-identifier", "some-data", "test_crypto_key", "test_pepper");
+
+  ASSERT_OK_AND_ASSIGN(PreprocessEventsResponse processed,
+                       PreprocessEvents(test_request));
+}
+
 }  // namespace
 }  // namespace wfa::panelmatch::client
