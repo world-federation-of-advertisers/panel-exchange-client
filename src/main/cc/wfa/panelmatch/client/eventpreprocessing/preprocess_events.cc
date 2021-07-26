@@ -59,6 +59,9 @@ PreprocessEvents(
   std::unique_ptr<Aes> aes = GetAesSivCmac512();
   std::unique_ptr<Hkdf> hkdf = GetSha256Hkdf();
   const AesWithHkdf aes_hkdf = AesWithHkdf(std::move(hkdf), std::move(aes));
+  if (request.pepper().empty()) {
+    return absl::InvalidArgumentError("No pepper");
+  }
   EventDataPreprocessor preprocessor = EventDataPreprocessor(
       std::move(cryptor), SecretDataFromStringView(request.pepper()),
       &fingerprinter, &aes_hkdf);

@@ -41,7 +41,7 @@ using ::wfa::panelmatch::protocol::crypto::EventDataPreprocessor;
 using ::wfa::panelmatch::protocol::crypto::ProcessedData;
 
 // Test using actual implementations to ensure nothing crashes
-TEST(EventDataPreprocessorTests, actualValues) {
+TEST(EventDataPreprocessorTests, ActualValues) {
   PreprocessEventsRequest test_request;
   PreprocessEventsRequest::UnprocessedEvent* unprocessed_event =
       test_request.add_unprocessed_events();
@@ -52,20 +52,21 @@ TEST(EventDataPreprocessorTests, actualValues) {
 
   ASSERT_OK_AND_ASSIGN(PreprocessEventsResponse processed,
                        PreprocessEvents(test_request));
-  ASSERT_EQ(processed.processed_events_size(), 1);
+  EXPECT_EQ(processed.processed_events_size(), 1);
+  EXPECT_NE(processed.processed_events(0).encrypted_data(), "some-data");
 }
 
-TEST(EventDataPreprocessorTests, missingPepper) {
+TEST(EventDataPreprocessorTests, MissingPepper) {
   PreprocessEventsRequest test_request;
   PreprocessEventsRequest::UnprocessedEvent* unprocessed_event =
       test_request.add_unprocessed_events();
   unprocessed_event->set_id("some-id");
   unprocessed_event->set_data("some-data");
   test_request.set_crypto_key("some-cryptokey");
-  ASSERT_OK_AND_ASSIGN(PreprocessEventsResponse processed,
-                       PreprocessEvents(test_request));
+  ASSERT_THAT(PreprocessEvents(test_request).status(),
+              StatusIs(absl::StatusCode::kInvalidArgument, ""));
 }
-TEST(EventDataPreprocessorTests, missingCryptokey) {
+TEST(EventDataPreprocessorTests, MissingCryptokey) {
   PreprocessEventsRequest test_request;
   PreprocessEventsRequest::UnprocessedEvent* unprocessed_event =
       test_request.add_unprocessed_events();
@@ -73,56 +74,57 @@ TEST(EventDataPreprocessorTests, missingCryptokey) {
   unprocessed_event->set_data("some-data");
   test_request.set_pepper("some-pepper");
   ASSERT_THAT(PreprocessEvents(test_request).status(),
-              wfa::StatusIs(absl::StatusCode::kInvalidArgument, ""));
+              StatusIs(absl::StatusCode::kInvalidArgument, ""));
 }
-TEST(EventDataPreprocessorTests, missingUnprocessedEvents) {
+TEST(EventDataPreprocessorTests, MissingUnprocessedEvents) {
   PreprocessEventsRequest test_request;
   test_request.set_crypto_key("some-cryptokey");
   test_request.set_pepper("some-pepper");
   ASSERT_OK_AND_ASSIGN(PreprocessEventsResponse processed,
                        PreprocessEvents(test_request));
-  ASSERT_EQ(processed.processed_events_size(), 0);
+  EXPECT_EQ(processed.processed_events_size(), 0);
 }
-TEST(EventDataPreprocessorTests, missingId) {
+TEST(EventDataPreprocessorTests, MissingId) {
   PreprocessEventsRequest test_request;
   PreprocessEventsRequest::UnprocessedEvent* unprocessed_event =
       test_request.add_unprocessed_events();
   unprocessed_event->set_data("some-data");
   test_request.set_pepper("some-pepper");
   test_request.set_crypto_key("some-cryptokey");
-  ASSERT_OK_AND_ASSIGN(PreprocessEventsResponse processed,
-                       PreprocessEvents(test_request));
+  EXPECT_THAT(PreprocessEvents(test_request), IsOk());
 }
-TEST(EventDataPreprocessorTests, missingData) {
+TEST(EventDataPreprocessorTests, MissingData) {
   PreprocessEventsRequest test_request;
   PreprocessEventsRequest::UnprocessedEvent* unprocessed_event =
       test_request.add_unprocessed_events();
   unprocessed_event->set_id("some-id");
   test_request.set_pepper("some-pepper");
   test_request.set_crypto_key("some-cryptokey");
-  ASSERT_OK_AND_ASSIGN(PreprocessEventsResponse processed,
-                       PreprocessEvents(test_request));
+  EXPECT_THAT(PreprocessEvents(test_request), IsOk());
 }
-TEST(EventDataPreprocessorTests, multipleUnprocessedEvents) {
+TEST(EventDataPreprocessorTests, MultipleUnprocessedEvents) {
   PreprocessEventsRequest test_request;
   PreprocessEventsRequest::UnprocessedEvent* unprocessed_event =
       test_request.add_unprocessed_events();
   unprocessed_event->set_id("some-id");
-  unprocessed_event->set_data("some-data");
+  unprocessed_event->set_data("some-data1");
   PreprocessEventsRequest::UnprocessedEvent* unprocessed_event2 =
       test_request.add_unprocessed_events();
   unprocessed_event2->set_id("some-id");
-  unprocessed_event2->set_data("some-data");
+  unprocessed_event2->set_data("some-data2");
   PreprocessEventsRequest::UnprocessedEvent* unprocessed_event3 =
       test_request.add_unprocessed_events();
   unprocessed_event3->set_id("some-id");
-  unprocessed_event3->set_data("some-data");
+  unprocessed_event3->set_data("some-data3");
   test_request.set_crypto_key("some-cryptokey");
   test_request.set_pepper("some-pepper");
 
   ASSERT_OK_AND_ASSIGN(PreprocessEventsResponse processed,
                        PreprocessEvents(test_request));
-  ASSERT_EQ(processed.processed_events_size(), 3);
+  EXPECT_EQ(processed.processed_events_size(), 3);
+  EXPECT_NE(processed.processed_events(0).encrypted_data(), "some-data1");
+  EXPECT_NE(processed.processed_events(1).encrypted_data(), "some-data2");
+  EXPECT_NE(processed.processed_events(2).encrypted_data(), "some-data3");
 }
 }  // namespace
 }  // namespace wfa::panelmatch::client
