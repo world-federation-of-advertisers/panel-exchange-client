@@ -14,37 +14,11 @@
 
 package org.wfanet.panelmatch.client.eventpreprocessing
 
-import com.google.common.truth.Truth.assertThat
-import com.google.protobuf.ByteString
-import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
-import org.wfanet.panelmatch.client.PreprocessEventsRequest
 import org.wfanet.panelmatch.client.eventpreprocessing.testing.AbstractPreprocessEventsTest
 
 @RunWith(JUnit4::class)
 class JniPreprocessEventsTest : AbstractPreprocessEventsTest() {
   override val preprocessEvents: PreprocessEvents = JniPreprocessEvents()
-
-  @Test
-  fun `test`() {
-    val arbitraryId: ByteString = ByteString.copyFromUtf8("arbitrary-id")
-    val arbitraryData: ByteString = ByteString.copyFromUtf8("arbitrary-data")
-    val arbitraryCryptoKey: ByteString = ByteString.copyFromUtf8("arbitrary-crypto-key")
-    val arbitraryPepper: ByteString = ByteString.copyFromUtf8("arbitrary-pepper")
-
-    val request =
-      PreprocessEventsRequest.newBuilder()
-        .apply {
-          cryptoKey = arbitraryCryptoKey
-          pepper = arbitraryPepper
-          addUnprocessedEventsBuilder().apply {
-            id = arbitraryId
-            data = arbitraryData
-          }
-        }
-        .build()
-
-    assertThat(preprocessEvents.preprocess(request)).isNotNull()
-  }
 }

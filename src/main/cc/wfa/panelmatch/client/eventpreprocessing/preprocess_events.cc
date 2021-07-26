@@ -63,9 +63,8 @@ PreprocessEvents(
       std::move(cryptor), SecretDataFromStringView(request.pepper()),
       &fingerprinter, &aes_hkdf);
   PreprocessEventsResponse processed;
-  for (PreprocessEventsRequest::UnprocessedEvent u :
+  for (const PreprocessEventsRequest::UnprocessedEvent& u :
        request.unprocessed_events()) {
-    preprocessor.Process(u.id(), u.data());
     ASSIGN_OR_RETURN(ProcessedData data,
                      preprocessor.Process(u.id(), u.data()));
     PreprocessEventsResponse::ProcessedEvent* processed_event =
@@ -74,6 +73,5 @@ PreprocessEvents(
     processed_event->set_encrypted_id(data.encrypted_identifier);
   }
   return processed;
-
-}  // namespace wfa::panelmatch::client
+}
 }  // namespace wfa::panelmatch::client

@@ -18,14 +18,17 @@ import java.nio.file.Paths
 import org.wfanet.panelmatch.client.PreprocessEventsRequest
 import org.wfanet.panelmatch.client.PreprocessEventsResponse
 import org.wfanet.panelmatch.common.loadLibrary
+import org.wfanet.panelmatch.common.wrapJniException
 
 /** A [PreprocessEvents] implementation using the JNI [PreprocessEvents]. */
 class JniPreprocessEvents : PreprocessEvents {
 
   override fun preprocess(request: PreprocessEventsRequest): PreprocessEventsResponse {
-    return PreprocessEventsResponse.parseFrom(
-      EventPreprocessing.preprocessEventsWrapper(request.toByteArray())
-    )
+    return wrapJniException {
+      PreprocessEventsResponse.parseFrom(
+        EventPreprocessing.preprocessEventsWrapper(request.toByteArray())
+      )
+    }
   }
 
   companion object {
