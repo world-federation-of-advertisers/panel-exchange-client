@@ -29,20 +29,18 @@ class JniPreprocessEventsTest : AbstractPreprocessEventsTest() {
   override val preprocessEvents: PreprocessEvents = JniPreprocessEvents()
   @Test
   fun testJniWrapExceptionPepper() {
-    val noPepper =
-      assertFailsWith(JniException::class) {
-        val request =
-          PreprocessEventsRequest.newBuilder()
-            .apply {
-              cryptoKey = ByteString.copyFromUtf8("arbitrary-cryptokey")
-              addUnprocessedEventsBuilder().apply {
-                id = ByteString.copyFromUtf8("arbitrary-id")
-                data = ByteString.copyFromUtf8("arbitrary-data")
-              }
-            }
-            .build()
-        preprocessEvents.preprocess(request)
-      }
+
+    val request =
+      PreprocessEventsRequest.newBuilder()
+        .apply {
+          cryptoKey = ByteString.copyFromUtf8("arbitrary-cryptokey")
+          addUnprocessedEventsBuilder().apply {
+            id = ByteString.copyFromUtf8("arbitrary-id")
+            data = ByteString.copyFromUtf8("arbitrary-data")
+          }
+        }
+        .build()
+    val noPepper = assertFailsWith(JniException::class) { preprocessEvents.preprocess(request) }
     assertThat(noPepper.message).contains("INVALID ARGUMENT: Empty Pepper")
   }
   @Test

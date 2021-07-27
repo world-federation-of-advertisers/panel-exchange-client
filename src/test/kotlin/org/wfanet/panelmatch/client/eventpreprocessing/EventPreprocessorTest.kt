@@ -15,11 +15,13 @@
 package org.wfanet.panelmatch.client.eventpreprocessing
 
 import com.google.protobuf.ByteString
+import kotlin.test.assertNotEquals
 import kotlin.test.assertNotNull
 import org.apache.beam.sdk.coders.Coder
 import org.apache.beam.sdk.coders.KvCoder
 import org.apache.beam.sdk.extensions.protobuf.ByteStringCoder
 import org.apache.beam.sdk.values.KV
+import org.apache.beam.sdk.values.PCollection
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
@@ -31,19 +33,23 @@ import org.wfanet.panelmatch.common.beam.testing.BeamTestBase
 class EventPreprocessorTest : BeamTestBase() {
   @Test
   fun testEncrypt() {
-    val coder: Coder<KV<ByteString, ByteString>> =
-      KvCoder.of(ByteStringCoder.of(), ByteStringCoder.of())
-    val collection =
-      pcollectionOf("collection1", kvOf("A", "B"), kvOf("C", "D"), kvOf("C", "D"), coder = coder)
-    val encrypted =
-      eventPreprocessor(collection, 8, toByteString("pepper"), toByteString("cryptokey"))
+
+    val events = eventsOf("A" to "B", "C" to "D")
+    val encrypted = preprocessEvents(events, 8, "pepper".toByteString(), "cryptokey".toByteString())
     assertNotNull(encrypted)
+    assertNotEquals(events, encrypted)
   }
 
-  fun kvOf(key: String, value: String): KV<ByteString, ByteString> {
-    return kvOf(toByteString(key), toByteString(value))
+  fun eventsOf(vararg pairs: Pair<String, String>): PCollection<KV<ByteString, ByteString>> {
+    val coder: Coder<KV<ByteString, ByteString>> =
+      KvCoder.of(ByteStringCoder.of(), ByteStringCoder.of())
+    return pcollectionOf(
+      "Create Events",
+      *pairs.map { kvOf(it.first.toByteString(), it.second.toByteString()) }.toTypedArray(),
+      coder = coder
+    )
   }
-  fun toByteString(input: String): ByteString {
-    return ByteString.copyFromUtf8(input)
+  private fun String.toByteString(): ByteString {
+    return ByteString.copyFromUtf8(this)
   }
 }

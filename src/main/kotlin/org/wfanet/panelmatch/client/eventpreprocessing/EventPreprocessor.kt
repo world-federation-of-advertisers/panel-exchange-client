@@ -16,17 +16,18 @@ package org.wfanet.panelmatch.client.eventpreprocessing
 
 import com.google.protobuf.ByteString
 import org.apache.beam.sdk.transforms.ParDo
+import org.apache.beam.sdk.transforms.SerializableFunction
 import org.apache.beam.sdk.values.KV
 import org.apache.beam.sdk.values.PCollection
 
 /** Runs preprocessing DoFns on input [PCollection] and outputs encrypted [PCollection] */
-fun eventPreprocessor(
-  collection: PCollection<KV<ByteString, ByteString>>,
+fun preprocessEvents(
+  events: PCollection<KV<ByteString, ByteString>>,
   maxByteSize: Int,
   pepper: ByteString,
   cryptokey: ByteString
 ): PCollection<KV<Long, ByteString>> {
-  return collection
+  return events
     .apply(ParDo.of(BatchingDoFn(maxByteSize, EventSize)))
     .apply(
       ParDo.of(
@@ -37,4 +38,13 @@ fun eventPreprocessor(
         )
       )
     )
+}
+
+fun preprocessEvents(
+  events: PCollection<KV<ByteString, ByteString>>,
+  maxByteSize: Int,
+  pepperProvider: SerializableFunction<Void, ByteString>,
+  cryptoKeyProvider: SerializableFunction<Void, ByteString>
+) {
+  return preprocessEvents(events, maxByteSize, pepperProvider, cryptoKeyProvider)
 }
