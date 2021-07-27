@@ -28,14 +28,15 @@ import org.junit.runners.JUnit4
 import org.wfanet.panelmatch.common.beam.kvOf
 import org.wfanet.panelmatch.common.beam.testing.BeamTestBase
 
-/** Unit tests for [eventPreprocessor]. */
+/** Unit tests for [preprocessEventsInPipeline]. */
 @RunWith(JUnit4::class)
-class EventPreprocessorTest : BeamTestBase() {
+class PreprocessEventsInPipelineTest : BeamTestBase() {
   @Test
   fun testEncrypt() {
 
     val events = eventsOf("A" to "B", "C" to "D")
-    val encrypted = preprocessEvents(events, 8, "pepper".toByteString(), "cryptokey".toByteString())
+    val encrypted =
+      preprocessEventsInPipeline(events, 8, "pepper".toByteString(), "cryptokey".toByteString())
     assertNotNull(encrypted)
     assertNotEquals(events, encrypted)
   }

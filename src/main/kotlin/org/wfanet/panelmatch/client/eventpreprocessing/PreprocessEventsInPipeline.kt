@@ -21,7 +21,7 @@ import org.apache.beam.sdk.values.KV
 import org.apache.beam.sdk.values.PCollection
 
 /** Runs preprocessing DoFns on input [PCollection] and outputs encrypted [PCollection] */
-fun preprocessEvents(
+fun preprocessEventsInPipeline(
   events: PCollection<KV<ByteString, ByteString>>,
   maxByteSize: Int,
   pepper: ByteString,
@@ -40,11 +40,11 @@ fun preprocessEvents(
     )
 }
 
-fun preprocessEvents(
+fun preprocessEventsInPipeline(
   events: PCollection<KV<ByteString, ByteString>>,
   maxByteSize: Int,
   pepperProvider: SerializableFunction<Void, ByteString>,
   cryptoKeyProvider: SerializableFunction<Void, ByteString>
 ) {
-  return preprocessEvents(events, maxByteSize, pepperProvider, cryptoKeyProvider)
+  return preprocessEventsInPipeline(events, maxByteSize, pepperProvider, cryptoKeyProvider)
 }

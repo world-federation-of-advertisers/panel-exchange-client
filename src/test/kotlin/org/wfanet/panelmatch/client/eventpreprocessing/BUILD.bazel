@@ -102,9 +102,9 @@ kt_jvm_test(
 )
 
 kt_jvm_test(
-    name = "EventPreprocessorTest",
-    srcs = ["EventPreprocessorTest.kt"],
-    test_class = "org.wfanet.panelmatch.client.eventpreprocessing.EventPreprocessorTest",
+    name = "PreprocessEventsInPipelineTest",
+    srcs = ["PreprocessEventsInPipelineTest.kt"],
+    test_class = "org.wfanet.panelmatch.client.eventpreprocessing.PreprocessEventsInPipelineTest",
     deps = [
         "//imports/java/com/google/common:guava",
         "//imports/java/org/apache/beam:core",
