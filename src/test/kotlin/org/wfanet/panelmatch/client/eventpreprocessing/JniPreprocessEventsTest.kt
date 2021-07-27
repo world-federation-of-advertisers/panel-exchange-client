@@ -47,19 +47,18 @@ class JniPreprocessEventsTest : AbstractPreprocessEventsTest() {
   }
   @Test
   fun testJniWrapExceptionCryptoKey() {
-    val noCryptoKey =
-      assertFailsWith(JniException::class) {
-        val request =
-          PreprocessEventsRequest.newBuilder()
-            .apply {
-              pepper = ByteString.copyFromUtf8("arbitrary-pepper")
-              addUnprocessedEventsBuilder().apply {
-                id = ByteString.copyFromUtf8("arbitrary-id")
-                data = ByteString.copyFromUtf8("arbitrary-data")
-              }
+    assertFailsWith(JniException::class) {
+      val request =
+        PreprocessEventsRequest.newBuilder()
+          .apply {
+            pepper = ByteString.copyFromUtf8("arbitrary-pepper")
+            addUnprocessedEventsBuilder().apply {
+              id = ByteString.copyFromUtf8("arbitrary-id")
+              data = ByteString.copyFromUtf8("arbitrary-data")
             }
-            .build()
-        preprocessEvents.preprocess(request)
-      }
+          }
+          .build()
+      preprocessEvents.preprocess(request)
+    }
   }
 }

@@ -46,3 +46,17 @@ kt_jvm_library(
         "//src/main/proto/wfa/panelmatch/client/eventpreprocessing:preprocess_events_java_proto",
     ],
 )
+
+kt_jvm_library(
+    name = "eventpreprocessor",
+    srcs = ["EventPreprocessor.kt"],
+    deps = [
+        "//imports/java/org/apache/beam:core",
+        "//src/main/kotlin/org/wfanet/panelmatch/client/eventpreprocessing:batchingdofn",
+        "//src/main/kotlin/org/wfanet/panelmatch/client/eventpreprocessing:encryptiondofn",
+        "//src/main/kotlin/org/wfanet/panelmatch/common",
+        "//src/main/kotlin/org/wfanet/panelmatch/common/beam",
+        "//src/main/proto/wfa/panelmatch/client/eventpreprocessing:preprocess_events_java_proto",
+        "@wfa_common_jvm//imports/java/com/google/protobuf",
+    ],
+)
