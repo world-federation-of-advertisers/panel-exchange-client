@@ -60,7 +60,7 @@ PreprocessEvents(
   std::unique_ptr<Hkdf> hkdf = GetSha256Hkdf();
   const AesWithHkdf aes_hkdf = AesWithHkdf(std::move(hkdf), std::move(aes));
   if (request.pepper().empty()) {
-    return absl::InvalidArgumentError("No pepper");
+    return absl::InvalidArgumentError("INVALID ARGUMENT: Empty Pepper");
   }
   EventDataPreprocessor preprocessor = EventDataPreprocessor(
       std::move(cryptor), SecretDataFromStringView(request.pepper()),
