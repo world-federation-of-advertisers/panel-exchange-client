@@ -91,16 +91,16 @@ class BatchLookupWorkflow(
     queriesByShard: PCollection<KV<ShardId, QueryBundle>>
   ): PCollection<KV<KV<ShardId, QueryId>, Result>> {
     return shardedDatabase.join(queriesByShard, name = "Join Database and queryMetadata") {
-      key,
-      shards,
-      queries ->
+      key: ShardId,
+      shards: Iterable<DatabaseShard>,
+      queries: Iterable<QueryBundle> ->
       val queriesList = queries.toList()
 
       val nonEmptyShards: Iterable<DatabaseShard> =
         if (shards.iterator().hasNext()) {
           shards
         } else {
-          listOf(DatabaseShard(key, emptyList()))
+          listOf(databaseShardOf(key, emptyList()))
         }
 
       for (shard in nonEmptyShards) {
@@ -125,7 +125,7 @@ class BatchLookupWorkflow(
       .groupByKey("Group by Shard and Bucket")
       .map {
         val combinedValues = it.value.fold(ByteString.EMPTY) { acc, e -> acc.concat(e.value.data) }
-        kvOf(it.key.key, Bucket(it.key.value, combinedValues))
+        kvOf(it.key.key, bucketOf(it.key.value, combinedValues))
       }
       .groupByKey("Group by Shard")
       .parDo {
@@ -137,9 +137,9 @@ class BatchLookupWorkflow(
         val shardId: ShardId = requireNotNull(it.key)
         val buckets: Iterable<Bucket> = requireNotNull(it.value)
         for (bucket in buckets) {
-          val bucketSize = bucket.data.size()
+          val bucketSize = bucket.payload.size()
           if (size + bucketSize > parameters.subshardSizeBytes) {
-            yield(kvOf(shardId, DatabaseShard(shardId, buffer)))
+            yield(kvOf(shardId, databaseShardOf(shardId, buffer)))
             buffer = mutableListOf()
             size = 0
           }
@@ -147,7 +147,7 @@ class BatchLookupWorkflow(
           buffer.add(bucket)
         }
         if (buffer.isNotEmpty()) {
-          yield(kvOf(shardId, DatabaseShard(shardId, buffer)))
+          yield(kvOf(shardId, databaseShardOf(shardId, buffer)))
         }
       }
   }

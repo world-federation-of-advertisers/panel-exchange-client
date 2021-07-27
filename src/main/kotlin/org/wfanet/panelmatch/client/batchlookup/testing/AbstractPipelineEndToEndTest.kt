@@ -27,8 +27,8 @@ import org.wfanet.panelmatch.client.batchlookup.DatabaseKey
 import org.wfanet.panelmatch.client.batchlookup.Plaintext
 import org.wfanet.panelmatch.client.batchlookup.QueryBundle
 import org.wfanet.panelmatch.client.batchlookup.QueryEvaluator
-import org.wfanet.panelmatch.client.batchlookup.QueryId
-import org.wfanet.panelmatch.client.batchlookup.registerPirCoders
+import org.wfanet.panelmatch.client.batchlookup.queryIdOf
+import org.wfanet.panelmatch.client.batchlookup.registerBatchLookupCoders
 import org.wfanet.panelmatch.common.beam.testing.BeamTestBase
 import org.wfanet.panelmatch.common.beam.testing.assertThat
 
@@ -41,7 +41,7 @@ abstract class AbstractPipelineEndToEndTest : BeamTestBase() {
 
   @Before
   fun registerCoders() {
-    pipeline.registerPirCoders()
+    pipeline.registerBatchLookupCoders()
   }
 
   @Test
@@ -70,7 +70,7 @@ abstract class AbstractPipelineEndToEndTest : BeamTestBase() {
       rawDatabase.mapKeys { DatabaseKey(it.key) }.mapValues { Plaintext(it.value) }
     val databasePCollection = pipeline.apply("Create Database", Create.of(database))
 
-    val rawQueries = keys.take(3).mapIndexed { i, key -> key to QueryId(i) }
+    val rawQueries = keys.take(3).mapIndexed { i, key -> key to queryIdOf(i) }
     val expectedResults: List<String> = rawQueries.map { rawDatabase[it.first]!!.toStringUtf8() }
 
     val bucketing =

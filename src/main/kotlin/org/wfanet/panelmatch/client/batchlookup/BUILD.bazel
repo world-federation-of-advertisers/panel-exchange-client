@@ -12,7 +12,10 @@ kt_jvm_library(
         "//imports/java/com/google/common:guava",
         "//imports/java/org/apache/beam:core",
         "//imports/java/org/apache/beam:protobuf",
+        "//src/main/kotlin/org/wfanet/panelmatch/common",
         "//src/main/kotlin/org/wfanet/panelmatch/common/beam",
+        "//src/main/proto/wfa/panelmatch/client/batchlookup:query_evaluator_java_proto",
+        "//src/main/swig/wfanet/panelmatch/client/batchlookup:query_evaluator",
         "@wfa_common_jvm//imports/java/com/google/protobuf/util",
     ],
 )

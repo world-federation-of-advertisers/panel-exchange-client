@@ -34,14 +34,14 @@ class BucketingTest {
   @Test
   fun `normal usage`() {
     val bucketing = Bucketing(numShards = 7, numBucketsPerShard = 3)
-    assertThat(bucketing.apply(0)).isEqualTo(ShardId(0) to BucketId(0))
-    assertThat(bucketing.apply(1)).isEqualTo(ShardId(1) to BucketId(0))
+    assertThat(bucketing.apply(0)).isEqualTo(shardIdOf(0) to bucketIdOf(0))
+    assertThat(bucketing.apply(1)).isEqualTo(shardIdOf(1) to bucketIdOf(0))
 
     // 9 % 7 == 2, (9 / 7) % 3 == 1
-    assertThat(bucketing.apply(9)).isEqualTo(ShardId(2) to BucketId(1))
+    assertThat(bucketing.apply(9)).isEqualTo(shardIdOf(2) to bucketIdOf(1))
 
     // 1000 % 7 == 6, (1000 / 7) % 3 == 1
-    assertThat(bucketing.apply(1000)).isEqualTo(ShardId(6) to BucketId(1))
+    assertThat(bucketing.apply(1000)).isEqualTo(shardIdOf(6) to bucketIdOf(1))
   }
 
   @Test
@@ -50,28 +50,28 @@ class BucketingTest {
 
     // -2^63 is 2^63 when interpreted as unsigned.
     // 2^63 % 7 == 1, (2^63 / 7) % 3 == 1
-    assertThat(bucketing.apply(Long.MIN_VALUE)).isEqualTo(ShardId(1) to BucketId(1))
+    assertThat(bucketing.apply(Long.MIN_VALUE)).isEqualTo(shardIdOf(1) to bucketIdOf(1))
 
     // -1L is 2^64-1 when interpreted as unsigned.
     // (2^64-1) % 7 == 1, ((2^64-1) / 7) % 3 == 2
-    assertThat(bucketing.apply(-1L)).isEqualTo(ShardId(1) to BucketId(2))
+    assertThat(bucketing.apply(-1L)).isEqualTo(shardIdOf(1) to bucketIdOf(2))
   }
 
   @Test
   fun `single shard`() {
     val bucketing = Bucketing(numShards = 1, numBucketsPerShard = 3)
-    assertThat(bucketing.apply(0)).isEqualTo(ShardId(0) to BucketId(0))
-    assertThat(bucketing.apply(1)).isEqualTo(ShardId(0) to BucketId(1))
-    assertThat(bucketing.apply(2)).isEqualTo(ShardId(0) to BucketId(2))
-    assertThat(bucketing.apply(3)).isEqualTo(ShardId(0) to BucketId(0))
-    assertThat(bucketing.apply(10)).isEqualTo(ShardId(0) to BucketId(1))
+    assertThat(bucketing.apply(0)).isEqualTo(shardIdOf(0) to bucketIdOf(0))
+    assertThat(bucketing.apply(1)).isEqualTo(shardIdOf(0) to bucketIdOf(1))
+    assertThat(bucketing.apply(2)).isEqualTo(shardIdOf(0) to bucketIdOf(2))
+    assertThat(bucketing.apply(3)).isEqualTo(shardIdOf(0) to bucketIdOf(0))
+    assertThat(bucketing.apply(10)).isEqualTo(shardIdOf(0) to bucketIdOf(1))
   }
 
   @Test
   fun `single bucket`() {
     val bucketing = Bucketing(numShards = 50, numBucketsPerShard = 1)
-    assertThat(bucketing.apply(0)).isEqualTo(ShardId(0) to BucketId(0))
-    assertThat(bucketing.apply(1)).isEqualTo(ShardId(1) to BucketId(0))
-    assertThat(bucketing.apply(53)).isEqualTo(ShardId(3) to BucketId(0))
+    assertThat(bucketing.apply(0)).isEqualTo(shardIdOf(0) to bucketIdOf(0))
+    assertThat(bucketing.apply(1)).isEqualTo(shardIdOf(1) to bucketIdOf(0))
+    assertThat(bucketing.apply(53)).isEqualTo(shardIdOf(3) to bucketIdOf(0))
   }
 }

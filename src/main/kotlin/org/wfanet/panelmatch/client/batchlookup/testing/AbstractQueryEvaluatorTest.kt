@@ -20,13 +20,15 @@ import java.lang.IllegalArgumentException
 import kotlin.test.assertFailsWith
 import org.junit.Test
 import org.wfanet.panelmatch.client.batchlookup.Bucket
-import org.wfanet.panelmatch.client.batchlookup.BucketId
 import org.wfanet.panelmatch.client.batchlookup.DatabaseShard
 import org.wfanet.panelmatch.client.batchlookup.QueryBundle
 import org.wfanet.panelmatch.client.batchlookup.QueryEvaluator
-import org.wfanet.panelmatch.client.batchlookup.QueryId
 import org.wfanet.panelmatch.client.batchlookup.Result
-import org.wfanet.panelmatch.client.batchlookup.ShardId
+import org.wfanet.panelmatch.client.batchlookup.bucketIdOf
+import org.wfanet.panelmatch.client.batchlookup.bucketOf
+import org.wfanet.panelmatch.client.batchlookup.databaseShardOf
+import org.wfanet.panelmatch.client.batchlookup.queryIdOf
+import org.wfanet.panelmatch.client.batchlookup.shardIdOf
 import org.wfanet.panelmatch.client.batchlookup.testing.QueryEvaluatorTestHelper.DecodedResult
 
 /** Tests for [QueryEvaluator]s. */
@@ -52,10 +54,10 @@ abstract class AbstractQueryEvaluatorTest {
     val results = evaluator.executeQueries(database, queryBundles)
     assertThat(results.map { it.queryMetadata.queryId to helper.decodeResultData(it) })
       .containsExactly(
-        QueryId(500) to makeFakeBucketData(bucket = 0, shard = 100),
-        QueryId(501) to makeFakeBucketData(bucket = 1, shard = 100),
-        QueryId(502) to ByteString.EMPTY,
-        QueryId(503) to ByteString.EMPTY
+        queryIdOf(500) to makeFakeBucketData(bucket = 0, shard = 100),
+        queryIdOf(501) to makeFakeBucketData(bucket = 1, shard = 100),
+        queryIdOf(502) to ByteString.EMPTY,
+        queryIdOf(503) to ByteString.EMPTY
       )
   }
 
@@ -95,14 +97,14 @@ abstract class AbstractQueryEvaluatorTest {
 
   @Test
   fun `combineResults single result`() {
-    val someQueryId = 5
+    val somequeryIdOf = 5
 
-    assertThat(runCombineResults(resultOf(someQueryId, ByteString.EMPTY)))
-      .isEqualTo(DecodedResult(someQueryId, ByteString.EMPTY))
+    assertThat(runCombineResults(resultOf(somequeryIdOf, ByteString.EMPTY)))
+      .isEqualTo(DecodedResult(somequeryIdOf, ByteString.EMPTY))
 
     val rawPayload = "some-raw-payload".toByteString()
-    assertThat(runCombineResults(resultOf(someQueryId, rawPayload)))
-      .isEqualTo(DecodedResult(someQueryId, rawPayload))
+    assertThat(runCombineResults(resultOf(somequeryIdOf, rawPayload)))
+      .isEqualTo(DecodedResult(somequeryIdOf, rawPayload))
   }
 
   private fun runCombineResults(vararg results: Result): DecodedResult {
@@ -111,22 +113,25 @@ abstract class AbstractQueryEvaluatorTest {
 
   private fun queryBundleOf(shard: Int, queries: List<Pair<Int, Int>>): QueryBundle {
     return helper.makeQueryBundle(
-      ShardId(shard),
-      queries.map { QueryId(it.first) to BucketId(it.second) }
+      shardIdOf(shard),
+      queries.map { queryIdOf(it.first) to bucketIdOf(it.second) }
     )
   }
 
   private fun resultOf(query: Int, rawPayload: ByteString): Result {
-    return helper.makeResult(QueryId(query), rawPayload)
+    return helper.makeResult(queryIdOf(query), rawPayload)
   }
 }
 
 private fun bucketOf(id: Int, data: ByteString): Bucket {
-  return Bucket(BucketId(id), data)
+  return bucketOf(bucketIdOf(id), data)
 }
 
 private fun databaseShardOf(shard: Int, buckets: List<Int>): DatabaseShard {
-  return DatabaseShard(ShardId(shard), buckets.map { bucketOf(it, makeFakeBucketData(it, shard)) })
+  return databaseShardOf(
+    shardIdOf(shard),
+    buckets.map { bucketOf(it, makeFakeBucketData(it, shard)) }
+  )
 }
 
 private fun makeFakeBucketData(bucket: Int, shard: Int): ByteString {

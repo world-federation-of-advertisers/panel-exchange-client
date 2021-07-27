@@ -15,6 +15,7 @@
 package org.wfanet.panelmatch.client.batchlookup
 
 import com.google.common.truth.Truth.assertThat
+import com.google.common.truth.extensions.proto.ProtoTruth.assertThat
 import com.google.protobuf.ByteString
 import org.apache.beam.sdk.values.KV
 import org.apache.beam.sdk.values.PCollection
@@ -43,7 +44,7 @@ class PipelineTest : BeamTestBase() {
 
   @Before
   fun registerCoders() {
-    pipeline.registerPirCoders()
+    pipeline.registerBatchLookupCoders()
   }
 
   @Test
@@ -137,8 +138,8 @@ class PipelineTest : BeamTestBase() {
     assertThat(runWorkflow(queryBundles, parameters)).satisfies {
       val list = it.toList()
       assertThat(list).hasSize(1)
-      assertThat(list[0].queryMetadata).isEqualTo(QueryMetadata(QueryId(17), ByteString.EMPTY))
-      assertThat(list[0].data.toStringUtf8().toList())
+      assertThat(list[0].queryMetadata).isEqualTo(queryMetadataOf(queryIdOf(17), ByteString.EMPTY))
+      assertThat(list[0].payload.toStringUtf8().toList())
         .containsExactlyElementsIn("abcdefhijklm".toList())
       null
     }
@@ -157,13 +158,13 @@ class PipelineTest : BeamTestBase() {
 }
 
 private fun resultOf(query: Int, rawPayload: String): Result {
-  return PlaintextQueryEvaluatorTestHelper.makeResult(QueryId(query), rawPayload.toByteString())
+  return PlaintextQueryEvaluatorTestHelper.makeResult(queryIdOf(query), rawPayload.toByteString())
 }
 
 private fun queryBundleOf(shard: Int, queries: List<Pair<Int, Int>>): QueryBundle {
   return PlaintextQueryEvaluatorTestHelper.makeQueryBundle(
-    ShardId(shard),
-    queries.map { QueryId(it.first) to BucketId(it.second) }
+    shardIdOf(shard),
+    queries.map { queryIdOf(it.first) to bucketIdOf(it.second) }
   )
 }
 

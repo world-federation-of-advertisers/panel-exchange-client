@@ -31,7 +31,7 @@ class Bucketing(private val numShards: Int, private val numBucketsPerShard: Int)
   private fun shard(value: Long): ShardId {
     val remainder = java.lang.Long.remainderUnsigned(value, numShards.toLong())
     // The conversion here is safe because 0 <= remainder < numShards and numShards is an Int.
-    return ShardId(remainder.toInt())
+    return shardIdOf(remainder.toInt())
   }
 
   private fun bucket(value: Long): BucketId {
@@ -39,6 +39,6 @@ class Bucketing(private val numShards: Int, private val numBucketsPerShard: Int)
     val remainder = quotient % numBucketsPerShard
     // The conversion here is safe because 0 <= remainder < numBucketsPerShard and
     // numBucketsPerShard is an Int.
-    return BucketId(remainder.toInt())
+    return bucketIdOf(remainder.toInt())
   }
 }

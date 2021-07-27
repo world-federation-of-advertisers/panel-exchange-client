@@ -14,63 +14,7 @@
 
 package org.wfanet.panelmatch.client.batchlookup
 
-import com.google.protobuf.ByteString
 import java.io.Serializable
-
-/** Strongly typed shard identifier. */
-data class ShardId(val id: Int)
-
-/** Strongly typed bucket identifier. */
-data class BucketId(val id: Int)
-
-/** An input database bucket. */
-data class Bucket(val bucketId: BucketId, val data: ByteString) {
-  override fun toString(): String {
-    return "Bucket(id=${bucketId.id}, data=${data.toDebugString()})"
-  }
-}
-
-/** Strongly typed queryMetadata identifier. */
-data class QueryId(val id: Int)
-
-/** Metadata associated with a query. */
-data class QueryMetadata(val queryId: QueryId, val metadata: ByteString) {
-  override fun toString(): String {
-    return "QueryMetadata(queryId=${queryId.id}, metadata=${metadata.toDebugString()})"
-  }
-}
-
-/**
- * A collection of queries all belonging to one shard that are packed into ciphertexts.
- *
- * @property shardId the shard all the queries belong to
- * @property queryMetadata metadata for the queries
- * @property data serialized ciphertexts into which the query data itself is packed
- */
-data class QueryBundle(
-  val shardId: ShardId,
-  val queryMetadata: List<QueryMetadata>,
-  val data: ByteString
-)
-
-/** Holds all or some of the buckets assigned to the same shard. */
-data class DatabaseShard(val shardId: ShardId, val buckets: List<Bucket>) {
-  override fun toString(): String {
-    return "DatabaseShard(shard=${shardId.id}, buckets=$buckets)"
-  }
-}
-
-/** The result of executing a query on some buckets. */
-data class Result(val queryMetadata: QueryMetadata, val data: ByteString) {
-  override fun toString(): String {
-    return "Result(queryId=${queryMetadata.queryId.id}, data=${data.toDebugString()})"
-  }
-}
-
-private fun ByteString.toDebugString(): String {
-  if (isValidUtf8) return toStringUtf8()
-  return toByteArray().toString()
-}
 
 /** Provides core batch lookup operations. */
 interface QueryEvaluator : Serializable {
