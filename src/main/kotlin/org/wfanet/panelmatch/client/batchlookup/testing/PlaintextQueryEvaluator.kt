@@ -20,6 +20,7 @@ import org.wfanet.panelmatch.client.batchlookup.DatabaseShard
 import org.wfanet.panelmatch.client.batchlookup.QueryBundle
 import org.wfanet.panelmatch.client.batchlookup.QueryEvaluator
 import org.wfanet.panelmatch.client.batchlookup.Result
+import org.wfanet.panelmatch.client.batchlookup.resultOf
 
 object PlaintextQueryEvaluator : QueryEvaluator {
   override fun executeQueries(
@@ -47,20 +48,20 @@ object PlaintextQueryEvaluator : QueryEvaluator {
       require(result.queryMetadata.queryId.id == queryId)
     }
 
-    return resultsList.singleOrNull { !it.data.isEmpty } ?: resultsList.first()
+    return resultsList.singleOrNull { !it.payload.isEmpty } ?: resultsList.first()
   }
 
   private fun query(shard: DatabaseShard, bundle: QueryBundle): List<Result> {
-    val queriedBuckets = ListValue.parseFrom(bundle.data)
-    require(queriedBuckets.valuesCount == bundle.queryMetadata.size)
+    val queriedBuckets = ListValue.parseFrom(bundle.payload)
+    require(queriedBuckets.valuesCount == bundle.queryMetadataList.size)
     val results = mutableListOf<Result>()
-    for ((metadata, queriedBucket) in bundle.queryMetadata zip queriedBuckets.valuesList) {
+    for ((metadata, queriedBucket) in bundle.queryMetadataList zip queriedBuckets.valuesList) {
       val result =
         shard
-          .buckets
+          .bucketsList
           .filter { it.bucketId.id == queriedBucket.stringValue.toInt() }
-          .map { Result(metadata, it.data) }
-          .ifEmpty { listOf(Result(metadata, ByteString.EMPTY)) }
+          .map { resultOf(metadata, it.payload) }
+          .ifEmpty { listOf(resultOf(metadata, ByteString.EMPTY)) }
           .single()
       results.add(result)
     }

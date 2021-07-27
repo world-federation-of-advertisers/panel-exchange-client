@@ -12,19 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package org.wfanet.panelmatch.client.batchlookup
+syntax = "proto3";
 
-import java.io.Serializable
+package wfa.panelmatch.client.batchlookup;
 
-/** Provides core batch lookup operations. */
-interface QueryEvaluator : Serializable {
-  /** Executes [queryBundles] on [shards]. */
-  fun executeQueries(shards: List<DatabaseShard>, queryBundles: List<QueryBundle>): List<Result>
+option java_package = "org.wfanet.panelmatch.client.batchlookup";
+option java_multiple_files = true;
 
-  /**
-   * Combines [results] into a single [Result].
-   *
-   * @throws IllegalArgumentException if [results] do not all have the same [QueryId].
-   */
-  fun combineResults(results: Sequence<Result>): Result
+message DatabaseKey {
+  fixed64 id = 1;
+}
+
+message Plaintext {
+  bytes payload = 1;
 }

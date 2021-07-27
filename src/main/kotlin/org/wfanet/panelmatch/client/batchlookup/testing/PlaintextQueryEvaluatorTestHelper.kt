@@ -19,22 +19,24 @@ import com.google.protobuf.ListValue
 import org.wfanet.panelmatch.client.batchlookup.BucketId
 import org.wfanet.panelmatch.client.batchlookup.QueryBundle
 import org.wfanet.panelmatch.client.batchlookup.QueryId
-import org.wfanet.panelmatch.client.batchlookup.QueryMetadata
 import org.wfanet.panelmatch.client.batchlookup.Result
 import org.wfanet.panelmatch.client.batchlookup.ShardId
+import org.wfanet.panelmatch.client.batchlookup.queryBundleOf
+import org.wfanet.panelmatch.client.batchlookup.queryMetadataOf
+import org.wfanet.panelmatch.client.batchlookup.resultOf
 
 object PlaintextQueryEvaluatorTestHelper : QueryEvaluatorTestHelper {
   override fun decodeResultData(result: Result): ByteString {
-    return result.data
+    return result.payload
   }
 
   override fun makeQueryBundle(
     shard: ShardId,
     queries: List<Pair<QueryId, BucketId>>
   ): QueryBundle {
-    return QueryBundle(
+    return queryBundleOf(
       shard,
-      queries.map { QueryMetadata(it.first, ByteString.EMPTY) },
+      queries.map { queryMetadataOf(it.first, ByteString.EMPTY) },
       ListValue.newBuilder()
         .apply {
           for (query in queries) {
@@ -47,6 +49,6 @@ object PlaintextQueryEvaluatorTestHelper : QueryEvaluatorTestHelper {
   }
 
   override fun makeResult(query: QueryId, rawPayload: ByteString): Result {
-    return Result(QueryMetadata(query, ByteString.EMPTY), rawPayload)
+    return resultOf(queryMetadataOf(query, ByteString.EMPTY), rawPayload)
   }
 }

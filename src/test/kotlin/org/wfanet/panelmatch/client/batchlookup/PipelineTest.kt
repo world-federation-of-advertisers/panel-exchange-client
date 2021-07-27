@@ -15,10 +15,10 @@
 package org.wfanet.panelmatch.client.batchlookup
 
 import com.google.common.truth.Truth.assertThat
+import com.google.common.truth.extensions.proto.ProtoTruth.assertThat
 import com.google.protobuf.ByteString
 import org.apache.beam.sdk.values.KV
 import org.apache.beam.sdk.values.PCollection
-import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
@@ -39,11 +39,6 @@ class PipelineTest : BeamTestBase() {
   ): PCollection<Result> {
     return BatchLookupWorkflow(parameters, PlaintextQueryEvaluator)
       .batchLookup(database, pcollectionOf("Create Query Bundles", *queryBundles.toTypedArray()))
-  }
-
-  @Before
-  fun registerCoders() {
-    pipeline.registerPirCoders()
   }
 
   @Test
@@ -137,8 +132,8 @@ class PipelineTest : BeamTestBase() {
     assertThat(runWorkflow(queryBundles, parameters)).satisfies {
       val list = it.toList()
       assertThat(list).hasSize(1)
-      assertThat(list[0].queryMetadata).isEqualTo(QueryMetadata(QueryId(17), ByteString.EMPTY))
-      assertThat(list[0].data.toStringUtf8().toList())
+      assertThat(list[0].queryMetadata).isEqualTo(queryMetadataOf(queryIdOf(17), ByteString.EMPTY))
+      assertThat(list[0].payload.toStringUtf8().toList())
         .containsExactlyElementsIn("abcdefhijklm".toList())
       null
     }
@@ -150,20 +145,20 @@ class PipelineTest : BeamTestBase() {
     return pcollectionOf(
       "Create Database",
       *entries
-        .map { kvOf(DatabaseKey(it.first.toLong()), Plaintext(it.second.toByteString())) }
+        .map { kvOf(databaseKeyOf(it.first.toLong()), plaintextOf(it.second.toByteString())) }
         .toTypedArray()
     )
   }
 }
 
 private fun resultOf(query: Int, rawPayload: String): Result {
-  return PlaintextQueryEvaluatorTestHelper.makeResult(QueryId(query), rawPayload.toByteString())
+  return PlaintextQueryEvaluatorTestHelper.makeResult(queryIdOf(query), rawPayload.toByteString())
 }
 
 private fun queryBundleOf(shard: Int, queries: List<Pair<Int, Int>>): QueryBundle {
   return PlaintextQueryEvaluatorTestHelper.makeQueryBundle(
-    ShardId(shard),
-    queries.map { QueryId(it.first) to BucketId(it.second) }
+    shardIdOf(shard),
+    queries.map { queryIdOf(it.first) to bucketIdOf(it.second) }
   )
 }
 

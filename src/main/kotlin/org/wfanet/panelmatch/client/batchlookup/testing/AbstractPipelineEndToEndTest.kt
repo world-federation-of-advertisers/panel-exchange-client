@@ -18,7 +18,6 @@ import com.google.common.truth.Truth.assertThat
 import com.google.protobuf.ByteString
 import kotlin.random.Random
 import org.apache.beam.sdk.transforms.Create
-import org.junit.Before
 import org.junit.Test
 import org.wfanet.panelmatch.client.batchlookup.BatchLookupWorkflow
 import org.wfanet.panelmatch.client.batchlookup.BatchLookupWorkflow.Parameters
@@ -27,8 +26,9 @@ import org.wfanet.panelmatch.client.batchlookup.DatabaseKey
 import org.wfanet.panelmatch.client.batchlookup.Plaintext
 import org.wfanet.panelmatch.client.batchlookup.QueryBundle
 import org.wfanet.panelmatch.client.batchlookup.QueryEvaluator
-import org.wfanet.panelmatch.client.batchlookup.QueryId
-import org.wfanet.panelmatch.client.batchlookup.registerPirCoders
+import org.wfanet.panelmatch.client.batchlookup.databaseKeyOf
+import org.wfanet.panelmatch.client.batchlookup.plaintextOf
+import org.wfanet.panelmatch.client.batchlookup.queryIdOf
 import org.wfanet.panelmatch.common.beam.testing.BeamTestBase
 import org.wfanet.panelmatch.common.beam.testing.assertThat
 
@@ -38,11 +38,6 @@ private val random = Random(seed = 12345L)
 abstract class AbstractPipelineEndToEndTest : BeamTestBase() {
   abstract val queryEvaluator: QueryEvaluator
   abstract val helper: QueryEvaluatorTestHelper
-
-  @Before
-  fun registerCoders() {
-    pipeline.registerPirCoders()
-  }
 
   @Test
   fun endToEnd() {
@@ -67,10 +62,10 @@ abstract class AbstractPipelineEndToEndTest : BeamTestBase() {
       keys.associateWith { ByteString.copyFromUtf8("<this is the payload for $it>") }
 
     val database: Map<DatabaseKey, Plaintext> =
-      rawDatabase.mapKeys { DatabaseKey(it.key) }.mapValues { Plaintext(it.value) }
+      rawDatabase.mapKeys { databaseKeyOf(it.key) }.mapValues { plaintextOf(it.value) }
     val databasePCollection = pipeline.apply("Create Database", Create.of(database))
 
-    val rawQueries = keys.take(3).mapIndexed { i, key -> key to QueryId(i) }
+    val rawQueries = keys.take(3).mapIndexed { i, key -> key to queryIdOf(i) }
     val expectedResults: List<String> = rawQueries.map { rawDatabase[it.first]!!.toStringUtf8() }
 
     val bucketing =
