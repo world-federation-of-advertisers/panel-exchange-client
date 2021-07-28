@@ -32,18 +32,15 @@ import org.wfanet.panelmatch.common.beam.testing.assertThat
 /** Unit tests for [preprocessEventsInPipeline]. */
 @RunWith(JUnit4::class)
 class PreprocessEventsInPipelineTest : BeamTestBase() {
+  private val events = eventsOf("A" to "B", "C" to "D")
   @Test
   fun testEncryptByteStrings() {
-
-    val events = eventsOf("A" to "B", "C" to "D")
     val encrypted =
       preprocessEventsInPipeline(events, 8, "pepper".toByteString(), "cryptokey".toByteString())
     assertions(encrypted)
   }
   @Test
   fun testEncryptSerializableFunctions() {
-
-    val events = eventsOf("A" to "B", "C" to "D")
     val encrypted =
       preprocessEventsInPipeline(
         events,
@@ -57,10 +54,8 @@ class PreprocessEventsInPipelineTest : BeamTestBase() {
   fun assertions(encrypted: PCollection<KV<Long, ByteString>>) {
     assertThat(encrypted).satisfies {
       val results: List<KV<Long, ByteString>> = it.toList() // `it` is an Iterable<KV<...>>
-      assertFalse(results.get(0).value.equals("B"))
+      assertFalse(results.get(0).value.equals("C"))
       assertFalse(results.get(1).value.equals("D"))
-      assert(results.get(0).key is Long)
-      assert(results.get(1).key is Long)
       assert(results.size == (2))
       null
     }
