@@ -32,11 +32,25 @@ import org.wfanet.panelmatch.common.beam.testing.BeamTestBase
 @RunWith(JUnit4::class)
 class PreprocessEventsInPipelineTest : BeamTestBase() {
   @Test
-  fun testEncrypt() {
+  fun testEncryptByteStrings() {
 
     val events = eventsOf("A" to "B", "C" to "D")
     val encrypted =
       preprocessEventsInPipeline(events, 8, "pepper".toByteString(), "cryptokey".toByteString())
+    assertNotNull(encrypted)
+    assertNotEquals(events, encrypted)
+  }
+  @Test
+  fun testEncryptSerializableFunctions() {
+
+    val events = eventsOf("A" to "B", "C" to "D")
+    val encrypted =
+      preprocessEventsInPipeline(
+        events,
+        8,
+        HardCodedPepperProvider("pepper".toByteString()),
+        HardCodedPepperProvider("cryptokey".toByteString())
+      )
     assertNotNull(encrypted)
     assertNotEquals(events, encrypted)
   }
