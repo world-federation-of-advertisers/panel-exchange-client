@@ -20,8 +20,11 @@ import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.reduce
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import org.wfanet.measurement.common.asBufferedFlow
 
 /** Interface for Storage adapter. */
 interface Storage {
@@ -33,14 +36,14 @@ interface Storage {
    * @param path String location of input data to read from.
    * @return Input data.
    */
-  @Throws(NotFoundException::class) suspend fun read(path: String): ByteString
+  @Throws(NotFoundException::class) suspend fun read(path: String): Flow<ByteString>
 
   /**
    * Writes output data into given path.
    *
    * @param path String location of data to write to.
    */
-  suspend fun write(path: String, data: ByteString)
+  suspend fun write(path: String, data: Flow<ByteString>)
 
   /**
    * Transforms values of [inputLabels] into the underlying blobs.
@@ -52,7 +55,11 @@ interface Storage {
     withContext(Dispatchers.IO) {
       coroutineScope {
         inputLabels
-          .mapValues { entry -> async(start = CoroutineStart.DEFAULT) { read(path = entry.value) } }
+          .mapValues { entry ->
+            async(start = CoroutineStart.DEFAULT) {
+              read(path = entry.value).reduce { a, b -> a.concat(b) }
+            }
+          }
           .mapValues { entry -> entry.value.await() }
       }
     }
@@ -63,7 +70,7 @@ interface Storage {
       coroutineScope {
         for ((key, value) in outputLabels) {
           val payload = requireNotNull(data[key]) { "Key $key not found in ${data.keys}" }
-          launch { write(path = value, data = payload) }
+          launch { write(path = value, data = payload.asBufferedFlow(4096)) }
         }
       }
     }
