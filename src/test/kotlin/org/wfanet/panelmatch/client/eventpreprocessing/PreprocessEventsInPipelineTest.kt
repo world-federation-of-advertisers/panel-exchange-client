@@ -14,8 +14,8 @@
 
 package org.wfanet.panelmatch.client.eventpreprocessing
 
+import com.google.common.truth.Truth.assertThat
 import com.google.protobuf.ByteString
-import kotlin.assert
 import kotlin.test.assertFalse
 import org.apache.beam.sdk.coders.Coder
 import org.apache.beam.sdk.coders.KvCoder
@@ -37,7 +37,7 @@ class PreprocessEventsInPipelineTest : BeamTestBase() {
   fun testEncryptByteStrings() {
     val encrypted =
       preprocessEventsInPipeline(events, 8, "pepper".toByteString(), "cryptokey".toByteString())
-    assertions(encrypted)
+    assertResultValuesChanged(encrypted)
   }
   @Test
   fun testEncryptSerializableFunctions() {
@@ -49,14 +49,15 @@ class PreprocessEventsInPipelineTest : BeamTestBase() {
         HardCodedPepperProvider("cryptokey".toByteString())
       )
 
-    assertions(encrypted)
+    assertResultValuesChanged(encrypted)
   }
-  fun assertions(encrypted: PCollection<KV<Long, ByteString>>) {
+  fun assertResultValuesChanged(encrypted: PCollection<KV<Long, ByteString>>) {
     assertThat(encrypted).satisfies {
       val results: List<KV<Long, ByteString>> = it.toList() // `it` is an Iterable<KV<...>>
       assertFalse(results.get(0).value.equals("C"))
       assertFalse(results.get(1).value.equals("D"))
-      assert(results.size == (2))
+      assertThat(results).hasSize(2)
+      assertThat(results.map { it.value }).containsNoneOf("B".toByteString(), "D".toByteString())
       null
     }
   }
@@ -70,7 +71,8 @@ class PreprocessEventsInPipelineTest : BeamTestBase() {
       coder = coder
     )
   }
-  private fun String.toByteString(): ByteString {
-    return ByteString.copyFromUtf8(this)
-  }
+}
+
+private fun String.toByteString(): ByteString {
+  return ByteString.copyFromUtf8(this)
 }
