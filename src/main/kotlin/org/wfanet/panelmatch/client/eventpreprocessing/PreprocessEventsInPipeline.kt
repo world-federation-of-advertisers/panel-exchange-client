@@ -20,7 +20,10 @@ import org.apache.beam.sdk.transforms.SerializableFunction
 import org.apache.beam.sdk.values.KV
 import org.apache.beam.sdk.values.PCollection
 
-/** Runs preprocessing DoFns on input [PCollection] and outputs encrypted [PCollection] */
+/**
+ * Runs preprocessing DoFns on input [PCollection] using specified ByteStrings as the crypto key and
+ * pepper and outputs encrypted [PCollection]
+ */
 fun preprocessEventsInPipeline(
   events: PCollection<KV<ByteString, ByteString>>,
   maxByteSize: Int,
@@ -35,6 +38,10 @@ fun preprocessEventsInPipeline(
   )
 }
 
+/**
+ * Runs preprocessing DoFns on input [PCollection] using specified SerializableFunctions to supply
+ * cryptokey and pepper and outputs encrypted [PCollection]
+ */
 fun preprocessEventsInPipeline(
   events: PCollection<KV<ByteString, ByteString>>,
   maxByteSize: Int,
