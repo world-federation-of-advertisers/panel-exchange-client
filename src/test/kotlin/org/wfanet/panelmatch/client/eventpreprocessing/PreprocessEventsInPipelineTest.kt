@@ -16,7 +16,7 @@ package org.wfanet.panelmatch.client.eventpreprocessing
 
 import com.google.protobuf.ByteString
 import kotlin.assert
-import kotlin.test.*
+import kotlin.test.assertFalse
 import org.apache.beam.sdk.coders.Coder
 import org.apache.beam.sdk.coders.KvCoder
 import org.apache.beam.sdk.extensions.protobuf.ByteStringCoder
