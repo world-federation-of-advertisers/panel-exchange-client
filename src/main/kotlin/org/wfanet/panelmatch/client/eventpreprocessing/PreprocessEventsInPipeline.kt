@@ -15,10 +15,10 @@
 package org.wfanet.panelmatch.client.eventpreprocessing
 
 import com.google.protobuf.ByteString
-import org.apache.beam.sdk.transforms.ParDo
 import org.apache.beam.sdk.transforms.SerializableFunction
 import org.apache.beam.sdk.values.KV
 import org.apache.beam.sdk.values.PCollection
+import org.wfanet.panelmatch.common.beam.parDo
 
 /**
  * Runs preprocessing DoFns on input [PCollection] using specified ByteStrings as the crypto key and
@@ -49,6 +49,6 @@ fun preprocessEventsInPipeline(
   cryptoKeyProvider: SerializableFunction<Void?, ByteString>
 ): PCollection<KV<Long, ByteString>> {
   return events
-    .apply(ParDo.of(BatchingDoFn(maxByteSize, EventSize)))
-    .apply(ParDo.of(EncryptionEventsDoFn(EncryptEvents(), pepperProvider, cryptoKeyProvider)))
+    .parDo(BatchingDoFn(maxByteSize, EventSize))
+    .parDo(EncryptionEventsDoFn(EncryptEvents(), pepperProvider, cryptoKeyProvider))
 }

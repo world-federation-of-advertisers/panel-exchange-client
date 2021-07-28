@@ -16,7 +16,6 @@ package org.wfanet.panelmatch.client.eventpreprocessing
 
 import com.google.common.truth.Truth.assertThat
 import com.google.protobuf.ByteString
-import kotlin.test.assertFalse
 import org.apache.beam.sdk.coders.Coder
 import org.apache.beam.sdk.coders.KvCoder
 import org.apache.beam.sdk.extensions.protobuf.ByteStringCoder
@@ -54,8 +53,6 @@ class PreprocessEventsInPipelineTest : BeamTestBase() {
   fun assertResultValuesChanged(encrypted: PCollection<KV<Long, ByteString>>) {
     assertThat(encrypted).satisfies {
       val results: List<KV<Long, ByteString>> = it.toList() // `it` is an Iterable<KV<...>>
-      assertFalse(results.get(0).value.equals("C"))
-      assertFalse(results.get(1).value.equals("D"))
       assertThat(results).hasSize(2)
       assertThat(results.map { it.value }).containsNoneOf("B".toByteString(), "D".toByteString())
       null
