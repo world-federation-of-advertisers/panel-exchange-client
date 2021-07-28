@@ -20,6 +20,7 @@ import kotlin.test.assertNotNull
 import org.apache.beam.sdk.coders.Coder
 import org.apache.beam.sdk.coders.KvCoder
 import org.apache.beam.sdk.extensions.protobuf.ByteStringCoder
+import org.apache.beam.sdk.transforms.ToString
 import org.apache.beam.sdk.values.KV
 import org.apache.beam.sdk.values.PCollection
 import org.junit.Test
@@ -37,8 +38,8 @@ class PreprocessEventsInPipelineTest : BeamTestBase() {
     val events = eventsOf("A" to "B", "C" to "D")
     val encrypted =
       preprocessEventsInPipeline(events, 8, "pepper".toByteString(), "cryptokey".toByteString())
-    assertNotNull(encrypted)
-    assertNotEquals(events, encrypted)
+    assertNotNull(encrypted.apply(ToString.kvs()))
+    assertNotEquals(events.apply(ToString.kvs()), encrypted.apply(ToString.kvs()))
   }
   @Test
   fun testEncryptSerializableFunctions() {
@@ -51,8 +52,8 @@ class PreprocessEventsInPipelineTest : BeamTestBase() {
         HardCodedPepperProvider("pepper".toByteString()),
         HardCodedPepperProvider("cryptokey".toByteString())
       )
-    assertNotNull(encrypted)
-    assertNotEquals(events, encrypted)
+    assertNotNull(encrypted.apply(ToString.kvs()))
+    assertNotEquals(events.apply(ToString.kvs()), encrypted.apply(ToString.kvs()))
   }
 
   fun eventsOf(vararg pairs: Pair<String, String>): PCollection<KV<ByteString, ByteString>> {
