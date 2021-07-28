@@ -15,12 +15,11 @@
 package org.wfanet.panelmatch.client.eventpreprocessing
 
 import com.google.protobuf.ByteString
-import kotlin.test.assertNotEquals
-import kotlin.test.assertNotNull
+import kotlin.assert
+import kotlin.test.*
 import org.apache.beam.sdk.coders.Coder
 import org.apache.beam.sdk.coders.KvCoder
 import org.apache.beam.sdk.extensions.protobuf.ByteStringCoder
-import org.apache.beam.sdk.transforms.ToString
 import org.apache.beam.sdk.values.KV
 import org.apache.beam.sdk.values.PCollection
 import org.junit.Test
@@ -28,6 +27,7 @@ import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
 import org.wfanet.panelmatch.common.beam.kvOf
 import org.wfanet.panelmatch.common.beam.testing.BeamTestBase
+import org.wfanet.panelmatch.common.beam.testing.assertThat
 
 /** Unit tests for [preprocessEventsInPipeline]. */
 @RunWith(JUnit4::class)
@@ -38,8 +38,7 @@ class PreprocessEventsInPipelineTest : BeamTestBase() {
     val events = eventsOf("A" to "B", "C" to "D")
     val encrypted =
       preprocessEventsInPipeline(events, 8, "pepper".toByteString(), "cryptokey".toByteString())
-    assertNotNull(encrypted.apply(ToString.kvs()))
-    assertNotEquals(events.apply(ToString.kvs()), encrypted.apply(ToString.kvs()))
+    assertions(encrypted)
   }
   @Test
   fun testEncryptSerializableFunctions() {
@@ -52,8 +51,19 @@ class PreprocessEventsInPipelineTest : BeamTestBase() {
         HardCodedPepperProvider("pepper".toByteString()),
         HardCodedPepperProvider("cryptokey".toByteString())
       )
-    assertNotNull(encrypted.apply(ToString.kvs()))
-    assertNotEquals(events.apply(ToString.kvs()), encrypted.apply(ToString.kvs()))
+
+    assertions(encrypted)
+  }
+  fun assertions(encrypted: PCollection<KV<Long, ByteString>>) {
+    assertThat(encrypted).satisfies {
+      val results: List<KV<Long, ByteString>> = it.toList() // `it` is an Iterable<KV<...>>
+      assertFalse(results.get(0).value.equals("B"))
+      assertFalse(results.get(1).value.equals("D"))
+      assert(results.get(0).key is Long)
+      assert(results.get(1).key is Long)
+      assert(results.size == (2))
+      null
+    }
   }
 
   fun eventsOf(vararg pairs: Pair<String, String>): PCollection<KV<ByteString, ByteString>> {
