@@ -27,24 +27,21 @@ fun preprocessEventsInPipeline(
   pepper: ByteString,
   cryptokey: ByteString
 ): PCollection<KV<Long, ByteString>> {
-  return events
-    .apply(ParDo.of(BatchingDoFn(maxByteSize, EventSize)))
-    .apply(
-      ParDo.of(
-        EncryptionEventsDoFn(
-          EncryptEvents(),
-          HardCodedPepperProvider(pepper),
-          HardCodedCryptoKeyProvider(cryptokey)
-        )
-      )
-    )
+  return preprocessEventsInPipeline(
+    events,
+    maxByteSize,
+    HardCodedPepperProvider(pepper),
+    HardCodedCryptoKeyProvider(cryptokey)
+  )
 }
 
 fun preprocessEventsInPipeline(
   events: PCollection<KV<ByteString, ByteString>>,
   maxByteSize: Int,
-  pepperProvider: SerializableFunction<Void, ByteString>,
-  cryptoKeyProvider: SerializableFunction<Void, ByteString>
-) {
-  return preprocessEventsInPipeline(events, maxByteSize, pepperProvider, cryptoKeyProvider)
+  pepperProvider: SerializableFunction<Void?, ByteString>,
+  cryptoKeyProvider: SerializableFunction<Void?, ByteString>
+): PCollection<KV<Long, ByteString>> {
+  return events
+    .apply(ParDo.of(BatchingDoFn(maxByteSize, EventSize)))
+    .apply(ParDo.of(EncryptionEventsDoFn(EncryptEvents(), pepperProvider, cryptoKeyProvider)))
 }
