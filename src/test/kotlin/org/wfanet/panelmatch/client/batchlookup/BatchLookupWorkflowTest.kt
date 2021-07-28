@@ -30,7 +30,7 @@ import org.wfanet.panelmatch.common.beam.testing.BeamTestBase
 import org.wfanet.panelmatch.common.beam.testing.assertThat
 
 @RunWith(JUnit4::class)
-class PipelineTest : BeamTestBase() {
+class BatchLookupWorkflowTest : BeamTestBase() {
   private val database by lazy { databaseOf(53 to "abc", 58 to "def", 71 to "hij", 85 to "klm") }
 
   private fun runWorkflow(

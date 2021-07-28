@@ -13,9 +13,9 @@ kt_jvm_test(
 )
 
 kt_jvm_test(
-    name = "PipelineTest",
-    srcs = ["PipelineTest.kt"],
-    test_class = "org.wfanet.panelmatch.client.batchlookup.PipelineTest",
+    name = "BatchLookupWorkflowTest",
+    srcs = ["BatchLookupWorkflowTest.kt"],
+    test_class = "org.wfanet.panelmatch.client.batchlookup.BatchLookupWorkflowTest",
     deps = [
         "//imports/java/org/apache/beam:core",
         "//imports/java/org/apache/beam:protobuf",

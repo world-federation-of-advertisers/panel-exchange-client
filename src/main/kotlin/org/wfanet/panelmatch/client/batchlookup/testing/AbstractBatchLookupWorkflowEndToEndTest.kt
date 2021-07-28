@@ -35,7 +35,7 @@ import org.wfanet.panelmatch.common.beam.testing.assertThat
 private val random = Random(seed = 12345L)
 
 /** Base test class for testing the full pipeline, including a specific [QueryEvaluator]. */
-abstract class AbstractPipelineEndToEndTest : BeamTestBase() {
+abstract class AbstractBatchLookupWorkflowEndToEndTest : BeamTestBase() {
   abstract val queryEvaluator: QueryEvaluator
   abstract val helper: QueryEvaluatorTestHelper
 
