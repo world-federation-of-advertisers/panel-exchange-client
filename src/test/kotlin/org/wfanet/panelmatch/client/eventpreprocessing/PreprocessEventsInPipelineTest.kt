@@ -36,7 +36,12 @@ class PreprocessEventsInPipelineTest : BeamTestBase() {
   fun testEncryptByteStrings() {
     val encrypted =
       preprocessEventsInPipeline(events, 8, "pepper".toByteString(), "cryptokey".toByteString())
-    assertResultValuesChanged(encrypted)
+    assertThat(encrypted).satisfies {
+      val results: List<KV<Long, ByteString>> = it.toList() // `it` is an Iterable<KV<...>>
+      assertThat(results).hasSize(2)
+      assertThat(results.map { it.value }).containsNoneOf("B".toByteString(), "D".toByteString())
+      null
+    }
   }
   @Test
   fun testEncryptSerializableFunctions() {
@@ -48,9 +53,6 @@ class PreprocessEventsInPipelineTest : BeamTestBase() {
         HardCodedPepperProvider("cryptokey".toByteString())
       )
 
-    assertResultValuesChanged(encrypted)
-  }
-  fun assertResultValuesChanged(encrypted: PCollection<KV<Long, ByteString>>) {
     assertThat(encrypted).satisfies {
       val results: List<KV<Long, ByteString>> = it.toList() // `it` is an Iterable<KV<...>>
       assertThat(results).hasSize(2)
