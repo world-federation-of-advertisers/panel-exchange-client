@@ -1,0 +1,21 @@
+load("@io_bazel_rules_kotlin//kotlin:kotlin.bzl", "kt_jvm_library")
+
+package(default_visibility = [
+    "//src/main/kotlin/org/wfanet/panelmatch:__subpackages__",
+    "//src/test/kotlin/org/wfanet/panelmatch:__subpackages__",
+])
+
+kt_jvm_library(
+    name = "batchlookup",
+    srcs = glob(["*.kt"]),
+    deps = [
+        "//src/main/proto/wfa/panelmatch/client/batchlookup:oblivious_query_java_proto",
+        "//src/main/swig/wfanet/panelmatch/client/batchlookup:oblivious_query",
+        "//imports/java/com/google/common:guava",
+        "//imports/java/org/apache/beam:core",
+        "//imports/java/org/apache/beam:protobuf",
+        "//src/main/kotlin/org/wfanet/panelmatch/common",
+        "//src/main/kotlin/org/wfanet/panelmatch/common/beam",
+        "@wfa_common_jvm//imports/java/com/google/protobuf/util",
+    ],
+)
