@@ -21,6 +21,7 @@ import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
 import org.wfanet.panelmatch.protocol.CryptorReEncryptRequest
 import org.wfanet.panelmatch.protocol.common.testing.AbstractCryptorTest
+import org.wfanet.panelmatch.common.JniException
 
 @RunWith(JUnit4::class)
 class JniDeterministicCommutativeCryptorTest : AbstractCryptorTest() {
@@ -29,7 +30,7 @@ class JniDeterministicCommutativeCryptorTest : AbstractCryptorTest() {
   @Test
   fun `invalid proto throws JniException`() {
     val missingKeyException =
-      assertFailsWith(JniDeterministicCommutativeCryptor.JniException::class) {
+      assertFailsWith(JniException::class) {
         val request = CryptorReEncryptRequest.getDefaultInstance()
         Cryptor.reEncrypt(request)
       }

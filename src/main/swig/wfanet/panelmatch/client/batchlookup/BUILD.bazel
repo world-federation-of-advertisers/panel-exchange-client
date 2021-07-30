@@ -14,3 +14,13 @@ java_wrap_cc(
         "//src/main/cc/wfa/panelmatch/client/batchlookup:query_evaluator_wrapper",
     ],
 )
+
+java_wrap_cc(
+    name = "oblivious_query",
+    src = "oblivious_query.swig",
+    module = "SwigObliviousQuery",
+    package = "org.wfanet.panelmatch.client.batchlookup",
+    deps = [
+        "//src/main/cc/wfa/panelmatch/client/batchlookup:oblivious_query_wrapper",
+    ],
+)
