@@ -25,14 +25,13 @@
 #include "absl/types/span.h"
 #include "common_cpp/fingerprinters/fingerprinters.h"
 #include "common_cpp/macros/macros.h"
-#include "wfa/panelmatch/common/crypto/cryptor.h"
-#include "wfa/panelmatch/protocol/crypto/event_data_preprocessor.h"
 #include "tink/util/secret_data.h"
 #include "wfa/panelmatch/client/eventpreprocessing/preprocess_events.pb.h"
 #include "wfa/panelmatch/common/crypto/aes.h"
 #include "wfa/panelmatch/common/crypto/aes_with_hkdf.h"
 #include "wfa/panelmatch/common/crypto/cryptor.h"
 #include "wfa/panelmatch/common/crypto/hkdf.h"
+#include "wfa/panelmatch/protocol/crypto/event_data_preprocessor.h"
 
 namespace wfa::panelmatch::client {
 using ::crypto::tink::util::SecretData;

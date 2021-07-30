@@ -11,14 +11,15 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
 #include "wfa/panelmatch/client/batchlookup/oblivious_query_wrapper.h"
 
 #include <string>
 
 #include "absl/status/statusor.h"
 #include "common_cpp/jni/jni_wrap.h"
-#include "wfa/panelmatch/client/batchlookup/oblivious_query.h"
 #include "wfa/panelmatch/client/batchlookup/oblivious_query.pb.h"
+#include "wfa/panelmatch/client/batchlookup/oblivious_query.h"
 
 namespace wfa::panelmatch::client::batchlookup {
 

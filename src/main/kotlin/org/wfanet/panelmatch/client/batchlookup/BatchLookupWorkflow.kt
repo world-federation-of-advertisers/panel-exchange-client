@@ -33,7 +33,7 @@ import org.wfanet.panelmatch.common.beam.values
  * @param parameters tuning knobs for the workflow
  * @param queryEvaluator implementation of lower-level homomorphic operations
  */
-class BatchExpansionWorkflow(
+class BatchLookupWorkflow(
   private val parameters: Parameters,
   private val queryEvaluator: QueryEvaluator
 ) : Serializable {
@@ -122,6 +122,9 @@ class BatchExpansionWorkflow(
           it.value.fold(ByteString.EMPTY) { acc, e -> acc.concat(e.value.payload) }
         kvOf(it.key.key, bucketOf(it.key.value, combinedValues))
       }
+      // TODO: try replacing this with `GroupIntoBatches`. The size limit should be the
+      //  subshardSizeBytes minus some constant that we expect to be larger than any individual
+      //  bucket.
       .groupByKey("Group by Shard")
       .parDo {
         // While this might look like exactly what GroupIntoBatches does, it's not. GroupIntoBatches

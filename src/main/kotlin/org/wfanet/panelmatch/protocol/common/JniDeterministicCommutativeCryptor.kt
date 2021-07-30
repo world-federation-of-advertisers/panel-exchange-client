@@ -14,7 +14,6 @@
 
 package org.wfanet.panelmatch.protocol.common
 
-import java.lang.RuntimeException
 import java.nio.file.Paths
 import org.wfanet.panelmatch.common.loadLibrary
 import org.wfanet.panelmatch.common.wrapJniException
@@ -30,7 +29,7 @@ import org.wfanet.panelmatch.protocol.crypto.SwigDeterministicCommutativeEncrypt
  * A [DeterministicCommutativeEncryption] implementation using the JNI
  * [SwigDeterministicCommutativeEncryption].
  */
-class cd ../../..JniDeterministicCommutativeCryptor : Cryptor {
+class JniDeterministicCommutativeCryptor : Cryptor {
 
   override fun encrypt(request: CryptorEncryptRequest): CryptorEncryptResponse {
     return wrapJniException {

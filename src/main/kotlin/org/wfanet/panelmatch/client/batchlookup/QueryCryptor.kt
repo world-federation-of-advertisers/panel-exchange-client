@@ -14,20 +14,19 @@
 
 package org.wfanet.panelmatch.client.batchlookup
 
-import org.wfanet.panelmatch.client.batchlookup.ObliviousQueryParameters
-import org.wfanet.panelmatch.client.batchlookup.GenerateKeysRequest
-import org.wfanet.panelmatch.client.batchlookup.GenerateKeysResponse
-import org.wfanet.panelmatch.client.batchlookup.UnencryptedQuery
-import org.wfanet.panelmatch.client.batchlookup.EncryptQueriesRequest
-import org.wfanet.panelmatch.client.batchlookup.EncryptedQuery
-import org.wfanet.panelmatch.client.batchlookup.EncryptQueriesResponse
 import org.wfanet.panelmatch.client.batchlookup.DecryptQueriesRequest
 import org.wfanet.panelmatch.client.batchlookup.DecryptQueriesResponse
+import org.wfanet.panelmatch.client.batchlookup.EncryptQueriesRequest
+import org.wfanet.panelmatch.client.batchlookup.EncryptQueriesResponse
+import org.wfanet.panelmatch.client.batchlookup.GenerateKeysRequest
+import org.wfanet.panelmatch.client.batchlookup.GenerateKeysResponse
 
 interface QueryCryptor {
 
-  fun encrypteQueries(request: EncryptQueriesRequest): EncryptQueriesResponse
-
   fun generateKeys(request: GenerateKeysRequest): GenerateKeysResponse
-}
 
+  fun decryptQueries(request: DecryptQueriesRequest): DecryptQueriesResponse
+
+  fun encryptQueries(request: EncryptQueriesRequest): EncryptQueriesResponse
+
+}
