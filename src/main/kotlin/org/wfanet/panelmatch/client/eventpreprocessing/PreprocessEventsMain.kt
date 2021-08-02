@@ -21,15 +21,12 @@ import com.google.protobuf.ByteString
 import org.apache.beam.sdk.Pipeline
 import org.apache.beam.sdk.io.gcp.bigquery.BigQueryIO
 import org.apache.beam.sdk.io.gcp.bigquery.BigQueryIO.TypedRead.Method
-import org.apache.beam.sdk.options.Default
 import org.apache.beam.sdk.options.Description
 import org.apache.beam.sdk.options.PipelineOptions
 import org.apache.beam.sdk.options.PipelineOptionsFactory
 import org.apache.beam.sdk.options.Validation
-import org.apache.beam.sdk.transforms.DoFn
-import org.apache.beam.sdk.transforms.ParDo
-import org.apache.beam.sdk.values.KV
 import org.wfanet.panelmatch.common.beam.kvOf
+import org.wfanet.panelmatch.common.beam.map
 
 private const val EVENT_TABLE = "INSERT TABLE ADDRESS HERE"
 
@@ -40,15 +37,15 @@ interface Options : PipelineOptions {
 
   @get:Description("Pepper") var pepper: String
 
+  @get:Validation.Required
   @get:Description("Table to read from, specified as <project_id>:<dataset_id>.<table_id>")
-  @get:Default.String(EVENT_TABLE)
-  var input: String
+  var bigQueryInputTable: String
 
   @get:Description(
     "BigQuery table to write to, specified as <project_id>:<dataset_id>.<table_id>. The dataset must already exist."
   )
   @get:Validation.Required
-  var outputFile: String
+  var bigQueryOutputTable: String
 }
 
 fun main(args: Array<String>) {
@@ -56,7 +53,7 @@ fun main(args: Array<String>) {
   val p = Pipeline.create(options)
   // Build the table schema for the output table.
   val fields =
-    arrayListOf<TableFieldSchema>(
+    listOf<TableFieldSchema>(
       TableFieldSchema().setName("encrypted_id").setType("LONG"),
       TableFieldSchema().setName("encrypted_data").setType("BYTESTRING")
     )
@@ -66,11 +63,17 @@ fun main(args: Array<String>) {
   val rowsFromBigQuery =
     p.apply(
       BigQueryIO.readTableRows()
-        .from(options.input)
+        .from(options.bigQueryInputTable)
         .withMethod(Method.DIRECT_READ)
-        .withSelectedFields(mutableListOf("id", "event"))
+        .withSelectedFields(mutableListOf("id", "data"))
     )
-  val pairs = rowsFromBigQuery.apply(ParDo.of(PairDoFn))
+  val pairs =
+    rowsFromBigQuery.map {
+      kvOf(
+        ByteString.copyFromUtf8(it["id"] as String),
+        ByteString.copyFromUtf8(it["data"] as String)
+      )
+    }
   val encrypted =
     preprocessEventsInPipeline(
       pairs,
@@ -79,34 +82,17 @@ fun main(args: Array<String>) {
       ByteString.copyFromUtf8(options.cryptokey)
     )
 
-  val tableRows = encrypted.apply(ParDo.of(TablRowDoFn))
+  val tableRows =
+    encrypted.map {
+      val tablerow = TableRow().set("encrypted_id", it.key)
+      tablerow.set("encrypted_data", it.value)
+    }
   tableRows.apply(
     BigQueryIO.writeTableRows()
-      .to(options.outputFile)
+      .to(options.bigQueryOutputTable)
       .withSchema(schema)
       .withCreateDisposition(BigQueryIO.Write.CreateDisposition.CREATE_IF_NEEDED)
       .withWriteDisposition(BigQueryIO.Write.WriteDisposition.WRITE_TRUNCATE)
   )
   p.run().waitUntilFinish()
-}
-
-object PairDoFn : DoFn<TableRow, KV<ByteString, ByteString>>() {
-  @ProcessElement
-  fun process(c: ProcessContext) {
-    c.output(
-      kvOf(
-        ByteString.copyFromUtf8(c.element()["id"] as String),
-        ByteString.copyFromUtf8(c.element()["event"] as String)
-      )
-    )
-  }
-}
-
-object TablRowDoFn : DoFn<KV<Long, ByteString>, TableRow>() {
-  @ProcessElement
-  fun process(c: ProcessContext) {
-    val tablerow = TableRow().set("encrypted_id", c.element().key)
-    tablerow.set("encrypted_data", c.element().value)
-    c.output(tablerow)
-  }
 }
