@@ -14,3 +14,18 @@ alias(
     name = "protobuf",
     actual = "@maven//:org_apache_beam_beam_sdks_java_extensions_protobuf",
 )
+
+alias(
+    name = "gcpcore",
+    actual = "@maven//:org_apache_beam_beam_sdks_java_extensions_google_cloud_platform_core",
+)
+
+alias(
+    name = "iogcp",
+    actual = "@maven//:org_apache_beam_beam_sdks_java_io_google_cloud_platform",
+)
+
+alias(
+    name = "gcd",
+    actual = "@maven//:org_apache_beam_beam_runners_google_cloud_dataflow_java",
+)
