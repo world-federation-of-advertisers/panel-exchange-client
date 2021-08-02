@@ -1,6 +1,6 @@
 workspace(name = "panel_exchange_client")
 
-load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive", "http_file")
+load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
 # @bazel_skylib
 
@@ -124,9 +124,9 @@ load(
 
 http_archive(
     name = "rules_jvm_external",
-    sha256 = "82262ff4223c5fda6fb7ff8bd63db8131b51b413d26eb49e3131037e79e324af",
-    strip_prefix = "rules_jvm_external-3.2",
-    url = "https://github.com/bazelbuild/rules_jvm_external/archive/3.2.zip",
+    sha256 = "f36441aa876c4f6427bfb2d1f2d723b48e9d930b62662bf723ddfb8fc80f0140",
+    strip_prefix = "rules_jvm_external-4.1",
+    url = "https://github.com/bazelbuild/rules_jvm_external/archive/4.1.zip",
 )
 
 load("@rules_jvm_external//:defs.bzl", "maven_install")
@@ -141,45 +141,43 @@ MAVEN_ARTIFACTS.update(com_google_truth_artifact_dict(version = "1.0.1"))
 
 MAVEN_ARTIFACTS.update(kotlinx_coroutines_artifact_dict(version = "1.4.3"))
 
-_BEAM_VERSION = "2.31.0"
+BEAM_VERSION = "2.31.0"
 
 # Add Maven artifacts or override versions (e.g. those pulled in by gRPC Kotlin
 # or default dependency versions).
 MAVEN_ARTIFACTS.update({
-    #"com.google.api.client:google-api-client-json": "1.2.3-alpha",
     "com.google.api:gax": "2.0.0",
     "com.google.api:gax-grpc": "2.0.0",
     "com.google.apis:google-api-services-bigquery": "v2-rev20210404-1.31.0",
-    "com.google.cloud:google-cloud-nio": "0.122.0",
     "com.google.cloud:google-cloud-bigquery": "1.137.1",
+    "com.google.cloud:google-cloud-nio": "0.122.0",
     "com.google.cloud:google-cloud-storage": "1.118.0",
-    "com.google.http-client:google-http-client": "1.39.2",
     "com.google.code.gson:gson": "2.8.6",
     "com.google.guava:guava": "30.1.1-jre",
-    "org.apache.beam:beam-vendor-guava-26_0-jre": "0.1",
-    "org.mockito.kotlin:mockito-kotlin": "3.2.0",
+    "com.google.http-client:google-http-client": "1.39.2",
     "info.picocli:picocli": "4.4.0",
     "io.grpc:grpc-api": "1.37.0",
     "joda-time:joda-time": "2.10.10",
-    "junit:junit": "4.13",
-    "org.apache.beam:beam-runners-direct-java": _BEAM_VERSION,
-    "org.apache.beam:beam-runners-google-cloud-dataflow-java": _BEAM_VERSION,
-    "org.apache.beam:beam-sdks-java-extensions-google-cloud-platform-core": _BEAM_VERSION,
-    "org.apache.beam:beam-sdks-java-io-google-cloud-platform": _BEAM_VERSION,
-    "org.apache.beam:beam-sdks-java-core": _BEAM_VERSION,
-    "org.apache.beam:beam-sdks-java-extensions-protobuf": _BEAM_VERSION,
-    "org.hamcrest:hamcrest-library": "1.3",
-    "org.hamcrest:hamcrest-core": "1.3",
-    "org.slf4j:slf4j-simple": "1.7.9",
-})
+    "junit:junit": "4.13.1",
+    "org.apache.beam:beam-runners-direct-java": BEAM_VERSION,
+    "org.apache.beam:beam-runners-google-cloud-dataflow-java": BEAM_VERSION,
+    "org.apache.beam:beam-sdks-java-core": BEAM_VERSION,
+    "org.apache.beam:beam-sdks-java-extensions-google-cloud-platform-core": BEAM_VERSION,
+    "org.apache.beam:beam-sdks-java-extensions-protobuf": BEAM_VERSION,
+    "org.apache.beam:beam-sdks-java-io-google-cloud-platform": BEAM_VERSION,
+    "org.apache.beam:beam-vendor-guava-26_0-jre": "0.1",
+    "org.hamcrest:hamcrest": "2.2",
+    "org.mockito.kotlin:mockito-kotlin": "3.2.0",
+    "org.slf4j:slf4j-simple": "1.7.32",
 
-load("@rules_jvm_external//:specs.bzl", "maven")
+    # For grpc-kotlin. This should be a version that is compatible with the
+    # Kotlin release used by rules_kotlin.
+    "com.squareup:kotlinpoet": "1.8.0",
+})
 
 maven_install(
     artifacts = artifacts.dict_to_list(MAVEN_ARTIFACTS),
     excluded_artifacts = [
-        #        "io.confluent:kafka-schema-registry-client",
-        #        "io.confluent:kafka-avro-serializer",
         "org.apache.beam:beam-sdks-java-io-kafka",
     ],
     fetch_sources = True,
@@ -229,11 +227,6 @@ base_java_images(
     digest = "sha256:7fc091e8686df11f7bf0b7f67fd7da9862b2b9a3e49978d1184f0ff62cb673cc",
 )
 
-load(
-    "@io_bazel_rules_docker//java:image.bzl",
-    java_image_repositories = "repositories",
-)
-
 # Run after compat_repositories to ensure the maven_install-selected
 # dependencies are used.
 grpc_kt_repositories()
@@ -272,8 +265,6 @@ http_archive(
         "https://github.com/protocolbuffers/protobuf/archive/refs/tags/v3.15.6.tar.gz",
     ],
 )
-
-load("@com_google_protobuf//:protobuf_deps.bzl", "protobuf_deps")  # From gRPC.
 
 # @com_google_truth_truth
 load("@wfa_common_jvm//build/com_google_truth:repo.bzl", "com_google_truth_artifact_dict")
