@@ -29,7 +29,6 @@ kt_jvm_library(
     ],
     deps = [
         ":eventpreprocessing",
-        "//imports/java/com/google/api/client:http",
         "//imports/java/com/google/api/services:cloud_bigquery",
         "//imports/java/com/google/api/services:services_bigquery",
         "//imports/java/org/apache/beam:core",
