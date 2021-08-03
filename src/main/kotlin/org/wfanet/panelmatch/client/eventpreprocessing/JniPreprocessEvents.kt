@@ -14,9 +14,13 @@
 
 package org.wfanet.panelmatch.client.eventpreprocessing
 
+import java.nio.file.Files
 import java.nio.file.Paths
+import java.util.logging.Level
 import org.wfanet.panelmatch.client.PreprocessEventsRequest
 import org.wfanet.panelmatch.client.PreprocessEventsResponse
+import org.wfanet.panelmatch.client.logger.loggerFor
+import org.wfanet.panelmatch.common.getRuntimePath
 import org.wfanet.panelmatch.common.loadLibrary
 import org.wfanet.panelmatch.common.wrapJniException
 
@@ -32,11 +36,43 @@ class JniPreprocessEvents : PreprocessEvents {
   }
 
   companion object {
+    private val logger by loggerFor()
 
     init {
-      val SWIG_PATH =
+      val directoryPath =
         "panel_exchange_client/src/main/swig/wfanet/panelmatch/client/eventpreprocessing"
-      loadLibrary(name = "preprocess_events", directoryPath = Paths.get(SWIG_PATH))
+      try {
+        loadLibrary(name = "preprocess_events", directoryPath = Paths.get(directoryPath))
+      } catch (e: Exception) {
+        logger.log(Level.WARNING, "loadLibrary exception", e)
+        val dataflowDir = Paths.get("/var/opt/google/dataflow").toFile()
+        if (dataflowDir.exists() && dataflowDir.isDirectory) {
+          val libraryFile =
+            dataflowDir.listFiles()!!.single {
+              it.name.startsWith("libpreprocess_events-") && it.extension == "so"
+            }
+
+          val tmpDirPath = checkNotNull(getRuntimePath(Paths.get(directoryPath)))
+          logger.info("!!! $tmpDirPath")
+
+          if (!tmpDirPath.toFile().exists()) {
+            Files.createDirectories(tmpDirPath)
+          }
+          val destinationPath = tmpDirPath.resolve("libpreprocess_events.so")
+          if (!destinationPath.toFile().exists()) {
+            libraryFile.copyTo(destinationPath.toFile())
+          }
+          val tmpLibraryFile = destinationPath.toFile()
+          check(tmpLibraryFile.setReadable(true))
+          check(tmpLibraryFile.setWritable(true))
+          check(tmpLibraryFile.setExecutable(true))
+
+          logger.info("!!! $tmpLibraryFile")
+          loadLibrary(name = "preprocess_events", directoryPath = Paths.get(directoryPath))
+        } else {
+          throw e
+        }
+      }
     }
   }
 }

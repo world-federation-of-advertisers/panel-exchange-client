@@ -18,8 +18,11 @@ import com.google.api.services.bigquery.model.TableFieldSchema
 import com.google.api.services.bigquery.model.TableRow
 import com.google.api.services.bigquery.model.TableSchema
 import com.google.protobuf.ByteString
+import java.nio.file.Paths
+import org.apache.beam.runners.core.construction.resources.PipelineResources
 import org.apache.beam.runners.dataflow.options.DataflowPipelineOptions
 import org.apache.beam.sdk.Pipeline
+import org.apache.beam.sdk.io.FileSystems
 import org.apache.beam.sdk.io.gcp.bigquery.BigQueryIO
 import org.apache.beam.sdk.io.gcp.bigquery.BigQueryIO.TypedRead.Method
 import org.apache.beam.sdk.options.Description
@@ -29,6 +32,7 @@ import org.apache.beam.sdk.values.KV
 import org.apache.beam.sdk.values.PCollection
 import org.wfanet.panelmatch.common.beam.kvOf
 import org.wfanet.panelmatch.common.beam.map
+import org.wfanet.panelmatch.common.getRuntimePath
 
 interface Options : DataflowPipelineOptions {
 
@@ -48,10 +52,27 @@ interface Options : DataflowPipelineOptions {
   )
   @get:Validation.Required
   var bigQueryOutputTable: String
+
+  //  @get:Description("Runfiles directory")
+  //  var runfilesDir: String
 }
+
+class Dummy
 
 fun main(args: Array<String>) {
   val options = PipelineOptionsFactory.fromArgs(*args).withValidation().`as`(Options::class.java)
+
+  val swigPath =
+    Paths.get("panel_exchange_client/src/main/swig/wfanet/panelmatch/client/eventpreprocessing")
+  val relativePath = swigPath.resolve(System.mapLibraryName("preprocess_events"))
+  val runtimePath = requireNotNull(getRuntimePath(relativePath))
+  val filesToStage = listOf(runtimePath.toAbsolutePath().toString())
+  val classPathFiles =
+    PipelineResources.detectClassPathResourcesToStage(Dummy::class.java.classLoader, options)
+  options.filesToStage = filesToStage + classPathFiles
+  FileSystems.setDefaultPipelineOptions(options)
+
+  // options.runfilesDir = System.getenv("RUNFILES_DIR")
   val p = Pipeline.create(options)
 
   val unencryptedEvents = readFromBigQuery(options.bigQueryInputTable, p)
@@ -98,13 +119,13 @@ fun readFromBigQuery(inputTable: String, p: Pipeline): PCollection<KV<ByteString
       BigQueryIO.readTableRows()
         .from(inputTable)
         .withMethod(Method.DIRECT_READ)
-        .withSelectedFields(mutableListOf("id", "data"))
+        .withSelectedFields(mutableListOf("UserId", "UserEvent"))
     )
   val unencryptedEvents =
     rowsFromBigQuery.map {
       kvOf(
-        ByteString.copyFromUtf8(it["id"] as String),
-        ByteString.copyFromUtf8(it["data"] as String)
+        ByteString.copyFromUtf8(it["UserId"] as String),
+        ByteString.copyFromUtf8(it["UserEvent"] as String)
       )
     }
   return unencryptedEvents
