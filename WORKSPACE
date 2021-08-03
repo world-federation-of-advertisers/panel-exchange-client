@@ -141,12 +141,14 @@ MAVEN_ARTIFACTS.update(com_google_truth_artifact_dict(version = "1.0.1"))
 
 MAVEN_ARTIFACTS.update(kotlinx_coroutines_artifact_dict(version = "1.4.3"))
 
+_BEAM_VERSION = "2.31.0"
+
 # Add Maven artifacts or override versions (e.g. those pulled in by gRPC Kotlin
 # or default dependency versions).
 MAVEN_ARTIFACTS.update({
     #"com.google.api.client:google-api-client-json": "1.2.3-alpha",
-    "com.google.api:gax": "1.66.0",
-    "com.google.api:gax-grpc": "1.66.0",
+    "com.google.api:gax": "2.0.0",
+    "com.google.api:gax-grpc": "2.0.0",
     "com.google.apis:google-api-services-bigquery": "v2-rev20210404-1.31.0",
     "com.google.cloud:google-cloud-nio": "0.122.0",
     "com.google.cloud:google-cloud-bigquery": "1.137.1",
@@ -160,10 +162,12 @@ MAVEN_ARTIFACTS.update({
     "io.grpc:grpc-api": "1.37.0",
     "joda-time:joda-time": "2.10.10",
     "junit:junit": "4.13",
-    "org.apache.beam:beam-runners-direct-java": "2.28.0",
-    "org.apache.beam:beam-sdks-java-extensions-google-cloud-platform-core": "2.28.0",
-    "org.apache.beam:beam-sdks-java-core": "2.28.0",
-    "org.apache.beam:beam-sdks-java-extensions-protobuf": "2.28.0",
+    "org.apache.beam:beam-runners-direct-java": _BEAM_VERSION,
+    "org.apache.beam:beam-runners-google-cloud-dataflow-java": _BEAM_VERSION,
+    "org.apache.beam:beam-sdks-java-extensions-google-cloud-platform-core": _BEAM_VERSION,
+    "org.apache.beam:beam-sdks-java-io-google-cloud-platform": _BEAM_VERSION,
+    "org.apache.beam:beam-sdks-java-core": _BEAM_VERSION,
+    "org.apache.beam:beam-sdks-java-extensions-protobuf": _BEAM_VERSION,
     "org.hamcrest:hamcrest-library": "1.3",
     "org.hamcrest:hamcrest-core": "1.3",
     "org.slf4j:slf4j-simple": "1.7.9",
@@ -172,33 +176,11 @@ MAVEN_ARTIFACTS.update({
 load("@rules_jvm_external//:specs.bzl", "maven")
 
 maven_install(
-    artifacts = artifacts.dict_to_list(MAVEN_ARTIFACTS) + [
-        maven.artifact(
-            group = "org.apache.beam",
-            artifact = "beam-sdks-java-io-google-cloud-platform",
-            version = "2.28.0",
-            exclusions = [
-                "io.grpc:grpc-netty",
-                "io.grpc:grpc-api",
-                "com.google.cloud.bigtable:bigtable-client-core",
-            ],
-        ),
-        maven.artifact(
-            group = "org.apache.beam",
-            artifact = "beam-runners-google-cloud-dataflow-java",
-            version = "2.28.0",
-            exclusions = [
-                "io.grpc:grpc-netty",
-                "io.grpc:grpc-api",
-                "com.google.cloud.bigtable:bigtable-client-core",
-            ],
-        ),
-    ],
+    artifacts = artifacts.dict_to_list(MAVEN_ARTIFACTS),
     excluded_artifacts = [
-        "io.grpc:grpc-netty",
-        "io.grpc:grpc-api",
-        "com.google.cloud.bigtable:bigtable-client-core",
-        "com.google.api.grpc:grpc-google-cloud-pubsub-v1",
+        #        "io.confluent:kafka-schema-registry-client",
+        #        "io.confluent:kafka-avro-serializer",
+        "org.apache.beam:beam-sdks-java-io-kafka",
     ],
     fetch_sources = True,
     generate_compat_repositories = True,
