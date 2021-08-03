@@ -1,21 +1,17 @@
 load("@io_bazel_rules_kotlin//kotlin:kotlin.bzl", "kt_jvm_library")
+load("@rules_java//java:defs.bzl", "java_binary")
 
 package(default_visibility = ["//visibility:public"])
 
 kt_jvm_library(
     name = "eventpreprocessing",
-    srcs = glob(["*.kt"]),
+    srcs = glob(
+        ["*.kt"],
+        exclude = ["*Main.kt"],
+    ),
     deps = [
-        "//imports/java/com/google/api/client:http",
-        "//imports/java/com/google/api/client:json",
-        "//imports/java/com/google/api/services:cloud_bigquery",
-        "//imports/java/com/google/api/services:cloud_bigquerystorage",
-        "//imports/java/com/google/api/services:services_bigquery",
         "//imports/java/org/apache/beam:core",
-        "//imports/java/org/apache/beam/extensions:gcp_core",
         "//imports/java/org/apache/beam/extensions:protobuf",
-        "//imports/java/org/apache/beam/io:google_cloud_platform",
-        "//imports/java/org/apache/beam/runners:google_cloud_dataflow",
         "//imports/java/org/joda",
         "//src/main/kotlin/org/wfanet/panelmatch/common",
         "//src/main/kotlin/org/wfanet/panelmatch/common/beam",
@@ -23,4 +19,33 @@ kt_jvm_library(
         "//src/main/swig/wfanet/panelmatch/client/eventpreprocessing:preprocess_events",
         "@wfa_common_jvm//imports/java/com/google/protobuf",
     ],
+)
+
+kt_jvm_library(
+    name = "preprocess_events_main",
+    srcs = ["PreprocessEventsMain.kt"],
+    runtime_deps = [
+        "//imports/java/org/slf4j:simple",
+    ],
+    deps = [
+        ":eventpreprocessing",
+        "//imports/java/com/google/api/client:http",
+        "//imports/java/com/google/api/client:json",
+        "//imports/java/com/google/api/services:cloud_bigquery",
+        "//imports/java/com/google/api/services:cloud_bigquerystorage",
+        "//imports/java/com/google/api/services:services_bigquery",
+        "//imports/java/org/apache/beam:core",
+        "//imports/java/org/apache/beam/extensions:google_cloud_platform_core",
+        "//imports/java/org/apache/beam/extensions:protobuf",
+        "//imports/java/org/apache/beam/io:google_cloud_platform",
+        "//imports/java/org/apache/beam/runners:google_cloud_dataflow",
+        "//src/main/kotlin/org/wfanet/panelmatch/common/beam",
+    ],
+)
+
+java_binary(
+    name = "process_events",
+    main_class = "org.wfanet.panelmatch.client.eventpreprocessing.PreprocessEventsMainKt",
+    tags = ["manual"],
+    runtime_deps = [":preprocess_events_main"],
 )
