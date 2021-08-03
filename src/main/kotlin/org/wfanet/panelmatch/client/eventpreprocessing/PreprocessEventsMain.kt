@@ -25,6 +25,7 @@ import org.apache.beam.sdk.io.gcp.bigquery.BigQueryIO.TypedRead.Method
 import org.apache.beam.sdk.options.Description
 import org.apache.beam.sdk.options.PipelineOptionsFactory
 import org.apache.beam.sdk.options.Validation
+import org.apache.beam.sdk.values.KV
 import org.apache.beam.sdk.values.PCollection
 import org.wfanet.panelmatch.common.beam.kvOf
 import org.wfanet.panelmatch.common.beam.map
@@ -53,37 +54,21 @@ fun main(args: Array<String>) {
   val options = PipelineOptionsFactory.fromArgs(*args).withValidation().`as`(Options::class.java)
   val p = Pipeline.create(options)
 
-  // Build the read options proto for the read operation.
-  val rowsFromBigQuery =
-    p.apply(
-      BigQueryIO.readTableRows()
-        .from(options.bigQueryInputTable)
-        .withMethod(Method.DIRECT_READ)
-        .withSelectedFields(mutableListOf("id", "data"))
-    )
-  val unencrypted_events =
-    rowsFromBigQuery.map {
-      kvOf(
-        ByteString.copyFromUtf8(it["id"] as String),
-        ByteString.copyFromUtf8(it["data"] as String)
-      )
-    }
-  val encrypted_events =
+  val unencryptedEvents = readFromBigQuery(options.bigQueryInputTable, p)
+  val encryptedEvents =
     preprocessEventsInPipeline(
-      unencrypted_events,
+      unencryptedEvents,
       options.batchSize,
       ByteString.copyFromUtf8(options.pepper),
       ByteString.copyFromUtf8(options.cryptokey)
     )
 
-  val encryptedTableRows =
-    encrypted_events.map { TableRow().set("encrypted_id", it.key).set("encrypted_data", it.value) }
-  writeToBigQuery(encryptedTableRows, options.bigQueryOutputTable)
+  writeToBigQuery(encryptedEvents, options.bigQueryOutputTable)
 
   p.run().waitUntilFinish()
 }
 
-fun writeToBigQuery(encrypted_events: PCollection<TableRow>, outputTable: String) {
+fun writeToBigQuery(encryptedEvents: PCollection<KV<Long, ByteString>>, outputTable: String) {
   // Build the table schema for the output table.
   val fields =
     listOf<TableFieldSchema>(
@@ -91,11 +76,36 @@ fun writeToBigQuery(encrypted_events: PCollection<TableRow>, outputTable: String
       TableFieldSchema().setName("encrypted_data").setType("BYTESTRING")
     )
   val schema = TableSchema().setFields(fields)
-  encrypted_events.apply(
+
+  // Convert KV<Long,ByteString> to TableRow
+  val encryptedTableRows =
+    encryptedEvents.map { TableRow().set("encrypted_id", it.key).set("encrypted_data", it.value) }
+
+  // Write to BigQueryIO
+  encryptedTableRows.apply(
     BigQueryIO.writeTableRows()
       .to(outputTable)
       .withSchema(schema)
       .withCreateDisposition(BigQueryIO.Write.CreateDisposition.CREATE_IF_NEEDED)
       .withWriteDisposition(BigQueryIO.Write.WriteDisposition.WRITE_TRUNCATE)
   )
+}
+
+fun readFromBigQuery(inputTable: String, p: Pipeline): PCollection<KV<ByteString, ByteString>> {
+  // Build the read options proto for the read operation.
+  val rowsFromBigQuery =
+    p.apply(
+      BigQueryIO.readTableRows()
+        .from(inputTable)
+        .withMethod(Method.DIRECT_READ)
+        .withSelectedFields(mutableListOf("id", "data"))
+    )
+  val unencryptedEvents =
+    rowsFromBigQuery.map {
+      kvOf(
+        ByteString.copyFromUtf8(it["id"] as String),
+        ByteString.copyFromUtf8(it["data"] as String)
+      )
+    }
+  return unencryptedEvents
 }
