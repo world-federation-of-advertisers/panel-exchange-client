@@ -6,6 +6,6 @@ alias(
 )
 
 alias(
-    name = "gcp_core",
+    name = "google_cloud_platform_core",
     actual = "@maven//:org_apache_beam_beam_sdks_java_extensions_google_cloud_platform_core",
 )

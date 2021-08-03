@@ -18,46 +18,40 @@ import com.google.api.services.bigquery.model.TableFieldSchema
 import com.google.api.services.bigquery.model.TableRow
 import com.google.api.services.bigquery.model.TableSchema
 import com.google.protobuf.ByteString
+import org.apache.beam.runners.dataflow.options.DataflowPipelineOptions
 import org.apache.beam.sdk.Pipeline
 import org.apache.beam.sdk.io.gcp.bigquery.BigQueryIO
 import org.apache.beam.sdk.io.gcp.bigquery.BigQueryIO.TypedRead.Method
 import org.apache.beam.sdk.options.Description
-import org.apache.beam.sdk.options.PipelineOptions
 import org.apache.beam.sdk.options.PipelineOptionsFactory
 import org.apache.beam.sdk.options.Validation
+import org.apache.beam.sdk.values.PCollection
 import org.wfanet.panelmatch.common.beam.kvOf
 import org.wfanet.panelmatch.common.beam.map
 
-private const val EVENT_TABLE = "INSERT TABLE ADDRESS HERE"
+interface Options : DataflowPipelineOptions {
 
-interface Options : PipelineOptions {
   @get:Description("Batch Size") var batchSize: Int
 
   @get:Description("Cryptokey") var cryptokey: String
 
   @get:Description("Pepper") var pepper: String
 
-  @get:Validation.Required
   @get:Description("Table to read from, specified as <project_id>:<dataset_id>.<table_id>")
+  @get:Validation.Required
   var bigQueryInputTable: String
 
   @get:Description(
-    "BigQuery table to write to, specified as <project_id>:<dataset_id>.<table_id>. The dataset must already exist."
+    "BigQuery table to write to, specified as <project_id>:<dataset_id>.<table_id>. " +
+      "The dataset must already exist."
   )
   @get:Validation.Required
   var bigQueryOutputTable: String
 }
 
 fun main(args: Array<String>) {
-  val options = PipelineOptionsFactory.fromArgs(*args).withValidation() as Options
+  val options = PipelineOptionsFactory.fromArgs(*args).withValidation().`as`(Options::class.java)
   val p = Pipeline.create(options)
-  // Build the table schema for the output table.
-  val fields =
-    listOf<TableFieldSchema>(
-      TableFieldSchema().setName("encrypted_id").setType("LONG"),
-      TableFieldSchema().setName("encrypted_data").setType("BYTESTRING")
-    )
-  val schema = TableSchema().setFields(fields)
 
   // Build the read options proto for the read operation.
   val rowsFromBigQuery =
@@ -67,32 +61,41 @@ fun main(args: Array<String>) {
         .withMethod(Method.DIRECT_READ)
         .withSelectedFields(mutableListOf("id", "data"))
     )
-  val pairs =
+  val unencrypted_events =
     rowsFromBigQuery.map {
       kvOf(
         ByteString.copyFromUtf8(it["id"] as String),
         ByteString.copyFromUtf8(it["data"] as String)
       )
     }
-  val encrypted =
+  val encrypted_events =
     preprocessEventsInPipeline(
-      pairs,
+      unencrypted_events,
       options.batchSize,
       ByteString.copyFromUtf8(options.pepper),
       ByteString.copyFromUtf8(options.cryptokey)
     )
 
-  val tableRows =
-    encrypted.map {
-      val tablerow = TableRow().set("encrypted_id", it.key)
-      tablerow.set("encrypted_data", it.value)
-    }
-  tableRows.apply(
+  val encryptedTableRows =
+    encrypted_events.map { TableRow().set("encrypted_id", it.key).set("encrypted_data", it.value) }
+  writeToBigQuery(encryptedTableRows, options.bigQueryOutputTable)
+
+  p.run().waitUntilFinish()
+}
+
+fun writeToBigQuery(encrypted_events: PCollection<TableRow>, outputTable: String) {
+  // Build the table schema for the output table.
+  val fields =
+    listOf<TableFieldSchema>(
+      TableFieldSchema().setName("encrypted_id").setType("LONG"),
+      TableFieldSchema().setName("encrypted_data").setType("BYTESTRING")
+    )
+  val schema = TableSchema().setFields(fields)
+  encrypted_events.apply(
     BigQueryIO.writeTableRows()
-      .to(options.bigQueryOutputTable)
+      .to(outputTable)
       .withSchema(schema)
       .withCreateDisposition(BigQueryIO.Write.CreateDisposition.CREATE_IF_NEEDED)
       .withWriteDisposition(BigQueryIO.Write.WriteDisposition.WRITE_TRUNCATE)
   )
-  p.run().waitUntilFinish()
 }
