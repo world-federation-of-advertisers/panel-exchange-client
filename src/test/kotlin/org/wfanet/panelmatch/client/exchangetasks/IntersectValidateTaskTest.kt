@@ -15,17 +15,22 @@
 package org.wfanet.panelmatch.client.exchangetasks
 
 import com.google.common.truth.Truth.assertThat
+import com.google.protobuf.ByteString
 import kotlin.test.assertFailsWith
+import kotlinx.coroutines.flow.fold
 import kotlinx.coroutines.runBlocking
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
+import org.wfanet.measurement.common.asBufferedFlow
 import org.wfanet.panelmatch.client.launcher.testing.SINGLE_BLINDED_KEYS
+import org.wfanet.panelmatch.client.storage.InMemoryStorageClient
 import org.wfanet.panelmatch.protocol.common.makeSerializedSharedInputs
 import org.wfanet.panelmatch.protocol.common.parseSerializedSharedInputs
 
 @RunWith(JUnit4::class)
 class IntersectValidateTaskTest {
+  private val mockStorage = InMemoryStorageClient(keyPrefix = "mock")
 
   @Test
   fun `test valid intersect and validate exchange step`() = runBlocking {
@@ -33,11 +38,27 @@ class IntersectValidateTaskTest {
       IntersectValidateTask(maxSize = 100, minimumOverlap = 0.75f)
         .execute(
           mapOf(
-            "previous-data" to makeSerializedSharedInputs(SINGLE_BLINDED_KEYS.dropLast(1)),
-            "current-data" to makeSerializedSharedInputs(SINGLE_BLINDED_KEYS)
+            "previous-data" to
+              mockStorage.createBlob(
+                "encrypted-data",
+                makeSerializedSharedInputs(SINGLE_BLINDED_KEYS.dropLast(1))
+                  .asBufferedFlow(mockStorage.defaultBufferSizeBytes)
+              ),
+            "current-data" to
+              mockStorage.createBlob(
+                "current-data",
+                makeSerializedSharedInputs(SINGLE_BLINDED_KEYS)
+                  .asBufferedFlow(mockStorage.defaultBufferSizeBytes)
+              )
           )
         )
-    assertThat(parseSerializedSharedInputs(requireNotNull(output["current-data"])))
+    assertThat(
+        parseSerializedSharedInputs(
+          requireNotNull(
+            output["current-data"]!!.fold(ByteString.EMPTY, { agg, chunk -> agg.concat(chunk) })
+          )
+        )
+      )
       .isEqualTo(SINGLE_BLINDED_KEYS)
   }
 
@@ -48,8 +69,18 @@ class IntersectValidateTaskTest {
         IntersectValidateTask(maxSize = 1, minimumOverlap = 0.99f)
           .execute(
             mapOf(
-              "previous-data" to makeSerializedSharedInputs(SINGLE_BLINDED_KEYS),
-              "current-data" to makeSerializedSharedInputs(SINGLE_BLINDED_KEYS)
+              "previous-data" to
+                mockStorage.createBlob(
+                  "current-data",
+                  makeSerializedSharedInputs(SINGLE_BLINDED_KEYS)
+                    .asBufferedFlow(mockStorage.defaultBufferSizeBytes)
+                ),
+              "current-data" to
+                mockStorage.createBlob(
+                  "current-data",
+                  makeSerializedSharedInputs(SINGLE_BLINDED_KEYS)
+                    .asBufferedFlow(mockStorage.defaultBufferSizeBytes)
+                )
             )
           )
       }
@@ -62,8 +93,18 @@ class IntersectValidateTaskTest {
         IntersectValidateTask(maxSize = 10, minimumOverlap = 0.85f)
           .execute(
             mapOf(
-              "previous-data" to makeSerializedSharedInputs(SINGLE_BLINDED_KEYS.dropLast(1)),
-              "current-data" to makeSerializedSharedInputs(SINGLE_BLINDED_KEYS)
+              "previous-data" to
+                mockStorage.createBlob(
+                  "current-data",
+                  makeSerializedSharedInputs(SINGLE_BLINDED_KEYS.dropLast(1))
+                    .asBufferedFlow(mockStorage.defaultBufferSizeBytes)
+                ),
+              "current-data" to
+                mockStorage.createBlob(
+                  "current-data",
+                  makeSerializedSharedInputs(SINGLE_BLINDED_KEYS)
+                    .asBufferedFlow(mockStorage.defaultBufferSizeBytes)
+                )
             )
           )
       }

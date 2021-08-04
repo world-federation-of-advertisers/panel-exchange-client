@@ -15,8 +15,12 @@
 package org.wfanet.panelmatch.client.exchangetasks
 
 import com.google.protobuf.ByteString
+import kotlinx.coroutines.flow.Flow
+import org.wfanet.measurement.common.asBufferedFlow
+import org.wfanet.measurement.storage.StorageClient.Blob
 import org.wfanet.panelmatch.client.logger.addToTaskLog
 import org.wfanet.panelmatch.client.logger.loggerFor
+import org.wfanet.panelmatch.client.storage.foldBlob
 import org.wfanet.panelmatch.protocol.common.Cryptor
 import org.wfanet.panelmatch.protocol.common.makeSerializedSharedInputs
 import org.wfanet.panelmatch.protocol.common.parseSerializedSharedInputs
@@ -31,16 +35,16 @@ internal constructor(
   private val inputKeyLabel: String = DEFAULT_INPUT_KEY_LABEL
 ) : ExchangeTask {
 
-  override suspend fun execute(input: Map<String, ByteString>): Map<String, ByteString> {
+  override suspend fun execute(input: Map<String, Blob>): Map<String, Flow<ByteString>> {
     logger.addToTaskLog("Executing operation: $operation")
 
-    val key = requireNotNull(input[inputKeyLabel]) { "Missing input label '$inputKeyLabel'" }
-    val serializedInputs =
-      requireNotNull(input[inputDataLabel]) { "Missing input label '$inputDataLabel'" }
+    // TODO See how to update this to not collect the inputs entirely at this step
+    val key = foldBlob(input[inputKeyLabel])
+    val serializedInputs = foldBlob(input[inputDataLabel])
 
     val inputs = parseSerializedSharedInputs(serializedInputs)
     val result = operation(key, inputs)
-    return mapOf(outputDataLabel to makeSerializedSharedInputs(result))
+    return mapOf(outputDataLabel to makeSerializedSharedInputs(result).asBufferedFlow(1024))
   }
 
   companion object {

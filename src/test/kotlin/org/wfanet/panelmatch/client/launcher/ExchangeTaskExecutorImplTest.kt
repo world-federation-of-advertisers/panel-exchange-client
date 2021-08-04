@@ -19,16 +19,22 @@ import com.google.protobuf.ByteString
 import kotlin.test.assertFails
 import kotlin.test.assertFailsWith
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.flow.fold
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
 import org.mockito.kotlin.mock
 import org.wfanet.measurement.api.v2alpha.ExchangeStepAttemptKey
 import org.wfanet.measurement.api.v2alpha.ExchangeWorkflow.Step.StepCase.ENCRYPT_STEP
+import org.wfanet.measurement.common.asBufferedFlow
+import org.wfanet.measurement.storage.StorageClient
 import org.wfanet.panelmatch.client.exchangetasks.ExchangeTask
 import org.wfanet.panelmatch.client.launcher.testing.FakeTimeout
 import org.wfanet.panelmatch.client.launcher.testing.buildStep
 import org.wfanet.panelmatch.client.storage.InMemoryStorage
+import org.wfanet.panelmatch.client.storage.foldBlob
 import org.wfanet.panelmatch.common.testing.runBlockingTest
 
 @RunWith(JUnit4::class)
@@ -41,12 +47,18 @@ class ExchangeTaskExecutorImplTest {
 
   private val exchangeTask =
     object : ExchangeTask {
-      override suspend fun execute(input: Map<String, ByteString>): Map<String, ByteString> {
-        val result =
-          input.mapKeys { "Out:${it.key}" }.mapValues {
-            ByteString.copyFromUtf8("Out:${it.value.toStringUtf8()}")
-          }
-        return result
+      override suspend fun execute(
+        input: Map<String, StorageClient.Blob>
+      ): Map<String, Flow<ByteString>> {
+        return input.mapKeys { "Out:${it.key}" }.mapValues {
+          ByteString.copyFromUtf8(
+              "Out:${
+            it.value.read(1024)
+            .fold(ByteString.EMPTY, { agg, chunk -> agg.concat(chunk) }).toStringUtf8()
+          }"
+            )
+            .asBufferedFlow(1024)
+        }
       }
     }
 
@@ -58,8 +70,14 @@ class ExchangeTaskExecutorImplTest {
     val blob1 = ByteString.copyFromUtf8("blob1")
     val blob2 = ByteString.copyFromUtf8("blob2")
 
-    privateStorage.batchWrite(outputLabels = mapOf("a" to "b"), data = mapOf("a" to blob1))
-    sharedStorage.batchWrite(outputLabels = mapOf("c" to "d"), data = mapOf("c" to blob2))
+    privateStorage.batchWrite(
+      outputLabels = mapOf("a" to "b"),
+      data = mapOf("a" to blob1.asBufferedFlow(1024))
+    )
+    sharedStorage.batchWrite(
+      outputLabels = mapOf("c" to "d"),
+      data = mapOf("c" to blob2.asBufferedFlow(1024))
+    )
 
     exchangeTaskExecutor.execute(
       ExchangeStepAttemptKey("w", "x", "y", "z"),
@@ -72,10 +90,10 @@ class ExchangeTaskExecutorImplTest {
       )
     )
 
-    assertThat(privateStorage.batchRead(mapOf("Out:c" to "e")))
+    assertThat(privateStorage.batchRead(mapOf("Out:c" to "e")).mapValues { foldBlob(it.value) })
       .containsExactly("Out:c", ByteString.copyFromUtf8("Out:blob2"))
 
-    assertThat(sharedStorage.batchRead(mapOf("Out:a" to "f")))
+    assertThat(sharedStorage.batchRead(mapOf("Out:a" to "f")).mapValues { foldBlob(it.value) })
       .containsExactly("Out:a", ByteString.copyFromUtf8("Out:blob1"))
   }
 
@@ -85,7 +103,7 @@ class ExchangeTaskExecutorImplTest {
 
     privateStorage.batchWrite(
       outputLabels = mapOf("a" to "b"),
-      data = mapOf("a" to ByteString.EMPTY)
+      data = mapOf("a" to emptyFlow<ByteString>())
     )
 
     assertFailsWith<CancellationException> {
