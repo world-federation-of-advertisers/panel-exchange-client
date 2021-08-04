@@ -1,0 +1,24 @@
+load("@rules_cc//cc:defs.bzl", "cc_library")
+
+package(default_visibility = ["//visibility:public"])
+
+_INCLUDE_PREFIX = "/src/main/cc"
+
+cc_library(
+    name = "key_generator",
+    srcs = [
+        "key_generator.cc",
+    ],
+    hdrs = [
+        "key_generator.h",
+    ],
+    strip_include_prefix = _INCLUDE_PREFIX,
+    deps = [
+        "//src/main/cc/wfa/panelmatch/common/crypto:cryptor",
+        "@boringssl//:crypto",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/status:statusor",
+        "@com_google_private_join_and_compute//crypto:ec_commutative_cipher",
+        "@tink_base//cc/util:secret_data",
+    ],
+)
