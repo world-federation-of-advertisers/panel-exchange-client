@@ -15,6 +15,11 @@
 package org.wfanet.panelmatch.client.exchangetasks
 
 import com.google.protobuf.ByteString
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.fold
+import org.wfanet.measurement.storage.StorageClient.Blob
+import org.wfanet.measurement.storage.read
+import org.wfanet.panelmatch.client.storage.toByteString
 import org.wfanet.panelmatch.protocol.common.parseSerializedSharedInputs
 
 /**
@@ -23,21 +28,26 @@ import org.wfanet.panelmatch.protocol.common.parseSerializedSharedInputs
  */
 class IntersectValidateTask(val maxSize: Int, val minimumOverlap: Float) : ExchangeTask {
 
-  override suspend fun execute(input: Map<String, ByteString>): Map<String, ByteString> {
-    val currentData: Set<ByteString> =
-      parseSerializedSharedInputs(requireNotNull(input["current-data"])).toSet()
-    val currentDataSize: Int = currentData.size
+  override suspend fun execute(input: Map<String, Blob>): Map<String, Flow<ByteString>> {
+    val currentData: Flow<ByteString> = requireNotNull(input["current-data"]).read()
+    val currentSetData: Set<ByteString> =
+      parseSerializedSharedInputs(
+          currentData.fold(ByteString.EMPTY, { agg, chunk -> agg.concat(chunk) })
+        )
+        .toSet()
+    val currentDataSize: Int = currentSetData.size
+
     require(currentDataSize < maxSize) {
       "Current data size of $currentDataSize is greater than $maxSize"
     }
     val oldData: Set<ByteString> =
-      parseSerializedSharedInputs(requireNotNull(input["previous-data"])).toSet()
-    val overlapItemsCount: Int = currentData.count { it in oldData }
+      parseSerializedSharedInputs(requireNotNull(input["previous-data"]).toByteString()).toSet()
+    val overlapItemsCount: Int = currentSetData.count { it in oldData }
     require(currentDataSize > 0)
     val currentOverlap: Float = overlapItemsCount.toFloat() / currentDataSize
     require(currentOverlap > minimumOverlap) {
       "Overlap of $currentOverlap is less than $minimumOverlap"
     }
-    return mapOf("current-data" to requireNotNull(input["current-data"])).toMap()
+    return mapOf("current-data" to currentData).toMap()
   }
 }
