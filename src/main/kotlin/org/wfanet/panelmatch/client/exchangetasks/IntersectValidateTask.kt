@@ -15,6 +15,10 @@
 package org.wfanet.panelmatch.client.exchangetasks
 
 import com.google.protobuf.ByteString
+import kotlinx.coroutines.flow.Flow
+import org.wfanet.measurement.storage.StorageClient.Blob
+import org.wfanet.measurement.storage.read
+import org.wfanet.panelmatch.client.storage.toByteString
 import org.wfanet.panelmatch.protocol.common.parseSerializedSharedInputs
 
 /**
@@ -23,21 +27,21 @@ import org.wfanet.panelmatch.protocol.common.parseSerializedSharedInputs
  */
 class IntersectValidateTask(val maxSize: Int, val minimumOverlap: Float) : ExchangeTask {
 
-  override suspend fun execute(input: Map<String, ByteString>): Map<String, ByteString> {
+  override suspend fun execute(input: Map<String, Blob>): Map<String, Flow<ByteString>> {
     val currentData: Set<ByteString> =
-      parseSerializedSharedInputs(requireNotNull(input["current-data"])).toSet()
+      parseSerializedSharedInputs(input["current-data"].toByteString()).toSet()
     val currentDataSize: Int = currentData.size
     require(currentDataSize < maxSize) {
       "Current data size of $currentDataSize is greater than $maxSize"
     }
     val oldData: Set<ByteString> =
-      parseSerializedSharedInputs(requireNotNull(input["previous-data"])).toSet()
+      parseSerializedSharedInputs(input["previous-data"].toByteString()).toSet()
     val overlapItemsCount: Int = currentData.count { it in oldData }
     require(currentDataSize > 0)
     val currentOverlap: Float = overlapItemsCount.toFloat() / currentDataSize
     require(currentOverlap > minimumOverlap) {
       "Overlap of $currentOverlap is less than $minimumOverlap"
     }
-    return mapOf("current-data" to requireNotNull(input["current-data"])).toMap()
+    return mapOf("current-data" to requireNotNull(input["current-data"]).read()).toMap()
   }
 }
