@@ -30,7 +30,7 @@ absl::StatusOr<GeneratedKeys> KeyGenerator::GenerateKeys() const {
   GeneratedKeys keys;
   uint8_t pepper[32];
   RAND_bytes(pepper, sizeof(keys.pepper));
-  keys.pepper = SecretDataFromStringView((char*)pepper);
+  keys.pepper = SecretDataFromStringView(reinterpret_cast<char*>(pepper));
   ASSIGN_OR_RETURN(
       std::unique_ptr<ECCommutativeCipher> cipher,
       ECCommutativeCipher::CreateWithNewKey(
