@@ -9,3 +9,8 @@ alias(
     name = "google_cloud_dataflow",
     actual = "@maven//:org_apache_beam_beam_runners_google_cloud_dataflow_java",
 )
+
+alias(
+    name = "core",
+    actual = "@maven//:org_apache_beam_beam_runners_core_java",
+)
