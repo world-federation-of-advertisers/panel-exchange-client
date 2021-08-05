@@ -15,10 +15,22 @@
 package org.wfanet.panelmatch.common
 
 import com.google.devtools.build.runfiles.Runfiles
+import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
 
-private val runfiles: Runfiles by lazy { Runfiles.create() }
+private val runfiles: Runfiles by lazy {
+  try {
+    Runfiles.create()
+  } catch (e: Exception) {
+    // Last-ditch effort to create working runfiles.
+    val tmpDirPath = Paths.get("/tmp/panel-exchange-client-runfiles")
+    if (!tmpDirPath.toFile().exists()) {
+      Files.createDirectories(tmpDirPath)
+    }
+    Runfiles.create(mapOf("RUNFILES_DIR" to tmpDirPath.toString()))
+  }
+}
 
 /**
  * Returns the runtime [Path] for the given runfiles-root-relative [Path], or null if it cannot be
@@ -42,6 +54,8 @@ fun getRuntimePath(runfilesRelativePath: Path): Path? {
 fun loadLibrary(name: String, directoryPath: Path) {
   val relativePath = directoryPath.resolve(System.mapLibraryName(name))
   val runtimePath = requireNotNull(getRuntimePath(relativePath))
-
+  check(runtimePath.toFile().exists())
+  check(runtimePath.toFile().canExecute())
+  check(runtimePath.toFile().canRead())
   System.load(runtimePath.toAbsolutePath().toString())
 }

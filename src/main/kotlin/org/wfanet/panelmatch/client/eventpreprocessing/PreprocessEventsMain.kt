@@ -18,6 +18,7 @@ import com.google.api.services.bigquery.model.TableFieldSchema
 import com.google.api.services.bigquery.model.TableRow
 import com.google.api.services.bigquery.model.TableSchema
 import com.google.protobuf.ByteString
+import java.util.Base64
 import org.apache.beam.runners.dataflow.options.DataflowPipelineOptions
 import org.apache.beam.sdk.Pipeline
 import org.apache.beam.sdk.io.gcp.bigquery.BigQueryIO
@@ -31,12 +32,11 @@ import org.wfanet.panelmatch.common.beam.kvOf
 import org.wfanet.panelmatch.common.beam.map
 
 interface Options : DataflowPipelineOptions {
+  @get:Description("Batch Size") @get:Validation.Required var batchSize: Int
 
-  @get:Description("Batch Size") var batchSize: Int
+  @get:Description("Cryptokey") @get:Validation.Required var cryptokey: String
 
-  @get:Description("Cryptokey") var cryptokey: String
-
-  @get:Description("Pepper") var pepper: String
+  @get:Description("Pepper") @get:Validation.Required var pepper: String
 
   @get:Description("Table to read from, specified as <project_id>:<dataset_id>.<table_id>")
   @get:Validation.Required
@@ -51,9 +51,8 @@ interface Options : DataflowPipelineOptions {
 }
 
 fun main(args: Array<String>) {
-  val options = PipelineOptionsFactory.fromArgs(*args).withValidation().`as`(Options::class.java)
+  val options = makeOptions(args)
   val p = Pipeline.create(options)
-
   val unencryptedEvents = readFromBigQuery(options.bigQueryInputTable, p)
   val encryptedEvents =
     preprocessEventsInPipeline(
@@ -68,18 +67,45 @@ fun main(args: Array<String>) {
   p.run().waitUntilFinish()
 }
 
-fun writeToBigQuery(encryptedEvents: PCollection<KV<Long, ByteString>>, outputTable: String) {
+private fun readFromBigQuery(
+  inputTable: String,
+  p: Pipeline
+): PCollection<KV<ByteString, ByteString>> {
+  // Build the read options proto for the read operation.
+  val rowsFromBigQuery =
+    p.apply(
+      BigQueryIO.readTableRows()
+        .from(inputTable)
+        .withMethod(Method.DIRECT_READ)
+        .withSelectedFields(mutableListOf("UserId", "UserEvent"))
+    )
+  return rowsFromBigQuery.map {
+    kvOf(
+      ByteString.copyFromUtf8(it["UserId"] as String),
+      ByteString.copyFromUtf8(it["UserEvent"] as String)
+    )
+  }
+}
+
+private fun writeToBigQuery(
+  encryptedEvents: PCollection<KV<Long, ByteString>>,
+  outputTable: String
+) {
   // Build the table schema for the output table.
   val fields =
     listOf<TableFieldSchema>(
-      TableFieldSchema().setName("encrypted_id").setType("LONG"),
-      TableFieldSchema().setName("encrypted_data").setType("BYTESTRING")
+      TableFieldSchema().setName("EncryptedId").setType("INT64"),
+      TableFieldSchema().setName("EncryptedData").setType("BYTES")
     )
   val schema = TableSchema().setFields(fields)
 
   // Convert KV<Long,ByteString> to TableRow
   val encryptedTableRows =
-    encryptedEvents.map { TableRow().set("encrypted_id", it.key).set("encrypted_data", it.value) }
+    encryptedEvents.map {
+      TableRow()
+        .set("EncryptedId", it.key)
+        .set("EncryptedData", Base64.getEncoder().encode(it.value.toByteArray()))
+    }
 
   // Write to BigQueryIO
   encryptedTableRows.apply(
@@ -91,21 +117,8 @@ fun writeToBigQuery(encryptedEvents: PCollection<KV<Long, ByteString>>, outputTa
   )
 }
 
-fun readFromBigQuery(inputTable: String, p: Pipeline): PCollection<KV<ByteString, ByteString>> {
-  // Build the read options proto for the read operation.
-  val rowsFromBigQuery =
-    p.apply(
-      BigQueryIO.readTableRows()
-        .from(inputTable)
-        .withMethod(Method.DIRECT_READ)
-        .withSelectedFields(mutableListOf("id", "data"))
-    )
-  val unencryptedEvents =
-    rowsFromBigQuery.map {
-      kvOf(
-        ByteString.copyFromUtf8(it["id"] as String),
-        ByteString.copyFromUtf8(it["data"] as String)
-      )
-    }
-  return unencryptedEvents
+private fun makeOptions(args: Array<String>): Options {
+  val options = PipelineOptionsFactory.fromArgs(*args).withValidation().`as`(Options::class.java)
+  setFilesToStage(options)
+  return options
 }

@@ -12,7 +12,9 @@ kt_jvm_library(
     deps = [
         "//imports/java/org/apache/beam:core",
         "//imports/java/org/apache/beam/extensions:protobuf",
+        "//imports/java/org/apache/beam/runners:core",
         "//imports/java/org/joda",
+        "//src/main/kotlin/org/wfanet/panelmatch/client/logger",
         "//src/main/kotlin/org/wfanet/panelmatch/common",
         "//src/main/kotlin/org/wfanet/panelmatch/common/beam",
         "//src/main/proto/wfa/panelmatch/client/eventpreprocessing:preprocess_events_java_proto",
@@ -29,7 +31,6 @@ kt_jvm_library(
     ],
     deps = [
         ":eventpreprocessing",
-        "//imports/java/com/google/api/client:http",
         "//imports/java/com/google/api/services:cloud_bigquery",
         "//imports/java/com/google/api/services:services_bigquery",
         "//imports/java/org/apache/beam:core",
