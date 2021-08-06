@@ -146,6 +146,7 @@ BEAM_VERSION = "2.31.0"
 # Add Maven artifacts or override versions (e.g. those pulled in by gRPC Kotlin
 # or default dependency versions).
 MAVEN_ARTIFACTS.update({
+    # Without this, we get java.lang.NoClassDefFoundError: com/google/api/gax/tracing/NoopApiTracer
     "com.google.api:gax": "2.0.0",
     "com.google.api:gax-grpc": "2.0.0",
     "com.google.apis:google-api-services-bigquery": "v2-rev20210404-1.31.0",

@@ -15,13 +15,13 @@
 package org.wfanet.panelmatch.client.eventpreprocessing
 
 import java.nio.file.Files
-import java.nio.file.Paths
 import java.util.logging.Level
 import org.wfanet.panelmatch.client.PreprocessEventsRequest
 import org.wfanet.panelmatch.client.PreprocessEventsResponse
 import org.wfanet.panelmatch.client.logger.loggerFor
 import org.wfanet.panelmatch.common.getRuntimePath
 import org.wfanet.panelmatch.common.loadLibrary
+import org.wfanet.panelmatch.common.pathOf
 import org.wfanet.panelmatch.common.wrapJniException
 
 /** A [PreprocessEvents] implementation using the JNI [PreprocessEvents]. */
@@ -39,25 +39,25 @@ class JniPreprocessEvents : PreprocessEvents {
     private val logger by loggerFor()
 
     init {
-      val directoryPath =
-        "panel_exchange_client/src/main/swig/wfanet/panelmatch/client/eventpreprocessing"
+      val directory =
+        pathOf("panel_exchange_client/src/main/swig/wfanet/panelmatch/client/eventpreprocessing")
       try {
-        loadLibrary(name = "preprocess_events", directoryPath = Paths.get(directoryPath))
+        loadLibrary(name = "preprocess_events", directoryPath = directory)
       } catch (e: Exception) {
         /*
          * This is a massive hack for Google Cloud Dataflow.
          *
-         * TODO: switch to using `getResource` here from a jar.
+         * TODO: switch to using `getResource` here from a jar. (Github Issue #77)
          */
         logger.log(Level.WARNING, "loadLibrary exception", e)
-        val dataflowDir = Paths.get("/var/opt/google/dataflow").toFile()
+        val dataflowDir = pathOf("/var/opt/google/dataflow").toFile()
         if (dataflowDir.exists() && dataflowDir.isDirectory) {
           val libraryFile =
             dataflowDir.listFiles()!!.single {
               it.name.startsWith("libpreprocess_events-") && it.extension == "so"
             }
 
-          val tmpDirPath = checkNotNull(getRuntimePath(Paths.get(directoryPath)))
+          val tmpDirPath = checkNotNull(getRuntimePath(directory))
           if (!tmpDirPath.toFile().exists()) {
             Files.createDirectories(tmpDirPath)
           }
@@ -66,7 +66,7 @@ class JniPreprocessEvents : PreprocessEvents {
             libraryFile.copyTo(destinationPath.toFile())
           }
           check(destinationPath.toFile().setExecutable(true))
-          loadLibrary(name = "preprocess_events", directoryPath = Paths.get(directoryPath))
+          loadLibrary(name = "preprocess_events", directoryPath = directory)
         } else {
           throw e
         }

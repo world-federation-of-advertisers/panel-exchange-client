@@ -49,7 +49,25 @@ interface Options : DataflowPipelineOptions {
   @get:Validation.Required
   var bigQueryOutputTable: String
 }
-
+/**
+ * Runs relevant DoFns to preprocess events in a condensed main function
+ *
+ * All logic and transforms featured in this pipeline are thoroughly unit tested
+ *
+ * To test this pipeline, it must be run on Google Cloud Platform on a machine that also has the
+ * cross-media-measurement repository cloned and docker installed. The command to run the pipeline
+ * on GCP is: ../cross-media-measurement/tools/bazel-container build
+ * //src/main/kotlin/org/wfanet/panelmatch/ client/eventpreprocessing:process_events &&
+ * bazel-bin/src/main/kotlin/org/wfanet/panelmatch/ client/eventpreprocessing/process_events
+ * '--batchSize=SIZE' '--cryptokey=KEY' '--pepper=PEPPER' '--bigQueryInputTable=INPUT_TABLE'
+ * '--bigQueryOutputTable=OUTPUT_TABLE' '--project=PROJECT' '--runner=dataflow'
+ * '--region=us-central1' '--tempLocation=TEMP_LOCATION' '--defaultWorkerLogLevel=DEBUG' Where SIZE
+ * is the desired batch size, KEY is the desired crypto key, PEPPER is the desired pepper,
+ * INPUT_TABLE is the BigQuery table to read from, OUTPUT_TABLE is the BigQuery table to write to,
+ * PROJECT is the project name, and TEMP_LOCATION is the desired location to store temp files.
+ *
+ * Performance and outputs can be tracked on the GCP console.
+ */
 fun main(args: Array<String>) {
   val options = makeOptions(args)
   val p = Pipeline.create(options)
@@ -74,12 +92,14 @@ private fun readFromBigQuery(
   // Build the read options proto for the read operation.
   val rowsFromBigQuery =
     p.apply(
+      "Read Unencrypted Events",
       BigQueryIO.readTableRows()
         .from(inputTable)
         .withMethod(Method.DIRECT_READ)
         .withSelectedFields(mutableListOf("UserId", "UserEvent"))
     )
-  return rowsFromBigQuery.map {
+  // Convert TableRow to KV<Long,ByteString>
+  return rowsFromBigQuery.map(name = "Map to ByteStrings") {
     kvOf(
       ByteString.copyFromUtf8(it["UserId"] as String),
       ByteString.copyFromUtf8(it["UserEvent"] as String)
@@ -101,7 +121,7 @@ private fun writeToBigQuery(
 
   // Convert KV<Long,ByteString> to TableRow
   val encryptedTableRows =
-    encryptedEvents.map {
+    encryptedEvents.map(name = "Map to TableRows") {
       TableRow()
         .set("EncryptedId", it.key)
         .set("EncryptedData", Base64.getEncoder().encode(it.value.toByteArray()))
@@ -109,6 +129,7 @@ private fun writeToBigQuery(
 
   // Write to BigQueryIO
   encryptedTableRows.apply(
+    "Write Encrypted Events",
     BigQueryIO.writeTableRows()
       .to(outputTable)
       .withSchema(schema)

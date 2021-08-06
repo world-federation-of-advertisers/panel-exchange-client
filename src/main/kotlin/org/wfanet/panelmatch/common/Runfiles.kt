@@ -23,7 +23,11 @@ private val runfiles: Runfiles by lazy {
   try {
     Runfiles.create()
   } catch (e: Exception) {
-    // Last-ditch effort to create working runfiles.
+    /**
+     * Last-ditch effort to create working runfiles. If the RUNFILES_DIR environmental variable
+     * isn't set (which is not done by the workers spawned by many runners), it will be created
+     * here. The only runner this should not have to be done for is DirectRunner.
+     */
     val tmpDirPath = Paths.get("/tmp/panel-exchange-client-runfiles")
     if (!tmpDirPath.toFile().exists()) {
       Files.createDirectories(tmpDirPath)

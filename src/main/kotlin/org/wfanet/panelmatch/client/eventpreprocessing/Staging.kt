@@ -14,11 +14,11 @@
 
 package org.wfanet.panelmatch.client.eventpreprocessing
 
-import java.nio.file.Paths
 import org.apache.beam.runners.core.construction.resources.PipelineResources
 import org.apache.beam.sdk.options.FileStagingOptions
 import org.apache.beam.sdk.options.PipelineOptions
 import org.wfanet.panelmatch.common.getRuntimePath
+import org.wfanet.panelmatch.common.pathOf
 
 /**
  * Sets the `filesToStage` for the pipeline.
@@ -35,9 +35,9 @@ private fun getDefaultFilesToStage(options: PipelineOptions): List<String> {
 }
 
 private val extraFilesToStage: List<String> by lazy {
-  val swigPath =
-    Paths.get("panel_exchange_client/src/main/swig/wfanet/panelmatch/client/eventpreprocessing")
-  val relativePath = swigPath.resolve(System.mapLibraryName("preprocess_events"))
+  val swig =
+    pathOf("panel_exchange_client/src/main/swig/wfanet/panelmatch/client/eventpreprocessing")
+  val relativePath = swig.resolve(System.mapLibraryName("preprocess_events"))
   val runtimePath = requireNotNull(getRuntimePath(relativePath))
   listOf(runtimePath.toAbsolutePath().toString())
 }
