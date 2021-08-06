@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package org.wfanet.panelmatch.client.eventpreprocessing
+package org.wfanet.panelmatch.client.eventpreprocessing.deploy.gcloud
 
 import com.google.api.services.bigquery.model.TableFieldSchema
 import com.google.api.services.bigquery.model.TableRow
@@ -28,6 +28,8 @@ import org.apache.beam.sdk.options.PipelineOptionsFactory
 import org.apache.beam.sdk.options.Validation
 import org.apache.beam.sdk.values.KV
 import org.apache.beam.sdk.values.PCollection
+import org.wfanet.panelmatch.client.eventpreprocessing.preprocessEventsInPipeline
+import org.wfanet.panelmatch.client.eventpreprocessing.setFilesToStage
 import org.wfanet.panelmatch.common.beam.kvOf
 import org.wfanet.panelmatch.common.beam.map
 
