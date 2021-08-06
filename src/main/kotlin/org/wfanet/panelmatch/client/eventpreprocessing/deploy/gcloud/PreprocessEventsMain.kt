@@ -29,7 +29,6 @@ import org.apache.beam.sdk.options.Validation
 import org.apache.beam.sdk.values.KV
 import org.apache.beam.sdk.values.PCollection
 import org.wfanet.panelmatch.client.eventpreprocessing.preprocessEventsInPipeline
-import org.wfanet.panelmatch.client.eventpreprocessing.setFilesToStage
 import org.wfanet.panelmatch.common.beam.kvOf
 import org.wfanet.panelmatch.common.beam.map
 
@@ -142,7 +141,5 @@ private fun writeToBigQuery(
 }
 
 private fun makeOptions(args: Array<String>): Options {
-  val options = PipelineOptionsFactory.fromArgs(*args).withValidation().`as`(Options::class.java)
-  setFilesToStage(options)
-  return options
+  return PipelineOptionsFactory.fromArgs(*args).withValidation().`as`(Options::class.java)
 }
