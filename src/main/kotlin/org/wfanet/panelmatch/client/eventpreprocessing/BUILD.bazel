@@ -3,12 +3,27 @@ load("@rules_java//java:defs.bzl", "java_binary")
 
 package(default_visibility = ["//visibility:public"])
 
+# There is a bug in kt_jvm_library that does not allow specifying a .so file in
+# the `resources` parameter, so instead we make a `java_library` containing the
+# .so file.
+#
+# See also https://github.com/world-federation-of-advertisers/panel-exchange-client/issues/77.
+java_library(
+    name = "swig_resources",
+    resources = [
+        "//src/main/swig/wfanet/panelmatch/client/eventpreprocessing:libpreprocess_events.so",
+    ],
+)
+
 kt_jvm_library(
     name = "eventpreprocessing",
     srcs = glob(
         ["*.kt"],
         exclude = ["*Main.kt"],
     ),
+    runtime_deps = [
+        ":swig_resources",
+    ],
     deps = [
         "//imports/java/org/apache/beam:core",
         "//imports/java/org/apache/beam/extensions:protobuf",

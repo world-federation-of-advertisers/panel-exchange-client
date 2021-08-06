@@ -15,26 +15,10 @@
 package org.wfanet.panelmatch.common
 
 import com.google.devtools.build.runfiles.Runfiles
-import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
 
-private val runfiles: Runfiles by lazy {
-  try {
-    Runfiles.create()
-  } catch (e: Exception) {
-    /**
-     * Last-ditch effort to create working runfiles. If the RUNFILES_DIR environmental variable
-     * isn't set (which is not done by the workers spawned by many runners), it will be created
-     * here. The only runner this should not have to be done for is DirectRunner.
-     */
-    val tmpDirPath = Paths.get("/tmp/panel-exchange-client-runfiles")
-    if (!tmpDirPath.toFile().exists()) {
-      Files.createDirectories(tmpDirPath)
-    }
-    Runfiles.create(mapOf("RUNFILES_DIR" to tmpDirPath.toString()))
-  }
-}
+private val runfiles: Runfiles by lazy { Runfiles.create() }
 
 /**
  * Returns the runtime [Path] for the given runfiles-root-relative [Path], or null if it cannot be
