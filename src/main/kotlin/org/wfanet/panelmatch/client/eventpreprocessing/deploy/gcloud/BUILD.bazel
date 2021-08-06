@@ -22,7 +22,7 @@ kt_jvm_library(
 
 java_binary(
     name = "process_events",
-    main_class = "org.wfanet.panelmatch.client.eventpreprocessing.PreprocessEventsMainKt",
+    main_class = "org.wfanet.panelmatch.client.eventpreprocessing.deploy.gcloud.PreprocessEventsMainKt",
     tags = ["manual"],
     runtime_deps = [":preprocess_events_main"],
 )
