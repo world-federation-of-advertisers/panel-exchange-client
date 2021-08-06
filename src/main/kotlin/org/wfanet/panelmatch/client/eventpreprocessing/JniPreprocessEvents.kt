@@ -14,14 +14,12 @@
 
 package org.wfanet.panelmatch.client.eventpreprocessing
 
+import java.io.InputStream
 import java.nio.file.Files
-import java.util.logging.Level
+import java.nio.file.Paths
 import org.wfanet.panelmatch.client.PreprocessEventsRequest
 import org.wfanet.panelmatch.client.PreprocessEventsResponse
 import org.wfanet.panelmatch.client.logger.loggerFor
-import org.wfanet.panelmatch.common.getRuntimePath
-import org.wfanet.panelmatch.common.loadLibrary
-import org.wfanet.panelmatch.common.pathOf
 import org.wfanet.panelmatch.common.wrapJniException
 
 /** A [PreprocessEvents] implementation using the JNI [PreprocessEvents]. */
@@ -39,38 +37,25 @@ class JniPreprocessEvents : PreprocessEvents {
     private val logger by loggerFor()
 
     init {
-      val directory =
-        pathOf("panel_exchange_client/src/main/swig/wfanet/panelmatch/client/eventpreprocessing")
-      try {
-        loadLibrary(name = "preprocess_events", directoryPath = directory)
-      } catch (e: Exception) {
-        /*
-         * This is a massive hack for Google Cloud Dataflow.
-         *
-         * TODO: switch to using `getResource` here from a jar. (Github Issue #77)
-         */
-        logger.log(Level.WARNING, "loadLibrary exception", e)
-        val dataflowDir = pathOf("/var/opt/google/dataflow").toFile()
-        if (dataflowDir.exists() && dataflowDir.isDirectory) {
-          val libraryFile =
-            dataflowDir.listFiles()!!.single {
-              it.name.startsWith("libpreprocess_events-") && it.extension == "so"
-            }
+      val libraryName = System.mapLibraryName("preprocess_events")
+      val libraryPath = "/main/swig/wfanet/panelmatch/client/eventpreprocessing/$libraryName"
 
-          val tmpDirPath = checkNotNull(getRuntimePath(directory))
-          if (!tmpDirPath.toFile().exists()) {
-            Files.createDirectories(tmpDirPath)
-          }
-          val destinationPath = tmpDirPath.resolve("libpreprocess_events.so")
-          if (!destinationPath.toFile().exists()) {
-            libraryFile.copyTo(destinationPath.toFile())
-          }
-          check(destinationPath.toFile().setExecutable(true))
-          loadLibrary(name = "preprocess_events", directoryPath = directory)
-        } else {
-          throw e
-        }
-      }
+      val tmpDir =
+        Paths.get(
+            System.getProperty("java.io.tmpdir"),
+            "panel-exchange-client",
+            "JniPreprocessEvents",
+            System.currentTimeMillis().toString()
+          )
+          .toAbsolutePath()
+      check(tmpDir.toFile().mkdirs())
+      tmpDir.toFile().deleteOnExit()
+      val outputPath = tmpDir.resolve(libraryName)
+
+      val stream: InputStream = this::class.java.getResourceAsStream(libraryPath)!!
+      stream.use { Files.copy(stream, outputPath) }
+      outputPath.toFile().deleteOnExit()
+      System.load(outputPath.toString())
     }
   }
 }
