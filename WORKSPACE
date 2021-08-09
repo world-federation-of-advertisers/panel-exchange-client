@@ -237,13 +237,6 @@ load("@com_github_grpc_grpc//bazel:grpc_extra_deps.bzl", "grpc_extra_deps")
 
 grpc_extra_deps()
 
-load("//build/com_google_private_join_and_compute:repo.bzl", "private_join_and_compute_repo")
-
-private_join_and_compute_repo(
-    commit = "89c8d0aae070b9c282043af419e47d7ef897f460",
-    sha256 = "13e0414220a2709b0dbeefafe5a4d1b3f3261a541d0405c844857521d5f25f32",
-)
-
 # @platforms
 
 http_archive(
@@ -318,11 +311,15 @@ tink_cc_deps_init()
 # Common-cpp
 http_archive(
     name = "wfa_common_cpp",
-    sha256 = "e0e1f5eed832ef396109354a64c6c1306bf0fb5ea0b449ce6ee1e8edc6fe279d",
-    strip_prefix = "common-cpp-43c75acc3394e19bcfd2cfe8e8e2454365d26d60",
-    url = "https://github.com/world-federation-of-advertisers/common-cpp/archive/43c75acc3394e19bcfd2cfe8e8e2454365d26d60.tar.gz",
+    sha256 = "d694543bb89ffb6fb669f18684d38981e968e906b39618687e3feeea37ec325d",
+    strip_prefix = "common-cpp-0.2.0",
+    url = "https://github.com/world-federation-of-advertisers/common-cpp/archive/v0.2.0.tar.gz",
 )
 
-load("@wfa_common_cpp//build:deps.bzl", "common_cpp_deps")
+load("@wfa_common_cpp//build:common_cpp_repositories.bzl", "common_cpp_repositories")
+
+common_cpp_repositories()
+
+load("@wfa_common_cpp//build:common_cpp_deps.bzl", "common_cpp_deps")
 
 common_cpp_deps()
