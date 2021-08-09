@@ -69,8 +69,6 @@ interface Options : DataflowPipelineOptions {
  * files.
  *
  * Performance and outputs can be tracked on the GCP console.
- * ```
- * ```
  */
 fun main(args: Array<String>) {
   val options = makeOptions(args)
