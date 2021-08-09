@@ -12,14 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Common sets of constraint values."""
+"""
+Step 3 of configuring WORKSPACE.
+"""
 
-DISTROLESS_JAVA = [
-    "@platforms//os:linux",
-    "@platforms//cpu:x86_64",
-] + select({
-    "//build/platforms:glibc_2_23": [],
-    "//build/platforms:glibc_2_27": [],
-    "//build/platforms:glibc_2_28": [],
-    "//conditions:default": ["@platforms//:incompatible"],
-})
+load("@wfa_common_jvm//build:common_jvm_deps.bzl", "common_jvm_deps")
+load("@tink_base//:tink_base_deps_init.bzl", "tink_base_deps_init")
+load("@tink_cc//:tink_cc_deps_init.bzl", "tink_cc_deps_init")
+
+def panel_exchange_client_extra_deps():
+    """Installs additional deps for panel_exchange_client."""
+    common_jvm_deps()
+    tink_base_deps_init()
+    tink_cc_deps_init()
