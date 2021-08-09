@@ -14,27 +14,26 @@
  * limitations under the License.
  */
 
-#ifndef SRC_MAIN_CC_WFA_PANELMATCH_CLIENT_KEYGENERATION_KEY_GENERATOR_H_
-#define SRC_MAIN_CC_WFA_PANELMATCH_CLIENT_KEYGENERATION_KEY_GENERATOR_H_
+#ifndef SRC_MAIN_CC_WFA_PANELMATCH_COMMON_CRYPTO_EC_COMMUTATIVE_CIPHER_KEY_GENERATOR_H_
+#define SRC_MAIN_CC_WFA_PANELMATCH_COMMON_CRYPTO_EC_COMMUTATIVE_CIPHER_KEY_GENERATOR_H_
 
 #include "absl/status/statusor.h"
 #include "tink/util/secret_data.h"
 
-namespace wfa::panelmatch::client::keygeneration {
+namespace wfa::panelmatch::common::crypto {
 
-struct GeneratedKeys {
-  crypto::tink::util::SecretData pepper;
-  crypto::tink::util::SecretData cryptokey;
-};
+// ECCommutativeCipher random key generator
+class EcCommutativeCipherKeyGenerator {
 
-class KeyGenerator {
  public:
-  KeyGenerator() = default;
-  ~KeyGenerator() = default;
+  EcCommutativeCipherKeyGenerator() = default;
+  ~EcCommutativeCipherKeyGenerator() = default;
 
-  absl::StatusOr<GeneratedKeys> GenerateKeys() const;
+  // Generates a random key for creating an ECCommutativeCipher
+  absl::StatusOr<::crypto::tink::util::SecretData> GenerateKey() const;
+
 };
 
-}  // namespace wfa::panelmatch::client::keygeneration
+}  // namespace wfa::panelmatch::common::crypto
 
-#endif  // SRC_MAIN_CC_WFA_PANELMATCH_CLIENT_KEYGENERATION_KEY_GENERATOR_H_
+#endif  // SRC_MAIN_CC_WFA_PANELMATCH_COMMON_CRYPTO_EC_COMMUTATIVE_CIPHER_KEY_GENERATOR_H_
