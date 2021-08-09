@@ -22,10 +22,14 @@ namespace wfa::panelmatch::common::crypto {
 
 using ::crypto::tink::util::SecretData;
 
-absl::StatusOr<SecretData> RandomBytesKeyGenerator::GenerateKey() const {
+absl::StatusOr<SecretData> RandomBytesKeyGenerator::GenerateKey(int size) const {
+
+  if (size <= 0)
+    return absl::InvalidArgumentError("Size must be greater than 0");
+
   SecretData key;
-  key.resize(32);
-  RAND_bytes(key.data(), sizeof(key));
+  key.resize(size);
+  RAND_bytes(key.data(), size);
   return key;
 }
 

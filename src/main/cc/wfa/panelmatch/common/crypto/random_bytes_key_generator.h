@@ -30,7 +30,7 @@ class RandomBytesKeyGenerator {
   ~RandomBytesKeyGenerator() = default;
 
   // Generates random bytes
-  absl::StatusOr<::crypto::tink::util::SecretData> GenerateKey() const;
+  absl::StatusOr<::crypto::tink::util::SecretData> GenerateKey(int size) const;
 
 };
 

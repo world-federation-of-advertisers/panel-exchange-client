@@ -26,9 +26,16 @@ using ::crypto::tink::util::SecretData;
 // Make sure each call to GenerateKey returns a unique value
 TEST(RandomBytesKeyGenerator, uniqueValues) {
   RandomBytesKeyGenerator generator;
-  ASSERT_OK_AND_ASSIGN(SecretData key1, generator.GenerateKey());
-  ASSERT_OK_AND_ASSIGN(SecretData key2, generator.GenerateKey());
+  ASSERT_OK_AND_ASSIGN(SecretData key1, generator.GenerateKey(32));
+  ASSERT_OK_AND_ASSIGN(SecretData key2, generator.GenerateKey(32));
   ASSERT_NE(key1, key2);
+}
+
+// Make sure values <= 0 return an error
+TEST(RandomBytesKeyGenerator, invalidArgument) {
+  RandomBytesKeyGenerator generator;
+  auto key = generator.GenerateKey(-12);
+  EXPECT_THAT(key.status(), StatusIs(absl::StatusCode::kInvalidArgument, "Size must be greater than 0"));
 }
 
 }  // namespace
