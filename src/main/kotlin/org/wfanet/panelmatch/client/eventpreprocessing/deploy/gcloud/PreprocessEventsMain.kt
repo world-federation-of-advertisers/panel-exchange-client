@@ -59,21 +59,17 @@ interface Options : DataflowPipelineOptions {
  * cross-media-measurement repository cloned and docker installed. The command to run the pipeline
  * on GCP is:
  *
- * ''' ../cross-media-measurement/tools/bazel-container build
- * //src/main/kotlin/org/wfanet/panelmatch/ client/eventpreprocessing/deploy/gcloud:process_events
- * && bazel-bin/src/main/kotlin/org/wfanet/panelmatch/
- * client/eventpreprocessing/deploy/gcloud/process_events '--batchSize=SIZE' '--cryptokey=KEY'
- * '--pepper=PEPPER' '--bigQueryInputTable=INPUT_TABLE' '--bigQueryOutputTable=OUTPUT_TABLE'
- * '--project=PROJECT' '--runner=dataflow' '--region=us-central1' '--tempLocation=TEMP_LOCATION'
- * '--defaultWorkerLogLevel=DEBUG'
+ * ```
+ * ../cross-media-measurement/tools/bazel-container build //src/main/kotlin/org/wfanet/panelmatch/ client/eventpreprocessing/deploy/gcloud:process_events && bazel-bin/src/main/kotlin/org/wfanet/panelmatch/client/eventpreprocessing/deploy/gcloud/process_events '--batchSize=SIZE' '--cryptokey=KEY' '--pepper=PEPPER' '--bigQueryInputTable=INPUT_TABLE' '--bigQueryOutputTable=OUTPUT_TABLE' '--project=PROJECT' '--runner=dataflow' '--region=us-central1' '--tempLocation=TEMP_LOCATION' '--defaultWorkerLogLevel=DEBUG'
  * ```
  *
- * Where SIZE is the desired batch size, KEY is the desired crypto
- * key, PEPPER is the desired pepper, INPUT_TABLE is the BigQuery table to read from, OUTPUT_TABLE
- * is the BigQuery table to write to, PROJECT is the project name, and TEMP_LOCATION is the desired
- * location to store temp files.
+ * Where SIZE is the desired batch size, KEY is the desired crypto key, PEPPER is the desired
+ * pepper, INPUT_TABLE is the BigQuery table to read from, OUTPUT_TABLE is the BigQuery table to
+ * write to, PROJECT is the project name, and TEMP_LOCATION is the desired location to store temp
+ * files.
  *
  * Performance and outputs can be tracked on the GCP console.
+ * ```
  * ```
  */
 fun main(args: Array<String>) {
