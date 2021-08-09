@@ -15,18 +15,12 @@
 package org.wfanet.panelmatch.client.batchlookup
 
 import java.nio.file.Paths
-import org.wfanet.panelmatch.client.batchlookup.DecryptQueriesRequest
-import org.wfanet.panelmatch.client.batchlookup.DecryptQueriesResponse
-import org.wfanet.panelmatch.client.batchlookup.EncryptQueriesRequest
-import org.wfanet.panelmatch.client.batchlookup.EncryptQueriesResponse
-import org.wfanet.panelmatch.client.batchlookup.GenerateKeysRequest
-import org.wfanet.panelmatch.client.batchlookup.GenerateKeysResponse
 import org.wfanet.panelmatch.common.loadLibrary
 import org.wfanet.panelmatch.common.wrapJniException
 import org.wfanet.panelmatch.protocol.batchlookup.SwigObliviousQuery
 
 /** A [QueryCryptor] implementation using the JNI [SwigObliviousQuery]. */
-class JniQueryCryptor : QueryCryptor {
+class JniObliviousQueryBuilder : ObliviousQueryBuilder {
 
   override fun generateKeys(request: GenerateKeysRequest): GenerateKeysResponse {
     return wrapJniException {
@@ -53,8 +47,7 @@ class JniQueryCryptor : QueryCryptor {
   companion object {
 
     init {
-      val SWIG_PATH =
-        "panel_exchange_client/src/main/swig/wfanet/panelmatch/protocol/batchlookup"
+      val SWIG_PATH = "panel_exchange_client/src/main/swig/wfanet/panelmatch/protocol/batchlookup"
       loadLibrary(name = "oblivious_query", directoryPath = Paths.get(SWIG_PATH))
     }
   }

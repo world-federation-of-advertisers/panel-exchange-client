@@ -14,19 +14,14 @@
 
 package org.wfanet.panelmatch.client.batchlookup
 
-import org.wfanet.panelmatch.client.batchlookup.DecryptQueriesRequest
-import org.wfanet.panelmatch.client.batchlookup.DecryptQueriesResponse
-import org.wfanet.panelmatch.client.batchlookup.EncryptQueriesRequest
-import org.wfanet.panelmatch.client.batchlookup.EncryptQueriesResponse
-import org.wfanet.panelmatch.client.batchlookup.GenerateKeysRequest
-import org.wfanet.panelmatch.client.batchlookup.GenerateKeysResponse
-
-interface QueryCryptor {
-
+/** Provides oblvious query compression encryption for us in private information retrieval */
+interface ObliviousQueryBuilder {
+  /** Generates a public and private key for query compression and expansion */
   fun generateKeys(request: GenerateKeysRequest): GenerateKeysResponse
 
+  /** decrypts a set of encrypted queries */
   fun decryptQueries(request: DecryptQueriesRequest): DecryptQueriesResponse
 
+  /** encrypts a set of unencrypted queries */
   fun encryptQueries(request: EncryptQueriesRequest): EncryptQueriesResponse
-
 }

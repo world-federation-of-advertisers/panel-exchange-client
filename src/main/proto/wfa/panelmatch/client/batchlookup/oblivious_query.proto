@@ -16,6 +16,8 @@ syntax = "proto3";
 
 package wfa.panelmatch.client.batchlookup;
 
+import "wfa/panelmatch/client/batchlookup/query.proto";
+
 option java_package = "org.wfanet.panelmatch.client.batchlookup";
 option java_multiple_files = true;
 
@@ -35,9 +37,9 @@ message GenerateKeysResponse {
 
 // Used in the request to encrypt a set of queries
 message UnencryptedQuery {
-  int64 shard_id = 1;
-  int64 query_id = 2;
-  int64 bucket_id = 3;
+  ShardId shard_id = 1;
+  QueryId query_id = 2;
+  BucketId bucket_id = 3;
 }
 
 // A request to encrypt a set of queries
@@ -50,8 +52,8 @@ message EncryptQueriesRequest {
 
 // Used in the response to encrypt a set of queries
 message EncryptedQuery {
-  int64 shard_id = 1;
-  int64 query_id = 2;
+  ShardId shard_id = 1;
+  QueryId query_id = 2;
 }
 
 message EncryptQueriesResponse {

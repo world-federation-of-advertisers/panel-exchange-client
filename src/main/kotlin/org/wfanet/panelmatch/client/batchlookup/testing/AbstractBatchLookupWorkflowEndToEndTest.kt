@@ -15,6 +15,7 @@
 package org.wfanet.panelmatch.client.batchlookup.testing
 
 import com.google.common.truth.Truth.assertThat
+import com.google.common.truth.Truth.assertWithMessage
 import com.google.protobuf.ByteString
 import kotlin.random.Random
 import org.apache.beam.sdk.transforms.Create
@@ -44,7 +45,7 @@ abstract class AbstractBatchLookupWorkflowEndToEndTest : BeamTestBase() {
   fun endToEnd() {
     for (numShards in listOf(1, 10, 100)) {
       for (numBucketsPerShard in listOf(1, 10, 100, 1000)) {
-        for (subshardSizeBytes in listOf(1, 10, 100)) {
+        for (subshardSizeBytes in listOf(500, 1000, 100000)) {
           val parameters =
             Parameters(
               numShards = numShards,
@@ -75,8 +76,7 @@ abstract class AbstractBatchLookupWorkflowEndToEndTest : BeamTestBase() {
     assertThat(rawQueries.map { it.first }).containsNoDuplicates() // Sanity check
 
     val expectedResults: List<String> =
-      rawMatchingQueries.map { rawDatabase[it.first]!!.toStringUtf8() }
-
+      rawMatchingQueries.map { requireNotNull(rawDatabase[it.first]).toStringUtf8() }
     val bucketing =
       Bucketing(
         numShards = parameters.numShards,
@@ -92,7 +92,9 @@ abstract class AbstractBatchLookupWorkflowEndToEndTest : BeamTestBase() {
     val workflow = BatchLookupWorkflow(parameters, queryEvaluator)
     val results = workflow.batchLookup(databasePCollection, queryBundlesPCollection)
     val localHelper = helper // For Beam's serialization
-
+    print("asdf\n")
+    //print(results)
+    //print(results.toList())
     assertThat(results).satisfies {
       // First, we decode each result and then split each bucket up into individual values. This is
       // to handle the case where multiple database entries fall into the same bucket.
@@ -106,7 +108,9 @@ abstract class AbstractBatchLookupWorkflowEndToEndTest : BeamTestBase() {
           .map { result -> localHelper.decodeResultData(result).toStringUtf8() }
           .flatMap { decodedResult -> splitConcatenatedPayloads(decodedResult) }
           .toSet()
-      assertThat(uniqueResults).containsAtLeastElementsIn(expectedResults)
+      assertWithMessage("with $parameters")
+        .that(uniqueResults)
+        .containsAtLeastElementsIn(expectedResults)
       null
     }
   }

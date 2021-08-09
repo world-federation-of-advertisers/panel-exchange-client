@@ -14,13 +14,8 @@
 
 package org.wfanet.panelmatch.client.batchlookup.testing
 
-import org.wfanet.panelmatch.client.batchlookup.QueryCryptor
-import com.google.common.truth.Truth.assertThat
-import com.google.protobuf.ByteString
-import kotlin.test.assertFailsWith
-import org.junit.Test
+import org.wfanet.panelmatch.client.batchlookup.ObliviousQueryBuilder
 
-abstract class AbstractQueryCryptorTest {
-  abstract val queryCryptor:QueryCryptor
-
+class PlaintextObliviousQueryBuilderTest : AbstractObliviousQueryBuilderTest() {
+  override val obliviousQueryBuilder: ObliviousQueryBuilder = PlaintextObliviousQueryBuilder
 }

@@ -36,5 +36,7 @@ fun hashSha256(data: ByteString): ByteString {
 /** Generates a SHA-256 of [data] without a salt */
 fun hashSha256ToLong(data: ByteString): Long {
   val sha256MessageDigest = MessageDigest.getInstance(HASH_ALGORITHM)
-  return Base64.getEncoder().encodeToString(requireNotNull(sha256MessageDigest.digest(data.toByteArray()))).toLong()
+  return Base64.getEncoder()
+    .encodeToString(requireNotNull(sha256MessageDigest.digest(data.toByteArray())))
+    .toLong()
 }

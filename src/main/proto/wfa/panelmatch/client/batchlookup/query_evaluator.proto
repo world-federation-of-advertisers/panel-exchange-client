@@ -16,6 +16,8 @@ syntax = "proto3";
 
 package wfa.panelmatch.client.batchlookup;
 
+import "wfa/panelmatch/client/batchlookup/query.proto";
+
 option java_package = "org.wfanet.panelmatch.client.batchlookup";
 option java_multiple_files = true;
 option java_outer_classname = "QueryEvaluatorProto";
@@ -84,16 +86,4 @@ message QueryMetadata {
 
   // TODO: document metadata format.
   bytes metadata = 2;
-}
-
-message ShardId {
-  int32 id = 1;
-}
-
-message BucketId {
-  int32 id = 1;
-}
-
-message QueryId {
-  int32 id = 1;
 }

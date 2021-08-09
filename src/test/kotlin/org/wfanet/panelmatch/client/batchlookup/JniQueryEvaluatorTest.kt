@@ -20,20 +20,22 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
 import org.wfanet.panelmatch.common.JniException
-import org.wfanet.panelmatch.client.batchlookup.EncryptQueriesRequest
-import org.wfanet.panelmatch.client.batchlookup.testing.AbstractQueryCryptorTest
 
+// TODO: subclass AbstractQueryEvaluatorTest once implemented
 @RunWith(JUnit4::class)
-class JniQueryCryptorTest : AbstractQueryCryptorTest() {
-  override val queryCryptor: QueryCryptor = JniQueryCryptor()
+class JniQueryEvaluatorTest {
+  @Test
+  fun `executeQueries is unimplemented`() {
+    val queryEvaluator = JniQueryEvaluator()
+    val e =
+      assertFailsWith<JniException> { queryEvaluator.executeQueries(emptyList(), emptyList()) }
+    assertThat(e.message).ignoringCase().contains("unimplemented")
+  }
 
   @Test
-  fun `invalid proto throws JniException`() {
-    val missingKeyException =
-      assertFailsWith(JniException::class) {
-        val request = EncryptQueriesRequest.getDefaultInstance()
-        queryCryptor.encryptQueries(request)
-      }
-    assertThat(missingKeyException.message).contains("UNIMPLEMENTED: Not implemented")
+  fun `combineResults is unimplemented`() {
+    val queryEvaluator = JniQueryEvaluator()
+    val e = assertFailsWith<JniException> { queryEvaluator.combineResults(emptySequence()) }
+    assertThat(e.message).ignoringCase().contains("unimplemented")
   }
 }

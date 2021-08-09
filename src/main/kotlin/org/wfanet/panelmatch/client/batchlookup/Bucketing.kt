@@ -14,9 +14,9 @@
 
 package org.wfanet.panelmatch.client.batchlookup
 
+import com.google.protobuf.ByteString
 import java.io.Serializable
 import org.wfanet.panelmatch.common.crypto.hashSha256ToLong
-import com.google.protobuf.ByteString
 
 /** Computes the appropriate bucket and shard for keys. */
 class Bucketing(private val numShards: Int, private val numBucketsPerShard: Int) : Serializable {
@@ -27,7 +27,7 @@ class Bucketing(private val numShards: Int, private val numBucketsPerShard: Int)
 
   /** Returns the hashed [ShardId] and [BucketId] for [value]. */
   fun apply(value: ByteString): Pair<ShardId, BucketId> {
-    val hashedValue:Long = hashSha256ToLong(value)
+    val hashedValue: Long = hashSha256ToLong(value)
     return shard(hashedValue) to bucket(hashedValue)
   }
 

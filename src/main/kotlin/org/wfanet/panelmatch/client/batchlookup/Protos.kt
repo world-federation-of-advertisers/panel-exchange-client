@@ -25,6 +25,13 @@ fun bucketIdOf(id: Int): BucketId = BucketId.newBuilder().setId(id).build()
 /** Constructs a [QueryId]. */
 fun queryIdOf(id: Int): QueryId = QueryId.newBuilder().setId(id).build()
 
+fun unencryptedQueryOf(shard: Int, query: Int, bucket: Int): UnencryptedQuery =
+  UnencryptedQuery.newBuilder()
+    .setShardId(shardIdOf(shard))
+    .setBucketId(bucketIdOf(bucket))
+    .setQueryId(queryIdOf(query))
+    .build()
+
 /** Constructs a [DatabaseShard]. */
 fun databaseShardOf(shardId: ShardId, buckets: Iterable<Bucket>): DatabaseShard =
   DatabaseShard.newBuilder().setShardId(shardId).addAllBuckets(buckets).build()

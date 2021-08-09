@@ -18,8 +18,8 @@
 
 #include "absl/status/statusor.h"
 #include "common_cpp/jni/jni_wrap.h"
-#include "wfa/panelmatch/client/batchlookup/oblivious_query.pb.h"
 #include "wfa/panelmatch/client/batchlookup/oblivious_query.h"
+#include "wfa/panelmatch/client/batchlookup/oblivious_query.pb.h"
 
 namespace wfa::panelmatch::client::batchlookup {
 
