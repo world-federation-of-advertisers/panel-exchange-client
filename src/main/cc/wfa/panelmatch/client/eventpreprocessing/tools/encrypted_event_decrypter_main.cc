@@ -29,7 +29,7 @@ using ::wfa::panelmatch::common::crypto::GetAesSivCmac512;
 using ::wfa::panelmatch::common::crypto::GetSha256Hkdf;
 using ::wfa::panelmatch::common::crypto::Hkdf;
 
-// Spot check AesWithHkdf enrypted values from the command line
+// Spot check AesWithHkdf encrypted values from the command line
 // Parameters: encrypted value, key
 int main(int argc, char** argv) {
   if (argc != 3) {
@@ -44,7 +44,7 @@ int main(int argc, char** argv) {
   absl::StatusOr<std::string> plaintext =
       aes_hkdf.Decrypt(argv[1], SecretDataFromStringView(argv[2]));
   if (!plaintext.ok()) {
-    std::cout << "Decryption failed: " << plaintext.status() << std::endl;
+    std::cerr << "Decryption failed: " << plaintext.status() << std::endl;
     return 1;
   }
 
