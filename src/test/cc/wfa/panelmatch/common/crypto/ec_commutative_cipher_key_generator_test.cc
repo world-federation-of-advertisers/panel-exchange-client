@@ -47,8 +47,8 @@ TEST(EcCommutativeCipherKeyGeneratorTest, createEcCommutativeCipher) {
                        ECCommutativeCipher::CreateFromKey(
                            NID_X9_62_prime256v1, SecretDataAsStringView(key),
                            ECCommutativeCipher::HashType::SHA256));
-  ASSERT_OK_AND_ASSIGN(std::string ciphertext,
-                       cipher->Encrypt("plaintext-test"));
+  ASSERT_NE(cipher, nullptr);
+  EXPECT_THAT(cipher->Encrypt("plaintext-test").status(), IsOk());
 }
 
 }  // namespace
