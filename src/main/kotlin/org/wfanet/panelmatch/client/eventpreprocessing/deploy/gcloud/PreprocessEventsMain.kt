@@ -66,9 +66,7 @@ interface Options : DataflowPipelineOptions {
  * Where SIZE is the desired batch size, KEY is the desired crypto key, PEPPER is the desired
  * pepper, INPUT_TABLE is the BigQuery table to read from, OUTPUT_TABLE is the BigQuery table to
  * write to, PROJECT is the project name, and TEMP_LOCATION is the desired location to store temp
- * files.
- *
- * Performance and outputs can be tracked on the GCP console.
+ * files. Performance and outputs can be tracked on the GCP console.
  */
 fun main(args: Array<String>) {
   val options = makeOptions(args)
