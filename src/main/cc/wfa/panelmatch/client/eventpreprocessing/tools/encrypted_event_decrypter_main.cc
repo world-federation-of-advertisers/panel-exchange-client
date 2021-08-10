@@ -22,8 +22,6 @@
 #include "wfa/panelmatch/common/crypto/aes_with_hkdf.h"
 #include "wfa/panelmatch/common/crypto/hkdf.h"
 
-namespace wfa::panelmatch::client::eventpreprocessing::tools {
-
 using ::crypto::tink::util::SecretDataFromStringView;
 using ::wfa::panelmatch::common::crypto::Aes;
 using ::wfa::panelmatch::common::crypto::AesWithHkdf;
@@ -46,12 +44,10 @@ int main(int argc, char** argv) {
   absl::StatusOr<std::string> plaintext =
       aes_hkdf.Decrypt(argv[1], SecretDataFromStringView(argv[2]));
   if (!plaintext.ok()) {
-    std::cout << "Decryption failed" << std::endl;
+    std::cout << "Decryption failed: " << plaintext.status() << std::endl;
     return 1;
   }
 
   std::cout << "Decrypted value: " << plaintext.value() << std::endl;
   return 0;
 }
-
-}  // namespace wfa::panelmatch::client::eventpreprocessing::tools
