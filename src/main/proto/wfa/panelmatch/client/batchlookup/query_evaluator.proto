@@ -63,27 +63,10 @@ message Bucket {
   bytes payload = 2;
 }
 
-// A full or partial set of oblivious queries for a single database shard.
-message QueryBundle {
-  ShardId shard_id = 1;
-  repeated QueryMetadata query_metadata = 2;
-
-  // TODO: document payload format.
-  bytes payload = 3;
-}
-
 // A full or partial result for an oblivious query.
 message Result {
   QueryMetadata query_metadata = 1;
 
   // TODO: document payload format.
   bytes payload = 2;
-}
-
-// Identifier and metadata for an oblivious query.
-message QueryMetadata {
-  QueryId query_id = 1;
-
-  // TODO: document metadata format.
-  bytes metadata = 2;
 }

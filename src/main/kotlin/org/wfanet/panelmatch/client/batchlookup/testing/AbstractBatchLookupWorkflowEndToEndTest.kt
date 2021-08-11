@@ -76,7 +76,8 @@ abstract class AbstractBatchLookupWorkflowEndToEndTest : BeamTestBase() {
     assertThat(rawQueries.map { it.first }).containsNoDuplicates() // Sanity check
 
     val expectedResults: List<String> =
-      rawMatchingQueries.map { requireNotNull(rawDatabase[it.first]).toStringUtf8() }
+      rawMatchingQueries.map { rawDatabase[it.first]!!.toStringUtf8() }
+
     val bucketing =
       Bucketing(
         numShards = parameters.numShards,
@@ -92,9 +93,7 @@ abstract class AbstractBatchLookupWorkflowEndToEndTest : BeamTestBase() {
     val workflow = BatchLookupWorkflow(parameters, queryEvaluator)
     val results = workflow.batchLookup(databasePCollection, queryBundlesPCollection)
     val localHelper = helper // For Beam's serialization
-    print("asdf\n")
-    //print(results)
-    //print(results.toList())
+
     assertThat(results).satisfies {
       // First, we decode each result and then split each bucket up into individual values. This is
       // to handle the case where multiple database entries fall into the same bucket.

@@ -65,3 +65,17 @@ fun databaseKeyOf(id: Long): DatabaseKey = DatabaseKey.newBuilder().setId(id).bu
 
 /** Constructs a [Plaintext]. */
 fun plaintextOf(payload: ByteString): Plaintext = Plaintext.newBuilder().setPayload(payload).build()
+
+/** Constructs a [PanelistKey]. */
+fun panelistKeyOf(id: Long): PanelistKey = PanelistKey.newBuilder().setId(id).build()
+
+/** Constructs a [JoinKey]. */
+fun joinKeyOf(key: ByteString): JoinKey = JoinKey.newBuilder().setKey(key).build()
+
+/** Constructs a [UnencryptedQuery]. */
+fun unencryptedQueryOf(shardId: ShardId, bucketId: BucketId, queryId: QueryId): UnencryptedQuery =
+  UnencryptedQuery.newBuilder()
+    .setShardId(shardId)
+    .setBucketId(bucketId)
+    .setQueryId(queryId)
+    .build()

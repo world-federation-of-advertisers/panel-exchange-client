@@ -26,7 +26,6 @@ import org.wfanet.panelmatch.client.batchlookup.GenerateKeysResponse
 import org.wfanet.panelmatch.client.batchlookup.ObliviousQueryBuilder
 import org.wfanet.panelmatch.client.batchlookup.QueryBundle
 import org.wfanet.panelmatch.client.batchlookup.QueryId
-import org.wfanet.panelmatch.client.batchlookup.Result
 import org.wfanet.panelmatch.client.batchlookup.ShardId
 import org.wfanet.panelmatch.client.batchlookup.queryBundleOf
 import org.wfanet.panelmatch.client.batchlookup.queryMetadataOf
@@ -45,7 +44,7 @@ import org.wfanet.panelmatch.client.batchlookup.queryMetadataOf
  */
 object PlaintextObliviousQueryBuilder : ObliviousQueryBuilder {
 
-  private fun makeQueryBundle(shard: ShardId, queries: List<Pair<QueryId, BucketId>>): QueryBundle {
+  fun makeQueryBundle(shard: ShardId, queries: List<Pair<QueryId, BucketId>>): QueryBundle {
     return queryBundleOf(
       shard,
       queries.map { queryMetadataOf(it.first, ByteString.EMPTY) },
@@ -58,10 +57,6 @@ object PlaintextObliviousQueryBuilder : ObliviousQueryBuilder {
         .build()
         .toByteString()
     )
-  }
-
-  private fun decodeResultData(result: Result): ByteString {
-    return result.payload
   }
 
   /**
@@ -97,17 +92,15 @@ object PlaintextObliviousQueryBuilder : ObliviousQueryBuilder {
       .build()
   }
 
-  /** Deserializes each query_id into its bucket_id and maps it back to the correct shard_id */
+  /** Simple plaintext decrypter that splits up data marked by <...> */
   override fun decryptQueries(request: DecryptQueriesRequest): DecryptQueriesResponse {
     val encryptedQueryResults = request.getEncryptedQueryResultsList()
     return DecryptQueriesResponse.newBuilder()
       .addAllDecryptedQueryResults(
         encryptedQueryResults
-          //.map { result -> decodeResultData(Result.parseFrom(result)).toStringUtf8() }
           .flatMap { data -> splitConcatenatedPayloads(data.toStringUtf8()) }
           .map { it -> ByteString.copyFromUtf8(it) }
       )
       .build()
-    // return DecryptQueriesResponse.getDefaultInstance()
   }
 }

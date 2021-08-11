@@ -45,21 +45,6 @@ class BatchLookupWorkflowTest : BeamTestBase() {
   }
 
   @Test
-  fun `encrypt an UnencryptedQuery`() {
-    // With `parameters`, we expect database to have:
-    //  - Shard 0 to have bucket 4 with "def" in it
-    //  - Shard 1 to have buckets 0 with "hij", 1 with "abc", and 2 with "klm"
-    val parameters = Parameters(numShards = 2, numBucketsPerShard = 5, subshardSizeBytes = 1000)
-
-    val queryBundles = listOf(queryBundleOf(shard = 1, listOf(100 to 0, 101 to 0, 102 to 1)))
-
-    assertThat(runWorkflow(queryBundles, parameters))
-      .containsInAnyOrder(resultOf(100, "hij"), resultOf(101, "hij"), resultOf(102, "abc"))
-
-    assertThat(runPipelineAndGetActualMaxSubshardSize()).isEqualTo(9)
-  }
-
-  @Test
   fun `single QueryBundle`() {
     // With `parameters`, we expect database to have:
     //  - Shard 0 to have bucket 4 with "def" in it

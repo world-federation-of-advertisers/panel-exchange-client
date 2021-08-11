@@ -75,3 +75,11 @@ message DecryptQueriesRequest {
 message DecryptQueriesResponse {
   repeated bytes decrypted_query_results = 1;
 }
+
+message PanelistKey {
+  fixed64 id = 1;
+}
+
+message JoinKey {
+  bytes key = 1;
+}

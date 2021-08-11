@@ -14,9 +14,11 @@
 
 package org.wfanet.panelmatch.client.batchlookup
 
-import com.google.protobuf.ByteString
 import java.io.Serializable
-import org.wfanet.panelmatch.common.crypto.hashSha256ToLong
+import kotlin.math.ceil
+import kotlin.math.floor
+import kotlin.math.log2
+import org.wfanet.panelmatch.common.crypto.hashSha256ToSpace
 
 /** Computes the appropriate bucket and shard for keys. */
 class Bucketing(private val numShards: Int, private val numBucketsPerShard: Int) : Serializable {
@@ -25,9 +27,10 @@ class Bucketing(private val numShards: Int, private val numBucketsPerShard: Int)
     require(numBucketsPerShard > 0)
   }
 
-  /** Returns the hashed [ShardId] and [BucketId] for [value]. */
-  fun apply(value: ByteString): Pair<ShardId, BucketId> {
-    val hashedValue: Long = hashSha256ToLong(value)
+  /** Returns the hashed [ShardId] and [BucketId] for [joinKey]. */
+  fun apply(joinKey: JoinKey): Pair<ShardId, BucketId> {
+    val hashedValue: Long =
+      hashSha256ToSpace(joinKey.key, numShards.toLong() * numBucketsPerShard.toLong())
     return shard(hashedValue) to bucket(hashedValue)
   }
 
@@ -37,6 +40,7 @@ class Bucketing(private val numShards: Int, private val numBucketsPerShard: Int)
   }
 
   private fun shard(value: Long): ShardId {
+    // number of shards would be a power of 2 to ensure a uniform distribution
     val remainder = java.lang.Long.remainderUnsigned(value, numShards.toLong())
     // The conversion here is safe because 0 <= remainder < numShards and numShards is an Int.
     return shardIdOf(remainder.toInt())
@@ -48,5 +52,14 @@ class Bucketing(private val numShards: Int, private val numBucketsPerShard: Int)
     // The conversion here is safe because 0 <= remainder < numBucketsPerShard and
     // numBucketsPerShard is an Int.
     return bucketIdOf(remainder.toInt())
+  }
+
+  /**
+   * By default, the hash space is a power of 2. If the shards and buckets are not powers of 2, then
+   * the queries will be unevenly distributed.
+   */
+  private fun isPowerOfTwo(value: Int): Boolean {
+    val logValue = log2(value.toDouble())
+    return ceil(logValue) == floor(logValue)
   }
 }

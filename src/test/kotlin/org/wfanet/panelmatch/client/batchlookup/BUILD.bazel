@@ -30,6 +30,23 @@ kt_jvm_test(
 )
 
 kt_jvm_test(
+    name = "BatchCreationWorkflowTest",
+    srcs = ["BatchCreationWorkflowTest.kt"],
+    test_class = "org.wfanet.panelmatch.client.batchlookup.BatchCreationWorkflowTest",
+    deps = [
+        "//imports/java/org/apache/beam:core",
+        "//imports/java/org/apache/beam:protobuf",
+        "//src/main/kotlin/org/wfanet/panelmatch/client/batchlookup",
+        "//src/main/kotlin/org/wfanet/panelmatch/client/batchlookup/testing",
+        "//src/main/kotlin/org/wfanet/panelmatch/common/beam",
+        "//src/main/kotlin/org/wfanet/panelmatch/common/beam/testing",
+        "@wfa_common_jvm//imports/java/com/google/common/truth",
+        "@wfa_common_jvm//imports/java/com/google/common/truth/extensions/proto",
+        "@wfa_common_jvm//imports/java/org/junit",
+    ],
+)
+
+kt_jvm_test(
     name = "JniObliviousQueryBuilderTest",
     srcs = ["JniObliviousQueryBuilderTest.kt"],
     test_class = "org.wfanet.panelmatch.client.batchlookup.JniObliviousQueryBuilderTest",

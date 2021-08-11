@@ -24,7 +24,7 @@
 namespace wfa::panelmatch::client::batchlookup {
 namespace {
 
-/*TEST(ObliviousQuery, GenerateKeysTest) {
+TEST(ObliviousQuery, GenerateKeysTest) {
   GenerateKeysRequest test_request;
   auto test_response = GenerateKeys(test_request);
   EXPECT_THAT(test_response.status(),
@@ -40,7 +40,7 @@ namespace {
       GenerateKeysWrapper("some-invalid-serialized-request");
   EXPECT_THAT(wrapper_test_response2.status(),
               StatusIs(absl::StatusCode::kInternal, ""));
-}*/
+}
 
 TEST(ObliviousQuery, EncryptQueriesTest) {
   EncryptQueriesRequest test_request;
@@ -72,7 +72,7 @@ TEST(ObliviousQuery, EncryptQueriesTest) {
               StatusIs(absl::StatusCode::kInternal, ""));
 }
 
-/*TEST(ObliviousQuery, DecryptQueriesTest) {
+TEST(ObliviousQuery, DecryptQueriesTest) {
   DecryptQueriesRequest test_request;
   test_request.set_public_key("some-public-key");
   test_request.set_private_key("some-private-key");
@@ -91,6 +91,6 @@ TEST(ObliviousQuery, EncryptQueriesTest) {
       DecryptQueriesWrapper("some-invalid-serialized-request");
   EXPECT_THAT(wrapper_test_response2.status(),
               StatusIs(absl::StatusCode::kInternal, ""));
-}*/
+}
 }  // namespace
 }  // namespace wfa::panelmatch::client::batchlookup

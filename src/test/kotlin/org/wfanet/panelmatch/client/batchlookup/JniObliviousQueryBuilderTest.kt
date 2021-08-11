@@ -21,7 +21,6 @@ import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
 import org.wfanet.panelmatch.common.JniException
 
-// TODO: subclass AbstractObliviousQueryBuilderTest once implemented
 @RunWith(JUnit4::class)
 class JniObliviousQueryBuilderTest {
   val obliviousQueryBuilder: ObliviousQueryBuilder = JniObliviousQueryBuilder()

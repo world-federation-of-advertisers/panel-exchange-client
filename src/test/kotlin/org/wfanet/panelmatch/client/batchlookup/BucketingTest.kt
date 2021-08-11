@@ -15,6 +15,7 @@
 package org.wfanet.panelmatch.client.batchlookup
 
 import com.google.common.truth.Truth.assertThat
+import com.google.protobuf.ByteString
 import kotlin.test.assertFails
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -42,6 +43,17 @@ class BucketingTest {
 
     // 1000 % 7 == 6, (1000 / 7) % 3 == 1
     assertThat(bucketing.apply(1000)).isEqualTo(shardIdOf(6) to bucketIdOf(1))
+  }
+
+  @Test
+  fun `hash encrypted join keys`() {
+    val bucketing = Bucketing(numShards = 30000, numBucketsPerShard = 3)
+    assertThat(bucketing.apply(joinKeyOf(ByteString.copyFromUtf8("some-encrypted-joinkey"))))
+      .isEqualTo(shardIdOf(18852) to bucketIdOf(0))
+    assertThat(bucketing.apply(joinKeyOf(ByteString.copyFromUtf8("some-other-encrypted-joinkey"))))
+      .isEqualTo(shardIdOf(21603) to bucketIdOf(0))
+    assertThat(bucketing.apply(joinKeyOf(ByteString.copyFromUtf8("another-encrypted-joinkey-1"))))
+      .isEqualTo(shardIdOf(29214) to bucketIdOf(2))
   }
 
   @Test
