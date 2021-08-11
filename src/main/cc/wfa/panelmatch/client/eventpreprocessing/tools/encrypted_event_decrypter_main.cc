@@ -55,9 +55,9 @@ int main(int argc, char** argv) {
     return 1;
   }
 
-  std::vector<std::string> unencyrpted_identifier = {std::string(argv[2])};
+  std::vector<std::string> unencrypted_identifier = {std::string(argv[2])};
   absl::StatusOr<std::vector<std::string>> key =
-      (*cryptor)->BatchProcess(unencyrpted_identifier, Action::kEncrypt);
+      (*cryptor)->BatchProcess(unencrypted_identifier, Action::kEncrypt);
   if (!key.ok()) {
     std::cerr << "Creating a key failed: " << key.status() << std::endl;
     return 1;
