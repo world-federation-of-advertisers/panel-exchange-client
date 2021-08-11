@@ -62,17 +62,22 @@ int main(int argc, char** argv) {
     return 1;
   }
 
+  if (processed->empty()) {
+    std::cerr << "Creating a key failed: Empty result" << std::endl;
+    return 1;
+  }
+
   std::unique_ptr<Hkdf> hkdf = GetSha256Hkdf();
   std::unique_ptr<Aes> aes = GetAesSivCmac512();
   AesWithHkdf aes_hkdf(std::move(hkdf), std::move(aes));
 
-  absl::StatusOr<std::string> plaintext = aes_hkdf.Decrypt(
-      ciphertext, SecretDataFromStringView(processed.value()[0]));
+  absl::StatusOr<std::string> plaintext =
+      aes_hkdf.Decrypt(ciphertext, SecretDataFromStringView((*processed)[0]));
   if (!plaintext.ok()) {
     std::cerr << "Decryption failed: " << plaintext.status() << std::endl;
     return 1;
   }
 
-  std::cout << "Decrypted value: " << plaintext.value() << std::endl;
+  std::cout << "Decrypted value: " << *plaintext << std::endl;
   return 0;
 }
