@@ -35,7 +35,8 @@ using ::wfa::panelmatch::common::crypto::GetSha256Hkdf;
 using ::wfa::panelmatch::common::crypto::Hkdf;
 
 // Spot check AesWithHkdf encrypted values from the command line
-// Parameters: encrypted value, unencrypted identifier, cryptokey
+// Parameters: double-base64-escaped encrypted value, unencrypted identifier,
+// cryptokey
 int main(int argc, char** argv) {
   if (argc != 4) {
     std::cout << "There must be 3 parameters" << std::endl;
@@ -54,15 +55,15 @@ int main(int argc, char** argv) {
     return 1;
   }
 
-  std::vector<std::string> input = {std::string(argv[2])};
-  absl::StatusOr<std::vector<std::string>> processed =
-      cryptor.value()->BatchProcess(input, Action::kEncrypt);
-  if (!processed.ok()) {
-    std::cerr << "Creating a key failed: " << processed.status() << std::endl;
+  std::vector<std::string> unencyrpted_identifier = {std::string(argv[2])};
+  absl::StatusOr<std::vector<std::string>> key =
+      (*cryptor)->BatchProcess(unencyrpted_identifier, Action::kEncrypt);
+  if (!key.ok()) {
+    std::cerr << "Creating a key failed: " << key.status() << std::endl;
     return 1;
   }
 
-  if (processed->empty()) {
+  if (key->empty()) {
     std::cerr << "Creating a key failed: Empty result" << std::endl;
     return 1;
   }
@@ -72,7 +73,7 @@ int main(int argc, char** argv) {
   AesWithHkdf aes_hkdf(std::move(hkdf), std::move(aes));
 
   absl::StatusOr<std::string> plaintext =
-      aes_hkdf.Decrypt(ciphertext, SecretDataFromStringView((*processed)[0]));
+      aes_hkdf.Decrypt(ciphertext, SecretDataFromStringView((*key)[0]));
   if (!plaintext.ok()) {
     std::cerr << "Decryption failed: " << plaintext.status() << std::endl;
     return 1;
