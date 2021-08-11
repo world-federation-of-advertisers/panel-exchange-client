@@ -4,6 +4,13 @@ load("@wfa_common_jvm//build:macros.bzl", "kt_jvm_grpc_and_java_proto_library")
 package(default_visibility = ["//visibility:public"])
 
 java_proto_library(
+    name = "crypto_java_proto",
+    deps = [
+        "@wfa_measurement_proto//src/main/proto/wfa/measurement/api/v2alpha:crypto_proto",
+    ],
+)
+
+java_proto_library(
     name = "model_provider_java_proto",
     deps = [
         "@wfa_measurement_proto//src/main/proto/wfa/measurement/api/v2alpha:model_provider_proto",
