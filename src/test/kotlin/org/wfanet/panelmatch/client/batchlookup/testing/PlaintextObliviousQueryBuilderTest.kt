@@ -36,18 +36,18 @@ class PlaintextObliviousQueryBuilderTest {
       EncryptQueriesRequest.newBuilder()
         .addAllUnencryptedQuery(
           listOf(
-            unencryptedQueryOf(100, 1, 1),
-            unencryptedQueryOf(100, 2, 2),
-            unencryptedQueryOf(101, 3, 1),
-            unencryptedQueryOf(101, 4, 5)
+            unencryptedQueryOf(100, 1L, 1),
+            unencryptedQueryOf(100, 2L, 2),
+            unencryptedQueryOf(101, 3L, 1),
+            unencryptedQueryOf(101, 4L, 5)
           )
         )
         .build()
     val encryptedQueries = obliviousQueryBuilder.encryptQueries(encryptQueriesRequest)
     assertThat(encryptedQueries.getCiphertextsList().map { it -> QueryBundle.parseFrom(it) })
       .containsExactly(
-        queryBundleOf(shard = 100, listOf(1 to 1, 2 to 2)),
-        queryBundleOf(shard = 101, listOf(3 to 1, 4 to 5))
+        queryBundleOf(shard = 100, listOf(1L to 1, 2L to 2)),
+        queryBundleOf(shard = 101, listOf(3L to 1, 4L to 5))
       )
   }
 
@@ -71,12 +71,12 @@ class PlaintextObliviousQueryBuilderTest {
         .addAllEncryptedQueryResults(listOf(ByteString.copyFromUtf8(queriedData.joinToString(""))))
         .build()
     val decryptedQueries = obliviousQueryBuilder.decryptQueries(decryptQueriesRequest)
-    assertThat(decryptedQueries.getDecryptedQueryResultsList().map { it.toStringUtf8() }.toSet())
-      .containsExactlyElementsIn(queriedData.toSet())
+    assertThat(decryptedQueries.getDecryptedQueryResultsList().map { it.toStringUtf8() })
+      .containsAtLeastElementsIn(queriedData)
   }
 }
 
-private fun queryBundleOf(shard: Int, queries: List<Pair<Int, Int>>): QueryBundle {
+private fun queryBundleOf(shard: Int, queries: List<Pair<Long, Int>>): QueryBundle {
   return PlaintextQueryEvaluatorTestHelper.makeQueryBundle(
     shardIdOf(shard),
     queries.map { queryIdOf(it.first) to bucketIdOf(it.second) }

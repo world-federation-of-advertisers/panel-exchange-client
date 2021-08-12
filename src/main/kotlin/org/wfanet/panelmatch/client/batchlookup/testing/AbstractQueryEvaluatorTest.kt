@@ -47,17 +47,17 @@ abstract class AbstractQueryEvaluatorTest {
       )
     val queryBundles =
       listOf(
-        queryBundleOf(shard = 100, queries = listOf(500 to 0, 501 to 1, 502 to 3)),
-        queryBundleOf(shard = 100, queries = listOf(503 to 9)),
-        queryBundleOf(shard = 102, queries = listOf(504 to 0, 505 to 1, 506 to 2, 507 to 3))
+        queryBundleOf(shard = 100, queries = listOf(500L to 0, 501L to 1, 502L to 3)),
+        queryBundleOf(shard = 100, queries = listOf(503L to 9)),
+        queryBundleOf(shard = 102, queries = listOf(504L to 0, 505L to 1, 506L to 2, 507L to 3))
       )
     val results = evaluator.executeQueries(database, queryBundles)
     assertThat(results.map { it.queryMetadata.queryId to helper.decodeResultData(it) })
       .containsExactly(
-        queryIdOf(500) to makeFakeBucketData(bucket = 0, shard = 100),
-        queryIdOf(501) to makeFakeBucketData(bucket = 1, shard = 100),
-        queryIdOf(502) to ByteString.EMPTY,
-        queryIdOf(503) to ByteString.EMPTY
+        queryIdOf(500L) to makeFakeBucketData(bucket = 0, shard = 100),
+        queryIdOf(501L) to makeFakeBucketData(bucket = 1, shard = 100),
+        queryIdOf(502L) to ByteString.EMPTY,
+        queryIdOf(503L) to ByteString.EMPTY
       )
   }
 
@@ -71,8 +71,8 @@ abstract class AbstractQueryEvaluatorTest {
 
     val queryBundles =
       listOf(
-        queryBundleOf(shard = 100, queries = listOf(500 to 1)),
-        queryBundleOf(shard = 101, queries = listOf(501 to 1))
+        queryBundleOf(shard = 100, queries = listOf(500L to 1)),
+        queryBundleOf(shard = 101, queries = listOf(501L to 1))
       )
 
     val results = evaluator.executeQueries(database, queryBundles)
@@ -97,7 +97,7 @@ abstract class AbstractQueryEvaluatorTest {
 
   @Test
   fun `combineResults single result`() {
-    val queryId = 5
+    val queryId = 5L
 
     assertThat(runCombineResults(resultOf(queryId, ByteString.EMPTY)))
       .isEqualTo(DecodedResult(queryId, ByteString.EMPTY))
@@ -109,7 +109,7 @@ abstract class AbstractQueryEvaluatorTest {
 
   @Test
   fun `combineResults multiple results`() {
-    val queryId = 5
+    val queryId = 5L
 
     val emptyResult = resultOf(queryId, ByteString.EMPTY)
     val payload = "some-payload".toByteString()
@@ -130,14 +130,14 @@ abstract class AbstractQueryEvaluatorTest {
     return helper.decodeResult(evaluator.combineResults(results.asSequence()))
   }
 
-  private fun queryBundleOf(shard: Int, queries: List<Pair<Int, Int>>): QueryBundle {
+  private fun queryBundleOf(shard: Int, queries: List<Pair<Long, Int>>): QueryBundle {
     return helper.makeQueryBundle(
       shardIdOf(shard),
       queries.map { queryIdOf(it.first) to bucketIdOf(it.second) }
     )
   }
 
-  private fun resultOf(query: Int, rawPayload: ByteString): Result {
+  private fun resultOf(query: Long, rawPayload: ByteString): Result {
     return helper.makeResult(queryIdOf(query), rawPayload)
   }
 }

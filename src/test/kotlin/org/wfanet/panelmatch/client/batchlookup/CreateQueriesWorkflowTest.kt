@@ -24,7 +24,7 @@ import org.apache.beam.sdk.values.PCollection
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
-import org.wfanet.panelmatch.client.batchlookup.BatchCreationWorkflow.Parameters
+import org.wfanet.panelmatch.client.batchlookup.CreateQueriesWorkflow.Parameters
 import org.wfanet.panelmatch.client.batchlookup.testing.PlaintextObliviousQueryBuilder
 import org.wfanet.panelmatch.client.batchlookup.testing.PlaintextQueryEvaluatorTestHelper
 import org.wfanet.panelmatch.common.beam.kvOf
@@ -42,11 +42,11 @@ class BatchCreationWorkflowTest : BeamTestBase() {
     obliviousQueryBuilder: ObliviousQueryBuilder,
     parameters: Parameters
   ): PCollection<EncryptQueriesResponse> {
-    return BatchCreationWorkflow(
+    return CreateQueriesWorkflow(
         parameters = parameters,
         obliviousQueryBuilder = obliviousQueryBuilder,
       )
-      .batchCreate(database)
+      .createQueries(database)
   }
 
   @Test
@@ -63,12 +63,12 @@ class BatchCreationWorkflowTest : BeamTestBase() {
         )
         .containsAtLeastElementsIn(
           listOf(
-            Triple(shardIdOf(1), queryIdOf(5800), bucketIdOf(1)),
-            Triple(shardIdOf(1), queryIdOf(9500), bucketIdOf(2)),
-            Triple(shardIdOf(1), queryIdOf(8500), bucketIdOf(1)),
-            Triple(shardIdOf(1), queryIdOf(7100), bucketIdOf(3)),
-            Triple(shardIdOf(0), queryIdOf(5300), bucketIdOf(0)),
-            Triple(shardIdOf(0), queryIdOf(9900), bucketIdOf(0)),
+            ShardedQuery(1, 5800L, 1),
+            ShardedQuery(1, 9500L, 2),
+            ShardedQuery(1, 8500L, 1),
+            ShardedQuery(1, 7100L, 3),
+            ShardedQuery(0, 5300L, 0),
+            ShardedQuery(0, 9900L, 0),
           )
         )
       null
@@ -89,18 +89,24 @@ class BatchCreationWorkflowTest : BeamTestBase() {
   }
 }
 
-private fun queryBundleOf(shard: Int, queries: List<Pair<Int, Int>>): QueryBundle {
+private data class ShardedQuery(val shard: Int, val query: Long, val bucket: Int) {
+  var shardId = shardIdOf(shard)
+  var queryId = queryIdOf(query)
+  var bucketId = bucketIdOf(bucket)
+}
+
+private fun queryBundleOf(shard: Int, queries: List<Pair<Long, Int>>): QueryBundle {
   return PlaintextQueryEvaluatorTestHelper.makeQueryBundle(
     shardIdOf(shard),
     queries.map { queryIdOf(it.first) to bucketIdOf(it.second) }
   )
 }
 
-private fun decodeQueryBundle(queryBundle: QueryBundle): List<Triple<ShardId, QueryId, BucketId>> {
+private fun decodeQueryBundle(queryBundle: QueryBundle): List<ShardedQuery> {
   val queryBundleList = queryBundle.getQueryMetadataList()
   val bucketValuesList =
     ListValue.parseFrom(queryBundle.payload).getValuesList().map { it.stringValue.toInt() }
   return queryBundleList.zip(bucketValuesList) { a: QueryMetadata, b: Int ->
-    Triple(requireNotNull(queryBundle.shardId), a.queryId, bucketIdOf(b))
+    ShardedQuery(requireNotNull(queryBundle.shardId).id, a.queryId.id, b)
   }
 }

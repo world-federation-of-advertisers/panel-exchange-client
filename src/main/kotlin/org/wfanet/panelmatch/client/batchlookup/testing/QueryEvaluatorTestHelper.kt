@@ -25,7 +25,7 @@ import org.wfanet.panelmatch.client.batchlookup.ShardId
 // TODO: factor out QueryEvaluatorTestHelper. Much of its functionality is already moved to the
 // ObliviousQueryBuilder
 interface QueryEvaluatorTestHelper : Serializable {
-  data class DecodedResult(val queryId: Int, val data: ByteString) : Serializable {
+  data class DecodedResult(val queryId: Long, val data: ByteString) : Serializable {
     override fun toString(): String {
       return "DecodedResult(query=$queryId, data=${data.toStringUtf8()}"
     }

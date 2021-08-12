@@ -28,8 +28,11 @@ message BucketId {
   int32 id = 1;
 }
 
+// These can be dynamically generated and must be unique. For 30k QueryIds,
+// the odds of collision in 32 bit space are 1/10 and in 64 bit space 1 in
+// 2 billion.
 message QueryId {
-  int32 id = 1;
+  int64 id = 1;
 }
 
 // A full or partial set of oblivious queries for a single database shard.

@@ -69,7 +69,7 @@ object PlaintextObliviousQueryBuilder : ObliviousQueryBuilder {
 
   /** Easily reversible queryIdGenerator helpful for debugging. */
   override fun queryIdGenerator(panelistKey: PanelistKey): QueryId {
-    return queryIdOf(panelistKey.id.toInt() * 100)
+    return queryIdOf(panelistKey.id * 100L)
   }
 
   override fun generateKeys(request: GenerateKeysRequest): GenerateKeysResponse {

@@ -70,8 +70,8 @@ abstract class AbstractBatchLookupWorkflowEndToEndTest : BeamTestBase() {
       rawDatabase.mapKeys { databaseKeyOf(it.key) }.mapValues { plaintextOf(it.value) }
     val databasePCollection = pipeline.apply("Create Database", Create.of(database))
 
-    val rawMatchingQueries = keys.take(3).mapIndexed { i, key -> key to queryIdOf(i) }
-    val rawMissingQueries = (0 until 3).map { i -> random.nextLong() to queryIdOf(3 + i) }
+    val rawMatchingQueries = keys.take(3).mapIndexed { i, key -> key to queryIdOf(i.toLong()) }
+    val rawMissingQueries = (0 until 3).map { i -> random.nextLong() to queryIdOf(3L + i.toLong()) }
     val rawQueries = rawMatchingQueries + rawMissingQueries
     assertThat(rawQueries.map { it.first }).containsNoDuplicates() // Sanity check
 

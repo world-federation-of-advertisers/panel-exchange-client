@@ -23,13 +23,17 @@ fun shardIdOf(id: Int): ShardId = ShardId.newBuilder().setId(id).build()
 fun bucketIdOf(id: Int): BucketId = BucketId.newBuilder().setId(id).build()
 
 /** Constructs a [QueryId]. */
-fun queryIdOf(id: Int): QueryId = QueryId.newBuilder().setId(id).build()
+fun queryIdOf(id: Long): QueryId = QueryId.newBuilder().setId(id).build()
 
-fun unencryptedQueryOf(shard: Int, query: Int, bucket: Int): UnencryptedQuery =
+fun unencryptedQueryOf(shard: Int, query: Long, bucket: Int): UnencryptedQuery =
+  unencryptedQueryOf(shardIdOf(shard), bucketIdOf(bucket), queryIdOf(query))
+
+/** Constructs a [UnencryptedQuery]. */
+fun unencryptedQueryOf(shardId: ShardId, bucketId: BucketId, queryId: QueryId): UnencryptedQuery =
   UnencryptedQuery.newBuilder()
-    .setShardId(shardIdOf(shard))
-    .setBucketId(bucketIdOf(bucket))
-    .setQueryId(queryIdOf(query))
+    .setShardId(shardId)
+    .setBucketId(bucketId)
+    .setQueryId(queryId)
     .build()
 
 /** Constructs a [DatabaseShard]. */
@@ -71,11 +75,3 @@ fun panelistKeyOf(id: Long): PanelistKey = PanelistKey.newBuilder().setId(id).bu
 
 /** Constructs a [JoinKey]. */
 fun joinKeyOf(key: ByteString): JoinKey = JoinKey.newBuilder().setKey(key).build()
-
-/** Constructs a [UnencryptedQuery]. */
-fun unencryptedQueryOf(shardId: ShardId, bucketId: BucketId, queryId: QueryId): UnencryptedQuery =
-  UnencryptedQuery.newBuilder()
-    .setShardId(shardId)
-    .setBucketId(bucketId)
-    .setQueryId(queryId)
-    .build()

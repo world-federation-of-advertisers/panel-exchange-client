@@ -16,7 +16,6 @@ package org.wfanet.panelmatch.common.crypto
 
 import com.google.common.truth.Truth.assertThat
 import com.google.protobuf.ByteString
-import kotlin.test.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
@@ -31,7 +30,7 @@ class HashingTest {
     val hashedData1 = hashSha256ToSpace(DATA, 1024)
     val hashedData2 = hashSha256ToSpace(DATA, 1024)
     assertThat(hashedData1).isEqualTo(hashedData2)
-    assertTrue(hashedData1 < 1024)
+    assertThat(hashedData1).isLessThan(1024)
   }
 
   @Test
@@ -39,13 +38,13 @@ class HashingTest {
     val hashedData1 = hashSha256ToSpace(DATA, 1024)
     val hashedData2 = hashSha256ToSpace(ALT_DATA, 1024)
     assertThat(hashedData1).isNotEqualTo(hashedData2)
-    assertTrue(hashedData1 < 1024)
-    assertTrue(hashedData2 < 1024)
+    assertThat(hashedData1).isLessThan(1024)
+    assertThat(hashedData2).isLessThan(1024)
   }
 
   @Test
   fun `hash data with small range`() {
     val hashedData = hashSha256ToSpace(DATA, 2)
-    assertTrue(hashedData < 2)
+    assertThat(hashedData).isLessThan(2)
   }
 }

@@ -23,14 +23,14 @@ import org.wfanet.panelmatch.common.beam.map
 import org.wfanet.panelmatch.common.beam.values
 
 /**
- * Implements a batch query creation engine in Apache Beam using oblivious query expansion and
- * result decryption
+ * Implements a query creation engine in Apache Beam that encrypts a query so that it can later be
+ * expanded by another party using oblivious query expansion.
  *
  * @param parameters tuning knobs for the workflow
  * @param obliviousQueryBuilder implementation of lower-level oblivious query expansion and result
  * decryption
  */
-class BatchCreationWorkflow(
+class CreateQueriesWorkflow(
   private val parameters: Parameters,
   private val obliviousQueryBuilder: ObliviousQueryBuilder
 ) : Serializable {
@@ -49,11 +49,11 @@ class BatchCreationWorkflow(
   }
 
   /** Creates [EncryptQueriesResponse] on [data]. */
-  fun batchCreate(
+  fun createQueries(
     data: PCollection<KV<PanelistKey, JoinKey>>
   ): PCollection<EncryptQueriesResponse> {
-    val mappeddata = mapToQueryId(data)
-    val unencryptedQueries = buildUnencryptedQuery(mappeddata)
+    val mappedData = mapToQueryId(data)
+    val unencryptedQueries = buildUnencryptedQuery(mappedData)
     return getObliviousQueries(unencryptedQueries)
   }
 
@@ -61,7 +61,7 @@ class BatchCreationWorkflow(
   private fun mapToQueryId(
     data: PCollection<KV<PanelistKey, JoinKey>>
   ): PCollection<KV<QueryId, JoinKey>> {
-    return data.map {
+    return data.map(name = "Create QueryIds for each PanelistKey") {
       val queryId = obliviousQueryBuilder.queryIdGenerator(it.key)
       // TODO output kvOf(it.key, queryId) to MP storage
       kvOf(queryId, it.value)
@@ -73,8 +73,8 @@ class BatchCreationWorkflow(
     data: PCollection<KV<QueryId, JoinKey>>
   ): PCollection<KV<ShardId, UnencryptedQuery>> {
     val bucketing = Bucketing(parameters.numShards, parameters.numBucketsPerShard)
-    return data.map {
-      val (shardId, bucketId) = bucketing.apply(it.value)
+    return data.map(name = "Get shard and bucket values and build UnencryptedQuery") {
+      val (shardId, bucketId) = bucketing.hashAndApply(it.value)
       kvOf(shardId, unencryptedQueryOf(shardId, bucketId, it.key))
     }
   }
@@ -85,7 +85,7 @@ class BatchCreationWorkflow(
   ): PCollection<EncryptQueriesResponse> {
     return data
       .groupByKey("Group by Shard")
-      .map {
+      .map(name = "Encrypt each UnencrypteQuery using obliviousQueryBuilder") {
         val encryptQueriesRequest =
           EncryptQueriesRequest.newBuilder().addAllUnencryptedQuery(it.value).build()
         kvOf(it.key, obliviousQueryBuilder.encryptQueries(encryptQueriesRequest))

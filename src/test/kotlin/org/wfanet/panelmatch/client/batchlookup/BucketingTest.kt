@@ -48,11 +48,15 @@ class BucketingTest {
   @Test
   fun `hash encrypted join keys`() {
     val bucketing = Bucketing(numShards = 30000, numBucketsPerShard = 3)
-    assertThat(bucketing.apply(joinKeyOf(ByteString.copyFromUtf8("some-encrypted-joinkey"))))
+    assertThat(bucketing.hashAndApply(joinKeyOf(ByteString.copyFromUtf8("some-encrypted-joinkey"))))
       .isEqualTo(shardIdOf(18852) to bucketIdOf(0))
-    assertThat(bucketing.apply(joinKeyOf(ByteString.copyFromUtf8("some-other-encrypted-joinkey"))))
+    assertThat(
+        bucketing.hashAndApply(joinKeyOf(ByteString.copyFromUtf8("some-other-encrypted-joinkey")))
+      )
       .isEqualTo(shardIdOf(21603) to bucketIdOf(0))
-    assertThat(bucketing.apply(joinKeyOf(ByteString.copyFromUtf8("another-encrypted-joinkey-1"))))
+    assertThat(
+        bucketing.hashAndApply(joinKeyOf(ByteString.copyFromUtf8("another-encrypted-joinkey-1")))
+      )
       .isEqualTo(shardIdOf(29214) to bucketIdOf(2))
   }
 

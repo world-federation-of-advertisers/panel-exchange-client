@@ -24,16 +24,16 @@ class Bucketing(private val numShards: Int, private val numBucketsPerShard: Int)
     require(numBucketsPerShard > 0)
   }
 
-  /** Returns the hashed [ShardId] and [BucketId] for a [JoinKey]. */
-  fun apply(joinKey: JoinKey): Pair<ShardId, BucketId> {
-    val hashedValue: Long =
-      hashSha256ToSpace(joinKey.key, numShards.toLong() * numBucketsPerShard.toLong())
-    return shard(hashedValue) to bucket(hashedValue)
-  }
-
   /** Returns the [ShardId] and [BucketId] for [value]. */
   fun apply(value: Long): Pair<ShardId, BucketId> {
     return shard(value) to bucket(value)
+  }
+
+  /** Returns the hashed [ShardId] and [BucketId] for a [JoinKey]. */
+  fun hashAndApply(joinKey: JoinKey): Pair<ShardId, BucketId> {
+    val hashedValue: Long =
+      hashSha256ToSpace(joinKey.key, numShards.toLong() * numBucketsPerShard.toLong())
+    return apply(hashedValue)
   }
 
   private fun shard(value: Long): ShardId {

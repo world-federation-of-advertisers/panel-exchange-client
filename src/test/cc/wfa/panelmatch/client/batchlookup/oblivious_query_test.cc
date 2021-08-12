@@ -47,15 +47,12 @@ TEST(ObliviousQuery, EncryptQueriesTest) {
   test_request.set_public_key("some-public-key");
   test_request.set_private_key("some-private-key");
   UnencryptedQuery* unencrypted_query = test_request.add_unencrypted_query();
-  ShardId* shard_id = new ShardId();
+  ShardId* shard_id = unencrypted_query->mutable_shard_id();
   shard_id->set_id(1);
-  unencrypted_query->set_allocated_shard_id(shard_id);
-  QueryId* query_id = new QueryId;
+  QueryId* query_id = unencrypted_query->mutable_query_id();
   query_id->set_id(2);
-  unencrypted_query->set_allocated_query_id(query_id);
-  BucketId* bucket_id = new BucketId();
+  BucketId* bucket_id = unencrypted_query->mutable_bucket_id();
   bucket_id->set_id(3);
-  unencrypted_query->set_allocated_bucket_id(bucket_id);
   auto test_response = EncryptQueries(test_request);
   EXPECT_THAT(test_response.status(),
               StatusIs(absl::StatusCode::kUnimplemented, ""));

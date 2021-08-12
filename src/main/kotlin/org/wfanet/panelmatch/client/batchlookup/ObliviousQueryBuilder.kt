@@ -27,7 +27,7 @@ interface ObliviousQueryBuilder : Serializable {
    * 2. Return a UUID independent of [PanelistKey] and store the mapping
    */
   fun queryIdGenerator(panelistKey: PanelistKey): QueryId {
-    return queryIdOf(randomUUID().getLeastSignificantBits().toInt())
+    return queryIdOf(randomUUID().getLeastSignificantBits())
   }
 
   /** Generates a public and private key for query compression and expansion */
