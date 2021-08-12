@@ -18,9 +18,11 @@ import com.google.protobuf.ByteString
 import java.security.MessageDigest
 
 private val HASH_ALGORITHM = "SHA-256"
-// private val maxHashValue:Long = floor(Long.MAX_VALUE.toDouble() / (numShards * numBuckets)
-// ).toLong() * numShards * numBuckets
 
+/**
+ * Converts a [ByteArray] to a [Long]. A [Long] is 64 bits so the input [ByteArray] must be at least
+ * 8 bytes long.
+ */
 private fun ByteArray.toLong(): Long {
   require(this.size >= 8)
   var result: Long = 0
@@ -33,9 +35,13 @@ private fun ByteArray.toLong(): Long {
 }
 
 /**
- * Generates a long representing the SHA-256 of [data] without a salt. A 8 byte long has 64 bits of
- * information which is 1/4 the space of sha256. Furthermore, we then want to limit the hash space
- * to the largest multiple of (numShards * numBuckets) less than [Long.MAX_VALUE].
+ * Generates a long representing the SHA-256 of [data] without a salt. To properly distribute the
+ * data across shards and buckets, we use a two step process:
+ * 1. Convert to Long: A 8 byte long has 64 bits of information which is 1/4 the space of sha256.
+ * 2. Limit the hash space: We limit the hash space to the input maxValue which is typically
+ * numShards * numBuckets. A very small number of hashes will fall above the maximum multiple of
+ * maxValue less than MAX_LONG. They represent such a small number of overall hashes, that we do not
+ * recursively rehash them.
  */
 fun hashSha256ToSpace(data: ByteString, maxValue: Long): Long {
   val sha256MessageDigest = MessageDigest.getInstance(HASH_ALGORITHM)

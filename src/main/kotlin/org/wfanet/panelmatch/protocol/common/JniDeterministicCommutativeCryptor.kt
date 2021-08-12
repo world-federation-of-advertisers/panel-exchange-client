@@ -23,18 +23,18 @@ import org.wfanet.panelmatch.protocol.CryptorEncryptRequest
 import org.wfanet.panelmatch.protocol.CryptorEncryptResponse
 import org.wfanet.panelmatch.protocol.CryptorReEncryptRequest
 import org.wfanet.panelmatch.protocol.CryptorReEncryptResponse
-import org.wfanet.panelmatch.protocol.crypto.SwigDeterministicCommutativeEncryption
+import org.wfanet.panelmatch.protocol.crypto.DeterministicCommutativeEncryptionWrapper
 
 /**
  * A [DeterministicCommutativeEncryption] implementation using the JNI
- * [SwigDeterministicCommutativeEncryption].
+ * [DeterministicCommutativeEncryptionWrapper].
  */
 class JniDeterministicCommutativeCryptor : Cryptor {
 
   override fun encrypt(request: CryptorEncryptRequest): CryptorEncryptResponse {
     return wrapJniException {
       CryptorEncryptResponse.parseFrom(
-        SwigDeterministicCommutativeEncryption.deterministicCommutativeEncryptWrapper(
+        DeterministicCommutativeEncryptionWrapper.deterministicCommutativeEncryptWrapper(
           request.toByteArray()
         )
       )
@@ -44,7 +44,7 @@ class JniDeterministicCommutativeCryptor : Cryptor {
   override fun reEncrypt(request: CryptorReEncryptRequest): CryptorReEncryptResponse {
     return wrapJniException {
       CryptorReEncryptResponse.parseFrom(
-        SwigDeterministicCommutativeEncryption.deterministicCommutativeReEncryptWrapper(
+        DeterministicCommutativeEncryptionWrapper.deterministicCommutativeReEncryptWrapper(
           request.toByteArray()
         )
       )
@@ -54,7 +54,7 @@ class JniDeterministicCommutativeCryptor : Cryptor {
   override fun decrypt(request: CryptorDecryptRequest): CryptorDecryptResponse {
     return wrapJniException {
       CryptorDecryptResponse.parseFrom(
-        SwigDeterministicCommutativeEncryption.deterministicCommutativeDecryptWrapper(
+        DeterministicCommutativeEncryptionWrapper.deterministicCommutativeDecryptWrapper(
           request.toByteArray()
         )
       )

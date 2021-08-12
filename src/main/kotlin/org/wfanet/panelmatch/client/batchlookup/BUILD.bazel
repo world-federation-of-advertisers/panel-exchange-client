@@ -18,8 +18,8 @@ kt_jvm_library(
         "//src/main/proto/wfa/panelmatch/client/batchlookup:database_java_proto",
         "//src/main/proto/wfa/panelmatch/client/batchlookup:oblivious_query_java_proto",
         "//src/main/proto/wfa/panelmatch/client/batchlookup:query_evaluator_java_proto",
-        "//src/main/swig/wfanet/panelmatch/client/batchlookup:query_evaluator",
-        "//src/main/swig/wfanet/panelmatch/protocol/batchlookup:oblivious_query",
+        "//src/main/swig/wfanet/panelmatch/client/batchlookup/querybuilder:oblivious_query",
+        "//src/main/swig/wfanet/panelmatch/client/batchlookup/queryevaluator:query_evaluator",
         "@wfa_common_jvm//imports/java/com/google/protobuf/util",
     ],
 )

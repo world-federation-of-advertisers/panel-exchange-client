@@ -22,16 +22,13 @@ import org.wfanet.panelmatch.common.beam.kvOf
 import org.wfanet.panelmatch.common.beam.map
 import org.wfanet.panelmatch.common.beam.values
 
-private fun queryIdGenerator(panelistKey: PanelistKey): QueryId {
-  return queryIdOf(panelistKey.id.toInt() * 100)
-  // return queryIdOf(randomUUID().getLeastSignificantBits().toInt())
-}
-
 /**
- * Implements a batch query creation engine in Apache Beam using oblivious query expansion and result decryption
+ * Implements a batch query creation engine in Apache Beam using oblivious query expansion and
+ * result decryption
  *
  * @param parameters tuning knobs for the workflow
- * @param obliviousQueryBuilder implementation of lower-level oblivious query expansion and result decryption
+ * @param obliviousQueryBuilder implementation of lower-level oblivious query expansion and result
+ * decryption
  */
 class BatchCreationWorkflow(
   private val parameters: Parameters,

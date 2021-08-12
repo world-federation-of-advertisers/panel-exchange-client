@@ -17,26 +17,23 @@ package org.wfanet.panelmatch.client.batchlookup
 import java.nio.file.Paths
 import org.wfanet.panelmatch.common.loadLibrary
 import org.wfanet.panelmatch.common.wrapJniException
-import org.wfanet.panelmatch.protocol.batchlookup.SwigObliviousQuery
-import java.util.UUID.randomUUID
+import org.wfanet.panelmatch.protocol.batchlookup.ObliviousQueryWrapper
 
-/** A [QueryCryptor] implementation using the JNI [SwigObliviousQuery]. */
+/** A [ObliviousQueryBuilder] implementation using the JNI [ObliviousQueryWrapper]. */
 class JniObliviousQueryBuilder : ObliviousQueryBuilder {
-
-  override fun queryIdGenerator(panelistKey: PanelistKey): QueryId {
-    return queryIdOf(randomUUID().getLeastSignificantBits().toInt())
-  }
 
   override fun generateKeys(request: GenerateKeysRequest): GenerateKeysResponse {
     return wrapJniException {
-      GenerateKeysResponse.parseFrom(SwigObliviousQuery.generateKeysWrapper(request.toByteArray()))
+      GenerateKeysResponse.parseFrom(
+        ObliviousQueryWrapper.generateKeysWrapper(request.toByteArray())
+      )
     }
   }
 
   override fun encryptQueries(request: EncryptQueriesRequest): EncryptQueriesResponse {
     return wrapJniException {
       EncryptQueriesResponse.parseFrom(
-        SwigObliviousQuery.encryptQueriesWrapper(request.toByteArray())
+        ObliviousQueryWrapper.encryptQueriesWrapper(request.toByteArray())
       )
     }
   }
@@ -44,7 +41,7 @@ class JniObliviousQueryBuilder : ObliviousQueryBuilder {
   override fun decryptQueries(request: DecryptQueriesRequest): DecryptQueriesResponse {
     return wrapJniException {
       DecryptQueriesResponse.parseFrom(
-        SwigObliviousQuery.decryptQueriesWrapper(request.toByteArray())
+        ObliviousQueryWrapper.decryptQueriesWrapper(request.toByteArray())
       )
     }
   }
@@ -52,7 +49,8 @@ class JniObliviousQueryBuilder : ObliviousQueryBuilder {
   companion object {
 
     init {
-      val SWIG_PATH = "panel_exchange_client/src/main/swig/wfanet/panelmatch/protocol/batchlookup"
+      val SWIG_PATH =
+        "panel_exchange_client/src/main/swig/wfanet/panelmatch/client/batchlookup/querybuilder"
       loadLibrary(name = "oblivious_query", directoryPath = Paths.get(SWIG_PATH))
     }
   }

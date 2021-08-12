@@ -63,7 +63,9 @@ class JniQueryEvaluator : QueryEvaluator {
       loadLibrary(
         name = "query_evaluator",
         directoryPath =
-          Paths.get("panel_exchange_client/src/main/swig/wfanet/panelmatch/client/batchlookup")
+          Paths.get(
+            "panel_exchange_client/src/main/swig/wfanet/panelmatch/client/batchlookup/queryevaluator"
+          )
       )
     }
   }

@@ -24,13 +24,13 @@ import org.wfanet.panelmatch.client.batchlookup.EncryptQueriesResponse
 import org.wfanet.panelmatch.client.batchlookup.GenerateKeysRequest
 import org.wfanet.panelmatch.client.batchlookup.GenerateKeysResponse
 import org.wfanet.panelmatch.client.batchlookup.ObliviousQueryBuilder
+import org.wfanet.panelmatch.client.batchlookup.PanelistKey
 import org.wfanet.panelmatch.client.batchlookup.QueryBundle
 import org.wfanet.panelmatch.client.batchlookup.QueryId
 import org.wfanet.panelmatch.client.batchlookup.ShardId
 import org.wfanet.panelmatch.client.batchlookup.queryBundleOf
-import org.wfanet.panelmatch.client.batchlookup.queryMetadataOf
-import org.wfanet.panelmatch.client.batchlookup.PanelistKey
 import org.wfanet.panelmatch.client.batchlookup.queryIdOf
+import org.wfanet.panelmatch.client.batchlookup.queryMetadataOf
 
 /**
  * Fake [PlaintextObliviousQueryBuilder] for testing purposes.
@@ -67,6 +67,7 @@ object PlaintextObliviousQueryBuilder : ObliviousQueryBuilder {
       .toList()
   }
 
+  /** Easily reversible queryIdGenerator helpful for debugging. */
   override fun queryIdGenerator(panelistKey: PanelistKey): QueryId {
     return queryIdOf(panelistKey.id.toInt() * 100)
   }

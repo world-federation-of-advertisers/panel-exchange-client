@@ -15,16 +15,20 @@
 package org.wfanet.panelmatch.client.batchlookup
 
 import java.io.Serializable
+import java.util.UUID.randomUUID
 
 /** Provides oblvious query compression encryption for us in private information retrieval */
 interface ObliviousQueryBuilder : Serializable {
 
-  /** Generates a unique [QueryId], optionally, based on the [PanelistKey]. For privacy, reasons, it
+  /**
+   * Generates a unique [QueryId], optionally, based on the [PanelistKey]. For privacy, reasons, it
    * should not be easy to reverse the process. Some options:
    * 1. Hash the [PanelistKey] using a secret salt
-   * 2. Return a UUID independent of [PanelistKey]
+   * 2. Return a UUID independent of [PanelistKey] and store the mapping
    */
-  fun queryIdGenerator(panelistKey: PanelistKey): QueryId
+  fun queryIdGenerator(panelistKey: PanelistKey): QueryId {
+    return queryIdOf(randomUUID().getLeastSignificantBits().toInt())
+  }
 
   /** Generates a public and private key for query compression and expansion */
   fun generateKeys(request: GenerateKeysRequest): GenerateKeysResponse
