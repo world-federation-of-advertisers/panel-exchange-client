@@ -31,20 +31,13 @@ import org.wfanet.panelmatch.client.batchlookup.queryBundleOf
 import org.wfanet.panelmatch.client.batchlookup.queryMetadataOf
 
 /**
- * Fake [QueryEvaluator] for testing purposes.
+ * Fake [PlaintextObliviousQueryBuilder] for testing purposes.
  *
- * Each [QueryBundle]'s payload is a serialized [ListValue] protocol buffer. Each element in the
- * list is a string -- the decimal string representation of a bucket to select.
- *
- * For example, a [ListValue] to select buckets 10 and 14 might be:
- *
- * values { string_value: "10" } values { string_value: "14" }
- *
- * No additional data is stored in the query metadata beyond the query id.
+ * Built to be compatible with the [PlaintextQueryEvaluator].
  */
 object PlaintextObliviousQueryBuilder : ObliviousQueryBuilder {
 
-  fun makeQueryBundle(shard: ShardId, queries: List<Pair<QueryId, BucketId>>): QueryBundle {
+  private fun makeQueryBundle(shard: ShardId, queries: List<Pair<QueryId, BucketId>>): QueryBundle {
     return queryBundleOf(
       shard,
       queries.map { queryMetadataOf(it.first, ByteString.EMPTY) },

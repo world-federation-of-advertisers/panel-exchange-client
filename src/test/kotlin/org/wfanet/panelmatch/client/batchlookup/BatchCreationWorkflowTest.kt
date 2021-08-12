@@ -41,7 +41,7 @@ class BatchCreationWorkflowTest : BeamTestBase() {
   private fun runWorkflow(
     obliviousQueryBuilder: ObliviousQueryBuilder,
     parameters: Parameters
-  ): PCollection<KV<ShardId, EncryptQueriesResponse>> {
+  ): PCollection<EncryptQueriesResponse> {
     return BatchCreationWorkflow(
         parameters = parameters,
         obliviousQueryBuilder = obliviousQueryBuilder,
@@ -56,7 +56,7 @@ class BatchCreationWorkflowTest : BeamTestBase() {
     assertThat(results).satisfies {
       assertThat(
           it
-            .map { it.value.getCiphertextsList().map { QueryBundle.parseFrom(it) } }
+            .map { it.getCiphertextsList().map { QueryBundle.parseFrom(it) } }
             .flatten()
             .map { decodeQueryBundle(it) }
             .flatten()

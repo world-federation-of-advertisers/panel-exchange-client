@@ -20,6 +20,7 @@ import org.apache.beam.sdk.values.PCollection
 import org.wfanet.panelmatch.common.beam.groupByKey
 import org.wfanet.panelmatch.common.beam.kvOf
 import org.wfanet.panelmatch.common.beam.map
+import org.wfanet.panelmatch.common.beam.values
 
 private fun queryIdGenerator(panelistKey: PanelistKey): QueryId {
   return queryIdOf(panelistKey.id.toInt() * 100)
@@ -53,7 +54,7 @@ class BatchCreationWorkflow(
   /** Creates [queryBundles] on [data]. */
   fun batchCreate(
     data: PCollection<KV<PanelistKey, JoinKey>>
-  ): PCollection<KV<ShardId, EncryptQueriesResponse>> {
+  ): PCollection<EncryptQueriesResponse> {
     val mappeddata = mapToQueryId(data)
     val unencryptedQueries = buildUnencryptedQuery(mappeddata)
     return getObliviousQueries(unencryptedQueries)
@@ -85,12 +86,14 @@ class BatchCreationWorkflow(
   /** Batch gets the oblivious queries grouped by [ShardId]. */
   private fun getObliviousQueries(
     data: PCollection<KV<ShardId, UnencryptedQuery>>
-  ): PCollection<KV<ShardId, EncryptQueriesResponse>> {
-    return data.groupByKey("Group by Shard").map {
-      val encryptQueriesRequest =
-        EncryptQueriesRequest.newBuilder().addAllUnencryptedQuery(it.value).build()
-      kvOf(it.key, obliviousQueryBuilder.encryptQueries(encryptQueriesRequest))
-    }
-    // .values("Extract Results")
+  ): PCollection<EncryptQueriesResponse> {
+    return data
+      .groupByKey("Group by Shard")
+      .map {
+        val encryptQueriesRequest =
+          EncryptQueriesRequest.newBuilder().addAllUnencryptedQuery(it.value).build()
+        kvOf(it.key, obliviousQueryBuilder.encryptQueries(encryptQueriesRequest))
+      }
+      .values("Extract Results")
   }
 }

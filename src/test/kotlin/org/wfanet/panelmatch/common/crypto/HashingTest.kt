@@ -45,7 +45,7 @@ class HashingTest {
 
   @Test
   fun `hash data with small range`() {
-    val hashedData1 = hashSha256ToSpace(DATA, 2)
-    assertTrue(hashedData1 < 2)
+    val hashedData = hashSha256ToSpace(DATA, 2)
+    assertTrue(hashedData < 2)
   }
 }
