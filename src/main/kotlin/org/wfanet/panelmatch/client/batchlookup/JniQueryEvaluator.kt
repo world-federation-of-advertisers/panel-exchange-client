@@ -59,13 +59,11 @@ class JniQueryEvaluator : QueryEvaluator {
   }
 
   companion object {
+    const val SWIG_BASE = "panel_exchange_client/src/main/swig/wfanet/panelmatch"
     init {
       loadLibrary(
         name = "query_evaluator",
-        directoryPath =
-          Paths.get(
-            "panel_exchange_client/src/main/swig/wfanet/panelmatch/client/batchlookup/queryevaluator"
-          )
+        directoryPath = Paths.get("$SWIG_BASE/client/batchlookup/queryevaluator")
       )
     }
   }
