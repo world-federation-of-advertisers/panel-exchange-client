@@ -44,9 +44,11 @@ using ::wfa::panelmatch::common::crypto::GetPepperedFingerprinter;
 
 EventDataPreprocessor::EventDataPreprocessor(std::unique_ptr<Cryptor> cryptor,
                                              const SecretData& pepper,
+                                             const SecretData& salt,
                                              const Fingerprinter* delegate,
                                              const AesWithHkdf* aes_hkdf)
     : cryptor_(std::move(cryptor)),
+      salt_(salt),
       fingerprinter_(GetPepperedFingerprinter(CHECK_NOTNULL(delegate), pepper)),
       aes_hkdf_(*CHECK_NOTNULL(aes_hkdf)) {}
 
@@ -62,7 +64,8 @@ absl::StatusOr<ProcessedData> EventDataPreprocessor::Process(
   ProcessedData processed_data;
   ASSIGN_OR_RETURN(
       processed_data.encrypted_event_data,
-      aes_hkdf_.Encrypt(event_data, SecretDataFromStringView(processed[0])));
+      aes_hkdf_.Encrypt(event_data, SecretDataFromStringView(processed[0]),
+                        salt_));
 
   processed_data.encrypted_identifier =
       fingerprinter_->Fingerprint(processed[0]);
