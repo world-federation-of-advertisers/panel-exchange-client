@@ -43,7 +43,7 @@ class EventDataPreprocessor {
  public:
   EventDataPreprocessor(std::unique_ptr<common::crypto::Cryptor> cryptor,
                         const ::crypto::tink::util::SecretData& pepper,
-                        const ::crypto::tink::util::SecretData& salt,
+                        const ::crypto::tink::util::SecretData& hkdf_pepper_,
                         const Fingerprinter* delegate,
                         const common::crypto::AesWithHkdf* aes_hkdf);
   ~EventDataPreprocessor() = default;

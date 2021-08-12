@@ -61,7 +61,7 @@ PreprocessEvents(
     return absl::InvalidArgumentError("INVALID ARGUMENT: Empty Pepper");
   }
   // TODO(juliamorrissey): load the salt from the request
-  EventDataPreprocessor preprocessor = EventDataPreprocessor(
+  EventDataPreprocessor preprocessor(
       std::move(cryptor), SecretDataFromStringView(request.pepper()),
       SecretDataFromStringView(""), &fingerprinter, &aes_hkdf);
   PreprocessEventsResponse processed;
