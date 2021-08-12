@@ -187,5 +187,22 @@ TEST(AesTest, sameKeyDifferentStringDecrypt) {
   EXPECT_NE(decrypted_1, decrypted_2);
 }
 
+// Tests that the same key and string with different salts return different
+// values for Encrypt
+TEST(AesTest, differentSalt) {
+  std::unique_ptr<Hkdf> hkdf = GetSha256Hkdf();
+  std::unique_ptr<Aes> aes = GetAesSivCmac512();
+  SecretData key = SecretDataFromStringView("key");
+  std::string_view plaintext = "Some data to encrypt.";
+  AesWithHkdf aes_hkdf(std::move(hkdf), std::move(aes));
+  ASSERT_OK_AND_ASSIGN(
+      std::string ciphertext_1,
+      aes_hkdf.Encrypt(plaintext, key, SecretDataFromStringView("test-salt1")));
+  ASSERT_OK_AND_ASSIGN(
+      std::string ciphertext_2,
+      aes_hkdf.Encrypt(plaintext, key, SecretDataFromStringView("test-salt2")));
+  EXPECT_NE(ciphertext_1, ciphertext_2);
+}
+
 }  // namespace
 }  // namespace wfa::panelmatch::common::crypto
