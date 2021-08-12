@@ -30,6 +30,7 @@ class EncryptionEventsDoFn(
   private val encryptEvents:
     SerializableFunction<PreprocessEventsRequest, PreprocessEventsResponse>,
   private val getPepper: SerializableFunction<Void?, ByteString>,
+  private val getSalt: SerializableFunction<Void?, ByteString>,
   private val getCryptoKey: SerializableFunction<Void?, ByteString>,
 ) : DoFn<MutableList<KV<ByteString, ByteString>>, KV<Long, ByteString>>() {
   @ProcessElement
@@ -40,6 +41,7 @@ class EncryptionEventsDoFn(
         .apply {
           cryptoKey = getCryptoKey.apply(null as Void?)
           pepper = getPepper.apply(null as Void?)
+          salt = getSalt.apply(null as Void?)
           for (pair in list) {
             addUnprocessedEventsBuilder().apply {
               id = pair.key

@@ -21,37 +21,40 @@ import org.apache.beam.sdk.values.PCollection
 import org.wfanet.panelmatch.common.beam.parDo
 
 /**
- * Runs preprocessing DoFns on input [PCollection] using specified ByteStrings as the crypto key and
- * pepper and outputs encrypted [PCollection]
+ * Runs preprocessing DoFns on input [PCollection] using specified ByteStrings as the crypto key,
+ * salt, and pepper and outputs encrypted [PCollection]
  */
 fun preprocessEventsInPipeline(
   events: PCollection<KV<ByteString, ByteString>>,
   maxByteSize: Int,
   pepper: ByteString,
+  salt: ByteString,
   cryptokey: ByteString
 ): PCollection<KV<Long, ByteString>> {
   return preprocessEventsInPipeline(
     events,
     maxByteSize,
     HardCodedPepperProvider(pepper),
+    HardCodedSaltProvider(salt),
     HardCodedCryptoKeyProvider(cryptokey)
   )
 }
 
 /**
  * Runs preprocessing DoFns on input [PCollection] using specified SerializableFunctions to supply
- * cryptokey and pepper and outputs encrypted [PCollection]
+ * cryptokey, salt, and pepper and outputs encrypted [PCollection]
  */
 fun preprocessEventsInPipeline(
   events: PCollection<KV<ByteString, ByteString>>,
   maxByteSize: Int,
   pepperProvider: SerializableFunction<Void?, ByteString>,
-  cryptoKeyProvider: SerializableFunction<Void?, ByteString>
+  saltProvider: SerializableFunction<Void?, ByteString>,
+  cryptoKeyProvider: SerializableFunction<Void?, ByteString>,
 ): PCollection<KV<Long, ByteString>> {
   return events
     .parDo(BatchingDoFn(maxByteSize, EventSize), name = "Batch by $maxByteSize bytes")
     .parDo(
-      EncryptionEventsDoFn(EncryptEvents(), pepperProvider, cryptoKeyProvider),
+      EncryptionEventsDoFn(EncryptEvents(), pepperProvider, saltProvider, cryptoKeyProvider),
       name = "Encrypt"
     )
 }

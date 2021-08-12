@@ -109,6 +109,24 @@ kt_jvm_test(
 )
 
 kt_jvm_test(
+    name = "SaltProviderTest",
+    srcs = ["SaltProviderTest.kt"],
+    test_class = "org.wfanet.panelmatch.client.eventpreprocessing.SaltProviderTest",
+    deps = [
+        "//imports/java/com/google/common:guava",
+        "//imports/java/org/apache/beam:core",
+        "//imports/java/org/apache/beam/extensions:protobuf",
+        "//src/main/kotlin/org/wfanet/panelmatch/client/eventpreprocessing",
+        "//src/main/kotlin/org/wfanet/panelmatch/common",
+        "//src/main/kotlin/org/wfanet/panelmatch/common/beam",
+        "//src/main/kotlin/org/wfanet/panelmatch/common/beam/testing",
+        "//src/main/proto/wfa/panelmatch/client/eventpreprocessing:preprocess_events_java_proto",
+        "@wfa_common_jvm//imports/java/com/google/common/truth",
+        "@wfa_common_jvm//imports/kotlin/kotlin/test",
+    ],
+)
+
+kt_jvm_test(
     name = "PreprocessEventsInPipelineTest",
     srcs = ["PreprocessEventsInPipelineTest.kt"],
     test_class = "org.wfanet.panelmatch.client.eventpreprocessing.PreprocessEventsInPipelineTest",

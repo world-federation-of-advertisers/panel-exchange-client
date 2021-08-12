@@ -48,9 +48,10 @@ TEST(EventDataPreprocessorTests, ActualValues) {
   unprocessed_event->set_data("some-data");
   test_request.set_crypto_key("some-cryptokey");
   test_request.set_pepper("some-pepper");
+  test_request.set_pepper("some-salt")
 
-  ASSERT_OK_AND_ASSIGN(PreprocessEventsResponse processed,
-                       PreprocessEvents(test_request));
+      ASSERT_OK_AND_ASSIGN(PreprocessEventsResponse processed,
+                           PreprocessEvents(test_request));
   EXPECT_EQ(processed.processed_events_size(), 1);
   EXPECT_NE(processed.processed_events(0).encrypted_data(), "some-data");
 }
@@ -61,6 +62,18 @@ TEST(EventDataPreprocessorTests, MissingPepper) {
       test_request.add_unprocessed_events();
   unprocessed_event->set_id("some-id");
   unprocessed_event->set_data("some-data");
+  test_request.set_salt("some-salt");
+  test_request.set_crypto_key("some-cryptokey");
+  ASSERT_THAT(PreprocessEvents(test_request).status(),
+              StatusIs(absl::StatusCode::kInvalidArgument, ""));
+}
+TEST(EventDataPreprocessorTests, MissingSalt) {
+  PreprocessEventsRequest test_request;
+  PreprocessEventsRequest::UnprocessedEvent* unprocessed_event =
+      test_request.add_unprocessed_events();
+  unprocessed_event->set_id("some-id");
+  unprocessed_event->set_data("some-data");
+  test_request.set_pepper("some-pepper");
   test_request.set_crypto_key("some-cryptokey");
   ASSERT_THAT(PreprocessEvents(test_request).status(),
               StatusIs(absl::StatusCode::kInvalidArgument, ""));
@@ -72,6 +85,7 @@ TEST(EventDataPreprocessorTests, MissingCryptokey) {
   unprocessed_event->set_id("some-id");
   unprocessed_event->set_data("some-data");
   test_request.set_pepper("some-pepper");
+  test_request.set_pepper("some-salt");
   ASSERT_THAT(PreprocessEvents(test_request).status(),
               StatusIs(absl::StatusCode::kInvalidArgument, ""));
 }
@@ -79,6 +93,7 @@ TEST(EventDataPreprocessorTests, MissingUnprocessedEvents) {
   PreprocessEventsRequest test_request;
   test_request.set_crypto_key("some-cryptokey");
   test_request.set_pepper("some-pepper");
+  test_request.set_pepper("some-salt");
   ASSERT_OK_AND_ASSIGN(PreprocessEventsResponse processed,
                        PreprocessEvents(test_request));
   EXPECT_EQ(processed.processed_events_size(), 0);
@@ -89,6 +104,7 @@ TEST(EventDataPreprocessorTests, MissingId) {
       test_request.add_unprocessed_events();
   unprocessed_event->set_data("some-data");
   test_request.set_pepper("some-pepper");
+  test_request.set_pepper("some-salt");
   test_request.set_crypto_key("some-cryptokey");
   EXPECT_THAT(PreprocessEvents(test_request), IsOk());
 }
@@ -99,6 +115,7 @@ TEST(EventDataPreprocessorTests, MissingData) {
   unprocessed_event->set_id("some-id");
   test_request.set_pepper("some-pepper");
   test_request.set_crypto_key("some-cryptokey");
+  test_request.set_pepper("some-salt");
   EXPECT_THAT(PreprocessEvents(test_request), IsOk());
 }
 TEST(EventDataPreprocessorTests, MultipleUnprocessedEvents) {
@@ -117,6 +134,7 @@ TEST(EventDataPreprocessorTests, MultipleUnprocessedEvents) {
   unprocessed_event3->set_data("some-data3");
   test_request.set_crypto_key("some-cryptokey");
   test_request.set_pepper("some-pepper");
+  test_request.set_pepper("some-salt");
 
   ASSERT_OK_AND_ASSIGN(PreprocessEventsResponse processed,
                        PreprocessEvents(test_request));

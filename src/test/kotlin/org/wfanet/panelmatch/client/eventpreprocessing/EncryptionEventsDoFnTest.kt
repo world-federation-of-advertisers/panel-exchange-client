@@ -45,7 +45,7 @@ class EncryptionEventsDoFnTest : BeamTestBase() {
       mutableListOf(inputOf("1000", "2"), inputOf("2000", "4"))
     val collection = pcollectionOf("collection1", arbitraryUnprocessedEvents, coder = coder)
     val doFn: DoFn<MutableList<KV<ByteString, ByteString>>, KV<Long, ByteString>> =
-      EncryptionEventsDoFn(FakeEncryptEvents, FakeGetPepper, FakeGetCryptoKey)
+      EncryptionEventsDoFn(FakeEncryptEvents, FakeGetPepper, FakeGetSalt, FakeGetCryptoKey)
     val result: PCollection<KV<Long, ByteString>> = collection.apply(ParDo.of(doFn))
     assertThat(result)
       .containsInAnyOrder(outputOf(1001, "2hijklmnop"), outputOf(2001, "4hijklmnop"))
@@ -56,7 +56,7 @@ class EncryptionEventsDoFnTest : BeamTestBase() {
     val emptycollection = pcollectionOf("collection1", emptyUnprocessedEvents, coder = coder)
 
     val doFn: DoFn<MutableList<KV<ByteString, ByteString>>, KV<Long, ByteString>> =
-      EncryptionEventsDoFn(FakeEncryptEvents, FakeGetPepper, FakeGetCryptoKey)
+      EncryptionEventsDoFn(FakeEncryptEvents, FakeGetPepper, FakeGetSalt, FakeGetCryptoKey)
     val result: PCollection<KV<Long, ByteString>> = emptycollection.apply(ParDo.of(doFn))
     assertThat(result).empty()
   }
@@ -91,6 +91,12 @@ private object FakeEncryptEvents :
 private object FakeGetPepper : SerializableFunction<Void?, ByteString> {
   override fun apply(void: Void?): ByteString {
     return ByteString.copyFromUtf8("fakepepper")
+  }
+}
+
+private object FakeGetSalt : SerializableFunction<Void?, ByteString> {
+  override fun apply(void: Void?): ByteString {
+    return ByteString.copyFromUtf8("fakesalt")
   }
 }
 

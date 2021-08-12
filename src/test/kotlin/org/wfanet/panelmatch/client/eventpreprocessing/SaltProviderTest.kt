@@ -12,30 +12,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-syntax = "proto3";
+package org.wfanet.panelmatch.client.eventpreprocessing
 
-package wfa.panelmatch.client;
+import com.google.common.truth.Truth.assertThat
+import com.google.protobuf.ByteString
+import org.junit.Test
+import org.junit.runner.RunWith
+import org.junit.runners.JUnit4
 
-option java_package = "org.wfanet.panelmatch.client";
-option java_multiple_files = true;
+@RunWith(JUnit4::class)
+class SaltProviderTest {
 
-// Request to preprocess event data
-message PreprocessEventsRequest {
-  repeated UnprocessedEvent unprocessed_events = 1;
-  message UnprocessedEvent {
-    bytes id = 1;
-    bytes data = 2;
-  }
-  bytes crypto_key = 2;
-  bytes pepper = 3;
-  bytes salt = 4;
-}
-
-// Response of the PreprocessEvents method
-message PreprocessEventsResponse {
-  repeated ProcessedEvent processed_events = 1;
-  message ProcessedEvent {
-    fixed64 encrypted_id = 1;
-    bytes encrypted_data = 2;
+  @Test
+  fun hardCoded() {
+    val salt: ByteString = ByteString.copyFromUtf8("testsalt")
+    val result = HardCodedCryptoKeyProvider(salt).apply(null as Void?)
+    assertThat(result).isEqualTo(salt)
   }
 }
