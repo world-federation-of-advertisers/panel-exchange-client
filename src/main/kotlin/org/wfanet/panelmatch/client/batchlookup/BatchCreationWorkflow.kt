@@ -28,10 +28,10 @@ private fun queryIdGenerator(panelistKey: PanelistKey): QueryId {
 }
 
 /**
- * Implements a batch query engine in Apache Beam using homomorphic encryption.
+ * Implements a batch query creation engine in Apache Beam using oblivious query expansion and result decryption
  *
  * @param parameters tuning knobs for the workflow
- * @param queryEvaluator implementation of lower-level homomorphic operations
+ * @param obliviousQueryBuilder implementation of lower-level oblivious query expansion and result decryption
  */
 class BatchCreationWorkflow(
   private val parameters: Parameters,
@@ -51,7 +51,7 @@ class BatchCreationWorkflow(
     }
   }
 
-  /** Creates [queryBundles] on [data]. */
+  /** Creates [EncryptQueriesResponse] on [data]. */
   fun batchCreate(
     data: PCollection<KV<PanelistKey, JoinKey>>
   ): PCollection<EncryptQueriesResponse> {
@@ -65,9 +65,8 @@ class BatchCreationWorkflow(
     data: PCollection<KV<PanelistKey, JoinKey>>
   ): PCollection<KV<QueryId, JoinKey>> {
     return data.map {
-      val queryId = queryIdGenerator(it.key)
-      // val queryId = queryIdOf(5)
-      // TODO output kvOf(PanelistKey, queryId) to MP storage
+      val queryId = obliviousQueryBuilder.queryIdGenerator(it.key)
+      // TODO output kvOf(it.key, queryId) to MP storage
       kvOf(queryId, it.value)
     }
   }

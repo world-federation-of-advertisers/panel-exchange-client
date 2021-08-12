@@ -29,6 +29,8 @@ import org.wfanet.panelmatch.client.batchlookup.QueryId
 import org.wfanet.panelmatch.client.batchlookup.ShardId
 import org.wfanet.panelmatch.client.batchlookup.queryBundleOf
 import org.wfanet.panelmatch.client.batchlookup.queryMetadataOf
+import org.wfanet.panelmatch.client.batchlookup.PanelistKey
+import org.wfanet.panelmatch.client.batchlookup.queryIdOf
 
 /**
  * Fake [PlaintextObliviousQueryBuilder] for testing purposes.
@@ -63,6 +65,10 @@ object PlaintextObliviousQueryBuilder : ObliviousQueryBuilder {
       .findAll(combinedPayloads)
       .map { match -> match.groupValues[1] }
       .toList()
+  }
+
+  override fun queryIdGenerator(panelistKey: PanelistKey): QueryId {
+    return queryIdOf(panelistKey.id.toInt() * 100)
   }
 
   override fun generateKeys(request: GenerateKeysRequest): GenerateKeysResponse {

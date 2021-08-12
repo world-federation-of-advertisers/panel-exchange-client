@@ -19,6 +19,13 @@ import java.io.Serializable
 /** Provides oblvious query compression encryption for us in private information retrieval */
 interface ObliviousQueryBuilder : Serializable {
 
+  /** Generates a unique [QueryId], optionally, based on the [PanelistKey]. For privacy, reasons, it
+   * should not be easy to reverse the process. Some options:
+   * 1. Hash the [PanelistKey] using a secret salt
+   * 2. Return a UUID independent of [PanelistKey]
+   */
+  fun queryIdGenerator(panelistKey: PanelistKey): QueryId
+
   /** Generates a public and private key for query compression and expansion */
   fun generateKeys(request: GenerateKeysRequest): GenerateKeysResponse
 

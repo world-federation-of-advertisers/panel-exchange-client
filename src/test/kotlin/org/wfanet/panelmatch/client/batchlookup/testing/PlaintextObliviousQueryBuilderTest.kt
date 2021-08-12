@@ -26,6 +26,7 @@ import org.wfanet.panelmatch.client.batchlookup.queryBundleOf
 import org.wfanet.panelmatch.client.batchlookup.queryIdOf
 import org.wfanet.panelmatch.client.batchlookup.shardIdOf
 import org.wfanet.panelmatch.client.batchlookup.unencryptedQueryOf
+import org.wfanet.panelmatch.client.batchlookup.PanelistKey
 
 class PlaintextObliviousQueryBuilderTest {
   private val obliviousQueryBuilder: ObliviousQueryBuilder = PlaintextObliviousQueryBuilder

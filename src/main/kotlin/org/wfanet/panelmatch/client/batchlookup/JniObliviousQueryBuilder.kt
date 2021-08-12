@@ -18,9 +18,14 @@ import java.nio.file.Paths
 import org.wfanet.panelmatch.common.loadLibrary
 import org.wfanet.panelmatch.common.wrapJniException
 import org.wfanet.panelmatch.protocol.batchlookup.SwigObliviousQuery
+import java.util.UUID.randomUUID
 
 /** A [QueryCryptor] implementation using the JNI [SwigObliviousQuery]. */
 class JniObliviousQueryBuilder : ObliviousQueryBuilder {
+
+  override fun queryIdGenerator(panelistKey: PanelistKey): QueryId {
+    return queryIdOf(randomUUID().getLeastSignificantBits().toInt())
+  }
 
   override fun generateKeys(request: GenerateKeysRequest): GenerateKeysResponse {
     return wrapJniException {

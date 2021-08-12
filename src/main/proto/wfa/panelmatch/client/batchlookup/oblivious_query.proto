@@ -56,6 +56,7 @@ message EncryptedQuery {
   QueryId query_id = 2;
 }
 
+// A set of queries compressed and prepared for oblivious expansion
 message EncryptQueriesResponse {
   repeated bytes ciphertexts = 1;
   repeated EncryptedQuery encrypted_query = 2;
@@ -76,10 +77,12 @@ message DecryptQueriesResponse {
   repeated bytes decrypted_query_results = 1;
 }
 
+// Some key maintained by a model provider to identify a panelist
 message PanelistKey {
   fixed64 id = 1;
 }
 
+// The agreed upon join key used for double blind exchange and query lookup
 message JoinKey {
   bytes key = 1;
 }
