@@ -61,7 +61,7 @@ class CreateQueriesWorkflow(
   private fun mapToQueryId(
     data: PCollection<KV<PanelistKey, JoinKey>>
   ): PCollection<KV<QueryId, JoinKey>> {
-    return data.map(name = "Create QueryIds for each PanelistKey") {
+    return data.map(name = "Map to QueryId") {
       val queryId = obliviousQueryBuilder.queryIdGenerator(it.key)
       // TODO output kvOf(it.key, queryId) to MP storage
       kvOf(queryId, it.value)
@@ -73,7 +73,7 @@ class CreateQueriesWorkflow(
     data: PCollection<KV<QueryId, JoinKey>>
   ): PCollection<KV<ShardId, UnencryptedQuery>> {
     val bucketing = Bucketing(parameters.numShards, parameters.numBucketsPerShard)
-    return data.map(name = "Get shard and bucket values and build UnencryptedQuery") {
+    return data.map(name = "Map to UnencryptedQuery") {
       val (shardId, bucketId) = bucketing.hashAndApply(it.value)
       kvOf(shardId, unencryptedQueryOf(shardId, bucketId, it.key))
     }
@@ -85,7 +85,7 @@ class CreateQueriesWorkflow(
   ): PCollection<EncryptQueriesResponse> {
     return data
       .groupByKey("Group by Shard")
-      .map(name = "Encrypt each UnencrypteQuery using obliviousQueryBuilder") {
+      .map(name = "Map to EncryptQueriesResponse") {
         val encryptQueriesRequest =
           EncryptQueriesRequest.newBuilder().addAllUnencryptedQuery(it.value).build()
         kvOf(it.key, obliviousQueryBuilder.encryptQueries(encryptQueriesRequest))

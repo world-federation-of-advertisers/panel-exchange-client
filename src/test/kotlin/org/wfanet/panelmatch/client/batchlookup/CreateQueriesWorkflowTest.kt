@@ -32,7 +32,7 @@ import org.wfanet.panelmatch.common.beam.testing.BeamTestBase
 import org.wfanet.panelmatch.common.beam.testing.assertThat
 
 @RunWith(JUnit4::class)
-class BatchCreationWorkflowTest : BeamTestBase() {
+class CreateQueriesWorkflowTest : BeamTestBase() {
   private val database by lazy {
     databaseOf(53L to "abc", 58L to "def", 71L to "hij", 85L to "klm", 95L to "nop", 99L to "qrs")
   }
@@ -61,7 +61,7 @@ class BatchCreationWorkflowTest : BeamTestBase() {
             .map { decodeQueryBundle(it) }
             .flatten()
         )
-        .containsAtLeastElementsIn(
+        .containsExactlyElementsIn(
           listOf(
             ShardedQuery(1, 5800L, 1),
             ShardedQuery(1, 9500L, 2),

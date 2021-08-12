@@ -55,16 +55,16 @@ class PlaintextObliviousQueryBuilderTest {
   fun `decryptQueries`() {
     val queriedData =
       listOf(
-        "<this is the payload for -3026910158441561776>",
-        "<this is the payload for -4228343866523403918>",
-        "<this is the payload for -6367288518484839692>",
-        "<this is the payload for -6428220448289816081>",
-        "<this is the payload for -3350035376205273921>",
-        "<this is the payload for 7288696731122253832>",
-        "<this is the payload for -8481730907691591520>",
-        "<this is the payload for -2252118164433982605>",
-        "<this is the payload for -4359497035184897174>",
-        "<this is the payload for 4129736453975454884>"
+        "<this is the payload for 1>",
+        "<this is the payload for 2>",
+        "<this is the payload for 3>",
+        "<this is the payload for 4>",
+        "<this is the payload for 5>",
+        "<this is the payload for 6>",
+        "<this is the payload for 7>",
+        "<this is the payload for 8>",
+        "<this is the payload for 9>",
+        "<this is the payload for 10>"
       )
     val decryptQueriesRequest =
       DecryptQueriesRequest.newBuilder()
@@ -72,7 +72,7 @@ class PlaintextObliviousQueryBuilderTest {
         .build()
     val decryptedQueries = obliviousQueryBuilder.decryptQueries(decryptQueriesRequest)
     assertThat(decryptedQueries.getDecryptedQueryResultsList().map { it.toStringUtf8() })
-      .containsAtLeastElementsIn(queriedData)
+      .containsExactlyElementsIn(queriedData)
   }
 }
 

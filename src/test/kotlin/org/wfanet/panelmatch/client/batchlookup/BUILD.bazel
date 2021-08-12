@@ -32,9 +32,9 @@ kt_jvm_test(
 )
 
 kt_jvm_test(
-    name = "BatchCreationWorkflowTest",
+    name = "CreateQueriesWorkflowTest",
     srcs = ["CreateQueriesWorkflowTest.kt"],
-    test_class = "org.wfanet.panelmatch.client.batchlookup.BatchCreationWorkflowTest",
+    test_class = "org.wfanet.panelmatch.client.batchlookup.CreateQueriesWorkflowTest",
     deps = [
         "//imports/java/org/apache/beam:core",
         "//imports/java/org/apache/beam/extensions:protobuf",
