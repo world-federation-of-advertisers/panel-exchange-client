@@ -115,15 +115,16 @@ TEST(EventDataPreprocessorTests, properImplementation) {
   std::unique_ptr<Aes> aes = absl::make_unique<FakeAes>();
   const AesWithHkdf aes_hkdf(std::move(hkdf), std::move(aes));
   std::unique_ptr<FakeCryptor> cryptor = CreateFakeCryptor();
-  EventDataPreprocessor preprocessor(
-      std::move(cryptor), SecretDataFromStringView("pepper"),
-      SecretDataFromStringView("salt"), &fingerprinter, &aes_hkdf);
+  SecretData salt = SecretDataFromStringView("salt");
+  EventDataPreprocessor preprocessor(std::move(cryptor),
+                                     SecretDataFromStringView("pepper"), salt,
+                                     &fingerprinter, &aes_hkdf);
   ASSERT_OK_AND_ASSIGN(ProcessedData processed,
                        preprocessor.Process("some-identifier", "some-event"));
   EXPECT_EQ(processed.encrypted_identifier, 21);
   EXPECT_EQ(processed.encrypted_event_data,
             "Encrypted 'some-event' with key 'HKDF with length '64' of "
-            "'some-identifier''");
+            "'some-identifier' and salt 'salt' '");
 }
 
 // Tests EventDataPreprocessor with null Fingerprinter
