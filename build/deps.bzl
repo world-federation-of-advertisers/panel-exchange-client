@@ -1,4 +1,4 @@
-# Copyright 2020 The Cross-Media Measurement Authors
+# Copyright 2021 The Cross-Media Measurement Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,11 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Repository rules/macros for rules_kotlin dependencies."""
+"""
+Step 2 of configuring WORKSPACE: adds transitive deps.
+"""
 
-load("@io_bazel_rules_kotlin//kotlin:kotlin.bzl", "kotlin_repositories", "kt_register_toolchains")
+load("@wfa_common_cpp//build:common_cpp_repositories.bzl", "common_cpp_repositories")
+load("@wfa_common_jvm//build:common_jvm_repositories.bzl", "common_jvm_deps_repositories")
+load("@tink_base//:tink_base_deps.bzl", "tink_base_deps")
+load("@tink_cc//:tink_cc_deps.bzl", "tink_cc_deps")
 
-def rules_kotlin_deps(compiler_release):
-    kotlin_repositories(compiler_release = compiler_release)
-
-    kt_register_toolchains()
+def panel_exchange_client_deps():
+    common_cpp_repositories()
+    common_jvm_deps_repositories()
+    tink_base_deps()
+    tink_cc_deps()

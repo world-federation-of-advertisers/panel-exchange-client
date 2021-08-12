@@ -1,4 +1,4 @@
-load("@io_bazel_rules_kotlin//kotlin:kotlin.bzl", "kt_jvm_test")
+load("@io_bazel_rules_kotlin//kotlin:jvm.bzl", "kt_jvm_test")
 
 kt_jvm_test(
     name = "PlaintextBatchLookupWorkflowEndToEndTest",
@@ -6,7 +6,7 @@ kt_jvm_test(
     test_class = "org.wfanet.panelmatch.client.batchlookup.testing.PlaintextBatchLookupWorkflowEndToEndTest",
     deps = [
         "//imports/java/org/apache/beam:core",
-        "//imports/java/org/apache/beam:protobuf",
+        "//imports/java/org/apache/beam/extensions:protobuf",
         "//src/main/kotlin/org/wfanet/panelmatch/client/batchlookup",
         "//src/main/kotlin/org/wfanet/panelmatch/client/batchlookup/testing",
         "//src/main/kotlin/org/wfanet/panelmatch/common/beam",
@@ -22,7 +22,7 @@ kt_jvm_test(
     test_class = "org.wfanet.panelmatch.client.batchlookup.testing.PlaintextQueryEvaluatorTest",
     deps = [
         "//imports/java/org/apache/beam:core",
-        "//imports/java/org/apache/beam:protobuf",
+        "//imports/java/org/apache/beam/extensions:protobuf",
         "//src/main/kotlin/org/wfanet/panelmatch/client/batchlookup",
         "//src/main/kotlin/org/wfanet/panelmatch/client/batchlookup/testing",
         "//src/main/kotlin/org/wfanet/panelmatch/common/beam",
