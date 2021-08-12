@@ -49,7 +49,8 @@ TEST(HkdfTest, properCall) {
 // Test with an empty key and proper length
 TEST(HkdfTest, emptyKey) {
   std::unique_ptr<Hkdf> hkdf = GetSha256Hkdf();
-  auto result = hkdf->ComputeHkdf(SecretDataFromStringView(""), 42, SecretDataFromStringView("test-salt")));
+  auto result = hkdf->ComputeHkdf(SecretDataFromStringView(""), 42,
+                                  SecretDataFromStringView("test-salt"));
   EXPECT_THAT(result.status(),
               wfa::StatusIs(absl::StatusCode::kInvalidArgument, ""));
 }
@@ -72,7 +73,7 @@ TEST(HkdfTest, lengthTooBig) {
               wfa::StatusIs(absl::StatusCode::kInvalidArgument, ""));
 }
 
-TEST(HkdfTest, lengthTooBig) {
+TEST(HkdfTest, compareSalt) {
   std::unique_ptr<Hkdf> hkdf = GetSha256Hkdf();
   auto result1 = hkdf->ComputeHkdf(GetInputKeyMaterial(), 8,
                                    SecretDataFromStringView("test-salt1"));

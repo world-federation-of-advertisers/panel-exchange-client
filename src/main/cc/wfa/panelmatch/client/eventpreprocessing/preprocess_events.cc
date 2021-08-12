@@ -62,7 +62,7 @@ PreprocessEvents(
   }
   EventDataPreprocessor preprocessor = EventDataPreprocessor(
       std::move(cryptor), SecretDataFromStringView(request.pepper()),
-      &fingerprinter, &aes_hkdf);
+      SecretDataFromStringView(""), &fingerprinter, &aes_hkdf);
   PreprocessEventsResponse processed;
   for (const PreprocessEventsRequest::UnprocessedEvent& u :
        request.unprocessed_events()) {
