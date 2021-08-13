@@ -14,7 +14,10 @@
 
 package org.wfanet.panelmatch.client.eventpreprocessing
 
+import com.google.common.base.Stopwatch
 import com.google.protobuf.ByteString
+import java.util.concurrent.TimeUnit
+import org.apache.beam.sdk.metrics.Metrics
 import org.apache.beam.sdk.transforms.DoFn
 import org.apache.beam.sdk.transforms.SerializableFunction
 import org.apache.beam.sdk.values.KV
@@ -32,6 +35,8 @@ class EncryptionEventsDoFn(
   private val getPepper: SerializableFunction<Void?, ByteString>,
   private val getCryptoKey: SerializableFunction<Void?, ByteString>,
 ) : DoFn<MutableList<KV<ByteString, ByteString>>, KV<Long, ByteString>>() {
+  val jniCallTimeDistribution = Metrics.distribution(BatchingDoFn::class.java, "jni-call-time")
+
   @ProcessElement
   fun process(c: ProcessContext) {
     val list: MutableList<KV<ByteString, ByteString>> = c.element()
@@ -48,7 +53,10 @@ class EncryptionEventsDoFn(
           }
         }
         .build()
+    val stopWatch: Stopwatch = Stopwatch.createStarted()
     val response: PreprocessEventsResponse = encryptEvents.apply(request)
+    stopWatch.stop()
+    jniCallTimeDistribution.update(stopWatch.elapsed(TimeUnit.SECONDS))
 
     for (events in response.processedEventsList) {
       c.output(KV.of(events.encryptedId, events.encryptedData))
