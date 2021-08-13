@@ -55,8 +55,8 @@ class PreprocessEventsInPipelineTest : BeamTestBase() {
       preprocessEventsInPipeline(
         events,
         8,
-        HardCodedPepperProvider("pepper".toByteString()),
-        HardCodedSaltProvider("salt".toByteString()),
+        HardCodedIdentifierHashPepperProvider("idhashpepper".toByteString()),
+        HardCodedHkdfPepperProvider("hkdfpepper".toByteString()),
         HardCodedCryptoKeyProvider("cryptokey".toByteString())
       )
 

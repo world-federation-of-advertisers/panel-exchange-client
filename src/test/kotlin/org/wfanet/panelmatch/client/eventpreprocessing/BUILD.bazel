@@ -90,9 +90,9 @@ kt_jvm_test(
 )
 
 kt_jvm_test(
-    name = "PepperProviderTest",
-    srcs = ["PepperProviderTest.kt"],
-    test_class = "org.wfanet.panelmatch.client.eventpreprocessing.PepperProviderTest",
+    name = "IdentifierHashPepperProviderTest",
+    srcs = ["IdentifierHashPepperProviderTest.kt"],
+    test_class = "org.wfanet.panelmatch.client.eventpreprocessing.IdentifierHashPepperProviderTest",
     deps = [
         "//imports/java/com/google/common:guava",
         "//imports/java/org/apache/beam:core",
@@ -109,9 +109,9 @@ kt_jvm_test(
 )
 
 kt_jvm_test(
-    name = "SaltProviderTest",
-    srcs = ["SaltProviderTest.kt"],
-    test_class = "org.wfanet.panelmatch.client.eventpreprocessing.SaltProviderTest",
+    name = "HkdfPepperProviderTest",
+    srcs = ["HkdfPepperProviderTest.kt"],
+    test_class = "org.wfanet.panelmatch.client.eventpreprocessing.HkdfPepperProviderTest",
     deps = [
         "//imports/java/com/google/common:guava",
         "//imports/java/org/apache/beam:core",

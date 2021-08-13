@@ -22,39 +22,44 @@ import org.wfanet.panelmatch.common.beam.parDo
 
 /**
  * Runs preprocessing DoFns on input [PCollection] using specified ByteStrings as the crypto key,
- * salt, and pepper and outputs encrypted [PCollection]
+ * HKDF pepper, and Identifier Hash Pepper and outputs encrypted [PCollection]
  */
 fun preprocessEventsInPipeline(
   events: PCollection<KV<ByteString, ByteString>>,
   maxByteSize: Int,
-  pepper: ByteString,
-  salt: ByteString,
+  identifierHashPepper: ByteString,
+  hkdfPepper: ByteString,
   cryptokey: ByteString
 ): PCollection<KV<Long, ByteString>> {
   return preprocessEventsInPipeline(
     events,
     maxByteSize,
-    HardCodedPepperProvider(pepper),
-    HardCodedSaltProvider(salt),
+    HardCodedIdentifierHashPepperProvider(identifierHashPepper),
+    HardCodedHkdfPepperProvider(hkdfPepper),
     HardCodedCryptoKeyProvider(cryptokey)
   )
 }
 
 /**
  * Runs preprocessing DoFns on input [PCollection] using specified SerializableFunctions to supply
- * cryptokey, salt, and pepper and outputs encrypted [PCollection]
+ * cryptokey, HKDF pepper, and Identifier Hash pepper and outputs encrypted [PCollection]
  */
 fun preprocessEventsInPipeline(
   events: PCollection<KV<ByteString, ByteString>>,
   maxByteSize: Int,
-  pepperProvider: SerializableFunction<Void?, ByteString>,
-  saltProvider: SerializableFunction<Void?, ByteString>,
+  identifierHashPepperProvider: SerializableFunction<Void?, ByteString>,
+  hkdfPepperProvider: SerializableFunction<Void?, ByteString>,
   cryptoKeyProvider: SerializableFunction<Void?, ByteString>,
 ): PCollection<KV<Long, ByteString>> {
   return events
     .parDo(BatchingDoFn(maxByteSize, EventSize), name = "Batch by $maxByteSize bytes")
     .parDo(
-      EncryptionEventsDoFn(EncryptEvents(), pepperProvider, saltProvider, cryptoKeyProvider),
+      EncryptionEventsDoFn(
+        EncryptEvents(),
+        identifierHashPepperProvider,
+        hkdfPepperProvider,
+        cryptoKeyProvider
+      ),
       name = "Encrypt"
     )
 }

@@ -30,7 +30,8 @@ class EncryptEventsTest {
       PreprocessEventsRequest.newBuilder()
         .apply {
           cryptoKey = ByteString.copyFromUtf8("cryptokey")
-          pepper = ByteString.copyFromUtf8("pepper")
+          identifierHashPepper = ByteString.copyFromUtf8("identifier-hash-pepper")
+          hkdfPepper = ByteString.copyFromUtf8("hkdf-pepper")
           addUnprocessedEventsBuilder().apply {
             id = ByteString.copyFromUtf8("identifier")
             data = ByteString.copyFromUtf8("eventdata")

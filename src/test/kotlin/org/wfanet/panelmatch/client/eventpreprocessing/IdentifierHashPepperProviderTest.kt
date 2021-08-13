@@ -21,12 +21,12 @@ import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
 
 @RunWith(JUnit4::class)
-class SaltProviderTest {
+class IdentifierHashPepperProviderTest {
 
   @Test
   fun hardCoded() {
-    val salt: ByteString = ByteString.copyFromUtf8("testsalt")
-    val result = HardCodedCryptoKeyProvider(salt).apply(null as Void?)
-    assertThat(result).isEqualTo(salt)
+    val pepper: ByteString = ByteString.copyFromUtf8("testpepper")
+    val result = HardCodedIdentifierHashPepperProvider(pepper).apply(null as Void?)
+    assertThat(result).isEqualTo(pepper)
   }
 }

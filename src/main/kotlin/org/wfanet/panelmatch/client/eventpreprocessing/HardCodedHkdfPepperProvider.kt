@@ -18,22 +18,22 @@ import com.google.protobuf.ByteString
 import org.apache.beam.sdk.transforms.SerializableFunction
 
 /**
- * Takes in a salt as ByteString and outputs the same ByteString
+ * Takes in a HKDF pepper as ByteString and outputs the same ByteString
  *
  * Security concerns this introduces:
  *
- * The salt could get logged. If logs are visible to engineers, this could be vulnerable to insider
- * risk.
+ * The HKDF pepper could get logged. If logs are visible to engineers, this could be vulnerable to
+ * insider risk.
  *
- * The salt will reside in memory for longer. Other processes on the machines executing the Apache
- * Beam could potentially compromise it.
+ * The HKDF pepper will reside in memory for longer. Other processes on the machines executing the
+ * Apache Beam could potentially compromise it.
  *
- * The salt will be serialized and sent between Apache Beam workers. This means that vulnerable
- * temporary files or network connections could leak key material.
+ * The HKDF pepper will be serialized and sent between Apache Beam workers. This means that
+ * vulnerable temporary files or network connections could leak key material.
  */
-class HardCodedSaltProvider(private val salt: ByteString) :
+class HardCodedHkdfPepperProvider(private val hkdfPepper: ByteString) :
   SerializableFunction<Void?, ByteString> {
   override fun apply(void: Void?): ByteString {
-    return salt
+    return hkdfPepper
   }
 }
