@@ -36,7 +36,8 @@ class EncryptionEventsDoFn(
   private val getHkdfPepper: SerializableFunction<Void?, ByteString>,
   private val getCryptoKey: SerializableFunction<Void?, ByteString>,
 ) : DoFn<MutableList<KV<ByteString, ByteString>>, KV<Long, ByteString>>() {
-  val jniCallTimeDistribution = Metrics.distribution(BatchingDoFn::class.java, "jni-call-time")
+  private val jniCallTimeDistribution =
+    Metrics.distribution(BatchingDoFn::class.java, "jni-call-time-micros")
 
   @ProcessElement
   fun process(c: ProcessContext) {
@@ -58,7 +59,7 @@ class EncryptionEventsDoFn(
     val stopWatch: Stopwatch = Stopwatch.createStarted()
     val response: PreprocessEventsResponse = encryptEvents.apply(request)
     stopWatch.stop()
-    jniCallTimeDistribution.update(stopWatch.elapsed(TimeUnit.SECONDS))
+    jniCallTimeDistribution.update(stopWatch.elapsed(TimeUnit.MICROSECONDS))
 
     for (events in response.processedEventsList) {
       c.output(KV.of(events.encryptedId, events.encryptedData))
