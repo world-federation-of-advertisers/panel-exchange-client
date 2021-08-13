@@ -58,11 +58,10 @@ PreprocessEvents(
   std::unique_ptr<Hkdf> hkdf = GetSha256Hkdf();
   const AesWithHkdf aes_hkdf = AesWithHkdf(std::move(hkdf), std::move(aes));
   if (request.identifier_hash_pepper().empty()) {
-    return absl::InvalidArgumentError(
-        "INVALID ARGUMENT: Empty Identifier Hash Pepper");
+    return absl::InvalidArgumentError("Empty Identifier Hash Pepper");
   }
   if (request.hkdf_pepper().empty()) {
-    return absl::InvalidArgumentError("INVALID ARGUMENT: Empty HKDF Pepper");
+    return absl::InvalidArgumentError("Empty HKDF Pepper");
   }
   EventDataPreprocessor preprocessor(
       std::move(cryptor),

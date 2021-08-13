@@ -41,7 +41,7 @@ class JniPreprocessEventsTest : AbstractPreprocessEventsTest() {
         }
         .build()
     val noPepper = assertFailsWith(JniException::class) { preprocessEvents.preprocess(request) }
-    assertThat(noPepper.message).contains("INVALID ARGUMENT: Empty Identifier Hash Pepper")
+    assertThat(noPepper.message).contains("Empty Identifier Hash Pepper")
   }
   @Test
   fun testJniWrapExceptionHkdfPepper() {
@@ -57,7 +57,7 @@ class JniPreprocessEventsTest : AbstractPreprocessEventsTest() {
         }
         .build()
     val noPepper = assertFailsWith(JniException::class) { preprocessEvents.preprocess(request) }
-    assertThat(noPepper.message).contains("INVALID ARGUMENT: Empty HKDF Pepper")
+    assertThat(noPepper.message).contains("Empty HKDF Pepper")
   }
   @Test
   fun testJniWrapExceptionCryptoKey() {
