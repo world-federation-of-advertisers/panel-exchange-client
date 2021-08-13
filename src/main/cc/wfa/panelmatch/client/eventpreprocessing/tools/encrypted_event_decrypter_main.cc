@@ -36,13 +36,14 @@ using ::wfa::panelmatch::common::crypto::Hkdf;
 
 // Spot check AesWithHkdf encrypted values from the command line
 // Parameters: double-base64-escaped encrypted value, unencrypted identifier,
-// cryptokey
+// cryptokey, hkdf_pepper
 int main(int argc, char** argv) {
-  if (argc != 4) {
-    std::cout << "There must be 3 parameters" << std::endl;
+  if (argc != 5) {
+    std::cout << "There must be 4 parameters" << std::endl;
     return 1;
   }
 
+  // TODO (efoxepstein): Look into double-base64-escaped
   std::string temp;
   std::string ciphertext;
   absl::Base64Unescape(argv[1], &temp);
@@ -73,7 +74,8 @@ int main(int argc, char** argv) {
   AesWithHkdf aes_hkdf(std::move(hkdf), std::move(aes));
 
   absl::StatusOr<std::string> plaintext =
-      aes_hkdf.Decrypt(ciphertext, SecretDataFromStringView((*key)[0]));
+      aes_hkdf.Decrypt(ciphertext, SecretDataFromStringView((*key)[0]),
+                       SecretDataFromStringView(argv[4]));
   if (!plaintext.ok()) {
     std::cerr << "Decryption failed: " << plaintext.status() << std::endl;
     return 1;
