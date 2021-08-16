@@ -33,15 +33,17 @@ import org.wfanet.measurement.storage.StorageClient
 import org.wfanet.panelmatch.client.exchangetasks.ExchangeTask
 import org.wfanet.panelmatch.client.launcher.testing.FakeTimeout
 import org.wfanet.panelmatch.client.launcher.testing.buildStep
-import org.wfanet.panelmatch.client.storage.InMemoryStorage
+import org.wfanet.panelmatch.client.storage.InMemoryStorageClient
+import org.wfanet.panelmatch.client.storage.batchRead
+import org.wfanet.panelmatch.client.storage.batchWrite
 import org.wfanet.panelmatch.client.storage.toByteString
 import org.wfanet.panelmatch.common.testing.runBlockingTest
 
 @RunWith(JUnit4::class)
 class ExchangeTaskExecutorImplTest {
   private val apiClient: ApiClient = mock()
-  private val privateStorage = InMemoryStorage(keyPrefix = "private")
-  private val sharedStorage = InMemoryStorage(keyPrefix = "shared")
+  private val privateStorage = InMemoryStorageClient(keyPrefix = "private")
+  private val sharedStorage = InMemoryStorageClient(keyPrefix = "shared")
 
   private val timeout = FakeTimeout()
 
