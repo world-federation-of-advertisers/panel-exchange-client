@@ -43,7 +43,7 @@ int main(int argc, char** argv) {
     return 1;
   }
 
-  // TODO (efoxepstein): Look into double-base64-escaped
+  // TODO(efoxepstein): Look into why this is double-base64-escaped
   std::string temp;
   std::string ciphertext;
   absl::Base64Unescape(argv[1], &temp);
