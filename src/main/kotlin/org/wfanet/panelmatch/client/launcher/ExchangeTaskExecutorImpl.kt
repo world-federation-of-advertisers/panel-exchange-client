@@ -25,12 +25,14 @@ import kotlinx.coroutines.withContext
 import org.wfanet.measurement.api.v2alpha.ExchangeStepAttempt
 import org.wfanet.measurement.api.v2alpha.ExchangeStepAttemptKey
 import org.wfanet.measurement.api.v2alpha.ExchangeWorkflow
+import org.wfanet.measurement.storage.StorageClient
 import org.wfanet.measurement.storage.StorageClient.Blob
 import org.wfanet.panelmatch.client.exchangetasks.ExchangeTask
 import org.wfanet.panelmatch.client.logger.addToTaskLog
 import org.wfanet.panelmatch.client.logger.getAndClearTaskLog
 import org.wfanet.panelmatch.client.logger.loggerFor
-import org.wfanet.panelmatch.client.storage.Storage
+import org.wfanet.panelmatch.client.storage.batchRead
+import org.wfanet.panelmatch.client.storage.batchWrite
 import org.wfanet.panelmatch.common.Timeout
 
 /**
@@ -40,8 +42,8 @@ import org.wfanet.panelmatch.common.Timeout
 class ExchangeTaskExecutorImpl(
   private val apiClient: ApiClient,
   private val timeout: Timeout,
-  private val sharedStorage: Storage,
-  private val privateStorage: Storage,
+  private val sharedStorage: StorageClient,
+  private val privateStorage: StorageClient,
   private val getExchangeTaskForStep: suspend (ExchangeWorkflow.Step) -> ExchangeTask
 ) : ExchangeStepExecutor {
   /** Reads inputs for [step], executes [step], and writes the outputs to appropriate [Storage]. */
