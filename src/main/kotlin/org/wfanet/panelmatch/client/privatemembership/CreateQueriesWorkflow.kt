@@ -41,7 +41,7 @@ class CreateQueriesWorkflow(
 ) : Serializable {
 
   /**
-   * Tuning knobs for the [BatchCreationWorkflow].
+   * Tuning knobs for the [CreateQueriesWorkflow].
    *
    * @property numShards the number of shards to split the data into
    * @property numBucketsPerShard the number of buckets each shard can have

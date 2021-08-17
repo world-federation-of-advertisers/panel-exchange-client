@@ -70,7 +70,7 @@ class PlaintextObliviousQueryBuilderTest {
       DecryptQueriesRequest.newBuilder()
         .addAllEncryptedQueryResults(listOf(ByteString.copyFromUtf8(queriedData.joinToString(""))))
         .build()
-    val decryptedQueries = privateMembershipCryptor.decryptQueries(decryptQueriesRequest)
+    val decryptedQueries = privateMembershipCryptor.decryptQueryResults(decryptQueriesRequest)
     assertThat(decryptedQueries.getDecryptedQueryResultsList().map { it.toStringUtf8() })
       .containsExactlyElementsIn(queriedData)
   }

@@ -86,7 +86,7 @@ object PlaintextPrivateMembershipCryptor : PrivateMembershipCryptor {
   }
 
   /** Simple plaintext decrypter that splits up data marked by <...> */
-  override fun decryptQueries(request: DecryptQueriesRequest): DecryptQueriesResponse {
+  override fun decryptQueryResults(request: DecryptQueriesRequest): DecryptQueriesResponse {
     val encryptedQueryResults = request.getEncryptedQueryResultsList()
     return DecryptQueriesResponse.newBuilder()
       .addAllDecryptedQueryResults(
