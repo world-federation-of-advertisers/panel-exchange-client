@@ -50,11 +50,16 @@ _EXCLUDED_ARTIFACTS = [
     "org.apache.beam:beam-sdks-java-io-kafka",
 ]
 
+# TODO(@efoxepstein): remove this after upgrading common-jvm version to 0.8.0.
+_OVERRIDE_TARGETS = {
+    "org.jetbrains.kotlin:kotlin-stdlib-common": "@com_github_jetbrains_kotlin//:kotlin-stdlib",
+}
+
 def panel_exchange_client_maven_artifacts():
     return common_jvm_maven_artifacts() + _ARTIFACTS
 
 def panel_exchange_client_maven_override_targets():
-    return COMMON_JVM_MAVEN_TARGETS
+    return dict(COMMON_JVM_MAVEN_TARGETS.items() + _OVERRIDE_TARGETS.items())
 
 def panel_exchange_client_maven_excluded_artifacts():
     return _EXCLUDED_ARTIFACTS
