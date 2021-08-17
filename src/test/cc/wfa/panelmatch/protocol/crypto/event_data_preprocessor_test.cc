@@ -16,6 +16,7 @@
 
 #include "common_cpp/fingerprinters/fingerprinters.h"
 #include "common_cpp/testing/status_macros.h"
+#include "common_cpp/testing/status_matchers.h"
 #include "include/gtest/gtest.h"
 #include "tink/util/secret_data.h"
 #include "wfa/panelmatch/common/crypto/aes.h"
@@ -40,11 +41,12 @@ class FakeHkdf : public Hkdf {
  public:
   FakeHkdf() = default;
 
-  absl::StatusOr<SecretData> ComputeHkdf(const SecretData& ikm,
-                                         int length) const override {
-    return SecretDataFromStringView(
-        absl::StrCat("HKDF with length '", length, "' of '",
-                     SecretDataAsStringView(ikm), "'"));
+  absl::StatusOr<SecretData> ComputeHkdf(
+      const SecretData& ikm, int length,
+      const SecretData& salt) const override {
+    return SecretDataFromStringView(absl::StrCat(
+        "HKDF with length '", length, "' of '", SecretDataAsStringView(ikm),
+        "' and salt '", SecretDataAsStringView(salt), "' "));
   }
 };
 
@@ -114,15 +116,16 @@ TEST(EventDataPreprocessorTests, properImplementation) {
   std::unique_ptr<Aes> aes = absl::make_unique<FakeAes>();
   const AesWithHkdf aes_hkdf(std::move(hkdf), std::move(aes));
   std::unique_ptr<FakeCryptor> cryptor = CreateFakeCryptor();
+  SecretData salt = SecretDataFromStringView("salt");
   EventDataPreprocessor preprocessor(std::move(cryptor),
-                                     SecretDataFromStringView("pepper"),
+                                     SecretDataFromStringView("pepper"), salt,
                                      &fingerprinter, &aes_hkdf);
   ASSERT_OK_AND_ASSIGN(ProcessedData processed,
                        preprocessor.Process("some-identifier", "some-event"));
   EXPECT_EQ(processed.encrypted_identifier, 21);
   EXPECT_EQ(processed.encrypted_event_data,
             "Encrypted 'some-event' with key 'HKDF with length '64' of "
-            "'some-identifier''");
+            "'some-identifier' and salt 'salt' '");
 }
 
 // Tests EventDataPreprocessor with null Fingerprinter
@@ -133,7 +136,7 @@ TEST(EventDataPreprocessorTests, nullFingerpritner) {
   std::unique_ptr<FakeCryptor> cryptor = CreateFakeCryptor();
   ASSERT_DEATH(EventDataPreprocessor preprocessor(
                    std::move(cryptor), SecretDataFromStringView("pepper"),
-                   nullptr, &aes_hkdf),
+                   SecretDataFromStringView("salt"), nullptr, &aes_hkdf),
                "");
 }
 
@@ -146,7 +149,7 @@ TEST(EventDataPreprocessorTests, nullAesWithHkdf) {
   std::unique_ptr<FakeCryptor> cryptor = CreateFakeCryptor();
   ASSERT_DEATH(EventDataPreprocessor preprocessor(
                    std::move(cryptor), SecretDataFromStringView("pepper"),
-                   &fingerprinter, nullptr),
+                   SecretDataFromStringView("salt"), &fingerprinter, nullptr),
                "");
 }
 
@@ -157,11 +160,12 @@ TEST(EventDataPreprocessorTests, actualValues) {
   std::unique_ptr<Aes> aes = common::crypto::GetAesSivCmac512();
   const AesWithHkdf aes_hkdf(std::move(hkdf), std::move(aes));
   ASSERT_OK_AND_ASSIGN(std::unique_ptr<Cryptor> cryptor,
-                       common::crypto::CreateCryptorWithNewKey());
+                       common::crypto::CreateCryptorFromKey("some-key"));
   EventDataPreprocessor preprocessor(
-      std::move(cryptor), SecretDataFromStringView("pepper"), &sha, &aes_hkdf);
-  ASSERT_OK_AND_ASSIGN(ProcessedData processed,
-                       preprocessor.Process("some-identifier", "some-event"));
+      std::move(cryptor), SecretDataFromStringView("pepper"),
+      SecretDataFromStringView("salt"), &sha, &aes_hkdf);
+  EXPECT_THAT(preprocessor.Process("some-identifier", "some-event").status(),
+              IsOk());
 }
 
 }  // namespace

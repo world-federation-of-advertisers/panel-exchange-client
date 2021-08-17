@@ -19,8 +19,10 @@ import com.google.api.services.bigquery.model.TableRow
 import com.google.api.services.bigquery.model.TableSchema
 import com.google.protobuf.ByteString
 import java.util.Base64
+import java.util.logging.Logger
 import org.apache.beam.runners.dataflow.options.DataflowPipelineOptions
 import org.apache.beam.sdk.Pipeline
+import org.apache.beam.sdk.PipelineResult
 import org.apache.beam.sdk.io.gcp.bigquery.BigQueryIO
 import org.apache.beam.sdk.io.gcp.bigquery.BigQueryIO.TypedRead.Method
 import org.apache.beam.sdk.options.Description
@@ -37,7 +39,11 @@ interface Options : DataflowPipelineOptions {
 
   @get:Description("Cryptokey") @get:Validation.Required var cryptokey: String
 
-  @get:Description("Pepper") @get:Validation.Required var pepper: String
+  @get:Description("Identifier Hash Pepper")
+  @get:Validation.Required
+  var identifierHashPepper: String
+
+  @get:Description("HKDF Pepper") @get:Validation.Required var hkdfPepper: String
 
   @get:Description("Table to read from, specified as <project_id>:<dataset_id>.<table_id>")
   @get:Validation.Required
@@ -60,13 +66,14 @@ interface Options : DataflowPipelineOptions {
  * on GCP is:
  *
  * ```
- * ../cross-media-measurement/tools/bazel-container build //src/main/kotlin/org/wfanet/panelmatch/client/eventpreprocessing/deploy/gcloud:process_events && bazel-bin/src/main/kotlin/org/wfanet/panelmatch/client/eventpreprocessing/deploy/gcloud/process_events '--batchSize=SIZE' '--cryptokey=KEY' '--pepper=PEPPER' '--bigQueryInputTable=INPUT_TABLE' '--bigQueryOutputTable=OUTPUT_TABLE' '--project=PROJECT' '--runner=dataflow' '--region=us-central1' '--tempLocation=TEMP_LOCATION' '--defaultWorkerLogLevel=DEBUG'
+ * ../cross-media-measurement/tools/bazel-container build //src/main/kotlin/org/wfanet/panelmatch/client/eventpreprocessing/deploy/gcloud:process_events && bazel-bin/src/main/kotlin/org/wfanet/panelmatch/client/eventpreprocessing/deploy/gcloud/process_events '--batchSize=SIZE' '--cryptokey=KEY' '--hkdfPepper=HKDFPEPPER' '--identifierHashPepper=IDHPEPPER' '--bigQueryInputTable=INPUT_TABLE' '--bigQueryOutputTable=OUTPUT_TABLE' '--project=PROJECT' '--runner=dataflow' '--region=us-central1' '--tempLocation=TEMP_LOCATION' '--defaultWorkerLogLevel=DEBUG'
  * ```
  *
- * Where SIZE is the desired batch size, KEY is the desired crypto key, PEPPER is the desired
- * pepper, INPUT_TABLE is the BigQuery table to read from, OUTPUT_TABLE is the BigQuery table to
- * write to, PROJECT is the project name, and TEMP_LOCATION is the desired location to store temp
- * files. Performance and outputs can be tracked on the GCP console.
+ * Where SIZE is the desired batch size, KEY is the desired crypto key, IDHPEPPER is the desired
+ * Identifier Hash pepper, HKDFPEPPER is the desired HKDF pepper, INPUT_TABLE is the BigQuery table
+ * to read from, OUTPUT_TABLE is the BigQuery table to write to, PROJECT is the project name, and
+ * TEMP_LOCATION is the desired location to store temp files. Performance and outputs can be tracked
+ * on the GCP console.
  */
 fun main(args: Array<String>) {
   val options = makeOptions(args)
@@ -76,13 +83,16 @@ fun main(args: Array<String>) {
     preprocessEventsInPipeline(
       unencryptedEvents,
       options.batchSize,
-      ByteString.copyFromUtf8(options.pepper),
+      ByteString.copyFromUtf8(options.identifierHashPepper),
+      ByteString.copyFromUtf8(options.hkdfPepper),
       ByteString.copyFromUtf8(options.cryptokey)
     )
 
   writeToBigQuery(encryptedEvents, options.bigQueryOutputTable)
 
-  pipeline.run().waitUntilFinish()
+  val pipelineResult = pipeline.run()
+  check(pipelineResult.waitUntilFinish() == PipelineResult.State.DONE)
+  logMetrics(pipelineResult)
 }
 
 private fun readFromBigQuery(
@@ -140,4 +150,22 @@ private fun writeToBigQuery(
 
 private fun makeOptions(args: Array<String>): Options {
   return PipelineOptionsFactory.fromArgs(*args).withValidation().`as`(Options::class.java)
+}
+
+private fun logMetrics(pipelineResult: PipelineResult) {
+  val metrics = pipelineResult.metrics().allMetrics()
+  val logger = Logger.getLogger("PreprocessEventsMain")
+  for (metric in metrics.distributions) {
+    with(metric.attempted) {
+      logger.info(
+        "Distribution '${metric.name}': count=$count, min=$min, mean=$mean, max=$max, sum=$sum"
+      )
+    }
+  }
+  for (metric in metrics.counters) {
+    logger.info("Counter '${metric.name}': ${metric.attempted}")
+  }
+  for (metric in metrics.gauges) {
+    logger.info("Gauge '${metric.name}': ${metric.attempted.value}")
+  }
 }
