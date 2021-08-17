@@ -45,5 +45,6 @@ private fun ByteArray.toLong(): Long {
  */
 fun hashSha256ToSpace(data: ByteString, maxValue: Long): Long {
   val sha256MessageDigest = MessageDigest.getInstance(HASH_ALGORITHM)
+  // TODO Batch hash and convert to long using the fingerprinter in this same repo
   return sha256MessageDigest.digest(data.toByteArray()).toLong() % maxValue
 }

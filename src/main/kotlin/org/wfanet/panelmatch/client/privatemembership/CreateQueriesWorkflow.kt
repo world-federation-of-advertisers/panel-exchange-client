@@ -15,6 +15,9 @@
 package org.wfanet.panelmatch.client.privatemembership
 
 import java.io.Serializable
+import java.util.BitSet
+import kotlin.math.abs
+import kotlin.random.Random
 import org.apache.beam.sdk.values.KV
 import org.apache.beam.sdk.values.PCollection
 import org.wfanet.panelmatch.common.beam.groupByKey
@@ -42,8 +45,11 @@ class CreateQueriesWorkflow(
    *
    * @property numShards the number of shards to split the data into
    * @property numBucketsPerShard the number of buckets each shard can have
+   * @property padQueries [Boolean] if queries should be padded so that all shards have the same
+   * number of queries. TODO: Implement this property
    */
-  data class Parameters(val numShards: Int, val numBucketsPerShard: Int) : Serializable {
+  data class Parameters(val numShards: Int, val numBucketsPerShard: Int, val padQueries: Boolean) :
+    Serializable {
     init {
       require(numShards > 0)
       require(numBucketsPerShard > 0)
@@ -55,28 +61,41 @@ class CreateQueriesWorkflow(
     data: PCollection<KV<PanelistKey, JoinKey>>
   ): Pair<PCollection<KV<QueryId, PanelistKey>>, PCollection<EncryptQueriesResponse>> {
     val mappedData = mapToQueryId(data)
+    // TODO add in padded queries after we get the unencrypted queries
     val unencryptedQueries = buildUnencryptedQueryRequest(mappedData)
     val panelistToQueryIdMapping = getPanelistToQueryMapping(mappedData)
     return Pair(panelistToQueryIdMapping, getPrivateMembershipQueries(unencryptedQueries))
   }
 
-  /** Maps each [PanelistKey] to a unique [QueryId]. */
+  /**
+   * Maps each [PanelistKey] to a unique [QueryId] using an iterator. Works well as long as total
+   * collection size is less than ~90% of the mapped [QueryId] space (currently 32 bits). The
+   * current iterator uses a BitSet that only supports nonnegative integers which further reduces
+   * the mapped space to 16 bits.
+   */
   private fun mapToQueryId(
-    data: PCollection<KV<PanelistKey, JoinKey>>
+    data: PCollection<KV<PanelistKey, JoinKey>>,
+    maxSize: Int = (Int.MAX_VALUE * 0.9).toInt()
   ): PCollection<KV<KV<PanelistKey, QueryId>, JoinKey>> {
     return data.keyBy { 1 }.groupByKey().parDo {
+      val queryIds: Iterator<Int> = iterator {
+        val seen = BitSet()
+        while (seen.cardinality() < maxSize) {
+          val id = abs(Random.nextInt())
+          if (!seen.get(id)) {
+            seen.set(id)
+            yield(id)
+          }
+        }
+      }
       it
         .value
         .asSequence()
-        // TODO Change this to something that allows parallel flows. One options is to use
-        // UUID or use some sort of hash. To go that route, QueryId.id needs to be changed
-        // to 64 bits.
-        .shuffled()
         .mapIndexed { index, kv ->
-          kvOf(kvOf(requireNotNull(kv.key), queryIdOf(index)), requireNotNull(kv.value))
+          if (index > maxSize) throw Exception("Too many queries")
+          kvOf(kvOf(requireNotNull(kv.key), queryIdOf(queryIds.next())), requireNotNull(kv.value))
         }
-        .asSequence()
-        .forEach { yield(it) }
+        .also { yieldAll(it) }
     }
   }
 

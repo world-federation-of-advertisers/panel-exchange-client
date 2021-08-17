@@ -30,6 +30,7 @@ import org.wfanet.panelmatch.client.privatemembership.PrivateMembershipCryptor
 import org.wfanet.panelmatch.client.privatemembership.QueryId
 import org.wfanet.panelmatch.client.privatemembership.joinKeyOf
 import org.wfanet.panelmatch.client.privatemembership.panelistKeyOf
+import org.wfanet.panelmatch.common.beam.join
 import org.wfanet.panelmatch.common.beam.kvOf
 import org.wfanet.panelmatch.common.beam.map
 import org.wfanet.panelmatch.common.beam.testing.BeamTestBase
@@ -50,18 +51,34 @@ abstract class AbstractCreateQueriesWorkflowTest : BeamTestBase() {
   ): Pair<PCollection<KV<QueryId, PanelistKey>>, PCollection<EncryptQueriesResponse>> {
     return CreateQueriesWorkflow(
         parameters = parameters,
-        privateMembershipCryptor = privateMembershipCryptor,
+        privateMembershipCryptor = privateMembershipCryptor
       )
       .batchCreateQueries(database)
   }
 
+  private fun getPanelistQueries(
+    decryptedQueries: PCollection<KV<QueryId, ShardedQuery>>,
+    panelistKeyQueryId: PCollection<KV<QueryId, PanelistKey>>
+  ): PCollection<KV<QueryId, PanelistQuery>> {
+    return panelistKeyQueryId.join(decryptedQueries) {
+      key: QueryId,
+      lefts: Iterable<PanelistKey>,
+      rights: Iterable<ShardedQuery> ->
+      yield(
+        kvOf(
+          key,
+          PanelistQuery(rights.first().shardId.id, lefts.first().id, rights.first().bucketId.id)
+        )
+      )
+    }
+  }
+
   @Test
-  fun `Two Shards`() {
-    val parameters = Parameters(numShards = 2, numBucketsPerShard = 5)
+  fun `Two Shards with no padding`() {
+    val parameters = Parameters(numShards = 2, numBucketsPerShard = 5, padQueries = false)
     val (panelistKeyQueryId, encryptedResults) = runWorkflow(privateMembershipCryptor, parameters)
     val decodedQueries = privateMembershipCryptorHelper.decodeEncryptedQuery(encryptedResults)
-    val panelistQueries =
-      privateMembershipCryptorHelper.getPanelistQueries(decodedQueries, panelistKeyQueryId)
+    val panelistQueries = getPanelistQueries(decodedQueries, panelistKeyQueryId)
     assertThat(panelistQueries.values())
       .containsInAnyOrder(
         PanelistQuery(0, 53L, 0),
@@ -72,6 +89,8 @@ abstract class AbstractCreateQueriesWorkflowTest : BeamTestBase() {
         PanelistQuery(0, 99L, 0)
       )
   }
+
+  // TODO add a test with padding
 
   private fun databaseOf(
     vararg entries: Pair<Long, String>

@@ -17,54 +17,45 @@ package org.wfanet.panelmatch.client.privatemembership.testing
 import java.io.Serializable
 import org.apache.beam.sdk.values.KV
 import org.apache.beam.sdk.values.PCollection
+import org.wfanet.panelmatch.client.privatemembership.BucketId
 import org.wfanet.panelmatch.client.privatemembership.EncryptQueriesResponse
 import org.wfanet.panelmatch.client.privatemembership.PanelistKey
 import org.wfanet.panelmatch.client.privatemembership.QueryId
+import org.wfanet.panelmatch.client.privatemembership.ShardId
 import org.wfanet.panelmatch.client.privatemembership.bucketIdOf
 import org.wfanet.panelmatch.client.privatemembership.panelistKeyOf
 import org.wfanet.panelmatch.client.privatemembership.queryIdOf
 import org.wfanet.panelmatch.client.privatemembership.shardIdOf
-import org.wfanet.panelmatch.common.beam.join
-import org.wfanet.panelmatch.common.beam.kvOf
 
 /** Used for testing CreateQueriesWorkflow (eg reversing some of the operations) */
 interface PrivateMembershipCryptorHelper : Serializable {
 
+  /**
+   * Takes an [EncryptQueriesResponse] and reverses the process to yield the underlying decrypted
+   * [ShardedQuery] for each [QueryId]
+   */
   fun decodeEncryptedQuery(
     data: PCollection<EncryptQueriesResponse>
   ): PCollection<KV<QueryId, ShardedQuery>>
-
-  fun getPanelistQueries(
-    decryptedQueries: PCollection<KV<QueryId, ShardedQuery>>,
-    panelistKeyQueryId: PCollection<KV<QueryId, PanelistKey>>
-  ): PCollection<KV<QueryId, PanelistQuery>> {
-    return panelistKeyQueryId.join(decryptedQueries) {
-      key: QueryId,
-      lefts: Iterable<PanelistKey>,
-      rights: Iterable<ShardedQuery> ->
-      yield(
-        kvOf(
-          key,
-          PanelistQuery(rights.first().shardId.id, lefts.first().id, rights.first().bucketId.id)
-        )
-      )
-    }
-  }
 }
 
-data class ShardedQuery(private val shard: Int, private val query: Int, private val bucket: Int) :
+data class ShardedQuery(val shardId: ShardId, val queryId: QueryId, val bucketId: BucketId) :
   Serializable {
-  val shardId = shardIdOf(shard)
-  val queryId = queryIdOf(query)
-  val bucketId = bucketIdOf(bucket)
+  constructor(
+    shard: Int,
+    query: Int,
+    bucket: Int
+  ) : this(shardIdOf(shard), queryIdOf(query), bucketIdOf(bucket))
 }
 
 data class PanelistQuery(
-  private val shard: Int,
-  private val panelist: Long,
-  private val bucket: Int
+  val shardId: ShardId,
+  val panelistKey: PanelistKey,
+  val bucketId: BucketId
 ) : Serializable {
-  val shardId = shardIdOf(shard)
-  val panelistKey = panelistKeyOf(panelist)
-  val bucketId = bucketIdOf(bucket)
+  constructor(
+    shard: Int,
+    panelist: Long,
+    bucket: Int
+  ) : this(shardIdOf(shard), panelistKeyOf(panelist), bucketIdOf(bucket))
 }

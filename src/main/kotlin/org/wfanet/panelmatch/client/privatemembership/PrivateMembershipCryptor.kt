@@ -16,7 +16,10 @@ package org.wfanet.panelmatch.client.privatemembership
 
 import java.io.Serializable
 
-/** Provides oblvious query compression encryption for us in private information retrieval */
+/**
+ * Provides oblivious query compression encryption and decryption for use in private information
+ * retrieval
+ */
 interface PrivateMembershipCryptor : Serializable {
 
   /** Generates a public and private key for query compression and expansion */
