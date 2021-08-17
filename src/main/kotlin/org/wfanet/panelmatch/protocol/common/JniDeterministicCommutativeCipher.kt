@@ -14,9 +14,9 @@
 
 package org.wfanet.panelmatch.protocol.common
 
-import java.lang.RuntimeException
 import java.nio.file.Paths
 import org.wfanet.panelmatch.common.loadLibrary
+import org.wfanet.panelmatch.common.wrapJniException
 import org.wfanet.panelmatch.protocol.CryptorDecryptRequest
 import org.wfanet.panelmatch.protocol.CryptorDecryptResponse
 import org.wfanet.panelmatch.protocol.CryptorEncryptRequest
@@ -26,21 +26,10 @@ import org.wfanet.panelmatch.protocol.CryptorReEncryptResponse
 import wfanet.panelmatch.protocol.crypto.DeterministicCommutativeEncryptionUtility
 
 /**
- * A [DeterministicCommutativeEncryption] implementation using the JNI
+ * A [DeterministicCommutativeCipher] implementation using the JNI
  * [DeterministicCommutativeEncryptionUtility].
  */
-class JniDeterministicCommutativeCryptor : Cryptor {
-  /** Indicates something went wrong in C++. */
-  class JniException(cause: Throwable) : RuntimeException(cause)
-
-  private fun <T> wrapJniException(block: () -> T): T {
-    return try {
-      block()
-    } catch (e: RuntimeException) {
-      throw JniException(e)
-    }
-  }
-
+class JniDeterministicCommutativeCipher : DeterministicCommutativeCipher {
   override fun encrypt(request: CryptorEncryptRequest): CryptorEncryptResponse {
     return wrapJniException {
       CryptorEncryptResponse.parseFrom(
