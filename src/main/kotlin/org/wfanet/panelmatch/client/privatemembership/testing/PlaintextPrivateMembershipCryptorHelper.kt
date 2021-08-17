@@ -56,7 +56,6 @@ object PlaintextPrivateMembershipCryptorHelper : PrivateMembershipCryptorHelper 
           .asSequence()
           .map { QueryBundle.parseFrom(it) }
           .flatMap { decodeQueryBundle(it) }
-          // .flatten()
           .map { kvOf(it.queryId, ShardedQuery(it.shardId.id, it.queryId.id, it.bucketId.id)) }
       )
     }

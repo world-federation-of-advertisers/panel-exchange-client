@@ -50,15 +50,32 @@ class CreateQueriesWorkflow(
    * culled down to [totalQueriesPerShard]. Null signfies no additional padding/culling should take
    * place. TODO: Implement totalQueriesPerShard
    */
-  data class Parameters(
+  data class Parameters
+  private constructor(
     val numShards: Int,
     val numBucketsPerShard: Int,
-    val totalQueriesPerShard: Int?
+    val totalQueriesPerShard: Int?,
+    val numQueries: Int
   ) : Serializable {
     init {
       require(numShards > 0)
       require(numBucketsPerShard > 0)
+      totalQueriesPerShard?.let { require(totalQueriesPerShard > numBucketsPerShard) }
     }
+    constructor(
+      numShards: Int,
+      numBucketsPerShard: Int,
+      totalQueriesPerShard: Int?
+    ) : this(
+      numShards,
+      numBucketsPerShard,
+      totalQueriesPerShard,
+      if (totalQueriesPerShard == null) {
+        100000
+      } else {
+        numShards * totalQueriesPerShard
+      }
+    )
   }
 
   /** Creates [EncryptQueriesResponse] on [data]. */
@@ -79,13 +96,12 @@ class CreateQueriesWorkflow(
    * the mapped space to 16 bits.
    */
   private fun mapToQueryId(
-    data: PCollection<KV<PanelistKey, JoinKey>>,
-    maxSize: Int = 100000
+    data: PCollection<KV<PanelistKey, JoinKey>>
   ): PCollection<KV<KV<PanelistKey, QueryId>, JoinKey>> {
     return data.keyBy { 1 }.groupByKey().parDo {
       val queryIds: Iterator<Int> = iterator {
         val seen = BitSet()
-        while (seen.cardinality() < maxSize) {
+        while (seen.cardinality() < parameters.numQueries) {
           val id = abs(Random.nextInt())
           if (!seen.get(id)) {
             seen.set(id)
@@ -97,7 +113,7 @@ class CreateQueriesWorkflow(
         .value
         .asSequence()
         .mapIndexed { index, kv ->
-          require(index < maxSize) { "Too many queries" }
+          require(index < parameters.numQueries) { "Too many queries" }
           kvOf(kvOf(requireNotNull(kv.key), queryIdOf(queryIds.next())), requireNotNull(kv.value))
         }
         .also { yieldAll(it) }
