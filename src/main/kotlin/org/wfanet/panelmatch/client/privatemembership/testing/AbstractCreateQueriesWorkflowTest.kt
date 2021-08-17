@@ -62,12 +62,16 @@ abstract class AbstractCreateQueriesWorkflowTest : BeamTestBase() {
   ): PCollection<KV<QueryId, PanelistQuery>> {
     return panelistKeyQueryId.join(decryptedQueries) {
       key: QueryId,
-      lefts: Iterable<PanelistKey>,
-      rights: Iterable<ShardedQuery> ->
+      panelistKeys: Iterable<PanelistKey>,
+      shardedQueries: Iterable<ShardedQuery> ->
       yield(
         kvOf(
           key,
-          PanelistQuery(rights.first().shardId.id, lefts.first().id, rights.first().bucketId.id)
+          PanelistQuery(
+            shardedQueries.first().shardId.id,
+            panelistKeys.first().id,
+            shardedQueries.first().bucketId.id
+          )
         )
       )
     }
@@ -75,7 +79,7 @@ abstract class AbstractCreateQueriesWorkflowTest : BeamTestBase() {
 
   @Test
   fun `Two Shards with no padding`() {
-    val parameters = Parameters(numShards = 2, numBucketsPerShard = 5, padQueries = false)
+    val parameters = Parameters(numShards = 2, numBucketsPerShard = 5, totalQueriesPerShard = null)
     val (panelistKeyQueryId, encryptedResults) = runWorkflow(privateMembershipCryptor, parameters)
     val decodedQueries = privateMembershipCryptorHelper.decodeEncryptedQuery(encryptedResults)
     val panelistQueries = getPanelistQueries(decodedQueries, panelistKeyQueryId)

@@ -45,11 +45,16 @@ class CreateQueriesWorkflow(
    *
    * @property numShards the number of shards to split the data into
    * @property numBucketsPerShard the number of buckets each shard can have
-   * @property padQueries [Boolean] if queries should be padded so that all shards have the same
-   * number of queries. TODO: Implement this property
+   * @property totalQueriesPerShard [Int?] pads the number of queries per shard to be this number.
+   * If the number of queries is larger than [totalQueriesPerShard], then queries in that shard are
+   * culled down to [totalQueriesPerShard]. Null signfies no additional padding/culling should take
+   * place. TODO: Implement totalQueriesPerShard
    */
-  data class Parameters(val numShards: Int, val numBucketsPerShard: Int, val padQueries: Boolean) :
-    Serializable {
+  data class Parameters(
+    val numShards: Int,
+    val numBucketsPerShard: Int,
+    val totalQueriesPerShard: Int?
+  ) : Serializable {
     init {
       require(numShards > 0)
       require(numBucketsPerShard > 0)
@@ -75,7 +80,7 @@ class CreateQueriesWorkflow(
    */
   private fun mapToQueryId(
     data: PCollection<KV<PanelistKey, JoinKey>>,
-    maxSize: Int = (Int.MAX_VALUE * 0.9).toInt()
+    maxSize: Int = 100000
   ): PCollection<KV<KV<PanelistKey, QueryId>, JoinKey>> {
     return data.keyBy { 1 }.groupByKey().parDo {
       val queryIds: Iterator<Int> = iterator {
@@ -92,7 +97,7 @@ class CreateQueriesWorkflow(
         .value
         .asSequence()
         .mapIndexed { index, kv ->
-          if (index > maxSize) throw Exception("Too many queries")
+          require(index < maxSize) { "Too many queries" }
           kvOf(kvOf(requireNotNull(kv.key), queryIdOf(queryIds.next())), requireNotNull(kv.value))
         }
         .also { yieldAll(it) }
