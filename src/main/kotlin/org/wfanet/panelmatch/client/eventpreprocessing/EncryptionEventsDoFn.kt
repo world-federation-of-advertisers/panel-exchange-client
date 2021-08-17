@@ -14,7 +14,10 @@
 
 package org.wfanet.panelmatch.client.eventpreprocessing
 
+import com.google.common.base.Stopwatch
 import com.google.protobuf.ByteString
+import java.util.concurrent.TimeUnit
+import org.apache.beam.sdk.metrics.Metrics
 import org.apache.beam.sdk.transforms.DoFn
 import org.apache.beam.sdk.transforms.SerializableFunction
 import org.apache.beam.sdk.values.KV
@@ -29,9 +32,13 @@ import org.wfanet.panelmatch.client.PreprocessEventsResponse
 class EncryptionEventsDoFn(
   private val encryptEvents:
     SerializableFunction<PreprocessEventsRequest, PreprocessEventsResponse>,
-  private val getPepper: SerializableFunction<Void?, ByteString>,
+  private val getIdentifierHashPepper: SerializableFunction<Void?, ByteString>,
+  private val getHkdfPepper: SerializableFunction<Void?, ByteString>,
   private val getCryptoKey: SerializableFunction<Void?, ByteString>,
 ) : DoFn<MutableList<KV<ByteString, ByteString>>, KV<Long, ByteString>>() {
+  private val jniCallTimeDistribution =
+    Metrics.distribution(BatchingDoFn::class.java, "jni-call-time-micros")
+
   @ProcessElement
   fun process(c: ProcessContext) {
     val list: MutableList<KV<ByteString, ByteString>> = c.element()
@@ -39,7 +46,8 @@ class EncryptionEventsDoFn(
       PreprocessEventsRequest.newBuilder()
         .apply {
           cryptoKey = getCryptoKey.apply(null as Void?)
-          pepper = getPepper.apply(null as Void?)
+          identifierHashPepper = getIdentifierHashPepper.apply(null as Void?)
+          hkdfPepper = getHkdfPepper.apply(null as Void?)
           for (pair in list) {
             addUnprocessedEventsBuilder().apply {
               id = pair.key
@@ -48,7 +56,10 @@ class EncryptionEventsDoFn(
           }
         }
         .build()
+    val stopWatch: Stopwatch = Stopwatch.createStarted()
     val response: PreprocessEventsResponse = encryptEvents.apply(request)
+    stopWatch.stop()
+    jniCallTimeDistribution.update(stopWatch.elapsed(TimeUnit.MICROSECONDS))
 
     for (events in response.processedEventsList) {
       c.output(KV.of(events.encryptedId, events.encryptedData))
