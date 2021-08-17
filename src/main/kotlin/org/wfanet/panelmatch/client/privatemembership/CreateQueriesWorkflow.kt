@@ -29,12 +29,12 @@ import org.wfanet.panelmatch.common.beam.values
  * expanded by another party using oblivious query expansion.
  *
  * @param parameters tuning knobs for the workflow
- * @param obliviousQueryBuilder implementation of lower-level oblivious query expansion and result
- * decryption
+ * @param privateMembershipCryptor implementation of lower-level oblivious query expansion and
+ * result decryption
  */
 class CreateQueriesWorkflow(
   private val parameters: Parameters,
-  private val obliviousQueryBuilder: ObliviousQueryBuilder
+  private val privateMembershipCryptor: PrivateMembershipCryptor
 ) : Serializable {
 
   /**
@@ -53,11 +53,11 @@ class CreateQueriesWorkflow(
   /** Creates [EncryptQueriesResponse] on [data]. */
   fun batchCreateQueries(
     data: PCollection<KV<PanelistKey, JoinKey>>
-  ): Pair<PCollection<KV<PanelistKey, QueryId>>, PCollection<EncryptQueriesResponse>> {
+  ): Pair<PCollection<KV<QueryId, PanelistKey>>, PCollection<EncryptQueriesResponse>> {
     val mappedData = mapToQueryId(data)
+    val unencryptedQueries = buildUnencryptedQueryRequest(mappedData)
     val panelistToQueryIdMapping = getPanelistToQueryMapping(mappedData)
-    val unencryptedQueries = buildUnencryptedQuery(mappedData)
-    return Pair(panelistToQueryIdMapping, getObliviousQueries(unencryptedQueries))
+    return Pair(panelistToQueryIdMapping, getPrivateMembershipQueries(unencryptedQueries))
   }
 
   /** Maps each [PanelistKey] to a unique [QueryId]. */
@@ -68,6 +68,9 @@ class CreateQueriesWorkflow(
       it
         .value
         .asSequence()
+        // TODO Change this to something that allows parallel flows. One options is to use
+        // UUID or use some sort of hash. To go that route, QueryId.id needs to be changed
+        // to 64 bits.
         .shuffled()
         .mapIndexed { index, kv ->
           kvOf(kvOf(requireNotNull(kv.key), queryIdOf(index)), requireNotNull(kv.value))
@@ -80,12 +83,12 @@ class CreateQueriesWorkflow(
   /** Maps each [PanelistKey] to a unique [QueryId]. */
   private fun getPanelistToQueryMapping(
     data: PCollection<KV<KV<PanelistKey, QueryId>, JoinKey>>
-  ): PCollection<KV<PanelistKey, QueryId>> {
-    return data.map("Map of PanelistKey to QueryId") { kvOf(it.key.key, it.key.value) }
+  ): PCollection<KV<QueryId, PanelistKey>> {
+    return data.map("Map of PanelistKey to QueryId") { kvOf(it.key.value, it.key.key) }
   }
 
   /** Builds [EncryptedQuery] from the encrypted data join keys of [JoinKey]. */
-  private fun buildUnencryptedQuery(
+  private fun buildUnencryptedQueryRequest(
     data: PCollection<KV<KV<PanelistKey, QueryId>, JoinKey>>
   ): PCollection<KV<ShardId, UnencryptedQuery>> {
     val bucketing = Bucketing(parameters.numShards, parameters.numBucketsPerShard)
@@ -96,15 +99,17 @@ class CreateQueriesWorkflow(
   }
 
   /** Batch gets the oblivious queries grouped by [ShardId]. */
-  private fun getObliviousQueries(
+  private fun getPrivateMembershipQueries(
     data: PCollection<KV<ShardId, UnencryptedQuery>>
   ): PCollection<EncryptQueriesResponse> {
     return data
       .groupByKey("Group by Shard")
-      .map(name = "Map to EncryptQueriesResponse") {
+      .map<KV<ShardId, Iterable<UnencryptedQuery>>, KV<ShardId, EncryptQueriesResponse>>(
+        name = "Map to EncryptQueriesResponse"
+      ) {
         val encryptQueriesRequest =
           EncryptQueriesRequest.newBuilder().addAllUnencryptedQuery(it.value).build()
-        kvOf(it.key, obliviousQueryBuilder.encryptQueries(encryptQueriesRequest))
+        kvOf(it.key, privateMembershipCryptor.encryptQueries(encryptQueriesRequest))
       }
       .values("Extract Results")
   }

@@ -23,7 +23,7 @@ import org.wfanet.panelmatch.client.privatemembership.EncryptQueriesRequest
 import org.wfanet.panelmatch.client.privatemembership.EncryptQueriesResponse
 import org.wfanet.panelmatch.client.privatemembership.GenerateKeysRequest
 import org.wfanet.panelmatch.client.privatemembership.GenerateKeysResponse
-import org.wfanet.panelmatch.client.privatemembership.ObliviousQueryBuilder
+import org.wfanet.panelmatch.client.privatemembership.PrivateMembershipCryptor
 import org.wfanet.panelmatch.client.privatemembership.QueryBundle
 import org.wfanet.panelmatch.client.privatemembership.QueryId
 import org.wfanet.panelmatch.client.privatemembership.ShardId
@@ -31,11 +31,11 @@ import org.wfanet.panelmatch.client.privatemembership.queryBundleOf
 import org.wfanet.panelmatch.client.privatemembership.queryMetadataOf
 
 /**
- * Fake [PlaintextObliviousQueryBuilder] for testing purposes.
+ * Fake [PlaintextPrivateMembershipCryptor] for testing purposes.
  *
  * Built to be compatible with the [PlaintextQueryEvaluator].
  */
-object PlaintextObliviousQueryBuilder : ObliviousQueryBuilder {
+object PlaintextPrivateMembershipCryptor : PrivateMembershipCryptor {
 
   private fun makeQueryBundle(shard: ShardId, queries: List<Pair<QueryId, BucketId>>): QueryBundle {
     return queryBundleOf(

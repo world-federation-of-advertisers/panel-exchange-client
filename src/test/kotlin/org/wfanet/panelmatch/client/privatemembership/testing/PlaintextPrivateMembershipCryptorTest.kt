@@ -19,7 +19,7 @@ import com.google.protobuf.ByteString
 import org.junit.Test
 import org.wfanet.panelmatch.client.privatemembership.DecryptQueriesRequest
 import org.wfanet.panelmatch.client.privatemembership.EncryptQueriesRequest
-import org.wfanet.panelmatch.client.privatemembership.ObliviousQueryBuilder
+import org.wfanet.panelmatch.client.privatemembership.PrivateMembershipCryptor
 import org.wfanet.panelmatch.client.privatemembership.QueryBundle
 import org.wfanet.panelmatch.client.privatemembership.bucketIdOf
 import org.wfanet.panelmatch.client.privatemembership.queryBundleOf
@@ -28,7 +28,7 @@ import org.wfanet.panelmatch.client.privatemembership.shardIdOf
 import org.wfanet.panelmatch.client.privatemembership.unencryptedQueryOf
 
 class PlaintextObliviousQueryBuilderTest {
-  private val obliviousQueryBuilder: ObliviousQueryBuilder = PlaintextObliviousQueryBuilder
+  private val privateMembershipCryptor: PrivateMembershipCryptor = PlaintextPrivateMembershipCryptor
 
   @Test
   fun `encryptQueries with multiple shards`() {
@@ -43,7 +43,7 @@ class PlaintextObliviousQueryBuilderTest {
           )
         )
         .build()
-    val encryptedQueries = obliviousQueryBuilder.encryptQueries(encryptQueriesRequest)
+    val encryptedQueries = privateMembershipCryptor.encryptQueries(encryptQueriesRequest)
     assertThat(encryptedQueries.getCiphertextsList().map { it -> QueryBundle.parseFrom(it) })
       .containsExactly(
         queryBundleOf(shard = 100, listOf(1 to 1, 2 to 2)),
@@ -70,7 +70,7 @@ class PlaintextObliviousQueryBuilderTest {
       DecryptQueriesRequest.newBuilder()
         .addAllEncryptedQueryResults(listOf(ByteString.copyFromUtf8(queriedData.joinToString(""))))
         .build()
-    val decryptedQueries = obliviousQueryBuilder.decryptQueries(decryptQueriesRequest)
+    val decryptedQueries = privateMembershipCryptor.decryptQueries(decryptQueriesRequest)
     assertThat(decryptedQueries.getDecryptedQueryResultsList().map { it.toStringUtf8() })
       .containsExactlyElementsIn(queriedData)
   }

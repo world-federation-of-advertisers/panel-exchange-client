@@ -22,15 +22,15 @@ import org.junit.runners.JUnit4
 import org.wfanet.panelmatch.common.JniException
 
 @RunWith(JUnit4::class)
-class JniObliviousQueryBuilderTest {
-  val obliviousQueryBuilder: ObliviousQueryBuilder = JniObliviousQueryBuilder()
+class JniPrivateMembershipCryptorTest {
+  val privateMembershipCryptor: PrivateMembershipCryptor = JniPrivateMembershipCryptor()
 
   @Test
   fun `invalid proto throws JniException`() {
     val missingKeyException =
       assertFailsWith(JniException::class) {
         val request = EncryptQueriesRequest.getDefaultInstance()
-        obliviousQueryBuilder.encryptQueries(request)
+        privateMembershipCryptor.encryptQueries(request)
       }
     assertThat(missingKeyException.message).contains("UNIMPLEMENTED: Not implemented")
   }

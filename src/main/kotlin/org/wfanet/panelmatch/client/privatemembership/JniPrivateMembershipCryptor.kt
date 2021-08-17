@@ -19,8 +19,8 @@ import org.wfanet.panelmatch.common.loadLibrary
 import org.wfanet.panelmatch.common.wrapJniException
 import org.wfanet.panelmatch.protocol.privatemembership.ObliviousQueryWrapper
 
-/** A [ObliviousQueryBuilder] implementation using the JNI [ObliviousQueryWrapper]. */
-class JniObliviousQueryBuilder : ObliviousQueryBuilder {
+/** A [PrivateMembershipCryptor] implementation using the JNI [ObliviousQueryWrapper]. */
+class JniPrivateMembershipCryptor : PrivateMembershipCryptor {
 
   override fun generateKeys(request: GenerateKeysRequest): GenerateKeysResponse {
     return wrapJniException {
@@ -47,10 +47,9 @@ class JniObliviousQueryBuilder : ObliviousQueryBuilder {
   }
 
   companion object {
-
+    private val SWIG_PATH =
+      "panel_exchange_client/src/main/swig/wfanet/panelmatch/client/privatemembership/querybuilder"
     init {
-      val SWIG_PATH =
-        "panel_exchange_client/src/main/swig/wfanet/panelmatch/client/privatemembership/querybuilder"
       loadLibrary(name = "oblivious_query", directoryPath = Paths.get(SWIG_PATH))
     }
   }
