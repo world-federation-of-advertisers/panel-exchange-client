@@ -24,6 +24,8 @@ import org.wfanet.panelmatch.client.privatemembership.QueryBundle
 import org.wfanet.panelmatch.client.privatemembership.bucketIdOf
 import org.wfanet.panelmatch.client.privatemembership.queryBundleOf
 import org.wfanet.panelmatch.client.privatemembership.queryIdOf
+import org.wfanet.panelmatch.client.privatemembership.queryMetadataOf
+import org.wfanet.panelmatch.client.privatemembership.resultOf
 import org.wfanet.panelmatch.client.privatemembership.shardIdOf
 import org.wfanet.panelmatch.client.privatemembership.unencryptedQueryOf
 
@@ -55,24 +57,40 @@ class PlaintextObliviousQueryBuilderTest {
   fun `decryptQueries`() {
     val queriedData =
       listOf(
-        "<this is the payload for 1>",
-        "<this is the payload for 2>",
-        "<this is the payload for 3>",
-        "<this is the payload for 4>",
-        "<this is the payload for 5>",
-        "<this is the payload for 6>",
-        "<this is the payload for 7>",
-        "<this is the payload for 8>",
-        "<this is the payload for 9>",
-        "<this is the payload for 10>"
+        resultOf(
+          queryMetadataOf(queryIdOf(1), ByteString.EMPTY),
+          ByteString.copyFromUtf8("<some data a>")
+        ),
+        resultOf(
+          queryMetadataOf(queryIdOf(2), ByteString.EMPTY),
+          ByteString.copyFromUtf8("<some data b>")
+        ),
+        resultOf(
+          queryMetadataOf(queryIdOf(3), ByteString.EMPTY),
+          ByteString.copyFromUtf8("<some data c>")
+        ),
+        resultOf(
+          queryMetadataOf(queryIdOf(4), ByteString.EMPTY),
+          ByteString.copyFromUtf8("<some data d>")
+        ),
+        resultOf(
+          queryMetadataOf(queryIdOf(5), ByteString.EMPTY),
+          ByteString.copyFromUtf8("<some data e>")
+        )
       )
     val decryptQueriesRequest =
       DecryptQueriesRequest.newBuilder()
-        .addAllEncryptedQueryResults(listOf(ByteString.copyFromUtf8(queriedData.joinToString(""))))
+        .addAllEncryptedQueryResults(queriedData.map { it.toByteString() })
         .build()
     val decryptedQueries = privateMembershipCryptor.decryptQueryResults(decryptQueriesRequest)
-    assertThat(decryptedQueries.getDecryptedQueryResultsList().map { it.toStringUtf8() })
-      .containsExactlyElementsIn(queriedData)
+    assertThat(decryptedQueries.getDecryptedQueryResultsList())
+      .containsExactly(
+        ByteString.copyFromUtf8("<some data a>"),
+        ByteString.copyFromUtf8("<some data b>"),
+        ByteString.copyFromUtf8("<some data c>"),
+        ByteString.copyFromUtf8("<some data d>"),
+        ByteString.copyFromUtf8("<some data e>")
+      )
   }
 }
 

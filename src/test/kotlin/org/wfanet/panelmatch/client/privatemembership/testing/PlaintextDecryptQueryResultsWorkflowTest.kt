@@ -14,11 +14,47 @@
 
 package org.wfanet.panelmatch.client.privatemembership.testing
 
+import com.google.protobuf.ByteString
+import org.apache.beam.sdk.values.PCollection
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
+import org.wfanet.panelmatch.client.privatemembership.Result
+import org.wfanet.panelmatch.client.privatemembership.queryIdOf
+import org.wfanet.panelmatch.client.privatemembership.queryMetadataOf
+import org.wfanet.panelmatch.client.privatemembership.resultOf
 
 @RunWith(JUnit4::class)
 class PlaintextDecryptQueryResultsWorkflowTest : AbstractDecryptQueryResultsWorkflowTest() {
   override val privateMembershipCryptor = PlaintextPrivateMembershipCryptor
   override val privateMembershipCryptorHelper = PlaintextPrivateMembershipCryptorHelper
+  override val encryptedResults by lazy {
+    encryptedResultOf(
+      resultOf(
+        queryMetadataOf(queryIdOf(1), ByteString.EMPTY),
+        ByteString.copyFromUtf8("<some data a>")
+      ),
+      resultOf(
+        queryMetadataOf(queryIdOf(2), ByteString.EMPTY),
+        ByteString.copyFromUtf8("<some data b>")
+      ),
+      resultOf(
+        queryMetadataOf(queryIdOf(3), ByteString.EMPTY),
+        ByteString.copyFromUtf8("<some data c>")
+      ),
+      resultOf(
+        queryMetadataOf(queryIdOf(4), ByteString.EMPTY),
+        ByteString.copyFromUtf8("<some data d>")
+      ),
+      resultOf(
+        queryMetadataOf(queryIdOf(5), ByteString.EMPTY),
+        ByteString.copyFromUtf8("<some data e>")
+      )
+    )
+  }
+  private fun encryptedResultOf(vararg entries: Result): PCollection<ByteString> {
+    return pcollectionOf(
+      "Create encryptedResults",
+      *entries.map { it.toByteString() }.toTypedArray()
+    )
+  }
 }

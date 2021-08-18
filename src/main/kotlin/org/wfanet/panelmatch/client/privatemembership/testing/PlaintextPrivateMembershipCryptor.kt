@@ -26,6 +26,7 @@ import org.wfanet.panelmatch.client.privatemembership.GenerateKeysResponse
 import org.wfanet.panelmatch.client.privatemembership.PrivateMembershipCryptor
 import org.wfanet.panelmatch.client.privatemembership.QueryBundle
 import org.wfanet.panelmatch.client.privatemembership.QueryId
+import org.wfanet.panelmatch.client.privatemembership.Result
 import org.wfanet.panelmatch.client.privatemembership.ShardId
 import org.wfanet.panelmatch.client.privatemembership.queryBundleOf
 import org.wfanet.panelmatch.client.privatemembership.queryMetadataOf
@@ -65,8 +66,15 @@ object PlaintextPrivateMembershipCryptor : PrivateMembershipCryptor {
       .toList()
   }
 
+  private fun decodeResultData(result: Result): ByteString {
+    return result.payload
+  }
+
   override fun generateKeys(request: GenerateKeysRequest): GenerateKeysResponse {
-    return GenerateKeysResponse.getDefaultInstance()
+    return GenerateKeysResponse.newBuilder()
+      .setPublicKey(ByteString.EMPTY)
+      .setPrivateKey(ByteString.EMPTY)
+      .build()
   }
 
   /**
@@ -91,7 +99,8 @@ object PlaintextPrivateMembershipCryptor : PrivateMembershipCryptor {
     return DecryptQueriesResponse.newBuilder()
       .addAllDecryptedQueryResults(
         encryptedQueryResults
-          .flatMap { data -> splitConcatenatedPayloads(data.toStringUtf8()) }
+          .map { result -> decodeResultData(Result.parseFrom(result)).toStringUtf8() }
+          .flatMap { data -> splitConcatenatedPayloads(data) }
           .map { it -> ByteString.copyFromUtf8(it) }
       )
       .build()

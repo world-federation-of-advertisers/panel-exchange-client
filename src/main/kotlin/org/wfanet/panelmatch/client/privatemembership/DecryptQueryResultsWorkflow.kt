@@ -14,19 +14,10 @@
 
 package org.wfanet.panelmatch.client.privatemembership
 
-import java.io.Serializable
-import java.util.BitSet
 import com.google.protobuf.ByteString
-import kotlin.math.abs
-import kotlin.random.Random
-import org.apache.beam.sdk.values.KV
+import java.io.Serializable
 import org.apache.beam.sdk.values.PCollection
-import org.wfanet.panelmatch.common.beam.groupByKey
-import org.wfanet.panelmatch.common.beam.keyBy
-import org.wfanet.panelmatch.common.beam.kvOf
-import org.wfanet.panelmatch.common.beam.map
 import org.wfanet.panelmatch.common.beam.parDo
-import org.wfanet.panelmatch.common.beam.values
 
 /**
  * Implements a query decryption engine in Apache Beam that decrypts a query result
@@ -40,28 +31,28 @@ class DecryptQueryResultsWorkflow(
   private val privateMembershipCryptor: PrivateMembershipCryptor
 ) : Serializable {
 
-  /**
-   * Tuning knobs for the [CreateQueriesWorkflow].
-   *
-   */
+  /** Tuning knobs for the [CreateQueriesWorkflow]. */
   data class Parameters(
-    val obliviousQueryParameters: ObliviousQueryParameters
-    ) :
-    Serializable
+    val obliviousQueryParameters: ObliviousQueryParameters,
+    val publicKey: ByteString,
+    val privateKey: ByteString
+  ) : Serializable
 
-  /** Creates [EncryptQueriesResponse] on [data]. */
+  /** Creates [EncryptQueriesResponse] on [data]. TODO remove AES encryption */
   fun batchDecryptQueryResults(
     encryptedQueryResults: PCollection<ByteString>
   ): PCollection<ByteString> {
-      return encryptedQueryResults.parDo {
-        val decryptQueryResultsRequest = DecryptQueriesRequest.newBuilder()
+    return encryptedQueryResults.parDo {
+      val decryptQueryResultsRequest =
+        DecryptQueriesRequest.newBuilder()
           .setParameters(parameters.obliviousQueryParameters)
-          //TODO set public and private key
+          .setPublicKey(parameters.publicKey)
+          .setPrivateKey(parameters.privateKey)
           .addAllEncryptedQueryResults(listOf(it))
           .build()
-        val decryptedResults = privateMembershipCryptor.decryptQueryResults(decryptQueryResultsRequest)
-        yieldAll(decryptedResults.getDecryptedQueryResultsList())
+      val decryptedResults =
+        privateMembershipCryptor.decryptQueryResults(decryptQueryResultsRequest)
+      yieldAll(decryptedResults.getDecryptedQueryResultsList())
     }
-      //TODO remove AES encryption batches
   }
 }
