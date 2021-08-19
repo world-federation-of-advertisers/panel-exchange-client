@@ -17,36 +17,32 @@ package org.wfanet.panelmatch.client.privatemembership.testing
 import com.google.common.truth.Truth.assertThat
 import com.google.protobuf.ByteString
 import org.junit.Test
-import org.wfanet.panelmatch.client.privatemembership.DecryptQueriesRequest
-import org.wfanet.panelmatch.client.privatemembership.EncryptQueriesRequest
-import org.wfanet.panelmatch.client.privatemembership.PrivateMembershipCryptor
 import org.wfanet.panelmatch.client.privatemembership.QueryBundle
 import org.wfanet.panelmatch.client.privatemembership.bucketIdOf
+import org.wfanet.panelmatch.client.privatemembership.decryptQueriesRequest
+import org.wfanet.panelmatch.client.privatemembership.encryptQueriesRequest
 import org.wfanet.panelmatch.client.privatemembership.queryBundleOf
 import org.wfanet.panelmatch.client.privatemembership.queryIdOf
-import org.wfanet.panelmatch.client.privatemembership.queryMetadataOf
-import org.wfanet.panelmatch.client.privatemembership.resultOf
 import org.wfanet.panelmatch.client.privatemembership.shardIdOf
 import org.wfanet.panelmatch.client.privatemembership.unencryptedQueryOf
 
-class PlaintextObliviousQueryBuilderTest {
-  private val privateMembershipCryptor: PrivateMembershipCryptor = PlaintextPrivateMembershipCryptor
-
+class PlaintextPrivateMembershipCryptorTest {
+  private val privateMembershipCryptor = PlaintextPrivateMembershipCryptor
+  private val privateMembershipCryptorHelper = PlaintextPrivateMembershipCryptorHelper
   @Test
   fun `encryptQueries with multiple shards`() {
-    val encryptQueriesRequest =
-      EncryptQueriesRequest.newBuilder()
-        .addAllUnencryptedQuery(
-          listOf(
-            unencryptedQueryOf(100, 1, 1),
-            unencryptedQueryOf(100, 2, 2),
-            unencryptedQueryOf(101, 3, 1),
-            unencryptedQueryOf(101, 4, 5)
-          )
+    val encryptQueriesRequest = encryptQueriesRequest {
+      this.unencryptedQuery.addAll(
+        listOf(
+          unencryptedQueryOf(100, 1, 1),
+          unencryptedQueryOf(100, 2, 2),
+          unencryptedQueryOf(101, 3, 1),
+          unencryptedQueryOf(101, 4, 5)
         )
-        .build()
+      )
+    }
     val encryptedQueries = privateMembershipCryptor.encryptQueries(encryptQueriesRequest)
-    assertThat(encryptedQueries.getCiphertextsList().map { it -> QueryBundle.parseFrom(it) })
+    assertThat(encryptedQueries.ciphertextsList.map { it -> QueryBundle.parseFrom(it) })
       .containsExactly(
         queryBundleOf(shard = 100, listOf(1 to 1, 2 to 2)),
         queryBundleOf(shard = 101, listOf(3 to 1, 4 to 5))
@@ -55,35 +51,20 @@ class PlaintextObliviousQueryBuilderTest {
 
   @Test
   fun `decryptQueries`() {
-    val queriedData =
+    val plaintexts =
       listOf(
-        resultOf(
-          queryMetadataOf(queryIdOf(1), ByteString.EMPTY),
-          ByteString.copyFromUtf8("<some data a>")
-        ),
-        resultOf(
-          queryMetadataOf(queryIdOf(2), ByteString.EMPTY),
-          ByteString.copyFromUtf8("<some data b>")
-        ),
-        resultOf(
-          queryMetadataOf(queryIdOf(3), ByteString.EMPTY),
-          ByteString.copyFromUtf8("<some data c>")
-        ),
-        resultOf(
-          queryMetadataOf(queryIdOf(4), ByteString.EMPTY),
-          ByteString.copyFromUtf8("<some data d>")
-        ),
-        resultOf(
-          queryMetadataOf(queryIdOf(5), ByteString.EMPTY),
-          ByteString.copyFromUtf8("<some data e>")
-        )
+        Pair(1, "<some data a>"),
+        Pair(2, "<some data b>"),
+        Pair(3, "<some data c>"),
+        Pair(4, "<some data d>"),
+        Pair(5, "<some data e>"),
       )
-    val decryptQueriesRequest =
-      DecryptQueriesRequest.newBuilder()
-        .addAllEncryptedQueryResults(queriedData.map { it.toByteString() })
-        .build()
+    val queriedEncryptedResults = privateMembershipCryptorHelper.makeEncryptedResults(plaintexts)
+    val decryptQueriesRequest = decryptQueriesRequest {
+      this.encryptedQueryResults.addAll(queriedEncryptedResults)
+    }
     val decryptedQueries = privateMembershipCryptor.decryptQueryResults(decryptQueriesRequest)
-    assertThat(decryptedQueries.getDecryptedQueryResultsList())
+    assertThat(decryptedQueries.decryptedQueryResultsList)
       .containsExactly(
         ByteString.copyFromUtf8("<some data a>"),
         ByteString.copyFromUtf8("<some data b>"),

@@ -27,7 +27,7 @@ import org.wfanet.panelmatch.common.beam.parDo
  * result decryption
  */
 class DecryptQueryResultsWorkflow(
-  private val parameters: Parameters,
+  private val obliviousQueryParameters: Parameters,
   private val privateMembershipCryptor: PrivateMembershipCryptor
 ) : Serializable {
 
@@ -42,17 +42,16 @@ class DecryptQueryResultsWorkflow(
   fun batchDecryptQueryResults(
     encryptedQueryResults: PCollection<ByteString>
   ): PCollection<ByteString> {
-    return encryptedQueryResults.parDo {
-      val decryptQueryResultsRequest =
-        DecryptQueriesRequest.newBuilder()
-          .setParameters(parameters.obliviousQueryParameters)
-          .setPublicKey(parameters.publicKey)
-          .setPrivateKey(parameters.privateKey)
-          .addAllEncryptedQueryResults(listOf(it))
-          .build()
+    return encryptedQueryResults.parDo(name = "Decrypt encrypted results") { encryptedQueryResult ->
+      val decryptQueryResultsRequest = decryptQueriesRequest {
+        this.parameters = obliviousQueryParameters.obliviousQueryParameters
+        this.publicKey = obliviousQueryParameters.publicKey
+        this.privateKey = obliviousQueryParameters.privateKey
+        this.encryptedQueryResults.add(encryptedQueryResult)
+      }
       val decryptedResults =
         privateMembershipCryptor.decryptQueryResults(decryptQueryResultsRequest)
-      yieldAll(decryptedResults.getDecryptedQueryResultsList())
+      yieldAll(decryptedResults.decryptedQueryResultsList)
     }
   }
 }

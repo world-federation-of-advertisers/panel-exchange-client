@@ -28,18 +28,28 @@ import org.wfanet.panelmatch.client.privatemembership.PrivateMembershipCryptor
 import org.wfanet.panelmatch.common.beam.testing.BeamTestBase
 import org.wfanet.panelmatch.common.beam.testing.assertThat
 
+private val PLAINTEXTS =
+  listOf(
+    Pair(1, "<some data a>"),
+    Pair(2, "<some data b>"),
+    Pair(3, "<some data c>"),
+    Pair(4, "<some data d>"),
+    Pair(5, "<some data e>")
+  )
+
 @RunWith(JUnit4::class)
 abstract class AbstractDecryptQueryResultsWorkflowTest : BeamTestBase() {
   abstract val privateMembershipCryptor: PrivateMembershipCryptor
   abstract val privateMembershipCryptorHelper: PrivateMembershipCryptorHelper
-  abstract val encryptedResults: PCollection<ByteString>
 
   private fun runWorkflow(
     privateMembershipCryptor: PrivateMembershipCryptor,
     parameters: Parameters
   ): PCollection<ByteString> {
+    val encryptedResults: PCollection<ByteString> =
+      encryptedResultOf(this.privateMembershipCryptorHelper.makeEncryptedResults(PLAINTEXTS))
     return DecryptQueryResultsWorkflow(
-        parameters = parameters,
+        obliviousQueryParameters = parameters,
         privateMembershipCryptor = privateMembershipCryptor
       )
       .batchDecryptQueryResults(encryptedResults)
@@ -66,5 +76,9 @@ abstract class AbstractDecryptQueryResultsWorkflowTest : BeamTestBase() {
         ByteString.copyFromUtf8("<some data d>"),
         ByteString.copyFromUtf8("<some data e>")
       )
+  }
+
+  private fun encryptedResultOf(entries: List<ByteString>): PCollection<ByteString> {
+    return pcollectionOf("Create encryptedResults", *entries.map { it }.toTypedArray())
   }
 }
