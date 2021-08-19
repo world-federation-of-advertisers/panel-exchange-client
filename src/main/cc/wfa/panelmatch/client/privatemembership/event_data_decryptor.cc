@@ -22,6 +22,7 @@
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "absl/types/span.h"
+#include "tink/util/secret_data.h"
 #include "common_cpp/macros/macros.h"
 #include "wfa/panelmatch/common/crypto/aes.h"
 #include "wfa/panelmatch/common/crypto/aes_with_hkdf.h"
