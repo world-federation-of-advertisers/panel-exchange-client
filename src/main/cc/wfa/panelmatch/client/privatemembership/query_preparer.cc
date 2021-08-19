@@ -33,16 +33,14 @@ using ::crypto::tink::util::SecretData;
 using ::crypto::tink::util::SecretDataAsStringView;
 using ::crypto::tink::util::SecretDataFromStringView;
 
-absl::StatusOr<wfa::panelmatch::client::privatemembership::PrepareQueryResponse>
-PrepareQuery(
-    const wfa::panelmatch::client::privatemembership::PrepareQueryRequest&
-        request) {
+absl::StatusOr<PrepareQueryResponse> PrepareQuery(
+    const PrepareQueryRequest& request) {
   if (request.identifier_hash_pepper().empty()) {
     return absl::InvalidArgumentError("Empty Identifier Hash Pepper");
   }
   const Fingerprinter& fingerprinter = GetSha256Fingerprinter();
   std::unique_ptr<Fingerprinter> peppered_fingerprinter =
-      common::crypto::GetPepperedFingerprinter(
+      wfa::panelmatch::common::crypto::GetPepperedFingerprinter(
           &fingerprinter,
           SecretDataFromStringView(request.identifier_hash_pepper()));
   PrepareQueryResponse prepared_query;

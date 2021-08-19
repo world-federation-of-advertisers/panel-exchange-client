@@ -23,10 +23,7 @@
 #include "wfa/panelmatch/client/privatemembership/decrypt_event_data.pb.h"
 
 namespace wfa::panelmatch::client::privatemembership {
-absl::StatusOr<
-    wfa::panelmatch::client::privatemembership::DecryptEventDataResponse>
-DecryptEventData(
-    const wfa::panelmatch::client::privatemembership::DecryptEventDataRequest&
-        request);
+absl::StatusOr<DecryptEventDataResponse> DecryptEventData(
+    const DecryptEventDataRequest& request);
 }  // namespace wfa::panelmatch::client::privatemembership
 #endif  // SRC_MAIN_CC_WFA_PANELMATCH_CLIENT_PRIVATEMEMBERSHIP_EVENT_DATA_DECRYPTOR_H_

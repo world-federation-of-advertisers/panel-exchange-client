@@ -23,9 +23,7 @@
 #include "wfa/panelmatch/client/privatemembership/prepare_query.pb.h"
 
 namespace wfa::panelmatch::client::privatemembership {
-absl::StatusOr<wfa::panelmatch::client::privatemembership::PrepareQueryResponse>
-PrepareQuery(
-    const wfa::panelmatch::client::privatemembership::PrepareQueryRequest&
-        request);
+absl::StatusOr<PrepareQueryResponse> PrepareQuery(
+    const PrepareQueryRequest& request);
 }  // namespace wfa::panelmatch::client::privatemembership
 #endif  // SRC_MAIN_CC_WFA_PANELMATCH_CLIENT_PRIVATEMEMBERSHIP_QUERY_PREPARER_H_

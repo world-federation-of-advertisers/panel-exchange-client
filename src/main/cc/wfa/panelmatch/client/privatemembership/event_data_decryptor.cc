@@ -24,7 +24,6 @@
 #include "absl/types/span.h"
 #include "common_cpp/macros/macros.h"
 #include "tink/util/secret_data.h"
-#include "wfa/panelmatch/client/privatemembership/decrypt_event_data.pb.h"
 #include "wfa/panelmatch/common/crypto/aes.h"
 #include "wfa/panelmatch/common/crypto/aes_with_hkdf.h"
 #include "wfa/panelmatch/common/crypto/hkdf.h"
@@ -39,11 +38,8 @@ using ::wfa::panelmatch::common::crypto::GetAesSivCmac512;
 using ::wfa::panelmatch::common::crypto::GetSha256Hkdf;
 using ::wfa::panelmatch::common::crypto::Hkdf;
 
-absl::StatusOr<
-    wfa::panelmatch::client::privatemembership::DecryptEventDataResponse>
-DecryptEventData(
-    const wfa::panelmatch::client::privatemembership::DecryptEventDataRequest&
-        request) {
+absl::StatusOr<DecryptEventDataResponse> DecryptEventData(
+    const DecryptEventDataRequest& request) {
   if (request.hkdf_pepper().empty()) {
     return absl::InvalidArgumentError("Empty HKDF Pepper");
   }
@@ -56,7 +52,7 @@ DecryptEventData(
   DecryptEventDataResponse decrypted_event_data;
   for (const std::string& encrypted_event : request.encrypted_event_data()) {
     ASSIGN_OR_RETURN(
-        const std::string& decrypted_event,
+        const std::string decrypted_event,
         aes_hkdf.Decrypt(
             encrypted_event,
             SecretDataFromStringView(request.single_blinded_joinkey()),

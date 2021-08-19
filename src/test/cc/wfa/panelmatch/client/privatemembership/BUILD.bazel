@@ -64,6 +64,7 @@ cc_test(
         "@com_google_absl//absl/strings",
         "@com_google_protobuf//:protobuf",
         "@googletest//:gtest_main",
+        "@wfa_common_cpp//src/main/cc/common_cpp/testing:common_matchers",
         "@wfa_common_cpp//src/main/cc/common_cpp/testing:status",
     ],
 )

@@ -30,22 +30,22 @@ using ::google::protobuf::RepeatedPtrField;
 TEST(PrepareQuery, PrepareQueryTest) {
   PrepareQueryRequest test_request;
   test_request.set_identifier_hash_pepper("some-pepper");
-  std::vector<std::string> single_blinded_joinkeys{
-      "some joinkey0", "some joinkey1", "some joinkey2", "some joinkey3",
-      "some joinkey4"};
-  RepeatedPtrField<std::string> joinkey_batch(single_blinded_joinkeys.begin(),
-                                              single_blinded_joinkeys.end());
-  test_request.mutable_single_blinded_keys()->CopyFrom(joinkey_batch);
-
-  auto test_response = PrepareQuery(test_request);
+  test_request.add_single_blinded_keys("some joinkey0");
+  test_request.add_single_blinded_keys("some joinkey1");
+  test_request.add_single_blinded_keys("some joinkey2");
+  test_request.add_single_blinded_keys("some joinkey3");
+  test_request.add_single_blinded_keys("some joinkey4");
+  absl::StatusOr<PrepareQueryResponse> test_response =
+      PrepareQuery(test_request);
   EXPECT_THAT(test_response.status(), IsOk());
 
   std::string valid_serialized_request;
   test_request.SerializeToString(&valid_serialized_request);
-  auto wrapper_test_response1 = PrepareQueryWrapper(valid_serialized_request);
+  absl::StatusOr<std::string> wrapper_test_response1 =
+      PrepareQueryWrapper(valid_serialized_request);
   EXPECT_THAT(wrapper_test_response1.status(), IsOk());
 
-  auto wrapper_test_response2 =
+  absl::StatusOr<std::string> wrapper_test_response2 =
       PrepareQueryWrapper("some-invalid-serialized-request");
   EXPECT_THAT(wrapper_test_response2.status(),
               StatusIs(absl::StatusCode::kInternal, ""));

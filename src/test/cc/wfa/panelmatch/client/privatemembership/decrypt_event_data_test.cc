@@ -16,6 +16,7 @@
 
 #include <string>
 
+#include "common_cpp/testing/common_matchers.h"
 #include "common_cpp/testing/status_macros.h"
 #include "common_cpp/testing/status_matchers.h"
 #include "wfa/panelmatch/client/privatemembership/decrypt_event_data.pb.h"
@@ -26,16 +27,17 @@
 namespace wfa::panelmatch::client::privatemembership {
 namespace {
 
-using common::crypto::Aes;
-using common::crypto::AesWithHkdf;
-using common::crypto::GetAesSivCmac512;
-using common::crypto::GetSha256Hkdf;
-using common::crypto::Hkdf;
 using crypto::tink::util::SecretData;
 using crypto::tink::util::SecretDataFromStringView;
 using ::google::protobuf::RepeatedPtrField;
 using ::testing::Eq;
 using ::testing::Pointwise;
+using ::wfa::EqualsProto;
+using ::wfa::panelmatch::common::crypto::Aes;
+using ::wfa::panelmatch::common::crypto::AesWithHkdf;
+using ::wfa::panelmatch::common::crypto::GetAesSivCmac512;
+using ::wfa::panelmatch::common::crypto::GetSha256Hkdf;
+using ::wfa::panelmatch::common::crypto::Hkdf;
 
 TEST(DecryptEventData, DecryptEventDataTest) {
   std::string hkdf_pepper = "some-pepper";
@@ -63,18 +65,19 @@ TEST(DecryptEventData, DecryptEventDataTest) {
       encrypted_event_data.begin(), encrypted_event_data.end());
   test_request.mutable_encrypted_event_data()->CopyFrom(encrypted_data_batch);
 
-  auto test_response = DecryptEventData(test_request);
-  EXPECT_THAT(test_response.status(), IsOk());
-  EXPECT_THAT((*test_response).decrypted_event_data(),
-              Pointwise(Eq(), plaintext_event_data_batch));
+  absl::StatusOr<DecryptEventDataResponse> test_response =
+      DecryptEventData(test_request);
+  DecryptEventDataResponse expected_response;
+  expected_response.add_decrypted_event_data(plaintext);
+  EXPECT_THAT(test_response, IsOkAndHolds(EqualsProto(expected_response)));
 
   std::string valid_serialized_request;
   test_request.SerializeToString(&valid_serialized_request);
-  auto wrapper_test_response1 =
+  absl::StatusOr<std::string> wrapper_test_response1 =
       DecryptEventDataWrapper(valid_serialized_request);
   EXPECT_THAT(wrapper_test_response1.status(), IsOk());
 
-  auto wrapper_test_response2 =
+  absl::StatusOr<std::string> wrapper_test_response2 =
       DecryptEventDataWrapper("some-invalid-serialized-request");
   EXPECT_THAT(wrapper_test_response2.status(),
               StatusIs(absl::StatusCode::kInternal, ""));

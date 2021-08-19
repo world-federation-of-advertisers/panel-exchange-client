@@ -17,12 +17,11 @@
 
 #include "absl/status/statusor.h"
 #include "common_cpp/jni/jni_wrap.h"
-#include "wfa/panelmatch/client/privatemembership/prepare_query.pb.h"
 #include "wfa/panelmatch/client/privatemembership/query_preparer.h"
 
 namespace wfa::panelmatch::client::privatemembership {
 absl::StatusOr<std::string> PrepareQueryWrapper(
     const std::string& serialized_request) {
-  return wfa::JniWrap(serialized_request, PrepareQuery);
+  return JniWrap(serialized_request, PrepareQuery);
 }
 }  // namespace wfa::panelmatch::client::privatemembership

@@ -18,12 +18,11 @@
 
 #include "absl/status/statusor.h"
 #include "common_cpp/jni/jni_wrap.h"
-#include "wfa/panelmatch/client/privatemembership/decrypt_event_data.pb.h"
 #include "wfa/panelmatch/client/privatemembership/event_data_decryptor.h"
 
 namespace wfa::panelmatch::client::privatemembership {
 absl::StatusOr<std::string> DecryptEventDataWrapper(
     const std::string& serialized_request) {
-  return wfa::JniWrap(serialized_request, DecryptEventData);
+  return JniWrap(serialized_request, DecryptEventData);
 }
 }  // namespace wfa::panelmatch::client::privatemembership

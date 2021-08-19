@@ -23,6 +23,6 @@
 namespace wfa::panelmatch::client {
 absl::StatusOr<std::string> PreprocessEventsWrapper(
     const std::string& serialized_request) {
-  return wfa::JniWrap(serialized_request, PreprocessEvents);
+  return JniWrap(serialized_request, PreprocessEvents);
 }
 }  // namespace wfa::panelmatch::client
