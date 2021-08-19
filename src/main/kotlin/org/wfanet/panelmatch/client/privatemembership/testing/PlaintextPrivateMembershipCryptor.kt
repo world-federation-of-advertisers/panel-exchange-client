@@ -16,6 +16,7 @@ package org.wfanet.panelmatch.client.privatemembership.testing
 
 import com.google.protobuf.ByteString
 import com.google.protobuf.ListValue
+import com.google.protobuf.value
 import org.wfanet.panelmatch.client.privatemembership.BucketId
 import org.wfanet.panelmatch.client.privatemembership.DecryptQueriesRequest
 import org.wfanet.panelmatch.client.privatemembership.DecryptQueriesResponse
@@ -75,8 +76,8 @@ object PlaintextPrivateMembershipCryptor : PrivateMembershipCryptor {
 
   override fun generateKeys(request: GenerateKeysRequest): GenerateKeysResponse {
     return generateKeysResponse {
-      this.publicKey = ByteString.EMPTY
-      this.privateKey = ByteString.EMPTY
+      publicKey = ByteString.EMPTY
+      privateKey = ByteString.EMPTY
     }
   }
 
@@ -87,12 +88,11 @@ object PlaintextPrivateMembershipCryptor : PrivateMembershipCryptor {
   override fun encryptQueries(request: EncryptQueriesRequest): EncryptQueriesResponse {
     val unencryptedQueries = request.unencryptedQueryList
     return encryptQueriesResponse {
-      this.ciphertexts.addAll(
+      ciphertexts +=
         unencryptedQueries.groupBy { it.shardId }.map {
           makeQueryBundle(shard = it.key, queries = it.value.map { Pair(it.queryId, it.bucketId) })
             .toByteString()
         }
-      )
     }
   }
 
@@ -100,12 +100,11 @@ object PlaintextPrivateMembershipCryptor : PrivateMembershipCryptor {
   override fun decryptQueryResults(request: DecryptQueriesRequest): DecryptQueriesResponse {
     val encryptedQueryResults = request.encryptedQueryResultsList
     return decryptQueriesResponse {
-      this.decryptedQueryResults.addAll(
+      decryptedQueryResults +=
         encryptedQueryResults
           .map { result -> decodeResultData(Result.parseFrom(result)).toStringUtf8() }
           .flatMap { data -> splitConcatenatedPayloads(data) }
           .map { it -> ByteString.copyFromUtf8(it) }
-      )
     }
   }
 }

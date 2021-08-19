@@ -43,7 +43,7 @@ object PlaintextPrivateMembershipCryptorHelper : PrivateMembershipCryptorHelper 
   private fun decodeQueryBundle(queryBundle: QueryBundle): List<ShardedQuery> {
     val queryBundleList = queryBundle.queryMetadataList
     val bucketValuesList =
-      ListValue.parseFrom(queryBundle.payload).getValuesList().map { it.stringValue.toInt() }
+      ListValue.parseFrom(queryBundle.payload).valuesList.map { it.stringValue.toInt() }
     return queryBundleList.zip(bucketValuesList) { a: QueryMetadata, b: Int ->
       ShardedQuery(requireNotNull(queryBundle.shardId).id, a.queryId.id, b)
     }
@@ -51,13 +51,13 @@ object PlaintextPrivateMembershipCryptorHelper : PrivateMembershipCryptorHelper 
 
   override fun makeEncryptedResults(plaintexts: List<Pair<Int, String>>): List<ByteString> {
     return plaintexts.map {
-      requireNotNull(
-        resultOf(
-            queryMetadataOf(queryIdOf(it.first), ByteString.EMPTY),
-            ByteString.copyFromUtf8(it.second)
-          )
-          .toByteString()
-      )
+      // requireNotNull(
+      resultOf(
+          queryMetadataOf(queryIdOf(it.first), ByteString.EMPTY),
+          ByteString.copyFromUtf8(it.second)
+        )
+        .toByteString()
+      // )
     }
   }
 

@@ -31,7 +31,7 @@ import org.wfanet.panelmatch.client.privatemembership.shardIdOf
 /** Used for testing CreateQueriesWorkflow (eg reversing some of the operations) */
 interface PrivateMembershipCryptorHelper : Serializable {
 
-  /** Takes a list of plaintexts and return an encrypted list of ByteString */
+  /** Takes a list of pairs of (QueryId, Plaintext) and returns an encrypted list of ByteString */
   fun makeEncryptedResults(plaintexts: List<Pair<Int, String>>): List<ByteString>
 
   /**

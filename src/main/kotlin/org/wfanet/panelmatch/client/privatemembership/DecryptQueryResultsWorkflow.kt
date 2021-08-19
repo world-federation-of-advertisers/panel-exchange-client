@@ -44,10 +44,10 @@ class DecryptQueryResultsWorkflow(
   ): PCollection<ByteString> {
     return encryptedQueryResults.parDo(name = "Decrypt encrypted results") { encryptedQueryResult ->
       val decryptQueryResultsRequest = decryptQueriesRequest {
-        this.parameters = obliviousQueryParameters.obliviousQueryParameters
-        this.publicKey = obliviousQueryParameters.publicKey
-        this.privateKey = obliviousQueryParameters.privateKey
-        this.encryptedQueryResults.add(encryptedQueryResult)
+        parameters = obliviousQueryParameters.obliviousQueryParameters
+        publicKey = obliviousQueryParameters.publicKey
+        privateKey = obliviousQueryParameters.privateKey
+        this.encryptedQueryResults += encryptedQueryResult
       }
       val decryptedResults =
         privateMembershipCryptor.decryptQueryResults(decryptQueryResultsRequest)

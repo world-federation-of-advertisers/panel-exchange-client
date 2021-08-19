@@ -47,7 +47,7 @@ abstract class AbstractDecryptQueryResultsWorkflowTest : BeamTestBase() {
     parameters: Parameters
   ): PCollection<ByteString> {
     val encryptedResults: PCollection<ByteString> =
-      encryptedResultOf(this.privateMembershipCryptorHelper.makeEncryptedResults(PLAINTEXTS))
+      encryptedResultOf(privateMembershipCryptorHelper.makeEncryptedResults(PLAINTEXTS))
     return DecryptQueryResultsWorkflow(
         obliviousQueryParameters = parameters,
         privateMembershipCryptor = privateMembershipCryptor
