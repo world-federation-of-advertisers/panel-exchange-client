@@ -1,48 +1,73 @@
 load("@rules_java//java:defs.bzl", "java_proto_library")
 load("@wfa_common_jvm//build:macros.bzl", "kt_jvm_grpc_and_java_proto_library")
+load("@wfa_common_jvm//build:kt_jvm_proto_library.bzl", "kt_jvm_proto_library")
 
 package(default_visibility = ["//visibility:public"])
 
 java_proto_library(
     name = "crypto_java_proto",
-    deps = [
-        "@wfa_measurement_proto//src/main/proto/wfa/measurement/api/v2alpha:crypto_proto",
-    ],
+    deps = ["@wfa_measurement_proto//src/main/proto/wfa/measurement/api/v2alpha:crypto_proto"],
+)
+
+kt_jvm_proto_library(
+    name = "crypto_kt_jvm_proto",
+    srcs = ["@wfa_measurement_proto//src/main/proto/wfa/measurement/api/v2alpha:crypto_proto"],
+    deps = [":crypto_java_proto"],
 )
 
 java_proto_library(
     name = "model_provider_java_proto",
-    deps = [
-        "@wfa_measurement_proto//src/main/proto/wfa/measurement/api/v2alpha:model_provider_proto",
-    ],
+    deps = ["@wfa_measurement_proto//src/main/proto/wfa/measurement/api/v2alpha:model_provider_proto"],
+)
+
+kt_jvm_proto_library(
+    name = "model_provider_kt_jvm_proto",
+    srcs = ["@wfa_measurement_proto//src/main/proto/wfa/measurement/api/v2alpha:model_provider_proto"],
+    deps = [":model_provider_java_proto"],
 )
 
 java_proto_library(
     name = "data_provider_java_proto",
-    deps = [
-        "@wfa_measurement_proto//src/main/proto/wfa/measurement/api/v2alpha:data_provider_proto",
-    ],
+    deps = ["@wfa_measurement_proto//src/main/proto/wfa/measurement/api/v2alpha:data_provider_proto"],
+)
+
+kt_jvm_proto_library(
+    name = "data_provider_kt_jvm_proto",
+    srcs = ["@wfa_measurement_proto//src/main/proto/wfa/measurement/api/v2alpha:data_provider_proto"],
+    deps = [":data_provider_java_proto"],
 )
 
 java_proto_library(
     name = "exchange_step_java_proto",
-    deps = [
-        "@wfa_measurement_proto//src/main/proto/wfa/measurement/api/v2alpha:exchange_step_proto",
-    ],
+    deps = ["@wfa_measurement_proto//src/main/proto/wfa/measurement/api/v2alpha:exchange_step_proto"],
+)
+
+kt_jvm_proto_library(
+    name = "exchange_step_kt_jvm_proto",
+    srcs = ["@wfa_measurement_proto//src/main/proto/wfa/measurement/api/v2alpha:exchange_step_proto"],
+    deps = [":exchange_step_java_proto"],
 )
 
 java_proto_library(
     name = "exchange_step_attempt_java_proto",
-    deps = [
-        "@wfa_measurement_proto//src/main/proto/wfa/measurement/api/v2alpha:exchange_step_attempt_proto",
-    ],
+    deps = ["@wfa_measurement_proto//src/main/proto/wfa/measurement/api/v2alpha:exchange_step_attempt_proto"],
+)
+
+kt_jvm_proto_library(
+    name = "exchange_step_attempt_kt_jvm_proto",
+    srcs = ["@wfa_measurement_proto//src/main/proto/wfa/measurement/api/v2alpha:exchange_step_attempt_proto"],
+    deps = [":exchange_step_attempt_java_proto"],
 )
 
 java_proto_library(
     name = "exchange_workflow_java_proto",
-    deps = [
-        "@wfa_measurement_proto//src/main/proto/wfa/measurement/api/v2alpha:exchange_workflow_proto",
-    ],
+    deps = ["@wfa_measurement_proto//src/main/proto/wfa/measurement/api/v2alpha:exchange_workflow_proto"],
+)
+
+kt_jvm_proto_library(
+    name = "exchange_workflow_kt_jvm_proto",
+    srcs = ["@wfa_measurement_proto//src/main/proto/wfa/measurement/api/v2alpha:exchange_workflow_proto"],
+    deps = [":exchange_workflow_java_proto"],
 )
 
 kt_jvm_grpc_and_java_proto_library(
@@ -50,7 +75,19 @@ kt_jvm_grpc_and_java_proto_library(
     srcs = ["@wfa_measurement_proto//src/main/proto/wfa/measurement/api/v2alpha:exchange_steps_service_proto"],
 )
 
+kt_jvm_proto_library(
+    name = "exchange_steps_service_kt_jvm_proto",
+    srcs = ["@wfa_measurement_proto//src/main/proto/wfa/measurement/api/v2alpha:exchange_steps_service_proto"],
+    deps = [":exchange_steps_service_java_proto"],
+)
+
 kt_jvm_grpc_and_java_proto_library(
     name = "exchange_step_attempts_service_kt_jvm_grpc",
     srcs = ["@wfa_measurement_proto//src/main/proto/wfa/measurement/api/v2alpha:exchange_step_attempts_service_proto"],
+)
+
+kt_jvm_proto_library(
+    name = "exchange_step_attempts_service_kt_jvm_proto",
+    srcs = ["@wfa_measurement_proto//src/main/proto/wfa/measurement/api/v2alpha:exchange_step_attempts_service_proto"],
+    deps = [":exchange_step_attempts_service_java_proto"],
 )
