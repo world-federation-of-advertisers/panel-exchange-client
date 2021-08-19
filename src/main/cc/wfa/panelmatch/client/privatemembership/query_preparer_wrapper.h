@@ -20,7 +20,6 @@
 #include <string>
 
 #include "absl/status/statusor.h"
-#include "wfa/panelmatch/client/privatemembership/prepare_query.pb.h"
 
 namespace wfa::panelmatch::client::privatemembership {
 absl::StatusOr<std::string> PrepareQueryWrapper(

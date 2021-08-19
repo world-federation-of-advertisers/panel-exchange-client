@@ -23,7 +23,6 @@
 #include "absl/strings/str_cat.h"
 #include "absl/types/span.h"
 #include "common_cpp/macros/macros.h"
-#include "tink/util/secret_data.h"
 #include "wfa/panelmatch/common/crypto/aes.h"
 #include "wfa/panelmatch/common/crypto/aes_with_hkdf.h"
 #include "wfa/panelmatch/common/crypto/hkdf.h"
@@ -52,12 +51,11 @@ absl::StatusOr<DecryptEventDataResponse> DecryptEventData(
   DecryptEventDataResponse decrypted_event_data;
   for (const std::string& encrypted_event : request.encrypted_event_data()) {
     ASSIGN_OR_RETURN(
-        const std::string decrypted_event,
+        *decrypted_event_data.add_decrypted_event_data(),
         aes_hkdf.Decrypt(
             encrypted_event,
             SecretDataFromStringView(request.single_blinded_joinkey()),
             SecretDataFromStringView(request.hkdf_pepper())));
-    decrypted_event_data.add_decrypted_event_data(decrypted_event);
   }
   return decrypted_event_data;
 }

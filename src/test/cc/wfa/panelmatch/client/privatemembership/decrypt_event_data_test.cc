@@ -27,8 +27,8 @@
 namespace wfa::panelmatch::client::privatemembership {
 namespace {
 
-using crypto::tink::util::SecretData;
-using crypto::tink::util::SecretDataFromStringView;
+using ::crypto::tink::util::SecretData;
+using ::crypto::tink::util::SecretDataFromStringView;
 using ::google::protobuf::RepeatedPtrField;
 using ::testing::Eq;
 using ::testing::Pointwise;

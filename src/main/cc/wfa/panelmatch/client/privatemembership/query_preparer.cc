@@ -25,7 +25,6 @@
 #include "common_cpp/fingerprinters/fingerprinters.h"
 #include "common_cpp/macros/macros.h"
 #include "tink/util/secret_data.h"
-#include "wfa/panelmatch/client/privatemembership/prepare_query.pb.h"
 #include "wfa/panelmatch/common/crypto/peppered_fingerprinter.h"
 
 namespace wfa::panelmatch::client::privatemembership {
