@@ -15,7 +15,6 @@
 package org.wfanet.panelmatch.client.privatemembership.testing
 
 import com.google.common.truth.Truth.assertThat
-import com.google.protobuf.ByteString
 import org.junit.Test
 import org.wfanet.panelmatch.client.privatemembership.QueryBundle
 import org.wfanet.panelmatch.client.privatemembership.bucketIdOf
@@ -25,6 +24,7 @@ import org.wfanet.panelmatch.client.privatemembership.queryBundleOf
 import org.wfanet.panelmatch.client.privatemembership.queryIdOf
 import org.wfanet.panelmatch.client.privatemembership.shardIdOf
 import org.wfanet.panelmatch.client.privatemembership.unencryptedQueryOf
+import org.wfanet.panelmatch.common.toByteString
 
 class PlaintextPrivateMembershipCryptorTest {
   private val privateMembershipCryptor = PlaintextPrivateMembershipCryptor
@@ -65,11 +65,11 @@ class PlaintextPrivateMembershipCryptorTest {
     val decryptedQueries = privateMembershipCryptor.decryptQueryResults(decryptQueriesRequest)
     assertThat(decryptedQueries.decryptedQueryResultsList)
       .containsExactly(
-        ByteString.copyFromUtf8("<some data a>"),
-        ByteString.copyFromUtf8("<some data b>"),
-        ByteString.copyFromUtf8("<some data c>"),
-        ByteString.copyFromUtf8("<some data d>"),
-        ByteString.copyFromUtf8("<some data e>")
+        "<some data a>".toByteString(),
+        "<some data b>".toByteString(),
+        "<some data c>".toByteString(),
+        "<some data d>".toByteString(),
+        "<some data e>".toByteString()
       )
   }
 }
