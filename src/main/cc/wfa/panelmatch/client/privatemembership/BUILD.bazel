@@ -11,6 +11,7 @@ cc_library(
     strip_include_prefix = _INCLUDE_PREFIX,
     deps = [
         "//src/main/proto/wfa/panelmatch/client/privatemembership:oblivious_query_cc_proto",
+        "@private_membership//private_membership/rlwe/batch/cpp/client",
         "@com_google_absl//absl/memory",
         "@com_google_absl//absl/status:statusor",
         "@com_google_absl//absl/strings",
@@ -28,6 +29,7 @@ cc_library(
         "//src/main/proto/wfa/panelmatch/client/privatemembership:oblivious_query_cc_proto",
         "@com_google_absl//absl/status:statusor",
         "@wfa_common_cpp//src/main/cc/common_cpp/jni:jni_wrap",
+        "@private_membership//private_membership/rlwe/batch/cpp/client",
     ],
 )
 

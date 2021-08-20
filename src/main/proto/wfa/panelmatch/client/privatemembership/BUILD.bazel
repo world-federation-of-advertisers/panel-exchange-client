@@ -49,26 +49,19 @@ kt_jvm_proto_library(
     deps = [":query_java_proto"],
 )
 
-proto_library(
-    name = "oblivious_query_proto",
-    srcs = ["oblivious_query.proto"],
-    strip_import_prefix = "/src/main/proto",
-    deps = [":query_proto"],
-)
-
 cc_proto_library(
     name = "oblivious_query_cc_proto",
-    deps = [":oblivious_query_proto"],
+    deps = ["@private_membership//private_membership/rlwe/batch/cpp/client:client_proto"],
 )
 
 java_proto_library(
     name = "oblivious_query_java_proto",
-    deps = [":oblivious_query_proto"],
+    deps = ["@private_membership//private_membership/rlwe/batch/cpp/client:client_proto"],
 )
 
 kt_jvm_proto_library(
     name = "oblivious_query_kt_jvm_proto",
-    srcs = [":oblivious_query_proto"],
+    srcs = ["@private_membership//private_membership/rlwe/batch/cpp/client:client_proto"],
     deps = [":oblivious_query_java_proto"],
 )
 

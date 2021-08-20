@@ -26,6 +26,7 @@ import org.wfanet.panelmatch.common.beam.kvOf
 import org.wfanet.panelmatch.common.beam.map
 import org.wfanet.panelmatch.common.beam.parDo
 import org.wfanet.panelmatch.common.beam.values
+import private_membership.batch.EncryptQueriesResponse
 
 /**
  * Implements a query creation engine in Apache Beam that encrypts a query so that it can later be

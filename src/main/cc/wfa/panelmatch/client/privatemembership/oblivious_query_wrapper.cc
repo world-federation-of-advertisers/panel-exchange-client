@@ -18,10 +18,13 @@
 
 #include "absl/status/statusor.h"
 #include "common_cpp/jni/jni_wrap.h"
-#include "wfa/panelmatch/client/privatemembership/oblivious_query.h"
-#include "wfa/panelmatch/client/privatemembership/oblivious_query.pb.h"
+#include "private_membership/rlwe/batch/cpp/client/client.pb.h"
+#include "private_membership/rlwe/batch/cpp/client/client.h"
 
 namespace wfa::panelmatch::client::privatemembership {
+using private_membership::batch::GenerateKeys;
+using private_membership::batch::EncryptQueries;
+using private_membership::batch::DecryptQueries;
 
 absl::StatusOr<std::string> GenerateKeysWrapper(
     const std::string& serialized_request) {

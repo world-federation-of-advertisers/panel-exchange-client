@@ -69,3 +69,10 @@ def panel_exchange_client_repositories():
         strip_prefix = "tink-7c93a224b8fa6a3babfaf71c18c5610052dcbd61/cc",
         urls = ["https://github.com/google/tink/archive/7c93a224b8fa6a3babfaf71c18c5610052dcbd61.zip"],
     )
+
+    http_archive(
+        name = "private_membership",
+        sha256 = "c98f3e41a0a7108fba00e5ffa45e6ad13cf367a770dabfd3c9314071e729774a",
+        strip_prefix = "private-membership-598da907a6f74c015a84f663b128f813d8476d76",
+        urls = ["https://github.com/google/private-membership/archive/598da907a6f74c015a84f663b128f813d8476d76.zip"],
+    )
