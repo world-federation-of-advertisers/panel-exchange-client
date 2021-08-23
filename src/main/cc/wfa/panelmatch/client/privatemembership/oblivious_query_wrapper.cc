@@ -22,9 +22,9 @@
 #include "private_membership/rlwe/batch/cpp/client/client.pb.h"
 
 namespace wfa::panelmatch::client::privatemembership {
-using private_membership::batch::DecryptQueries;
-using private_membership::batch::EncryptQueries;
-using private_membership::batch::GenerateKeys;
+using ::private_membership::batch::DecryptQueries;
+using ::private_membership::batch::EncryptQueries;
+using ::private_membership::batch::GenerateKeys;
 
 absl::StatusOr<std::string> GenerateKeysWrapper(
     const std::string& serialized_request) {

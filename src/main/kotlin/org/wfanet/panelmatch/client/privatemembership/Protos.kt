@@ -25,6 +25,7 @@ fun bucketIdOf(id: Int): BucketId = BucketId.newBuilder().setId(id).build()
 /** Constructs a [QueryId]. */
 fun queryIdOf(id: Int): QueryId = QueryId.newBuilder().setId(id).build()
 
+/** Constructs a [UnencryptedQuery]. */
 fun unencryptedQueryOf(shard: Int, query: Int, bucket: Int): UnencryptedQuery =
   unencryptedQueryOf(shardIdOf(shard), bucketIdOf(bucket), queryIdOf(query))
 
@@ -36,6 +37,7 @@ fun unencryptedQueryOf(shardId: ShardId, bucketId: BucketId, queryId: QueryId): 
   this.queryId = queryId
 }
 
+/** Constructs a [EncryptedQuery]. */
 fun encryptedQueryOf(shard: Int, query: Int): EncryptedQuery =
   encryptedQueryOf(shardIdOf(shard), queryIdOf(query))
 
@@ -45,6 +47,7 @@ fun encryptedQueryOf(shardId: ShardId, queryId: QueryId): EncryptedQuery = encry
   this.queryId = queryId
 }
 
+/** Constructs a [DecryptedQueryResult]. */
 fun plaintextOf(plaintext: ByteString, query: Int, shard: Int): DecryptedQueryResult {
   return decryptedQueryResult {
     this.plaintext = plaintext

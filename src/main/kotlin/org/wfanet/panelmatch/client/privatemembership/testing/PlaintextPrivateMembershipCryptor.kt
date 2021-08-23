@@ -88,9 +88,9 @@ object PlaintextPrivateMembershipCryptor : PrivateMembershipCryptor {
    * for each shard
    */
   override fun encryptQueries(request: EncryptQueriesRequest): EncryptQueriesResponse {
-    val unencryptedQueries = request.unencryptedQueryList
+    val unencryptedQueries = request.unencryptedQueriesList
     return encryptQueriesResponse {
-      ciphertext +=
+      ciphertexts +=
         unencryptedQueries.groupBy { it.shardId }.map {
           makeQueryBundle(shard = it.key, queries = it.value.map { Pair(it.queryId, it.bucketId) })
             .toByteString()
@@ -98,13 +98,16 @@ object PlaintextPrivateMembershipCryptor : PrivateMembershipCryptor {
     }
   }
 
-  /** Simple plaintext decrypter that splits up data marked by <...> */
+  /**
+   * Simple plaintext decrypter that splits up data marked by <...>. Expects the cryptor to only
+   * populates the first ciphertext.
+   */
   override fun decryptQueryResults(request: DecryptQueriesRequest): DecryptQueriesResponse {
     val encryptedQueryResults = request.encryptedQueryResultsList
     val decryptedResults: List<DecryptedQueryResult> =
       encryptedQueryResults
         .map { result ->
-          decodeResultData(Result.parseFrom(result.ciphertextList.first())).toStringUtf8()
+          decodeResultData(Result.parseFrom(result.ciphertextsList.single())).toStringUtf8()
         }
         .flatMap { data -> splitConcatenatedPayloads(data) }
         .map { it -> decryptedQueryResult { plaintext = ByteString.copyFromUtf8(it) } }

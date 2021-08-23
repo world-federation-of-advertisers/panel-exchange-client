@@ -56,7 +56,7 @@ object PlaintextPrivateMembershipCryptorHelper : PrivateMembershipCryptorHelper 
   ): List<EncryptedQueryResult> {
     return plaintexts.map {
       encryptedQueryResult {
-        ciphertext +=
+        ciphertexts +=
           resultOf(
               queryMetadataOf(queryIdOf(it.first), ByteString.EMPTY),
               ByteString.copyFromUtf8(it.second)
@@ -72,7 +72,7 @@ object PlaintextPrivateMembershipCryptorHelper : PrivateMembershipCryptorHelper 
     return data.parDo("Map to ShardedQuery") {
       yieldAll(
         it
-          .ciphertextList
+          .ciphertextsList
           .asSequence()
           .map { QueryBundle.parseFrom(it) }
           .flatMap { decodeQueryBundle(it) }

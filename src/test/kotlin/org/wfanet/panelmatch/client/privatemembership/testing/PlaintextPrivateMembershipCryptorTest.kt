@@ -36,7 +36,7 @@ class PlaintextPrivateMembershipCryptorTest() {
   @Test
   fun `encryptQueries with multiple shards`() {
     val encryptQueriesRequest = encryptQueriesRequest {
-      unencryptedQuery +=
+      unencryptedQueries +=
         listOf(
           unencryptedQueryOf(100, 1, 1),
           unencryptedQueryOf(100, 2, 2),
@@ -45,7 +45,7 @@ class PlaintextPrivateMembershipCryptorTest() {
         )
     }
     val encryptedQueries = privateMembershipCryptor.encryptQueries(encryptQueriesRequest)
-    assertThat(encryptedQueries.ciphertextList.map { it -> QueryBundle.parseFrom(it) })
+    assertThat(encryptedQueries.ciphertextsList.map { it -> QueryBundle.parseFrom(it) })
       .containsExactly(
         queryBundleOf(shard = 100, listOf(1 to 1, 2 to 2)),
         queryBundleOf(shard = 101, listOf(3 to 1, 4 to 5))

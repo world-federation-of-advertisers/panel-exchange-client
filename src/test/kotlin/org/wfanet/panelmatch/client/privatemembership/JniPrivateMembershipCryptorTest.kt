@@ -24,7 +24,7 @@ import org.junit.runners.JUnit4
 
 @OptIn(kotlin.ExperimentalUnsignedTypes::class)
 @RunWith(JUnit4::class)
-class JniPrivateMembershipCryptorTest() {
+class JniPrivateMembershipCryptorTest {
   val privateMembershipCryptor =
     JniPrivateMembershipCryptor(
       clientParameters =
@@ -56,7 +56,7 @@ class JniPrivateMembershipCryptorTest() {
   @Test
   fun `encryptQueries with multiple shards`() {
     val encryptQueriesRequest = encryptQueriesRequest {
-      unencryptedQuery +=
+      unencryptedQueries +=
         listOf(
           unencryptedQueryOf(100, 1, 1),
           unencryptedQueryOf(100, 2, 2),
