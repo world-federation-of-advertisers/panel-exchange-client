@@ -19,10 +19,12 @@ import com.google.protobuf.ListValue
 import org.apache.beam.sdk.values.KV
 import org.apache.beam.sdk.values.PCollection
 import org.wfanet.panelmatch.client.privatemembership.EncryptQueriesResponse
+import org.wfanet.panelmatch.client.privatemembership.EncryptedQueryResult
 import org.wfanet.panelmatch.client.privatemembership.QueryBundle
 import org.wfanet.panelmatch.client.privatemembership.QueryId
 import org.wfanet.panelmatch.client.privatemembership.QueryMetadata
 import org.wfanet.panelmatch.client.privatemembership.bucketIdOf
+import org.wfanet.panelmatch.client.privatemembership.encryptedQueryResult
 import org.wfanet.panelmatch.client.privatemembership.queryIdOf
 import org.wfanet.panelmatch.client.privatemembership.queryMetadataOf
 import org.wfanet.panelmatch.client.privatemembership.resultOf
@@ -49,15 +51,18 @@ object PlaintextPrivateMembershipCryptorHelper : PrivateMembershipCryptorHelper 
     }
   }
 
-  override fun makeEncryptedResults(plaintexts: List<Pair<Int, String>>): List<ByteString> {
+  override fun makeEncryptedResults(
+    plaintexts: List<Pair<Int, String>>
+  ): List<EncryptedQueryResult> {
     return plaintexts.map {
-      // requireNotNull(
-      resultOf(
-          queryMetadataOf(queryIdOf(it.first), ByteString.EMPTY),
-          ByteString.copyFromUtf8(it.second)
-        )
-        .toByteString()
-      // )
+      encryptedQueryResult {
+        ciphertext +=
+          resultOf(
+              queryMetadataOf(queryIdOf(it.first), ByteString.EMPTY),
+              ByteString.copyFromUtf8(it.second)
+            )
+            .toByteString()
+      }
     }
   }
 
@@ -67,7 +72,7 @@ object PlaintextPrivateMembershipCryptorHelper : PrivateMembershipCryptorHelper 
     return data.parDo("Map to ShardedQuery") {
       yieldAll(
         it
-          .ciphertextsList
+          .ciphertextList
           .asSequence()
           .map { QueryBundle.parseFrom(it) }
           .flatMap { decodeQueryBundle(it) }

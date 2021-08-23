@@ -26,7 +26,6 @@ import org.wfanet.panelmatch.common.beam.kvOf
 import org.wfanet.panelmatch.common.beam.map
 import org.wfanet.panelmatch.common.beam.parDo
 import org.wfanet.panelmatch.common.beam.values
-import private_membership.batch.EncryptQueriesResponse
 
 /**
  * Implements a query creation engine in Apache Beam that encrypts a query so that it can later be
@@ -148,7 +147,8 @@ class CreateQueriesWorkflow(
       .map<KV<ShardId, Iterable<UnencryptedQuery>>, KV<ShardId, EncryptQueriesResponse>>(
         name = "Map to EncryptQueriesResponse"
       ) {
-        val encryptQueriesRequest = encryptQueriesRequest { unencryptedQuery += it.value }
+        val encryptQueriesRequest =
+          EncryptQueriesRequest.newBuilder().addAllUnencryptedQuery(it.value).build()
         kvOf(it.key, privateMembershipCryptor.encryptQueries(encryptQueriesRequest))
       }
       .values("Extract Results")

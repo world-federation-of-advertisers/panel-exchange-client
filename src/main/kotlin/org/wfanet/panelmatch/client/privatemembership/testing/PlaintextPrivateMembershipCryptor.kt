@@ -20,6 +20,7 @@ import com.google.protobuf.value
 import org.wfanet.panelmatch.client.privatemembership.BucketId
 import org.wfanet.panelmatch.client.privatemembership.DecryptQueriesRequest
 import org.wfanet.panelmatch.client.privatemembership.DecryptQueriesResponse
+import org.wfanet.panelmatch.client.privatemembership.DecryptedQueryResult
 import org.wfanet.panelmatch.client.privatemembership.EncryptQueriesRequest
 import org.wfanet.panelmatch.client.privatemembership.EncryptQueriesResponse
 import org.wfanet.panelmatch.client.privatemembership.GenerateKeysRequest
@@ -30,6 +31,7 @@ import org.wfanet.panelmatch.client.privatemembership.QueryId
 import org.wfanet.panelmatch.client.privatemembership.Result
 import org.wfanet.panelmatch.client.privatemembership.ShardId
 import org.wfanet.panelmatch.client.privatemembership.decryptQueriesResponse
+import org.wfanet.panelmatch.client.privatemembership.decryptedQueryResult
 import org.wfanet.panelmatch.client.privatemembership.encryptQueriesResponse
 import org.wfanet.panelmatch.client.privatemembership.generateKeysResponse
 import org.wfanet.panelmatch.client.privatemembership.queryBundleOf
@@ -88,7 +90,7 @@ object PlaintextPrivateMembershipCryptor : PrivateMembershipCryptor {
   override fun encryptQueries(request: EncryptQueriesRequest): EncryptQueriesResponse {
     val unencryptedQueries = request.unencryptedQueryList
     return encryptQueriesResponse {
-      ciphertexts +=
+      ciphertext +=
         unencryptedQueries.groupBy { it.shardId }.map {
           makeQueryBundle(shard = it.key, queries = it.value.map { Pair(it.queryId, it.bucketId) })
             .toByteString()
@@ -99,12 +101,14 @@ object PlaintextPrivateMembershipCryptor : PrivateMembershipCryptor {
   /** Simple plaintext decrypter that splits up data marked by <...> */
   override fun decryptQueryResults(request: DecryptQueriesRequest): DecryptQueriesResponse {
     val encryptedQueryResults = request.encryptedQueryResultsList
-    return decryptQueriesResponse {
-      decryptedQueryResults +=
-        encryptedQueryResults
-          .map { result -> decodeResultData(Result.parseFrom(result)).toStringUtf8() }
-          .flatMap { data -> splitConcatenatedPayloads(data) }
-          .map { it -> ByteString.copyFromUtf8(it) }
-    }
+    val decryptedResults: List<DecryptedQueryResult> =
+      encryptedQueryResults
+        .map { result ->
+          decodeResultData(Result.parseFrom(result.ciphertextList.first())).toStringUtf8()
+        }
+        .flatMap { data -> splitConcatenatedPayloads(data) }
+        .map { it -> decryptedQueryResult { plaintext = ByteString.copyFromUtf8(it) } }
+
+    return decryptQueriesResponse { decryptedQueryResults += decryptedResults }
   }
 }
