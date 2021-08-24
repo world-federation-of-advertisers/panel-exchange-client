@@ -20,9 +20,12 @@ load("@wfa_common_cpp//build:common_cpp_repositories.bzl", "common_cpp_repositor
 load("@wfa_common_jvm//build:common_jvm_repositories.bzl", "common_jvm_repositories")
 load("@tink_base//:tink_base_deps.bzl", "tink_base_deps")
 load("@tink_cc//:tink_cc_deps.bzl", "tink_cc_deps")
+load("@private_membership//build:private_membership_repositories.bzl", "private_membership_repositories")
 
 def panel_exchange_client_deps():
+    """Installs transitive deps for panel_exchange_client."""
     common_cpp_repositories()
     common_jvm_repositories()
     tink_base_deps()
     tink_cc_deps()
+    private_membership_repositories()
