@@ -46,15 +46,14 @@ class JniPrivateMembershipCryptor(private val clientParameters: ClientParameters
 
   override fun generateKeys(request: GenerateKeysRequest): GenerateKeysResponse {
     val clientRequest = clientGenerateKeysRequest { parameters = clientParameters }
-    return wrapJniException {
-      val keys =
-        ClientGenerateKeysResponse.parseFrom(
-          ObliviousQueryWrapper.generateKeysWrapper(clientRequest.toByteArray())
-        )
-      generateKeysResponse {
-        privateKey = keys.privateKey.toByteString()
-        publicKey = keys.publicKey.toByteString()
-      }
+    val keys = wrapJniException {
+      ClientGenerateKeysResponse.parseFrom(
+        ObliviousQueryWrapper.generateKeysWrapper(clientRequest.toByteArray())
+      )
+    }
+    return generateKeysResponse {
+      privateKey = keys.privateKey.toByteString()
+      publicKey = keys.publicKey.toByteString()
     }
   }
 

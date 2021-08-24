@@ -15,8 +15,8 @@
 package org.wfanet.panelmatch.client.privatemembership
 
 import com.google.common.truth.Truth.assertThat
-import com.google.privatemembership.batch.Shared.Parameters.CryptoParameters
-import com.google.privatemembership.batch.Shared.Parameters.ShardParameters
+import com.google.privatemembership.batch.ParametersKt.cryptoParameters
+import com.google.privatemembership.batch.ParametersKt.shardParameters
 import com.google.privatemembership.batch.parameters as clientParameters
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -30,26 +30,22 @@ class JniPrivateMembershipCryptorTest {
       clientParameters =
         clientParameters {
           this.shardParameters =
-            ShardParameters.newBuilder()
-              .apply {
-                numberOfShards = 200
-                numberOfBucketsPerShard = 2000
-              }
-              .build()
+            shardParameters {
+              numberOfShards = 200
+              numberOfBucketsPerShard = 2000
+            }
           this.cryptoParameters =
-            CryptoParameters.newBuilder()
-              .apply {
-                logDegree = 12
-                logT = 1
-                variance = 8
-                levelsOfRecursion = 2
-                logCompressionFactor = 4
-                logDecompositionModulus = 10
-              }
-              .addRequestModulus(18446744073708380161UL.toLong())
-              .addRequestModulus(137438953471UL.toLong())
-              .addResponseModulus(2056193UL.toLong())
-              .build()
+            cryptoParameters {
+              logDegree = 12
+              logT = 1
+              variance = 8
+              levelsOfRecursion = 2
+              logCompressionFactor = 4
+              logDecompositionModulus = 10
+              requestModulus += 18446744073708380161UL.toLong()
+              requestModulus += 137438953471UL.toLong()
+              responseModulus += 2056193UL.toLong()
+            }
         }
     )
 

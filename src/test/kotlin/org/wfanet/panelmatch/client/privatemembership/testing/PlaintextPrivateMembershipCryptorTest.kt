@@ -29,7 +29,7 @@ import org.wfanet.panelmatch.client.privatemembership.shardIdOf
 import org.wfanet.panelmatch.client.privatemembership.unencryptedQueryOf
 
 @RunWith(JUnit4::class)
-class PlaintextPrivateMembershipCryptorTest() {
+class PlaintextPrivateMembershipCryptorTest {
   val privateMembershipCryptor = PlaintextPrivateMembershipCryptor
   val privateMembershipCryptorHelper = PlaintextPrivateMembershipCryptorHelper
 
