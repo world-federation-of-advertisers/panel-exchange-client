@@ -36,6 +36,7 @@ import org.wfanet.panelmatch.client.privatemembership.encryptQueriesResponse
 import org.wfanet.panelmatch.client.privatemembership.generateKeysResponse
 import org.wfanet.panelmatch.client.privatemembership.queryBundleOf
 import org.wfanet.panelmatch.client.privatemembership.queryMetadataOf
+import org.wfanet.panelmatch.common.toByteString
 
 /**
  * Fake [PlaintextPrivateMembershipCryptor] for testing purposes.
@@ -110,7 +111,7 @@ object PlaintextPrivateMembershipCryptor : PrivateMembershipCryptor {
           decodeResultData(Result.parseFrom(result.ciphertextsList.single())).toStringUtf8()
         }
         .flatMap { data -> splitConcatenatedPayloads(data) }
-        .map { it -> decryptedQueryResult { plaintext = ByteString.copyFromUtf8(it) } }
+        .map { it -> decryptedQueryResult { plaintext = it.toByteString() } }
 
     return decryptQueriesResponse { decryptedQueryResults += decryptedResults }
   }
