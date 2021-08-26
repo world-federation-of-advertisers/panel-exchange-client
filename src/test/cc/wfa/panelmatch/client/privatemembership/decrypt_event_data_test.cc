@@ -42,6 +42,8 @@ using ::wfa::panelmatch::common::crypto::Hkdf;
 TEST(DecryptEventData, DecryptEventDataTest) {
   std::string hkdf_pepper = "some-pepper";
   std::string key = "some-single-blinded-joinkey";
+  JoinKey single_blinded_joinkey;
+  single_blinded_joinkey.set_key(key);
 
   std::string plaintext = "Some data to encrypt.";
   std::vector<std::string> plaintext_event_data{plaintext};
@@ -59,7 +61,8 @@ TEST(DecryptEventData, DecryptEventDataTest) {
 
   DecryptEventDataRequest test_request;
   test_request.set_hkdf_pepper(hkdf_pepper);
-  test_request.set_single_blinded_joinkey(key);
+  test_request.mutable_single_blinded_joinkey()->CopyFrom(
+      single_blinded_joinkey);
   std::vector<std::string> encrypted_event_data{ciphertext};
   RepeatedPtrField<std::string> encrypted_data_batch(
       encrypted_event_data.begin(), encrypted_event_data.end());

@@ -47,24 +47,41 @@ fun encryptedQueryOf(shardId: ShardId, queryId: QueryId): EncryptedQuery = encry
   this.queryId = queryId
 }
 
-/** Constructs a [DecryptedQueryResult]. */
-fun plaintextOf(plaintext: ByteString, query: Int, shard: Int): DecryptedQueryResult {
-  return decryptedQueryResult {
+/** Constructs a [EncryptedEventData]. */
+fun encryptedEventDataOf(ciphertext: ByteString, query: Int, shard: Int): EncryptedEventData {
+  return encryptedEventData {
+    this.ciphertexts += ciphertext
+    queryId = queryIdOf(query)
+    shardId = shardIdOf(shard)
+  }
+}
+
+/** Constructs a [DecryptedEventData]. */
+fun plaintextOf(plaintext: ByteString, query: Int, shard: Int): DecryptedEventData {
+  return decryptedEventData {
     this.plaintext = plaintext
     queryId = queryIdOf(query)
     shardId = shardIdOf(shard)
   }
 }
 
-/** Constructs a [DecryptedQueryResult]. */
-fun plaintextOf(plaintext: String, query: Int, shard: Int): DecryptedQueryResult {
+/** Constructs a [DecryptedEventData]. */
+fun plaintextOf(plaintext: String, query: Int, shard: Int): DecryptedEventData {
   return plaintextOf(ByteString.copyFromUtf8(plaintext), query, shard)
 }
 
-// TODO some of the tests don't verify the plaintext lines up with the correct queryId. Delete the
-// following after that is implemented
-fun plaintextOf(plaintext: String): DecryptedQueryResult {
-  return decryptedQueryResult { this.plaintext = ByteString.copyFromUtf8(plaintext) }
+/** Constructs a [DecryptedQueryResult]. */
+fun decryptedQueryOf(queryResult: ByteString, query: Int, shard: Int): DecryptedQueryResult {
+  return decryptedQueryResult {
+    this.queryResult = queryResult
+    queryId = queryIdOf(query)
+    shardId = shardIdOf(shard)
+  }
+}
+
+/** Constructs a [DecryptedQueryResult]. */
+fun decryptedQueryOf(decryptedQuery: String, query: Int, shard: Int): DecryptedQueryResult {
+  return decryptedQueryOf(ByteString.copyFromUtf8(decryptedQuery), query, shard)
 }
 
 /** Constructs a [DatabaseShard]. */

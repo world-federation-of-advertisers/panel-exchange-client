@@ -113,10 +113,10 @@ class JniPrivateMembershipCryptor(private val clientParameters: ClientParameters
     }
     val mappedResults =
       clientResponse.resultList.map { result ->
-        plaintextOf(
+        decryptedQueryOf(
           shard = result.queryMetadata.shardId,
           query = result.queryMetadata.queryId,
-          plaintext = result.result
+          queryResult = result.result
         )
       }
     return decryptQueriesResponse { decryptedQueryResults += mappedResults }
