@@ -15,6 +15,7 @@
 package org.wfanet.panelmatch.client.privatemembership
 
 import com.google.protobuf.ByteString
+import org.wfanet.panelmatch.common.toByteString
 
 /** Constructs a [ShardId]. */
 fun shardIdOf(id: Int): ShardId = ShardId.newBuilder().setId(id).build()
@@ -67,7 +68,7 @@ fun plaintextOf(plaintext: ByteString, query: Int, shard: Int): DecryptedEventDa
 
 /** Constructs a [DecryptedEventData]. */
 fun plaintextOf(plaintext: String, query: Int, shard: Int): DecryptedEventData {
-  return plaintextOf(ByteString.copyFromUtf8(plaintext), query, shard)
+  return plaintextOf(plaintext.toByteString(), query, shard)
 }
 
 /** Constructs a [DecryptedQueryResult]. */
@@ -81,7 +82,7 @@ fun decryptedQueryOf(queryResult: ByteString, query: Int, shard: Int): Decrypted
 
 /** Constructs a [DecryptedQueryResult]. */
 fun decryptedQueryOf(decryptedQuery: String, query: Int, shard: Int): DecryptedQueryResult {
-  return decryptedQueryOf(ByteString.copyFromUtf8(decryptedQuery), query, shard)
+  return decryptedQueryOf(decryptedQuery.toByteString(), query, shard)
 }
 
 /** Constructs a [DatabaseShard]. */

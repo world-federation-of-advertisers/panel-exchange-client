@@ -24,10 +24,10 @@ class XorSymmetricCryptor : SymmetricCryptor {
   /** Assuming the receiver is UTF8, converts it into a [ByteString]. */
   fun ByteString.xor(privateKey: ByteString): ByteString {
     require(privateKey.size() > 0) { "Length of private key must be greater than zero" }
-    return ByteString.copyFrom(
+    val data =
       this.toByteArray().zip(privateKey.toByteArray()).map { (a, b) -> a.xor(b) }.toByteArray() +
         this.toByteArray().copyOfRange(privateKey.size(), this.size())
-    )
+    return ByteString.copyFrom(data)
   }
 
   override fun encrypt(privateKey: ByteString, data: ByteString): ByteString {

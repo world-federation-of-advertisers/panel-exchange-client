@@ -15,7 +15,6 @@
 package org.wfanet.panelmatch.client.privatemembership.testing
 
 import com.google.common.truth.Truth.assertThat
-import com.google.protobuf.ByteString
 import org.apache.beam.sdk.values.KV
 import org.apache.beam.sdk.values.PCollection
 import org.junit.Test
@@ -55,7 +54,7 @@ private val JOINKEYS =
     Pair(4, "some joinkey 1"),
     Pair(5, "some joinkey 1")
   )
-private val HKDF_PEPPER = ByteString.copyFromUtf8("some-pepper")
+private val HKDF_PEPPER = "some-pepper".toByteString()
 
 @RunWith(JUnit4::class)
 abstract class AbstractDecryptQueryResultsWorkflowTest : BeamTestBase() {

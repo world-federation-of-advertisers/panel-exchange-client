@@ -67,7 +67,7 @@ object PlaintextPrivateMembershipCryptor : PrivateMembershipCryptor {
    * respectively.
    *
    * TODO: This is not currently used but to better mimic the RLWE with FHE we should re-introduce
-   * it as sepearators between the encrypted texts.
+   * ciphertext separators.
    */
   private fun splitConcatenatedPayloads(combinedPayloads: String): List<String> {
     return Regex("(<[^>]+>)")
@@ -102,7 +102,7 @@ object PlaintextPrivateMembershipCryptor : PrivateMembershipCryptor {
     }
   }
 
-  /** Simple plaintext decrypter. Expects the cryptor to only populates the first ciphertext. */
+  /** Simple plaintext decrypter. Expects the encryptor to only populate the first ciphertext. */
   override fun decryptQueryResults(request: DecryptQueriesRequest): DecryptQueriesResponse {
     val encryptedQueryResults = request.encryptedQueryResultsList
     val decryptedResults: List<DecryptedQueryResult> =

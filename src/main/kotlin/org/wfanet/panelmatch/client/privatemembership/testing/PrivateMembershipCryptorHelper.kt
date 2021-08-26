@@ -36,14 +36,14 @@ interface PrivateMembershipCryptorHelper : Serializable {
 
   /**
    * Takes a list of pairs of [EncryptedEventData] and returns an encrypted list of
-   * EncryptedQueryResult
+   * [EncryptedQueryResult]
    */
   fun makeEncryptedQueryResults(
     encryptedEventData: List<EncryptedEventData>
   ): List<EncryptedQueryResult>
 
   /**
-   * Takes a list of pairs of (QueryId, Plaintext) and (QueryId, ByteString) and returns an
+   * Takes a list [DecryptedEventData] and a list of pairs of (QueryId, ByteString) and returns an
    * encrypted list of [EncryptedEventData]
    */
   fun makeEncryptedEventData(

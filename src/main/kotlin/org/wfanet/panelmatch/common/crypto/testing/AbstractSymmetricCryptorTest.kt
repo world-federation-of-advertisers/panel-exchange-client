@@ -15,14 +15,14 @@
 package org.wfanet.panelmatch.common.crypto.testing
 
 import com.google.common.truth.Truth.assertThat
-import com.google.protobuf.ByteString
 import kotlinx.coroutines.runBlocking
 import org.junit.Test
 import org.wfanet.panelmatch.common.crypto.SymmetricCryptor
+import org.wfanet.panelmatch.common.toByteString
 
-private val PLAINTEXT = ByteString.copyFromUtf8("some-long-long-plaintext")
-private val PRIVATE_KEY1 = ByteString.copyFromUtf8("some-private-key")
-private val PRIVATE_KEY2 = ByteString.copyFromUtf8("some-other-private-key")
+private val PLAINTEXT = "some-long-long-plaintext".toByteString()
+private val PRIVATE_KEY1 = "some-private-key".toByteString()
+private val PRIVATE_KEY2 = "some-other-private-key".toByteString()
 
 abstract class AbstractSymmetricCryptorTest() {
   abstract val symmetricCryptor: SymmetricCryptor

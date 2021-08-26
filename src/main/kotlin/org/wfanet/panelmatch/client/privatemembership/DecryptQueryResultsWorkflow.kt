@@ -44,9 +44,9 @@ class DecryptQueryResultsWorkflow(
   ) : Serializable
   //
   /**
-   * Decrypts [EncryptedQueryResult] into [DecryptedEventData]. Current assumes that each [QueryId]
-   * is unique across each [PCollection] and that each [QueryId] uniquely maps to a single [JoinKey]
-   * .
+   * Decrypts [EncryptedQueryResult] into [DecryptedEventData]. Currently assumes that each
+   * [QueryId] is unique across each [PCollection] and that each [QueryId] uniquely maps to a single
+   * [JoinKey].
    */
   fun batchDecryptQueryResults(
     encryptedQueryResults: PCollection<EncryptedQueryResult>,
