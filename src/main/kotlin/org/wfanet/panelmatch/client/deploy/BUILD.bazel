@@ -1,5 +1,4 @@
 load("@io_bazel_rules_kotlin//kotlin:jvm.bzl", "kt_jvm_library")
-load("@rules_java//java:defs.bzl", "java_binary")
 
 kt_jvm_library(
     name = "deploy",
@@ -15,10 +14,4 @@ kt_jvm_library(
         "@wfa_common_jvm//src/main/kotlin/org/wfanet/measurement/common/grpc",
         "@wfa_common_jvm//src/main/kotlin/org/wfanet/measurement/common/throttler",
     ],
-)
-
-java_binary(
-    name = "ExchangeWorkflowDaemon",
-    main_class = "org.wfanet.panelmatch.client.deploy.ExchangeWorkflowDaemonKt",
-    runtime_deps = [":deploy"],
 )
