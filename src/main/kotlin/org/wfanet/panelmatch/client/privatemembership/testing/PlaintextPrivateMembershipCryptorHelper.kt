@@ -77,11 +77,12 @@ object PlaintextPrivateMembershipCryptorHelper : PrivateMembershipCryptorHelper 
     plaintexts: List<DecryptedEventData>,
     joinkeys: List<Pair<Int, String>>
   ): List<EncryptedEventData> {
-    return plaintexts.zip(joinkeys).map {
+    return plaintexts.zip(joinkeys).map { (plaintext, joinkeyList) ->
       encryptedEventData {
-        queryId = it.first.queryId
-        shardId = it.first.shardId
-        ciphertexts += symmetricCryptor.encrypt(it.second.second.toByteString(), it.first.plaintext)
+        queryId = plaintext.queryId
+        shardId = plaintext.shardId
+        ciphertexts +=
+          symmetricCryptor.encrypt(joinkeyList.second.toByteString(), plaintext.plaintext)
       }
     }
   }

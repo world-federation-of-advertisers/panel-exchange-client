@@ -15,7 +15,6 @@
 package org.wfanet.panelmatch.client.privatemembership
 
 import com.google.protobuf.ByteString
-import org.wfanet.panelmatch.common.toByteString
 
 /** Constructs a [ShardId]. */
 fun shardIdOf(id: Int): ShardId = ShardId.newBuilder().setId(id).build()
@@ -26,9 +25,27 @@ fun bucketIdOf(id: Int): BucketId = BucketId.newBuilder().setId(id).build()
 /** Constructs a [QueryId]. */
 fun queryIdOf(id: Int): QueryId = QueryId.newBuilder().setId(id).build()
 
-/** Constructs a [UnencryptedQuery]. */
-fun unencryptedQueryOf(shard: Int, query: Int, bucket: Int): UnencryptedQuery =
-  unencryptedQueryOf(shardIdOf(shard), bucketIdOf(bucket), queryIdOf(query))
+/** Constructs a [EncryptedEventData]. */
+fun encryptedEventDataOf(
+  ciphertext: ByteString,
+  queryId: QueryId,
+  shardId: ShardId
+): EncryptedEventData {
+  return encryptedEventData {
+    ciphertexts += ciphertext
+    this.queryId = queryId
+    this.shardId = shardId
+  }
+}
+
+/** Constructs a [DecryptedEventData]. */
+fun plaintextOf(plaintext: ByteString, queryId: QueryId, shardId: ShardId): DecryptedEventData {
+  return decryptedEventData {
+    this.plaintext = plaintext
+    this.queryId = queryId
+    this.shardId = shardId
+  }
+}
 
 /** Constructs a [UnencryptedQuery]. */
 fun unencryptedQueryOf(shardId: ShardId, bucketId: BucketId, queryId: QueryId): UnencryptedQuery =
@@ -38,51 +55,23 @@ fun unencryptedQueryOf(shardId: ShardId, bucketId: BucketId, queryId: QueryId): 
   this.queryId = queryId
 }
 
-/** Constructs a [EncryptedQuery]. */
-fun encryptedQueryOf(shard: Int, query: Int): EncryptedQuery =
-  encryptedQueryOf(shardIdOf(shard), queryIdOf(query))
+/** Constructs a [DecryptedQueryResult]. */
+fun decryptedQueryOf(
+  queryResult: ByteString,
+  queryId: QueryId,
+  shardId: ShardId
+): DecryptedQueryResult {
+  return decryptedQueryResult {
+    this.queryResult = queryResult
+    this.queryId = queryId
+    this.shardId = shardId
+  }
+}
 
 /** Constructs a [EncryptedQuery]. */
 fun encryptedQueryOf(shardId: ShardId, queryId: QueryId): EncryptedQuery = encryptedQuery {
   this.shardId = shardId
   this.queryId = queryId
-}
-
-/** Constructs a [EncryptedEventData]. */
-fun encryptedEventDataOf(ciphertext: ByteString, query: Int, shard: Int): EncryptedEventData {
-  return encryptedEventData {
-    this.ciphertexts += ciphertext
-    queryId = queryIdOf(query)
-    shardId = shardIdOf(shard)
-  }
-}
-
-/** Constructs a [DecryptedEventData]. */
-fun plaintextOf(plaintext: ByteString, query: Int, shard: Int): DecryptedEventData {
-  return decryptedEventData {
-    this.plaintext = plaintext
-    queryId = queryIdOf(query)
-    shardId = shardIdOf(shard)
-  }
-}
-
-/** Constructs a [DecryptedEventData]. */
-fun plaintextOf(plaintext: String, query: Int, shard: Int): DecryptedEventData {
-  return plaintextOf(plaintext.toByteString(), query, shard)
-}
-
-/** Constructs a [DecryptedQueryResult]. */
-fun decryptedQueryOf(queryResult: ByteString, query: Int, shard: Int): DecryptedQueryResult {
-  return decryptedQueryResult {
-    this.queryResult = queryResult
-    queryId = queryIdOf(query)
-    shardId = shardIdOf(shard)
-  }
-}
-
-/** Constructs a [DecryptedQueryResult]. */
-fun decryptedQueryOf(decryptedQuery: String, query: Int, shard: Int): DecryptedQueryResult {
-  return decryptedQueryOf(decryptedQuery.toByteString(), query, shard)
 }
 
 /** Constructs a [DatabaseShard]. */
@@ -102,12 +91,11 @@ fun queryBundleOf(
   shardId: ShardId,
   queryMetadata: Iterable<QueryMetadata>,
   payload: ByteString
-): QueryBundle =
-  QueryBundle.newBuilder()
-    .setShardId(shardId)
-    .addAllQueryMetadata(queryMetadata)
-    .setPayload(payload)
-    .build()
+): QueryBundle = queryBundle {
+  this.shardId = shardId
+  this.queryMetadata += queryMetadata
+  this.payload = payload
+}
 
 /** Constructs a [QueryMetadata]. */
 fun queryMetadataOf(queryId: QueryId, metadata: ByteString): QueryMetadata =

@@ -24,8 +24,8 @@ private val PLAINTEXT = "some-long-long-plaintext".toByteString()
 private val PRIVATE_KEY1 = "some-private-key".toByteString()
 private val PRIVATE_KEY2 = "some-other-private-key".toByteString()
 
-abstract class AbstractSymmetricCryptorTest() {
-  abstract val symmetricCryptor: SymmetricCryptor
+abstract class AbstractSymmetricCryptorTest {
+  protected abstract val symmetricCryptor: SymmetricCryptor
 
   @Test
   fun `encrypt result should not equal original data`() {

@@ -97,14 +97,7 @@ abstract class AbstractDecryptQueryResultsWorkflowTest : BeamTestBase() {
         publicKey = generateKeysResponse.publicKey
       )
     val decryptedResults = runWorkflow(symmetricPrivateMembershipCryptor, parameters)
-    assertThat(decryptedResults)
-      .containsInAnyOrder(
-        plaintextOf("<some long data a>", 1, 6),
-        plaintextOf("<some long data b>", 2, 7),
-        plaintextOf("<some long data c>", 3, 8),
-        plaintextOf("<some long data d>", 4, 9),
-        plaintextOf("<some long data e>", 5, 10)
-      )
+    assertThat(decryptedResults).containsInAnyOrder(PLAINTEXTS)
   }
 
   private fun encryptedResultOf(

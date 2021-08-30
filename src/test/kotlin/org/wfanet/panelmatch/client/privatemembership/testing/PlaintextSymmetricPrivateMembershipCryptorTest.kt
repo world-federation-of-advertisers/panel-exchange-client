@@ -57,10 +57,10 @@ class PlaintextSymmetricPrivateMembershipCryptorTest {
       privateMembershipCryptorHelper.makeEncryptedQueryResults(encryptedEventData)
 
     val decryptedQueries =
-      encryptedQueryResults.zip(JOINKEYS).map {
+      encryptedQueryResults.zip(JOINKEYS).map { (encryptedQueryResult, joinkeyList) ->
         val request = symmetricDecryptQueriesRequest {
-          singleBlindedJoinkey = joinKeyOf(it.second.second.toByteString())
-          this.encryptedQueryResults += it.first
+          singleBlindedJoinkey = joinKeyOf(joinkeyList.second.toByteString())
+          this.encryptedQueryResults += encryptedQueryResult
           publicKey = PUBLIC_KEY
           privateKey = PRIVATE_KEY
           hkdfPepper = HKDF_PEPPER
@@ -70,13 +70,6 @@ class PlaintextSymmetricPrivateMembershipCryptorTest {
           .decryptedEventDataList
           .single()
       }
-    assertThat(decryptedQueries)
-      .containsExactly(
-        plaintextOf("<some long data a>".toByteString(), 1, 6),
-        plaintextOf("<some long data b>".toByteString(), 2, 7),
-        plaintextOf("<some long data c>".toByteString(), 3, 8),
-        plaintextOf("<some long data d>".toByteString(), 4, 9),
-        plaintextOf("<some long data e>".toByteString(), 5, 10)
-      )
+    assertThat(decryptedQueries).containsExactlyElementsIn(PLAINTEXTS)
   }
 }

@@ -53,10 +53,7 @@ class DecryptQueryResultsWorkflow(
     queryIdToJoinKey: PCollection<KV<QueryId, JoinKey>>
   ): PCollection<DecryptedEventData> {
     return encryptedQueryResults
-      .keyBy<EncryptedQueryResult, QueryId>("Key by Query Id") {
-        val queryId: QueryId = requireNotNull(it.queryId)
-        queryId
-      }
+      .keyBy<EncryptedQueryResult, QueryId>("Key by Query Id") { requireNotNull(it.queryId) }
       .join<QueryId, EncryptedQueryResult, JoinKey, KV<JoinKey, EncryptedQueryResult>>(
         queryIdToJoinKey
       ) {

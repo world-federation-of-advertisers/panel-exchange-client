@@ -30,7 +30,7 @@ message DecryptEventDataRequest {
   bytes hkdf_pepper = 3;
 }
 
-// Response of DecryptedEventDataRequest
+// Response of DecryptEventDataRequest
 message DecryptEventDataResponse {
   repeated bytes decrypted_event_data = 1;
 }

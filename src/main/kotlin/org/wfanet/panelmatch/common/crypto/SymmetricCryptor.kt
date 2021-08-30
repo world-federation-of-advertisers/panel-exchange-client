@@ -17,7 +17,7 @@ package org.wfanet.panelmatch.common.crypto
 import com.google.protobuf.ByteString
 import java.io.Serializable
 
-/** Performs symmetric encryption using a privatey key. */
+/** Performs symmetric encryption using a private key. */
 interface SymmetricCryptor : Serializable {
 
   abstract fun encrypt(privateKey: ByteString, data: ByteString): ByteString

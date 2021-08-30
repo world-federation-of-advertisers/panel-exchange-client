@@ -42,8 +42,8 @@ class PlaintextSymmetricPrivateMembershipCryptor(
   ): SymmetricDecryptQueriesResponse {
     val privateCryptorRequest = decryptQueriesRequest {
       parameters = request.parameters
-      publicKey = this.publicKey
-      privateKey = this.privateKey
+      publicKey = request.publicKey
+      privateKey = request.privateKey
       encryptedQueryResults += request.encryptedQueryResultsList
     }
     val privateCryptorResponse = privateMembershipCryptor.decryptQueryResults(privateCryptorRequest)

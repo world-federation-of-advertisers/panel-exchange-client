@@ -61,8 +61,7 @@ TEST(DecryptEventData, DecryptEventDataTest) {
 
   DecryptEventDataRequest test_request;
   test_request.set_hkdf_pepper(hkdf_pepper);
-  test_request.mutable_single_blinded_joinkey()->CopyFrom(
-      single_blinded_joinkey);
+  test_request.mutable_single_blinded_joinkey()->set_key(key);
   std::vector<std::string> encrypted_event_data{ciphertext};
   RepeatedPtrField<std::string> encrypted_data_batch(
       encrypted_event_data.begin(), encrypted_event_data.end());
