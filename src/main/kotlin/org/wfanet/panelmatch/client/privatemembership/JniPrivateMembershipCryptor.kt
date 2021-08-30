@@ -30,10 +30,10 @@ import com.google.privatemembership.batch.queryMetadata as clientQueryMetadata
 import java.nio.file.Paths
 import org.wfanet.panelmatch.common.loadLibrary
 import org.wfanet.panelmatch.common.wrapJniException
-import org.wfanet.panelmatch.protocol.privatemembership.ObliviousQueryWrapper
+import org.wfanet.panelmatch.protocol.privatemembership.PrivateMembershipWrapper
 import rlwe.Serialization.SerializedSymmetricRlweCiphertext
 
-/** A [PrivateMembershipCryptor] implementation using the JNI [ObliviousQueryWrapper]. */
+/** A [PrivateMembershipCryptor] implementation using the JNI [PrivateMembershipWrapper]. */
 class JniPrivateMembershipCryptor(private val clientParameters: ClientParameters) :
   PrivateMembershipCryptor {
   private val clientPrivateKey: ClientPrivateKey
@@ -48,7 +48,7 @@ class JniPrivateMembershipCryptor(private val clientParameters: ClientParameters
     val clientRequest = clientGenerateKeysRequest { parameters = clientParameters }
     val keys = wrapJniException {
       ClientGenerateKeysResponse.parseFrom(
-        ObliviousQueryWrapper.generateKeysWrapper(clientRequest.toByteArray())
+        PrivateMembershipWrapper.generateKeysWrapper(clientRequest.toByteArray())
       )
     }
     return generateKeysResponse {
@@ -77,7 +77,7 @@ class JniPrivateMembershipCryptor(private val clientParameters: ClientParameters
     }
     val clientResponse = wrapJniException {
       ClientEncryptQueriesResponse.parseFrom(
-        ObliviousQueryWrapper.encryptQueriesWrapper(clientRequest.toByteArray())
+        PrivateMembershipWrapper.encryptQueriesWrapper(clientRequest.toByteArray())
       )
     }
     val queryMetadata = clientResponse.encryptedQueries.queryMetadataList
@@ -110,7 +110,7 @@ class JniPrivateMembershipCryptor(private val clientParameters: ClientParameters
     }
     val clientResponse = wrapJniException {
       ClientDecryptQueriesResponse.parseFrom(
-        ObliviousQueryWrapper.decryptQueriesWrapper(clientRequest.toByteArray())
+        PrivateMembershipWrapper.decryptQueriesWrapper(clientRequest.toByteArray())
       )
     }
     val mappedResults =

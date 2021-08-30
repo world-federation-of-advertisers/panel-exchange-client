@@ -1,0 +1,85 @@
+// Copyright 2021 The Cross-Media Measurement Authors
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+#include "wfa/panelmatch/client/privatemembership/symmetric_private_membership.h"
+
+#include <google/protobuf/repeated_field.h>
+
+#include <memory>
+#include <string>
+#include <utility>
+
+#include "wfa/panelmatch/client/privatemembership/event_data_decryptor.h"
+#include "absl/memory/memory.h"
+#include "absl/status/statusor.h"
+#include "absl/strings/str_cat.h"
+#include "absl/types/span.h"
+#include "common_cpp/macros/macros.h"
+#include "private_membership/rlwe/batch/cpp/client/client.h"
+#include "private_membership/rlwe/batch/cpp/client/client.pb.h"
+
+namespace wfa::panelmatch::client::privatemembership {
+using ClientEncryptedQueryResult = ::private_membership::batch::EncryptedQueryResult;
+using ClientDecryptedQueryResult = ::private_membership::batch::DecryptedQueryResult;
+using ClientDecryptQueriesRequest = ::private_membership::batch::DecryptQueriesRequest;
+using ClientDecryptQueriesResponse = ::private_membership::batch::DecryptQueriesResponse;
+//using ClientParameters = ::private_membership::batch::Parameters;
+//using ClientPrivateKey = ::private_membership::batch::PrivateKey;
+//using ClientPublicKey = ::private_membership::batch::PublicKey;
+//using ClientQueryMetaData = ::private_membership::batch::QueryMetadata;
+
+absl::StatusOr<SymmetricDecryptQueryResultResponse> SymmetricDecryptQueryResult(
+    const SymmetricDecryptQueryResultRequest& request) {
+
+  // Step 1: Decrypt the encrypted query response
+  ClientDecryptQueriesRequest client_decrypt_queries_request;
+  client_decrypt_queries_request.mutable_parameters()->ParseFromString(request.serialized_parameters());
+  client_decrypt_queries_request.mutable_private_key()->ParseFromString(request.serialized_private_key());
+  client_decrypt_queries_request.mutable_public_key()->ParseFromString(request.serialized_public_key());
+  for (const EncryptedQueryResult& encrypted_query_result : request.encrypted_query_results()) {
+    ClientEncryptedQueryResult client_encrypted_query_result;
+    client_encrypted_query_result.mutable_query_metadata()->set_query_id(encrypted_query_result.query_id().id());
+    client_encrypted_query_result.mutable_query_metadata()->set_shard_id(encrypted_query_result.shard_id().id());
+    for (const std::string& ciphertext : encrypted_query_result.ciphertexts()) {
+        client_encrypted_query_result.add_ciphertexts()->ParseFromString(ciphertext);
+    }
+    client_decrypt_queries_request.add_encrypted_queries()->Swap(&client_encrypted_query_result);
+  }
+  ASSIGN_OR_RETURN(
+    ClientDecryptQueriesResponse client_decrypt_queries_response,
+    ::private_membership::batch::DecryptQueries(client_decrypt_queries_request)
+   );
+
+  // Step 2: Decrypt the encrypted event data
+  DecryptEventDataRequest decrypt_event_data_request;
+  decrypt_event_data_request.set_hkdf_pepper(request.hkdf_pepper());
+  decrypt_event_data_request.mutable_single_blinded_joinkey()->CopyFrom(request.single_blinded_joinkey());
+
+  for (const ClientDecryptedQueryResult& client_decrypted_query_result : client_decrypt_queries_response.result()) {
+    // We make an assertion that all the query ids must match
+    decrypt_event_data_request.mutable_encrypted_event_data()->mutable_shard_id()->set_id(client_decrypted_query_result.query_metadata().shard_id());
+    decrypt_event_data_request.mutable_encrypted_event_data()->mutable_query_id()->set_id(client_decrypted_query_result.query_metadata().query_id());
+    decrypt_event_data_request.mutable_encrypted_event_data()->add_ciphertexts(client_decrypted_query_result.result());
+  }
+  ASSIGN_OR_RETURN(
+    DecryptEventDataResponse decrypt_event_data_response,
+    DecryptEventData(decrypt_event_data_request)
+   );
+
+  // Step 3: Map the output
+  SymmetricDecryptQueryResultResponse result;
+  result.mutable_decrypted_event_data()->Swap(result.mutable_decrypted_event_data());
+  return result;
+}
+}  // namespace wfa::panelmatch::client::privatemembership

@@ -5,9 +5,9 @@ package(default_visibility = ["//visibility:public"])
 _INCLUDE_PREFIX = "/src/main/cc"
 
 cc_library(
-    name = "oblivious_query_wrapper",
-    srcs = ["oblivious_query_wrapper.cc"],
-    hdrs = ["oblivious_query_wrapper.h"],
+    name = "private_membership_wrapper",
+    srcs = ["private_membership_wrapper.cc"],
+    hdrs = ["private_membership_wrapper.h"],
     strip_include_prefix = _INCLUDE_PREFIX,
     deps = [
         "//src/main/proto/wfa/panelmatch/client/privatemembership:private_membership_cc_proto",
@@ -101,6 +101,38 @@ cc_library(
     deps = [
         ":event_data_decryptor",
         "//src/main/proto/wfa/panelmatch/client/privatemembership:decrypt_event_data_cc_proto",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/status:statusor",
+        "@com_google_absl//absl/strings",
+        "@wfa_common_cpp//src/main/cc/common_cpp/jni:jni_wrap",
+    ],
+)
+
+cc_library(
+    name = "symmetric_private_membership",
+    srcs = ["symmetric_private_membership.cc"],
+    hdrs = ["symmetric_private_membership.h"],
+    strip_include_prefix = _INCLUDE_PREFIX,
+    deps = [
+        ":event_data_decryptor",
+        "//src/main/proto/wfa/panelmatch/client/privatemembership:decrypt_event_data_cc_proto",
+        "@private_membership//private_membership/rlwe/batch/cpp/client",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/status:statusor",
+        "@tink_base//cc/util:secret_data",
+        "@wfa_common_cpp//src/main/cc/common_cpp/macros",
+    ],
+)
+
+cc_library(
+    name = "symmetric_private_membership_wrapper",
+    srcs = ["symmetric_private_membership_wrapper.cc"],
+    hdrs = ["symmetric_private_membership_wrapper.h"],
+    strip_include_prefix = _INCLUDE_PREFIX,
+    deps = [
+        ":symmetric_private_membership",
+        #"//src/main/proto/wfa/panelmatch/client/privatemembership:decrypt_event_data_cc_proto",
+        #"//src/main/proto/wfa/panelmatch/client/privatemembership:private_membership_cc_proto",
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/status:statusor",
         "@com_google_absl//absl/strings",

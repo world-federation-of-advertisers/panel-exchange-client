@@ -24,9 +24,6 @@ import java.io.Serializable
  */
 interface SymmetricPrivateMembershipCryptor : Serializable {
 
-  /** Generates a public and private key for query compression and expansion */
-  fun generatePrivateMembershipKeys(request: GenerateKeysRequest): GenerateKeysResponse
-
   /** Decrypts a set of encrypted queries */
   fun decryptQueryResults(request: SymmetricDecryptQueriesRequest): SymmetricDecryptQueriesResponse
 }

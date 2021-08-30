@@ -65,9 +65,9 @@ message EncryptQueriesResponse {
 
 // A request to remove RLWE-encryption from a set of results.
 message DecryptQueriesRequest {
-  ObliviousQueryParameters parameters = 1;
-  bytes public_key = 2;
-  bytes private_key = 3;
+  bytes serialized_parameters = 1;
+  bytes serialized_public_key = 2;
+  bytes serialized_private_key = 3;
   repeated EncryptedQueryResult encrypted_query_results = 4;
 }
 
