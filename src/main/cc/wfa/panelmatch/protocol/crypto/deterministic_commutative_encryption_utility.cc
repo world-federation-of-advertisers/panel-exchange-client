@@ -28,18 +28,22 @@
 #include "common_cpp/time/started_thread_cpu_timer.h"
 #include "tink/util/secret_data.h"
 #include "wfa/panelmatch/common/crypto/deterministic_commutative_cipher.h"
+#include "wfa/panelmatch/common/crypto/key_loader.h"
 #include "wfa/panelmatch/protocol/crypto/cryptor.pb.h"
 
 namespace wfa::panelmatch::protocol::crypto {
 using ::crypto::tink::util::SecretData;
 using ::crypto::tink::util::SecretDataFromStringView;
+using ::wfa::panelmatch::common::crypto::ApplyGlobalKeyLoaderIfSet;
 using ::wfa::panelmatch::common::crypto::NewDeterministicCommutativeCipher;
 
 absl::StatusOr<CryptorEncryptResponse> DeterministicCommutativeEncrypt(
     const CryptorEncryptRequest& request) {
   StartedThreadCpuTimer timer;
   CryptorEncryptResponse response;
-  SecretData key = SecretDataFromStringView(request.encryption_key());
+
+  ASSIGN_OR_RETURN(SecretData key,
+                   ApplyGlobalKeyLoaderIfSet(request.encryption_key()));
   ASSIGN_OR_RETURN(auto cipher, NewDeterministicCommutativeCipher(key));
 
   for (absl::string_view plaintext : request.plaintexts()) {
@@ -55,7 +59,9 @@ absl::StatusOr<CryptorDecryptResponse> DeterministicCommutativeDecrypt(
     const CryptorDecryptRequest& request) {
   StartedThreadCpuTimer timer;
   CryptorDecryptResponse response;
-  SecretData key = SecretDataFromStringView(request.encryption_key());
+
+  ASSIGN_OR_RETURN(SecretData key,
+                   ApplyGlobalKeyLoaderIfSet(request.encryption_key()));
   ASSIGN_OR_RETURN(auto cipher, NewDeterministicCommutativeCipher(key));
 
   for (absl::string_view ciphertext : request.encrypted_texts()) {
@@ -71,7 +77,9 @@ absl::StatusOr<CryptorReEncryptResponse> DeterministicCommutativeReEncrypt(
     const CryptorReEncryptRequest& request) {
   StartedThreadCpuTimer timer;
   CryptorReEncryptResponse response;
-  SecretData key = SecretDataFromStringView(request.encryption_key());
+
+  ASSIGN_OR_RETURN(SecretData key,
+                   ApplyGlobalKeyLoaderIfSet(request.encryption_key()));
   ASSIGN_OR_RETURN(auto cipher, NewDeterministicCommutativeCipher(key));
 
   for (absl::string_view ciphertext : request.encrypted_texts()) {
