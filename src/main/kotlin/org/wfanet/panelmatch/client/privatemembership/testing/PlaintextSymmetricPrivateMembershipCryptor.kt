@@ -24,12 +24,12 @@ import org.wfanet.panelmatch.client.privatemembership.decryptQueriesRequest
 import org.wfanet.panelmatch.client.privatemembership.decryptedEventData
 import org.wfanet.panelmatch.client.privatemembership.symmetricDecryptQueriesResponse
 import org.wfanet.panelmatch.common.crypto.SymmetricCryptor
-import org.wfanet.panelmatch.common.crypto.testing.XorSymmetricCryptor
+import org.wfanet.panelmatch.common.crypto.testing.ConcatSymmetricCryptor
 
 class PlaintextSymmetricPrivateMembershipCryptor(
   private val privateMembershipCryptor: PrivateMembershipCryptor =
     PlaintextPrivateMembershipCryptor,
-  private val symmetricCryptor: SymmetricCryptor = XorSymmetricCryptor(),
+  private val symmetricCryptor: SymmetricCryptor = ConcatSymmetricCryptor(),
 ) : SymmetricPrivateMembershipCryptor {
 
   /** Generates a public and private key for query compression and expansion */
