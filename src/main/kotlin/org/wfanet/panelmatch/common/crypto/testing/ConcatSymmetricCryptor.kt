@@ -27,7 +27,7 @@ class ConcatSymmetricCryptor : SymmetricCryptor {
   }
 
   override fun decrypt(privateKey: ByteString, data: ByteString): ByteString {
-    require(data.toStringUtf8().endsWith(privateKey.toStringUtf8()))
+    require(data.toStringUtf8().endsWith(SEPARATOR + privateKey.toStringUtf8()))
     return data
       .toStringUtf8()
       .substring(
