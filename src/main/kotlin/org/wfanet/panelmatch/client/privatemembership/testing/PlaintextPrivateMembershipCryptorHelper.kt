@@ -36,12 +36,12 @@ import org.wfanet.panelmatch.common.beam.kvOf
 import org.wfanet.panelmatch.common.beam.map
 import org.wfanet.panelmatch.common.beam.parDo
 import org.wfanet.panelmatch.common.crypto.SymmetricCryptor
-import org.wfanet.panelmatch.common.crypto.testing.XorSymmetricCryptor
+import org.wfanet.panelmatch.common.crypto.testing.ConcatSymmetricCryptor
 import org.wfanet.panelmatch.common.toByteString
 
 object PlaintextPrivateMembershipCryptorHelper : PrivateMembershipCryptorHelper {
 
-  private val symmetricCryptor: SymmetricCryptor = XorSymmetricCryptor()
+  private val symmetricCryptor: SymmetricCryptor = ConcatSymmetricCryptor()
 
   private fun queryBundleOf(shard: Int, queries: List<Pair<Int, Int>>): QueryBundle {
     return PlaintextQueryEvaluatorTestHelper.makeQueryBundle(

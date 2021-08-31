@@ -15,26 +15,18 @@
 package org.wfanet.panelmatch.common.crypto.testing
 
 import com.google.protobuf.ByteString
-import kotlin.experimental.xor
 import org.wfanet.panelmatch.common.crypto.SymmetricCryptor
+import org.wfanet.panelmatch.common.toByteString
 
 /** Does no real crypto. It only xors [data] with [privateKey]. */
-class XorSymmetricCryptor : SymmetricCryptor {
-
-  /** Assuming the receiver is UTF8, converts it into a [ByteString]. */
-  fun ByteString.xor(privateKey: ByteString): ByteString {
-    require(privateKey.size() > 0) { "Length of private key must be greater than zero" }
-    val data =
-      this.toByteArray().zip(privateKey.toByteArray()).map { (a, b) -> a.xor(b) }.toByteArray() +
-        this.toByteArray().copyOfRange(privateKey.size(), this.size())
-    return ByteString.copyFrom(data)
-  }
+class ConcatSymmetricCryptor : SymmetricCryptor {
 
   override fun encrypt(privateKey: ByteString, data: ByteString): ByteString {
-    return data.xor(privateKey)
+    return privateKey.concat(data)
   }
 
   override fun decrypt(privateKey: ByteString, data: ByteString): ByteString {
-    return data.xor(privateKey)
+    require(data.toStringUtf8().startsWith(privateKey.toStringUtf8()))
+    return data.toStringUtf8().substring(privateKey.toStringUtf8().length).toByteString()
   }
 }

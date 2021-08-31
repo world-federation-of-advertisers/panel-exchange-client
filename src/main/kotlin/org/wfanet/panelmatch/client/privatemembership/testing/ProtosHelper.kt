@@ -12,9 +12,22 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package org.wfanet.panelmatch.client.privatemembership
+package org.wfanet.panelmatch.client.privatemembership.testing
 
 import com.google.protobuf.ByteString
+import org.wfanet.panelmatch.client.privatemembership.DecryptedEventData
+import org.wfanet.panelmatch.client.privatemembership.DecryptedQueryResult
+import org.wfanet.panelmatch.client.privatemembership.EncryptedEventData
+import org.wfanet.panelmatch.client.privatemembership.EncryptedQuery
+import org.wfanet.panelmatch.client.privatemembership.UnencryptedQuery
+import org.wfanet.panelmatch.client.privatemembership.bucketIdOf
+import org.wfanet.panelmatch.client.privatemembership.decryptedQueryOf
+import org.wfanet.panelmatch.client.privatemembership.encryptedEventDataOf
+import org.wfanet.panelmatch.client.privatemembership.encryptedQueryOf
+import org.wfanet.panelmatch.client.privatemembership.plaintextOf
+import org.wfanet.panelmatch.client.privatemembership.queryIdOf
+import org.wfanet.panelmatch.client.privatemembership.shardIdOf
+import org.wfanet.panelmatch.client.privatemembership.unencryptedQueryOf
 import org.wfanet.panelmatch.common.toByteString
 
 /** Constructs a [UnencryptedQuery]. */

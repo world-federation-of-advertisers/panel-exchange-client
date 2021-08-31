@@ -44,11 +44,7 @@ TEST(DecryptEventData, DecryptEventDataTest) {
   std::string key = "some-single-blinded-joinkey";
   JoinKey single_blinded_joinkey;
   single_blinded_joinkey.set_key(key);
-
   std::string plaintext = "Some data to encrypt.";
-  std::vector<std::string> plaintext_event_data{plaintext};
-  RepeatedPtrField<std::string> plaintext_event_data_batch(
-      plaintext_event_data.begin(), plaintext_event_data.end());
 
   // We first generate a valid ciphertext
   std::unique_ptr<Hkdf> hkdf = GetSha256Hkdf();
@@ -62,10 +58,7 @@ TEST(DecryptEventData, DecryptEventDataTest) {
   DecryptEventDataRequest test_request;
   test_request.set_hkdf_pepper(hkdf_pepper);
   test_request.mutable_single_blinded_joinkey()->set_key(key);
-  std::vector<std::string> encrypted_event_data{ciphertext};
-  RepeatedPtrField<std::string> encrypted_data_batch(
-      encrypted_event_data.begin(), encrypted_event_data.end());
-  test_request.mutable_encrypted_event_data()->CopyFrom(encrypted_data_batch);
+  test_request.add_encrypted_event_data(ciphertext);
 
   absl::StatusOr<DecryptEventDataResponse> test_response =
       DecryptEventData(test_request);
