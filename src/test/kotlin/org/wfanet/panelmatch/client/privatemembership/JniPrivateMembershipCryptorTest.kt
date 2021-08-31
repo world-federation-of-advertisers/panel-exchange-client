@@ -14,6 +14,7 @@
 
 package org.wfanet.panelmatch.client.privatemembership
 
+import com.google.protobuf.ByteString
 import com.google.common.truth.Truth.assertThat
 import com.google.privatemembership.batch.ParametersKt.cryptoParameters
 import com.google.privatemembership.batch.ParametersKt.shardParameters
@@ -27,32 +28,33 @@ import org.wfanet.panelmatch.client.privatemembership.testing.unencryptedQueryOf
 @OptIn(kotlin.ExperimentalUnsignedTypes::class)
 @RunWith(JUnit4::class)
 class JniPrivateMembershipCryptorTest {
-  val privateMembershipCryptor =
-    JniPrivateMembershipCryptor(
-      clientParameters =
-        clientParameters {
-          this.shardParameters =
-            shardParameters {
-              numberOfShards = 200
-              numberOfBucketsPerShard = 2000
-            }
-          this.cryptoParameters =
-            cryptoParameters {
-              logDegree = 12
-              logT = 1
-              variance = 8
-              levelsOfRecursion = 2
-              logCompressionFactor = 4
-              logDecompositionModulus = 10
-              requestModulus += 18446744073708380161UL.toLong()
-              requestModulus += 137438953471UL.toLong()
-              responseModulus += 2056193UL.toLong()
-            }
-        }
-    )
+  val privateMembershipCryptor = JniPrivateMembershipCryptor()
+  val parameters = clientParameters {
+    this.shardParameters =
+      shardParameters {
+        numberOfShards = 200
+        numberOfBucketsPerShard = 2000
+      }
+    this.cryptoParameters =
+      cryptoParameters {
+        logDegree = 12
+        logT = 1
+        variance = 8
+        levelsOfRecursion = 2
+        logCompressionFactor = 4
+        logDecompositionModulus = 10
+        requestModulus += 18446744073708380161UL.toLong()
+        requestModulus += 137438953471UL.toLong()
+        responseModulus += 2056193UL.toLong()
+      }
+  }
 
   @Test
   fun `encryptQueries with multiple shards`() {
+    val generateKeysRequest = generateKeysRequest{
+      this.serializedParameters = parameters.toByteString()
+    }
+    val generateKeysResponse = privateMembershipCryptor.generateKeys(generateKeysRequest)
     val encryptQueriesRequest = encryptQueriesRequest {
       unencryptedQueries +=
         listOf(
@@ -61,6 +63,9 @@ class JniPrivateMembershipCryptorTest {
           unencryptedQueryOf(101, 3, 1),
           unencryptedQueryOf(101, 4, 5)
         )
+      this.serializedParameters = parameters.toByteString()
+      this.serializedPrivateKey = generateKeysResponse.serializedPrivateKey
+      this.serializedPublicKey = generateKeysResponse.serializedPublicKey
     }
     val encryptedQueries = privateMembershipCryptor.encryptQueries(encryptQueriesRequest)
     assertThat(encryptedQueries.encryptedQueryList)

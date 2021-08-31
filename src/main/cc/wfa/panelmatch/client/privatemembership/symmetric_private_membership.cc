@@ -39,8 +39,8 @@ using ClientDecryptQueriesResponse = ::private_membership::batch::DecryptQueries
 //using ClientPublicKey = ::private_membership::batch::PublicKey;
 //using ClientQueryMetaData = ::private_membership::batch::QueryMetadata;
 
-absl::StatusOr<SymmetricDecryptQueryResultResponse> SymmetricDecryptQueryResult(
-    const SymmetricDecryptQueryResultRequest& request) {
+absl::StatusOr<SymmetricDecryptQueryResultsResponse> SymmetricDecryptQueryResults(
+    const SymmetricDecryptQueryResultsRequest& request) {
 
   // Step 1: Decrypt the encrypted query response
   ClientDecryptQueriesRequest client_decrypt_queries_request;
@@ -78,7 +78,7 @@ absl::StatusOr<SymmetricDecryptQueryResultResponse> SymmetricDecryptQueryResult(
    );
 
   // Step 3: Map the output
-  SymmetricDecryptQueryResultResponse result;
+  SymmetricDecryptQueryResultsResponse result;
   result.mutable_decrypted_event_data()->Swap(result.mutable_decrypted_event_data());
   return result;
 }

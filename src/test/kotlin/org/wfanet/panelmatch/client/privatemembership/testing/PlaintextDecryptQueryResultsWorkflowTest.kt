@@ -16,9 +16,12 @@ package org.wfanet.panelmatch.client.privatemembership.testing
 
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
+import com.google.protobuf.ByteString
 
 @RunWith(JUnit4::class)
 class PlaintextDecryptQueryResultsWorkflowTest : AbstractDecryptQueryResultsWorkflowTest() {
   override val symmetricPrivateMembershipCryptor = PlaintextSymmetricPrivateMembershipCryptor()
+  override val privateMembershipCryptor = PlaintextPrivateMembershipCryptor
   override val privateMembershipCryptorHelper = PlaintextPrivateMembershipCryptorHelper
+  override val serializedParameters = ByteString.EMPTY
 }

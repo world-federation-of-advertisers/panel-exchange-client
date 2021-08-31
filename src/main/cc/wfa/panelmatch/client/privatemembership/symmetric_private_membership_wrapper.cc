@@ -24,7 +24,7 @@ namespace wfa::panelmatch::client::privatemembership {
 
 absl::StatusOr<std::string> SymmetricDecryptQueryResultsWrapper(
     const std::string& serialized_request) {
-  return JniWrap(serialized_request, SymmetricDecryptQueryResult);
+  return JniWrap(serialized_request, SymmetricDecryptQueryResults);
 }
 
 }  // namespace wfa::panelmatch::client::privatemembership

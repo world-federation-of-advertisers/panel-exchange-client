@@ -23,7 +23,7 @@
 #include "wfa/panelmatch/client/privatemembership/decrypt_event_data.pb.h"
 
 namespace wfa::panelmatch::client::privatemembership {
-absl::StatusOr<SymmetricDecryptQueryResultResponse> SymmetricDecryptQueryResult(
-    const SymmetricDecryptQueryResultRequest& request);
+absl::StatusOr<SymmetricDecryptQueryResultsResponse> SymmetricDecryptQueryResults(
+    const SymmetricDecryptQueryResultsRequest& request);
 }  // namespace wfa::panelmatch::client::privatemembership
 #endif  // SRC_MAIN_CC_WFA_PANELMATCH_CLIENT_PRIVATEMEMBERSHIP_SYMMETRIC_PRIVATE_MEMBERSHIP_H_

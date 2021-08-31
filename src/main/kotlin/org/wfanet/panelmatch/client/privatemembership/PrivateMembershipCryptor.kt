@@ -26,7 +26,7 @@ interface PrivateMembershipCryptor : Serializable {
   fun generateKeys(request: GenerateKeysRequest): GenerateKeysResponse
 
   /** decrypts a set of encrypted queries */
-  fun decryptQueryResults(request: DecryptQueriesRequest): DecryptQueriesResponse
+  fun decryptQueryResults(request: DecryptQueryResultsRequest): DecryptQueryResultsResponse
 
   /** encrypts a set of unencrypted queries */
   fun encryptQueries(request: EncryptQueriesRequest): EncryptQueriesResponse

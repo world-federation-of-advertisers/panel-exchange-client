@@ -38,9 +38,9 @@ class DecryptQueryResultsWorkflow(
 
   /** Tuning knobs for the [CreateQueriesWorkflow]. */
   data class Parameters(
-    val obliviousQueryParameters: ObliviousQueryParameters,
-    val publicKey: ByteString,
-    val privateKey: ByteString
+    val serializedParameters: ByteString,
+    val serializedPublicKey: ByteString,
+    val serializedPrivateKey: ByteString
   ) : Serializable
   //
   /**
@@ -63,12 +63,12 @@ class DecryptQueryResultsWorkflow(
         yield(kvOf(joinKeys.single(), encryptedQueryResultsList.single()))
       }
       .parDo(name = "Decrypt encrypted results") {
-        val request = symmetricDecryptQueriesRequest {
+        val request = symmetricDecryptQueryResultsRequest {
           singleBlindedJoinkey = it.key
           this.encryptedQueryResults += it.value
-          parameters = obliviousQueryParameters.obliviousQueryParameters
-          publicKey = obliviousQueryParameters.publicKey
-          privateKey = obliviousQueryParameters.privateKey
+          serializedParameters = obliviousQueryParameters.serializedParameters
+          serializedPublicKey = obliviousQueryParameters.serializedPublicKey
+          serializedPrivateKey = obliviousQueryParameters.serializedPrivateKey
           this.hkdfPepper = hkdfPepper
         }
         val decryptedResults = symmetricPrivateMembershipCryptor.decryptQueryResults(request)

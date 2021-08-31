@@ -34,26 +34,20 @@ import org.wfanet.panelmatch.protocol.privatemembership.PrivateMembershipWrapper
 import rlwe.Serialization.SerializedSymmetricRlweCiphertext
 
 /** A [PrivateMembershipCryptor] implementation using the JNI [PrivateMembershipWrapper]. */
-class JniPrivateMembershipCryptor(private val clientParameters: ClientParameters) :
-  PrivateMembershipCryptor {
-  private val clientPrivateKey: ClientPrivateKey
-  private val clientPublicKey: ClientPublicKey
-  init {
-    val keys = generateKeys(generateKeysRequest {})
-    clientPublicKey = ClientPublicKey.parseFrom(keys.publicKey)
-    clientPrivateKey = ClientPrivateKey.parseFrom(keys.privateKey)
-  }
+class JniPrivateMembershipCryptor : PrivateMembershipCryptor {
 
   override fun generateKeys(request: GenerateKeysRequest): GenerateKeysResponse {
-    val clientRequest = clientGenerateKeysRequest { parameters = clientParameters }
+    val clientRequest = clientGenerateKeysRequest {
+      parameters = ClientParameters.parseFrom(request.serializedParameters)
+    }
     val keys = wrapJniException {
       ClientGenerateKeysResponse.parseFrom(
         PrivateMembershipWrapper.generateKeysWrapper(clientRequest.toByteArray())
       )
     }
     return generateKeysResponse {
-      privateKey = keys.privateKey.toByteString()
-      publicKey = keys.publicKey.toByteString()
+      serializedPrivateKey = keys.privateKey.toByteString()
+      serializedPublicKey = keys.publicKey.toByteString()
     }
   }
 
@@ -70,9 +64,9 @@ class JniPrivateMembershipCryptor(private val clientParameters: ClientParameters
         }
       }
     val clientRequest = clientEncryptQueriesRequest {
-      parameters = clientParameters
-      privateKey = clientPrivateKey
-      publicKey = clientPublicKey
+      parameters = ClientParameters.parseFrom(request.serializedParameters)
+      privateKey = ClientPrivateKey.parseFrom(request.serializedPrivateKey)
+      publicKey = ClientPublicKey.parseFrom(request.serializedPublicKey)
       this.plaintextQueries += plaintextQueries
     }
     val clientResponse = wrapJniException {
@@ -92,7 +86,7 @@ class JniPrivateMembershipCryptor(private val clientParameters: ClientParameters
     }
   }
 
-  override fun decryptQueryResults(request: DecryptQueriesRequest): DecryptQueriesResponse {
+  override fun decryptQueryResults(request: DecryptQueryResultsRequest): DecryptQueryResultsResponse {
     val encryptedQueries: List<ClientEncryptedQueryResult> =
       request.encryptedQueryResultsList.map { encryptedResult ->
         clientEncryptedQueryResult {
@@ -103,14 +97,14 @@ class JniPrivateMembershipCryptor(private val clientParameters: ClientParameters
         }
       }
     val clientRequest = clientDecryptQueriesRequest {
-      parameters = clientParameters
-      privateKey = privateKey
-      publicKey = publicKey
+      parameters = ClientParameters.parseFrom(request.serializedParameters)
+      privateKey = ClientPrivateKey.parseFrom(request.serializedPrivateKey)
+      publicKey = ClientPublicKey.parseFrom(request.serializedPublicKey)
       this.encryptedQueries += encryptedQueries
     }
     val clientResponse = wrapJniException {
       ClientDecryptQueriesResponse.parseFrom(
-        PrivateMembershipWrapper.decryptQueriesWrapper(clientRequest.toByteArray())
+        PrivateMembershipWrapper.decryptQueryResultsWrapper(clientRequest.toByteArray())
       )
     }
     val mappedResults =
@@ -121,14 +115,14 @@ class JniPrivateMembershipCryptor(private val clientParameters: ClientParameters
           queryResult = result.result
         )
       }
-    return decryptQueriesResponse { decryptedQueryResults += mappedResults }
+    return decryptQueryResultsResponse { decryptedQueryResults += mappedResults }
   }
 
   companion object {
     private val SWIG_PATH =
       "panel_exchange_client/src/main/swig/wfanet/panelmatch/client/privatemembership/querybuilder"
     init {
-      loadLibrary(name = "oblivious_query", directoryPath = Paths.get(SWIG_PATH))
+      loadLibrary(name = "private_membership_wrapper", directoryPath = Paths.get(SWIG_PATH))
     }
   }
 }

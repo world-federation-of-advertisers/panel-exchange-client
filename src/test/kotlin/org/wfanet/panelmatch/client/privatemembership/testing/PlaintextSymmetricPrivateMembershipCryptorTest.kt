@@ -21,7 +21,7 @@ import org.junit.runners.JUnit4
 import org.wfanet.panelmatch.client.privatemembership.EncryptedEventData
 import org.wfanet.panelmatch.client.privatemembership.joinKeyOf
 import org.wfanet.panelmatch.client.privatemembership.plaintextOf
-import org.wfanet.panelmatch.client.privatemembership.symmetricDecryptQueriesRequest
+import org.wfanet.panelmatch.client.privatemembership.symmetricDecryptQueryResultsRequest
 import org.wfanet.panelmatch.common.toByteString
 
 private val PLAINTEXTS =
@@ -58,11 +58,11 @@ class PlaintextSymmetricPrivateMembershipCryptorTest {
 
     val decryptedQueries =
       encryptedQueryResults.zip(JOINKEYS).map { (encryptedQueryResult, joinkeyList) ->
-        val request = symmetricDecryptQueriesRequest {
+        val request = symmetricDecryptQueryResultsRequest {
           singleBlindedJoinkey = joinKeyOf(joinkeyList.second.toByteString())
           this.encryptedQueryResults += encryptedQueryResult
-          publicKey = PUBLIC_KEY
-          privateKey = PRIVATE_KEY
+          serializedPublicKey = PUBLIC_KEY
+          serializedPrivateKey = PRIVATE_KEY
           hkdfPepper = HKDF_PEPPER
         }
         symmetricPrivateMembershipCryptor

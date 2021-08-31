@@ -30,7 +30,6 @@ import com.google.privatemembership.batch.queryMetadata as clientQueryMetadata
 import java.nio.file.Paths
 import org.wfanet.panelmatch.common.loadLibrary
 import org.wfanet.panelmatch.common.wrapJniException
-import org.wfanet.panelmatch.protocol.privatemembership.ObliviousQueryWrapper
 import rlwe.Serialization.SerializedSymmetricRlweCiphertext
 
 /**
@@ -38,13 +37,16 @@ import rlwe.Serialization.SerializedSymmetricRlweCiphertext
  * [SymmetricPrivateMembershipWrapper]. Keys should have been generated prior to this step using an
  * implementation of [PrivateMembershipWrapper].
  * */
-class JniSymmetricPrivateMembershipCryptor(private val clientParameters: ClientParameters) :
-  SymmetricPrivateMembershipCryptor {
-  private val clientPrivateKey: ClientPrivateKey = ClientPublicKey.parseFrom(keys.publicKey)
-  private val clientPublicKey: ClientPublicKey = ClientPrivateKey.parseFrom(keys.privateKey)
+class JniSymmetricPrivateMembershipCryptor : SymmetricPrivateMembershipCryptor {
 
-  override fun decryptQueryResults(request: DecryptQueriesRequest): DecryptQueriesResponse {
-
+  override fun decryptQueryResults(request: SymmetricDecryptQueryResultsRequest): SymmetricDecryptQueryResultsResponse {
+    return wrapJniException {
+      SymmetricDecryptQueryResultsResponse.parseFrom(
+        SymmetricPrivateMembershipWrapper.symmetricDecryptQueryResultsWrapper(
+          request.toByteArray()
+        )
+      )
+    }
   }
 
   companion object {

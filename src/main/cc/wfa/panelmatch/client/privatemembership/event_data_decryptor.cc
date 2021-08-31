@@ -60,7 +60,6 @@ absl::StatusOr<DecryptEventDataResponse> DecryptEventData(
             SecretDataFromStringView(request.hkdf_pepper())));
     decrypted_event_data->mutable_query_id()->CopyFrom(request.encrypted_event_data().query_id());
     decrypted_event_data->mutable_shard_id()->CopyFrom(request.encrypted_event_data().shard_id());
-    //response.add_decrypted_event_data(decrypted_event_data);
   }
   return response;
 }

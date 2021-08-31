@@ -37,7 +37,7 @@ message DecryptEventDataResponse {
 
 // Removes in one step both the private membership encryption as well as the
 // symmetric encryption that ensures the data is computationally symmetric.
-message SymmetricDecryptQueryResultRequest {
+message SymmetricDecryptQueryResultsRequest {
   bytes serialized_parameters = 1;
   bytes serialized_public_key = 2;
   bytes serialized_private_key = 3;
@@ -46,7 +46,7 @@ message SymmetricDecryptQueryResultRequest {
   bytes hkdf_pepper = 6;
 }
 
-// Response of SymmetricDecryptQueryResultRequest
-message SymmetricDecryptQueryResultResponse {
+// Response of SymmetricDecryptQueryResultsRequest
+message SymmetricDecryptQueryResultsResponse {
   repeated DecryptedEventData decrypted_event_data = 1;
 }

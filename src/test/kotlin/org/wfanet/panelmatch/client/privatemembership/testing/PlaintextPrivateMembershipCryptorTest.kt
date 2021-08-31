@@ -20,7 +20,7 @@ import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
 import org.wfanet.panelmatch.client.privatemembership.QueryBundle
 import org.wfanet.panelmatch.client.privatemembership.bucketIdOf
-import org.wfanet.panelmatch.client.privatemembership.decryptQueriesRequest
+import org.wfanet.panelmatch.client.privatemembership.decryptQueryResultsRequest
 import org.wfanet.panelmatch.client.privatemembership.decryptedQueryOf
 import org.wfanet.panelmatch.client.privatemembership.encryptQueriesRequest
 import org.wfanet.panelmatch.client.privatemembership.encryptedEventDataOf
@@ -66,11 +66,11 @@ class PlaintextPrivateMembershipCryptorTest {
       )
     val queriedEncryptedResults =
       privateMembershipCryptorHelper.makeEncryptedQueryResults(encryptedEventData)
-    val decryptQueriesRequest = decryptQueriesRequest {
+    val decryptRequest = decryptQueryResultsRequest {
       encryptedQueryResults += queriedEncryptedResults
     }
 
-    val decryptedQueries = privateMembershipCryptor.decryptQueryResults(decryptQueriesRequest)
+    val decryptedQueries = privateMembershipCryptor.decryptQueryResults(decryptRequest)
     assertThat(decryptedQueries.decryptedQueryResultsList)
       .containsExactly(
         decryptedQueryOf("<some encrypted data a>".toByteString(), 1, 6),

@@ -18,8 +18,8 @@ import com.google.protobuf.ByteString
 import com.google.protobuf.ListValue
 import com.google.protobuf.value
 import org.wfanet.panelmatch.client.privatemembership.BucketId
-import org.wfanet.panelmatch.client.privatemembership.DecryptQueriesRequest
-import org.wfanet.panelmatch.client.privatemembership.DecryptQueriesResponse
+import org.wfanet.panelmatch.client.privatemembership.DecryptQueryResultsRequest
+import org.wfanet.panelmatch.client.privatemembership.DecryptQueryResultsResponse
 import org.wfanet.panelmatch.client.privatemembership.DecryptedQueryResult
 import org.wfanet.panelmatch.client.privatemembership.EncryptQueriesRequest
 import org.wfanet.panelmatch.client.privatemembership.EncryptQueriesResponse
@@ -30,7 +30,7 @@ import org.wfanet.panelmatch.client.privatemembership.QueryBundle
 import org.wfanet.panelmatch.client.privatemembership.QueryId
 import org.wfanet.panelmatch.client.privatemembership.Result
 import org.wfanet.panelmatch.client.privatemembership.ShardId
-import org.wfanet.panelmatch.client.privatemembership.decryptQueriesResponse
+import org.wfanet.panelmatch.client.privatemembership.decryptQueryResultsResponse
 import org.wfanet.panelmatch.client.privatemembership.decryptedQueryResult
 import org.wfanet.panelmatch.client.privatemembership.encryptQueriesResponse
 import org.wfanet.panelmatch.client.privatemembership.generateKeysResponse
@@ -82,8 +82,8 @@ object PlaintextPrivateMembershipCryptor : PrivateMembershipCryptor {
 
   override fun generateKeys(request: GenerateKeysRequest): GenerateKeysResponse {
     return generateKeysResponse {
-      publicKey = ByteString.EMPTY
-      privateKey = ByteString.EMPTY
+      serializedPublicKey = ByteString.EMPTY
+      serializedPrivateKey = ByteString.EMPTY
     }
   }
 
@@ -103,7 +103,7 @@ object PlaintextPrivateMembershipCryptor : PrivateMembershipCryptor {
   }
 
   /** Simple plaintext decrypter. Expects the encryptor to only populate the first ciphertext. */
-  override fun decryptQueryResults(request: DecryptQueriesRequest): DecryptQueriesResponse {
+  override fun decryptQueryResults(request: DecryptQueryResultsRequest): DecryptQueryResultsResponse {
     val encryptedQueryResults = request.encryptedQueryResultsList
     val decryptedResults: List<DecryptedQueryResult> =
       encryptedQueryResults.map { result ->
@@ -116,6 +116,6 @@ object PlaintextPrivateMembershipCryptor : PrivateMembershipCryptor {
         }
       }
 
-    return decryptQueriesResponse { decryptedQueryResults += decryptedResults }
+    return decryptQueryResultsResponse { decryptedQueryResults += decryptedResults }
   }
 }

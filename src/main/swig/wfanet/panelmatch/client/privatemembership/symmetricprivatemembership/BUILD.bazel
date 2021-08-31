@@ -9,7 +9,7 @@ java_wrap_cc(
     name = "symmetric_private_membership",
     src = "symmetric_private_membership.swig",
     module = "SymmetricPrivateMembershipWrapper",
-    package = "org.wfanet.panelmatch.protocol.privatemembership",
+    package = "org.wfanet.panelmatch.client.privatemembership",
     deps = [
         "//src/main/cc/wfa/panelmatch/client/privatemembership:symmetric_private_membership_wrapper",
     ],

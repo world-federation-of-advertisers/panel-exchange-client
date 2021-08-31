@@ -58,12 +58,17 @@ TEST(DecryptEventData, DecryptEventDataTest) {
   DecryptEventDataRequest test_request;
   test_request.set_hkdf_pepper(hkdf_pepper);
   test_request.mutable_single_blinded_joinkey()->set_key(key);
-  test_request.add_encrypted_event_data(ciphertext);
+  test_request.mutable_encrypted_event_data()->add_ciphertexts(ciphertext);
+  test_request.mutable_encrypted_event_data()->mutable_query_id()->set_id(1);
+  test_request.mutable_encrypted_event_data()->mutable_shard_id()->set_id(2);
 
   absl::StatusOr<DecryptEventDataResponse> test_response =
       DecryptEventData(test_request);
   DecryptEventDataResponse expected_response;
-  expected_response.add_decrypted_event_data(plaintext);
+  DecryptedEventData *expected_decrypted_event_data = expected_response.add_decrypted_event_data();
+  expected_decrypted_event_data->set_plaintext(plaintext);
+  expected_decrypted_event_data->mutable_query_id()->set_id(1);
+  expected_decrypted_event_data->mutable_shard_id()->set_id(2);
   EXPECT_THAT(test_response, IsOkAndHolds(EqualsProto(expected_response)));
 
   std::string valid_serialized_request;

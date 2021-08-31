@@ -17,12 +17,12 @@ package org.wfanet.panelmatch.client.privatemembership.testing
 import org.wfanet.panelmatch.client.privatemembership.GenerateKeysRequest
 import org.wfanet.panelmatch.client.privatemembership.GenerateKeysResponse
 import org.wfanet.panelmatch.client.privatemembership.PrivateMembershipCryptor
-import org.wfanet.panelmatch.client.privatemembership.SymmetricDecryptQueriesRequest
-import org.wfanet.panelmatch.client.privatemembership.SymmetricDecryptQueriesResponse
+import org.wfanet.panelmatch.client.privatemembership.SymmetricDecryptQueryResultsRequest
+import org.wfanet.panelmatch.client.privatemembership.SymmetricDecryptQueryResultsResponse
 import org.wfanet.panelmatch.client.privatemembership.SymmetricPrivateMembershipCryptor
-import org.wfanet.panelmatch.client.privatemembership.decryptQueriesRequest
+import org.wfanet.panelmatch.client.privatemembership.decryptQueryResultsRequest
 import org.wfanet.panelmatch.client.privatemembership.decryptedEventData
-import org.wfanet.panelmatch.client.privatemembership.symmetricDecryptQueriesResponse
+import org.wfanet.panelmatch.client.privatemembership.symmetricDecryptQueryResultsResponse
 import org.wfanet.panelmatch.common.crypto.SymmetricCryptor
 import org.wfanet.panelmatch.common.crypto.testing.ConcatSymmetricCryptor
 
@@ -32,22 +32,17 @@ class PlaintextSymmetricPrivateMembershipCryptor(
   private val symmetricCryptor: SymmetricCryptor = ConcatSymmetricCryptor(),
 ) : SymmetricPrivateMembershipCryptor {
 
-  /** Generates a public and private key for query compression and expansion */
-  override fun generatePrivateMembershipKeys(request: GenerateKeysRequest): GenerateKeysResponse {
-    return privateMembershipCryptor.generateKeys(request)
-  }
-
   override fun decryptQueryResults(
-    request: SymmetricDecryptQueriesRequest
-  ): SymmetricDecryptQueriesResponse {
-    val privateCryptorRequest = decryptQueriesRequest {
-      parameters = request.parameters
-      publicKey = request.publicKey
-      privateKey = request.privateKey
+    request: SymmetricDecryptQueryResultsRequest
+  ): SymmetricDecryptQueryResultsResponse {
+    val privateCryptorRequest = decryptQueryResultsRequest {
+      serializedParameters = request.serializedParameters
+      serializedPublicKey = request.serializedPublicKey
+      serializedPrivateKey = request.serializedPrivateKey
       encryptedQueryResults += request.encryptedQueryResultsList
     }
     val privateCryptorResponse = privateMembershipCryptor.decryptQueryResults(privateCryptorRequest)
-    return symmetricDecryptQueriesResponse {
+    return symmetricDecryptQueryResultsResponse {
       decryptedEventData +=
         privateCryptorResponse.decryptedQueryResultsList.map {
           decryptedEventData {
