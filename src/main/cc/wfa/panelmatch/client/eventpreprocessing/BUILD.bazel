@@ -12,6 +12,7 @@ cc_library(
         "//src/main/cc/wfa/panelmatch/common/crypto:aes_with_hkdf",
         "//src/main/cc/wfa/panelmatch/common/crypto:deterministic_commutative_cipher",
         "//src/main/cc/wfa/panelmatch/common/crypto:hkdf",
+        "//src/main/cc/wfa/panelmatch/common/crypto:key_loader",
         "//src/main/cc/wfa/panelmatch/protocol/crypto:event_data_preprocessor",
         "//src/main/proto/wfa/panelmatch/client/eventpreprocessing:preprocess_events_cc_proto",
         "@com_google_absl//absl/algorithm:container",
@@ -30,6 +31,7 @@ cc_library(
     strip_include_prefix = "/src/main/cc",
     deps = [
         ":preprocess_events",
+        "//src/main/cc/wfa/panelmatch/common/crypto:register_identity_key_loader",  # Testing only, TODO: remove this
         "//src/main/proto/wfa/panelmatch/client/eventpreprocessing:preprocess_events_cc_proto",
         "@com_google_absl//absl/status:statusor",
         "@wfa_common_cpp//src/main/cc/common_cpp/jni:jni_wrap",
