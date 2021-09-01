@@ -21,12 +21,15 @@ import org.wfanet.panelmatch.common.toByteString
 /** Does no real crypto. It only xors [data] with [privateKey]. */
 class ConcatSymmetricCryptor : SymmetricCryptor {
 
+  private val SEPARATOR = " encrypted by "
   override fun encrypt(privateKey: ByteString, data: ByteString): ByteString {
-    return privateKey.concat(data)
+    return data.concat(SEPARATOR.toByteString()).concat(privateKey)
   }
 
   override fun decrypt(privateKey: ByteString, data: ByteString): ByteString {
-    require(data.toStringUtf8().startsWith(privateKey.toStringUtf8()))
-    return data.toStringUtf8().substring(privateKey.toStringUtf8().length).toByteString()
+    val suffix = SEPARATOR + privateKey.toStringUtf8()
+    val dataString = data.toStringUtf8()
+    require(dataString.endsWith(suffix))
+    return dataString.removeSuffix(suffix).toByteString()
   }
 }
