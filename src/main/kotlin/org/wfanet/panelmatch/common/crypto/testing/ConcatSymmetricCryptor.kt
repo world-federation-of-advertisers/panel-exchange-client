@@ -27,13 +27,9 @@ class ConcatSymmetricCryptor : SymmetricCryptor {
   }
 
   override fun decrypt(privateKey: ByteString, data: ByteString): ByteString {
-    require(data.toStringUtf8().endsWith(SEPARATOR + privateKey.toStringUtf8()))
-    return data
-      .toStringUtf8()
-      .substring(
-        0,
-        data.toStringUtf8().length - privateKey.toStringUtf8().length - SEPARATOR.length
-      )
-      .toByteString()
+    val suffix = SEPARATOR + privateKey.toStringUtf8()
+    val dataString = data.toStringUtf8()
+    require(dataString.endsWith(suffix))
+    return dataString.removeSuffix(suffix).toByteString()
   }
 }
