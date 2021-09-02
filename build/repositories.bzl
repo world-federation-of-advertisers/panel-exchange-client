@@ -17,9 +17,13 @@ Step 1 of configuring WORKSPACE: adds direct deps.
 """
 
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+load("//build/com_google_riegeli:repo.bzl", "com_google_riegeli_repo")
 
 def panel_exchange_client_repositories():
     """Imports all direct dependencies for panel_exchange_client."""
+
+    com_google_riegeli_repo()
+
     http_archive(
         name = "wfa_common_cpp",
         sha256 = "3110be93990a449ac8f60b534319d7d3a08aa118908fecd7b571a5e08260e560",
