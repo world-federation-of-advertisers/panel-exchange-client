@@ -48,9 +48,9 @@ EventDataPreprocessor::EventDataPreprocessor(
     : deterministic_commutative_cipher_(
           std::move(deterministic_commutative_cipher)),
       hkdf_pepper_(hkdf_pepper),
-      fingerprinter_(GetPepperedFingerprinter(CHECK_NOTNULL(delegate),
+      fingerprinter_(GetPepperedFingerprinter(NULL_CHECK(delegate),
                                               identifier_hash_pepper)),
-      aes_hkdf_(*CHECK_NOTNULL(aes_hkdf)) {}
+      aes_hkdf_(*NULL_CHECK(aes_hkdf)) {}
 
 absl::StatusOr<ProcessedData> EventDataPreprocessor::Process(
     absl::string_view identifier, absl::string_view event_data) const {

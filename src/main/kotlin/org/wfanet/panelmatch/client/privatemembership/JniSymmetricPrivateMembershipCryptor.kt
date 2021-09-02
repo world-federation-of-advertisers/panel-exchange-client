@@ -14,37 +14,23 @@
 
 package org.wfanet.panelmatch.client.privatemembership
 
-import com.google.privatemembership.batch.Shared.EncryptedQueryResult as ClientEncryptedQueryResult
-import com.google.privatemembership.batch.Shared.Parameters as ClientParameters
-import com.google.privatemembership.batch.Shared.PublicKey as ClientPublicKey
-import com.google.privatemembership.batch.client.Client.DecryptQueriesResponse as ClientDecryptQueriesResponse
-import com.google.privatemembership.batch.client.Client.EncryptQueriesResponse as ClientEncryptQueriesResponse
-import com.google.privatemembership.batch.client.Client.GenerateKeysResponse as ClientGenerateKeysResponse
-import com.google.privatemembership.batch.client.Client.PrivateKey as ClientPrivateKey
-import com.google.privatemembership.batch.client.decryptQueriesRequest as clientDecryptQueriesRequest
-import com.google.privatemembership.batch.client.encryptQueriesRequest as clientEncryptQueriesRequest
-import com.google.privatemembership.batch.client.generateKeysRequest as clientGenerateKeysRequest
-import com.google.privatemembership.batch.client.plaintextQuery as clientPlaintextQuery
-import com.google.privatemembership.batch.encryptedQueryResult as clientEncryptedQueryResult
-import com.google.privatemembership.batch.queryMetadata as clientQueryMetadata
 import java.nio.file.Paths
 import org.wfanet.panelmatch.common.loadLibrary
 import org.wfanet.panelmatch.common.wrapJniException
-import rlwe.Serialization.SerializedSymmetricRlweCiphertext
 
 /**
  * A [SymmetricPrivateMembershipCryptor] implementation using the JNI
  * [SymmetricPrivateMembershipWrapper]. Keys should have been generated prior to this step using an
  * implementation of [PrivateMembershipWrapper].
- * */
+ */
 class JniSymmetricPrivateMembershipCryptor : SymmetricPrivateMembershipCryptor {
 
-  override fun decryptQueryResults(request: SymmetricDecryptQueryResultsRequest): SymmetricDecryptQueryResultsResponse {
+  override fun decryptQueryResults(
+    request: SymmetricDecryptQueryResultsRequest
+  ): SymmetricDecryptQueryResultsResponse {
     return wrapJniException {
       SymmetricDecryptQueryResultsResponse.parseFrom(
-        SymmetricPrivateMembershipWrapper.symmetricDecryptQueryResultsWrapper(
-          request.toByteArray()
-        )
+        SymmetricPrivateMembershipWrapper.symmetricDecryptQueryResultsWrapper(request.toByteArray())
       )
     }
   }
@@ -53,7 +39,10 @@ class JniSymmetricPrivateMembershipCryptor : SymmetricPrivateMembershipCryptor {
     private val SWIG_PATH =
       "panel_exchange_client/src/main/swig/wfanet/panelmatch/client/privatemembership/symmetricprivatemembershipwrapper"
     init {
-      loadLibrary(name = "symmetric_private_membership_wrapper", directoryPath = Paths.get(SWIG_PATH))
+      loadLibrary(
+        name = "symmetric_private_membership_wrapper",
+        directoryPath = Paths.get(SWIG_PATH)
+      )
     }
   }
 }

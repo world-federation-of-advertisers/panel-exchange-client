@@ -24,14 +24,14 @@ import org.wfanet.panelmatch.common.beam.kvOf
 import org.wfanet.panelmatch.common.beam.parDo
 
 /**
- * Implements a query decryption engine in Apache Beam that decrypts a query result
+ * Implements a query result decryption engine in Apache Beam that decrypts a query result
  *
  * @param parameters tuning knobs for the workflow
- * @param privateMembershipCryptor implementation of lower-level oblivious query expansion and
- * result decryption
+ * @param symmetricPrivateMembershipCryptor implementation of lower-level query result decryption
+ * and encrypted event decryption
  */
 class DecryptQueryResultsWorkflow(
-  private val obliviousQueryParameters: Parameters,
+  private val parameters: Parameters,
   private val symmetricPrivateMembershipCryptor: SymmetricPrivateMembershipCryptor,
   private val hkdfPepper: ByteString,
 ) : Serializable {
@@ -66,9 +66,9 @@ class DecryptQueryResultsWorkflow(
         val request = symmetricDecryptQueryResultsRequest {
           singleBlindedJoinkey = it.key
           this.encryptedQueryResults += it.value
-          serializedParameters = obliviousQueryParameters.serializedParameters
-          serializedPublicKey = obliviousQueryParameters.serializedPublicKey
-          serializedPrivateKey = obliviousQueryParameters.serializedPrivateKey
+          serializedParameters = parameters.serializedParameters
+          serializedPublicKey = parameters.serializedPublicKey
+          serializedPrivateKey = parameters.serializedPrivateKey
           this.hkdfPepper = hkdfPepper
         }
         val decryptedResults = symmetricPrivateMembershipCryptor.decryptQueryResults(request)

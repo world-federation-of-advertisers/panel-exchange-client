@@ -14,9 +14,9 @@
 
 package org.wfanet.panelmatch.client.privatemembership.testing
 
+import com.google.protobuf.ByteString
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
-import com.google.protobuf.ByteString
 
 @RunWith(JUnit4::class)
 class PlaintextDecryptQueryResultsWorkflowTest : AbstractDecryptQueryResultsWorkflowTest() {

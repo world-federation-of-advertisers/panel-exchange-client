@@ -103,7 +103,9 @@ object PlaintextPrivateMembershipCryptor : PrivateMembershipCryptor {
   }
 
   /** Simple plaintext decrypter. Expects the encryptor to only populate the first ciphertext. */
-  override fun decryptQueryResults(request: DecryptQueryResultsRequest): DecryptQueryResultsResponse {
+  override fun decryptQueryResults(
+    request: DecryptQueryResultsRequest
+  ): DecryptQueryResultsResponse {
     val encryptedQueryResults = request.encryptedQueryResultsList
     val decryptedResults: List<DecryptedQueryResult> =
       encryptedQueryResults.map { result ->

@@ -25,5 +25,7 @@ import java.io.Serializable
 interface SymmetricPrivateMembershipCryptor : Serializable {
 
   /** Decrypts a set of encrypted query results */
-  fun decryptQueryResults(request: SymmetricDecryptQueryResultsRequest): SymmetricDecryptQueryResultsResponse
+  fun decryptQueryResults(
+    request: SymmetricDecryptQueryResultsRequest
+  ): SymmetricDecryptQueryResultsResponse
 }

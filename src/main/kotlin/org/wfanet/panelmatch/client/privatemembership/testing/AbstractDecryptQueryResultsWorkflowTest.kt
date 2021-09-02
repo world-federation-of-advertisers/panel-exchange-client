@@ -14,8 +14,8 @@
 
 package org.wfanet.panelmatch.client.privatemembership.testing
 
-import com.google.protobuf.ByteString
 import com.google.common.truth.Truth.assertThat
+import com.google.protobuf.ByteString
 import org.apache.beam.sdk.values.KV
 import org.apache.beam.sdk.values.PCollection
 import org.junit.Test
@@ -26,12 +26,11 @@ import org.wfanet.panelmatch.client.privatemembership.DecryptQueryResultsWorkflo
 import org.wfanet.panelmatch.client.privatemembership.DecryptedEventData
 import org.wfanet.panelmatch.client.privatemembership.EncryptedEventData
 import org.wfanet.panelmatch.client.privatemembership.EncryptedQueryResult
-import org.wfanet.panelmatch.client.privatemembership.GenerateKeysRequest
 import org.wfanet.panelmatch.client.privatemembership.JoinKey
-import org.wfanet.panelmatch.client.privatemembership.QueryId
-import org.wfanet.panelmatch.client.privatemembership.generateKeysRequest
-import org.wfanet.panelmatch.client.privatemembership.SymmetricPrivateMembershipCryptor
 import org.wfanet.panelmatch.client.privatemembership.PrivateMembershipCryptor
+import org.wfanet.panelmatch.client.privatemembership.QueryId
+import org.wfanet.panelmatch.client.privatemembership.SymmetricPrivateMembershipCryptor
+import org.wfanet.panelmatch.client.privatemembership.generateKeysRequest
 import org.wfanet.panelmatch.client.privatemembership.joinKeyOf
 import org.wfanet.panelmatch.client.privatemembership.plaintextOf
 import org.wfanet.panelmatch.client.privatemembership.queryIdOf
@@ -77,7 +76,7 @@ abstract class AbstractDecryptQueryResultsWorkflowTest : BeamTestBase() {
       )
     val joinkeyCollection = joinkeyCollectionOf(JOINKEYS)
     return DecryptQueryResultsWorkflow(
-        obliviousQueryParameters = parameters,
+        parameters = parameters,
         symmetricPrivateMembershipCryptor = symmetricPrivateMembershipCryptor,
         hkdfPepper = HKDF_PEPPER,
       )
@@ -89,19 +88,18 @@ abstract class AbstractDecryptQueryResultsWorkflowTest : BeamTestBase() {
 
   @Test
   fun `Decrypt simple set of results`() {
-    val generateKeysRequest = generateKeysRequest{
+    val generateKeysRequest = generateKeysRequest {
       this.serializedParameters = serializedParameters
-        }
-      val generateKeysResponse =
-        privateMembershipCryptor.generateKeys(generateKeysRequest)
-      val parameters =
-        Parameters(
-          serializedParameters = serializedParameters,
-          serializedPrivateKey = generateKeysResponse.serializedPrivateKey,
-          serializedPublicKey = generateKeysResponse.serializedPublicKey
-        )
-      val decryptedResults = runWorkflow(symmetricPrivateMembershipCryptor, parameters)
-      assertThat(decryptedResults).containsInAnyOrder(PLAINTEXTS)
+    }
+    val generateKeysResponse = privateMembershipCryptor.generateKeys(generateKeysRequest)
+    val parameters =
+      Parameters(
+        serializedParameters = serializedParameters,
+        serializedPrivateKey = generateKeysResponse.serializedPrivateKey,
+        serializedPublicKey = generateKeysResponse.serializedPublicKey
+      )
+    val decryptedResults = runWorkflow(symmetricPrivateMembershipCryptor, parameters)
+    assertThat(decryptedResults).containsInAnyOrder(PLAINTEXTS)
   }
 
   private fun encryptedResultOf(

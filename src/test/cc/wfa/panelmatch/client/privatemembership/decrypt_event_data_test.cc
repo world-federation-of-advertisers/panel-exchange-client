@@ -19,6 +19,7 @@
 #include "common_cpp/testing/common_matchers.h"
 #include "common_cpp/testing/status_macros.h"
 #include "common_cpp/testing/status_matchers.h"
+#include "gtest/gtest.h"
 #include "wfa/panelmatch/client/privatemembership/decrypt_event_data.pb.h"
 #include "wfa/panelmatch/client/privatemembership/event_data_decryptor.h"
 #include "wfa/panelmatch/client/privatemembership/event_data_decryptor_wrapper.h"
@@ -65,7 +66,8 @@ TEST(DecryptEventData, DecryptEventDataTest) {
   absl::StatusOr<DecryptEventDataResponse> test_response =
       DecryptEventData(test_request);
   DecryptEventDataResponse expected_response;
-  DecryptedEventData *expected_decrypted_event_data = expected_response.add_decrypted_event_data();
+  DecryptedEventData *expected_decrypted_event_data =
+      expected_response.add_decrypted_event_data();
   expected_decrypted_event_data->set_plaintext(plaintext);
   expected_decrypted_event_data->mutable_query_id()->set_id(1);
   expected_decrypted_event_data->mutable_shard_id()->set_id(2);

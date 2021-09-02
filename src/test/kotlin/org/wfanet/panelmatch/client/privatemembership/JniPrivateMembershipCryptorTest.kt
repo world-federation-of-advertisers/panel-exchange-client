@@ -14,7 +14,6 @@
 
 package org.wfanet.panelmatch.client.privatemembership
 
-import com.google.protobuf.ByteString
 import com.google.common.truth.Truth.assertThat
 import com.google.privatemembership.batch.ParametersKt.cryptoParameters
 import com.google.privatemembership.batch.ParametersKt.shardParameters
@@ -51,7 +50,7 @@ class JniPrivateMembershipCryptorTest {
 
   @Test
   fun `encryptQueries with multiple shards`() {
-    val generateKeysRequest = generateKeysRequest{
+    val generateKeysRequest = generateKeysRequest {
       this.serializedParameters = parameters.toByteString()
     }
     val generateKeysResponse = privateMembershipCryptor.generateKeys(generateKeysRequest)

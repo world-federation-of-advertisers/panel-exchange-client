@@ -14,8 +14,6 @@
 
 package org.wfanet.panelmatch.client.privatemembership.testing
 
-import org.wfanet.panelmatch.client.privatemembership.GenerateKeysRequest
-import org.wfanet.panelmatch.client.privatemembership.GenerateKeysResponse
 import org.wfanet.panelmatch.client.privatemembership.PrivateMembershipCryptor
 import org.wfanet.panelmatch.client.privatemembership.SymmetricDecryptQueryResultsRequest
 import org.wfanet.panelmatch.client.privatemembership.SymmetricDecryptQueryResultsResponse

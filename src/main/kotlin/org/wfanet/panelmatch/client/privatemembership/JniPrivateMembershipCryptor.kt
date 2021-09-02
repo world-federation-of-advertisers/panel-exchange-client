@@ -86,7 +86,9 @@ class JniPrivateMembershipCryptor : PrivateMembershipCryptor {
     }
   }
 
-  override fun decryptQueryResults(request: DecryptQueryResultsRequest): DecryptQueryResultsResponse {
+  override fun decryptQueryResults(
+    request: DecryptQueryResultsRequest
+  ): DecryptQueryResultsResponse {
     val encryptedQueries: List<ClientEncryptedQueryResult> =
       request.encryptedQueryResultsList.map { encryptedResult ->
         clientEncryptedQueryResult {

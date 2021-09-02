@@ -116,10 +116,9 @@ cc_library(
     deps = [
         ":event_data_decryptor",
         "//src/main/proto/wfa/panelmatch/client/privatemembership:decrypt_event_data_cc_proto",
-        "@private_membership//private_membership/rlwe/batch/cpp/client",
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/status:statusor",
-        "@tink_base//cc/util:secret_data",
+        "@private_membership//private_membership/rlwe/batch/cpp/client",
         "@wfa_common_cpp//src/main/cc/common_cpp/macros",
     ],
 )
@@ -131,8 +130,6 @@ cc_library(
     strip_include_prefix = _INCLUDE_PREFIX,
     deps = [
         ":symmetric_private_membership",
-        #"//src/main/proto/wfa/panelmatch/client/privatemembership:decrypt_event_data_cc_proto",
-        #"//src/main/proto/wfa/panelmatch/client/privatemembership:private_membership_cc_proto",
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/status:statusor",
         "@com_google_absl//absl/strings",

@@ -14,17 +14,18 @@
  * limitations under the License.
  */
 
-#ifndef SRC_MAIN_CC_WFA_PANELMATCH_CLIENT_PRIVATEMEMBERSHIP_SYMMETRIC_PRIVATE_MEMBERSHIP_H_
-#define SRC_MAIN_CC_WFA_PANELMATCH_CLIENT_PRIVATEMEMBERSHIP_SYMMETRIC_PRIVATE_MEMBERSHIP_H_
+#ifndef SRC_MAIN_CC_WFA_PANELMATCH_CLIENT_PRIVATEMEMBERSHIP_TESTING_PRIVATE_MEMBERSHIP_HELPER_H_
+#define SRC_MAIN_CC_WFA_PANELMATCH_CLIENT_PRIVATEMEMBERSHIP_TESTING_PRIVATE_MEMBERSHIP_HELPER_H_
 
 #include <string>
 
 #include "absl/status/statusor.h"
-#include "wfa/panelmatch/client/privatemembership/decrypt_event_data.pb.h"
+#include "private_membership/rlwe/batch/cpp/client/client.pb.h"
 
-namespace wfa::panelmatch::client::privatemembership {
-absl::StatusOr<SymmetricDecryptQueryResultsResponse>
-SymmetricDecryptQueryResults(
-    const SymmetricDecryptQueryResultsRequest& request);
-}  // namespace wfa::panelmatch::client::privatemembership
-#endif  // SRC_MAIN_CC_WFA_PANELMATCH_CLIENT_PRIVATEMEMBERSHIP_SYMMETRIC_PRIVATE_MEMBERSHIP_H_
+namespace wfa::panelmatch::client::privatemembership::testing {
+
+absl::StatusOr<::private_membership::batch::DecryptQueriesRequest>
+CreateTestDecryptQueriesRequest(std::array<absl::string_view, 3> kTestBuckets);
+
+}  // namespace wfa::panelmatch::client::privatemembership::testing
+#endif  // SRC_MAIN_CC_WFA_PANELMATCH_CLIENT_PRIVATEMEMBERSHIP_TESTING_PRIVATE_MEMBERSHIP_HELPER_H_
