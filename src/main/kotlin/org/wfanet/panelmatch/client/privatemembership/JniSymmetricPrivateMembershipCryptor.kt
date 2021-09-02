@@ -37,12 +37,12 @@ class JniSymmetricPrivateMembershipCryptor : SymmetricPrivateMembershipCryptor {
 
   companion object {
     private val SWIG_PATH =
-      "panel_exchange_client/src/main/swig/wfanet/panelmatch/client/privatemembership/symmetricprivatemembershipwrapper"
-    init {
-      loadLibrary(
-        name = "symmetric_private_membership_wrapper",
-        directoryPath = Paths.get(SWIG_PATH)
+      Paths.get(
+        "panel_exchange_client/src/main/",
+        "swig/wfanet/panelmatch/client/privatemembership/symmetricprivatemembershipwrapper"
       )
+    init {
+      loadLibrary(name = "symmetric_private_membership_wrapper", directoryPath = SWIG_PATH)
     }
   }
 }
