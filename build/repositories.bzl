@@ -26,9 +26,9 @@ def panel_exchange_client_repositories():
 
     http_archive(
         name = "wfa_common_cpp",
-        sha256 = "3110be93990a449ac8f60b534319d7d3a08aa118908fecd7b571a5e08260e560",
-        strip_prefix = "common-cpp-0.2.1",
-        url = "https://github.com/world-federation-of-advertisers/common-cpp/archive/v0.2.1.tar.gz",
+        sha256 = "18a53b316f5e9f491d14a81af553eb3b214e70c167d372837a1155a67a734ddc",
+        strip_prefix = "common-cpp-0.4.0",
+        url = "https://github.com/world-federation-of-advertisers/common-cpp/archive/v0.4.0.tar.gz",
     )
 
     http_archive(
