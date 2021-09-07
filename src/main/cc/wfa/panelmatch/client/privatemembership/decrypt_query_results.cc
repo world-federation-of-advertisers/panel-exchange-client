@@ -70,7 +70,7 @@ absl::StatusOr<ClientDecryptQueriesResponse> RemoveRlwe(
 
 absl::StatusOr<DecryptQueryResultsResponse> RemoveAes(
     const DecryptQueryResultsRequest& request,
-    ClientDecryptQueriesResponse client_decrypt_queries_response) {
+    const ClientDecryptQueriesResponse& client_decrypt_queries_response) {
   DecryptQueryResultsResponse result;
   for (const ClientDecryptedQueryResult& client_decrypted_query_result :
        client_decrypt_queries_response.result()) {

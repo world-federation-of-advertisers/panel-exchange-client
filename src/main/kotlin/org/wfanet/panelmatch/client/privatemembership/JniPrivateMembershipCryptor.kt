@@ -81,7 +81,7 @@ class JniPrivateMembershipCryptor : PrivateMembershipCryptor {
     return privateMembershipEncryptResponse {
       metadata = clientResponse.encryptedQueries.prngSeed
       this.ciphertexts += ciphertexts
-      this.encryptedQuery +=
+      encryptedQuery +=
         queryMetadata.map {
           encryptedQueryOf(shardId = shardIdOf(it.shardId), queryId = queryIdOf(it.queryId))
         }

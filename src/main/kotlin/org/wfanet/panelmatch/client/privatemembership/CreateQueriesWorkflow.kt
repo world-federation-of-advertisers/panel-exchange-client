@@ -148,7 +148,7 @@ class CreateQueriesWorkflow(
         name = "Map to EncryptQueriesResponse"
       ) {
         val encryptQueriesRequest = privateMembershipEncryptRequest {
-          this.unencryptedQueries += it.value
+          unencryptedQueries += it.value
         }
         kvOf(it.key, privateMembershipCryptor.encryptQueries(encryptQueriesRequest))
       }

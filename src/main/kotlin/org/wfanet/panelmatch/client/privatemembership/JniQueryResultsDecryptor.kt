@@ -37,8 +37,15 @@ class JniQueryResultsDecryptor : QueryResultsDecryptor {
   companion object {
     private val SWIG_PATH =
       Paths.get(
-        "panel_exchange_client/src/main/",
-        "swig/wfanet/panelmatch/client/privatemembership/decryptqueryresults"
+        "panel_exchange_client",
+        "src",
+        "main",
+        "swig",
+        "wfanet",
+        "panelmatch",
+        "client",
+        "privatemembership",
+        "decryptqueryresults"
       )
     init {
       loadLibrary(name = "decrypt_query_results", directoryPath = SWIG_PATH)

@@ -14,7 +14,9 @@
 
 // Copied from
 // https://github.com/google/private-membership/blob/main/private_membership/rlwe/batch/cpp/client/client_test.cc
-// TODO(stevenwarejones) Import all this directly from their repo
+// TODO(stevenwarejones) This file really should be deleted. However, currently
+// there are not client libraries in github.com/google/private-membership that
+// we can use for testing.
 #include "wfa/panelmatch/client/privatemembership/testing/private_membership_helper.h"
 
 #include <algorithm>

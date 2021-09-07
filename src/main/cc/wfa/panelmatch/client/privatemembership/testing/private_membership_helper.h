@@ -24,7 +24,7 @@
 
 namespace wfa::panelmatch::client::privatemembership::testing {
 
-absl::StatusOr<::private_membership::batch::DecryptQueriesRequest>
+absl::StatusOr<private_membership::batch::DecryptQueriesRequest>
 CreateTestDecryptQueriesRequest(std::array<absl::string_view, 3> kTestBuckets);
 
 }  // namespace wfa::panelmatch::client::privatemembership::testing

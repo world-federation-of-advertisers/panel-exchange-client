@@ -29,12 +29,12 @@ import org.wfanet.panelmatch.client.privatemembership.testing.unencryptedQueryOf
 class JniPrivateMembershipCryptorTest {
   val privateMembershipCryptor = JniPrivateMembershipCryptor()
   val parameters = clientParameters {
-    this.shardParameters =
+    shardParameters =
       shardParameters {
         numberOfShards = 200
         numberOfBucketsPerShard = 2000
       }
-    this.cryptoParameters =
+    cryptoParameters =
       cryptoParameters {
         logDegree = 12
         logT = 1
@@ -51,7 +51,7 @@ class JniPrivateMembershipCryptorTest {
   @Test
   fun `encryptQueries with multiple shards`() {
     val generateKeysRequest = generateKeysRequest {
-      this.serializedParameters = parameters.toByteString()
+      serializedParameters = parameters.toByteString()
     }
     val generateKeysResponse = privateMembershipCryptor.generateKeys(generateKeysRequest)
     val encryptQueriesRequest = privateMembershipEncryptRequest {
@@ -62,9 +62,9 @@ class JniPrivateMembershipCryptorTest {
           unencryptedQueryOf(101, 3, 1),
           unencryptedQueryOf(101, 4, 5)
         )
-      this.serializedParameters = parameters.toByteString()
-      this.serializedPrivateKey = generateKeysResponse.serializedPrivateKey
-      this.serializedPublicKey = generateKeysResponse.serializedPublicKey
+      serializedParameters = parameters.toByteString()
+      serializedPrivateKey = generateKeysResponse.serializedPrivateKey
+      serializedPublicKey = generateKeysResponse.serializedPublicKey
     }
     val encryptedQueries = privateMembershipCryptor.encryptQueries(encryptQueriesRequest)
     assertThat(encryptedQueries.encryptedQueryList)
