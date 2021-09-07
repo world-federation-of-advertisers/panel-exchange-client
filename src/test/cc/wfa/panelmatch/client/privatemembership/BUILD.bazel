@@ -54,11 +54,11 @@ cc_test(
 )
 
 cc_test(
-    name = "symmetric_private_membership_test",
-    srcs = ["symmetric_private_membership_test.cc"],
+    name = "decrypt_query_results_test",
+    srcs = ["decrypt_query_results_test.cc"],
     deps = [
-        "//src/main/cc/wfa/panelmatch/client/privatemembership:symmetric_private_membership",
-        "//src/main/cc/wfa/panelmatch/client/privatemembership:symmetric_private_membership_wrapper",
+        "//src/main/cc/wfa/panelmatch/client/privatemembership:decrypt_query_results",
+        "//src/main/cc/wfa/panelmatch/client/privatemembership:decrypt_query_results_wrapper",
         "//src/main/cc/wfa/panelmatch/client/privatemembership/testing:private_membership_helper",
         "//src/main/cc/wfa/panelmatch/common/crypto:aes",
         "//src/main/cc/wfa/panelmatch/common/crypto:aes_with_hkdf",

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "wfa/panelmatch/client/privatemembership/symmetric_private_membership.h"
+#include "wfa/panelmatch/client/privatemembership/decrypt_query_results.h"
 
 #include <google/protobuf/repeated_field.h>
 
@@ -29,7 +29,7 @@
 #include "private_membership/rlwe/batch/cpp/shared.pb.h"
 #include "tink/util/secret_data.h"
 #include "wfa/panelmatch/client/privatemembership/decrypt_event_data.pb.h"
-#include "wfa/panelmatch/client/privatemembership/symmetric_private_membership_wrapper.h"
+#include "wfa/panelmatch/client/privatemembership/decrypt_query_results_wrapper.h"
 #include "wfa/panelmatch/client/privatemembership/testing/private_membership_helper.h"
 #include "wfa/panelmatch/common/crypto/aes.h"
 #include "wfa/panelmatch/common/crypto/aes_with_hkdf.h"
@@ -56,7 +56,7 @@ using ClientEncryptedQueryResult =
 using ::wfa::panelmatch::client::privatemembership::testing::
     CreateTestDecryptQueriesRequest;
 
-TEST(SymmetricPrivateMembership, SymmetricPrivateMembershipTest) {
+TEST(DecryptQueryResults, DecryptQueryResultsTest) {
   std::string hkdf_pepper = "some-pepper";
   std::string key = "some-single-blinded-joinkey";
   JoinKey single_blinded_joinkey;
@@ -87,7 +87,7 @@ TEST(SymmetricPrivateMembership, SymmetricPrivateMembershipTest) {
   ASSERT_OK_AND_ASSIGN(ClientDecryptQueriesRequest request,
                        CreateTestDecryptQueriesRequest(kTestBuckets));
 
-  SymmetricDecryptQueryResultsRequest test_request;
+  DecryptQueryResultsRequest test_request;
   test_request.set_hkdf_pepper(hkdf_pepper);
   test_request.mutable_single_blinded_joinkey()->set_key(key);
   test_request.set_serialized_private_key(
@@ -109,9 +109,9 @@ TEST(SymmetricPrivateMembership, SymmetricPrivateMembershipTest) {
         client_encrypted_query_result.query_metadata().shard_id());
   }
 
-  absl::StatusOr<SymmetricDecryptQueryResultsResponse> test_response =
-      SymmetricDecryptQueryResults(test_request);
-  SymmetricDecryptQueryResultsResponse expected_response;
+  absl::StatusOr<DecryptQueryResultsResponse> test_response =
+      DecryptQueryResults(test_request);
+  DecryptQueryResultsResponse expected_response;
   DecryptedEventData *expected_decrypted_event_data1 =
       expected_response.add_decrypted_event_data();
   expected_decrypted_event_data1->set_plaintext(plaintext1);

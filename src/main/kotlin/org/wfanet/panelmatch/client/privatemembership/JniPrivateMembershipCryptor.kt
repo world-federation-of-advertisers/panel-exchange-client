@@ -51,7 +51,9 @@ class JniPrivateMembershipCryptor : PrivateMembershipCryptor {
     }
   }
 
-  override fun encryptQueries(request: EncryptQueriesRequest): EncryptQueriesResponse {
+  override fun encryptQueries(
+    request: PrivateMembershipEncryptRequest
+  ): PrivateMembershipEncryptResponse {
     val plaintextQueries =
       request.unencryptedQueriesList.map {
         clientPlaintextQuery {
@@ -76,7 +78,7 @@ class JniPrivateMembershipCryptor : PrivateMembershipCryptor {
     }
     val queryMetadata = clientResponse.encryptedQueries.queryMetadataList
     val ciphertexts = clientResponse.encryptedQueries.encryptedQueriesList.map { it.toByteString() }
-    return encryptQueriesResponse {
+    return privateMembershipEncryptResponse {
       metadata = clientResponse.encryptedQueries.prngSeed
       this.ciphertexts += ciphertexts
       this.encryptedQuery +=
@@ -87,8 +89,8 @@ class JniPrivateMembershipCryptor : PrivateMembershipCryptor {
   }
 
   override fun decryptQueryResults(
-    request: DecryptQueryResultsRequest
-  ): DecryptQueryResultsResponse {
+    request: PrivateMembershipDecryptRequest
+  ): PrivateMembershipDecryptResponse {
     val encryptedQueries: List<ClientEncryptedQueryResult> =
       request.encryptedQueryResultsList.map { encryptedResult ->
         clientEncryptedQueryResult {
@@ -117,14 +119,14 @@ class JniPrivateMembershipCryptor : PrivateMembershipCryptor {
           queryResult = result.result
         )
       }
-    return decryptQueryResultsResponse { decryptedQueryResults += mappedResults }
+    return privateMembershipDecryptResponse { decryptedQueryResults += mappedResults }
   }
 
   companion object {
     private val SWIG_PATH =
       "panel_exchange_client/src/main/swig/wfanet/panelmatch/client/privatemembership/querybuilder"
     init {
-      loadLibrary(name = "private_membership_wrapper", directoryPath = Paths.get(SWIG_PATH))
+      loadLibrary(name = "private_membership", directoryPath = Paths.get(SWIG_PATH))
     }
   }
 }

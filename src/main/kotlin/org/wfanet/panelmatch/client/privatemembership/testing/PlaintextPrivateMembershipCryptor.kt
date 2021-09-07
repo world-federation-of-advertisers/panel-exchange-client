@@ -18,22 +18,22 @@ import com.google.protobuf.ByteString
 import com.google.protobuf.ListValue
 import com.google.protobuf.value
 import org.wfanet.panelmatch.client.privatemembership.BucketId
-import org.wfanet.panelmatch.client.privatemembership.DecryptQueryResultsRequest
-import org.wfanet.panelmatch.client.privatemembership.DecryptQueryResultsResponse
 import org.wfanet.panelmatch.client.privatemembership.DecryptedQueryResult
-import org.wfanet.panelmatch.client.privatemembership.EncryptQueriesRequest
-import org.wfanet.panelmatch.client.privatemembership.EncryptQueriesResponse
 import org.wfanet.panelmatch.client.privatemembership.GenerateKeysRequest
 import org.wfanet.panelmatch.client.privatemembership.GenerateKeysResponse
 import org.wfanet.panelmatch.client.privatemembership.PrivateMembershipCryptor
+import org.wfanet.panelmatch.client.privatemembership.PrivateMembershipDecryptRequest
+import org.wfanet.panelmatch.client.privatemembership.PrivateMembershipDecryptResponse
+import org.wfanet.panelmatch.client.privatemembership.PrivateMembershipEncryptRequest
+import org.wfanet.panelmatch.client.privatemembership.PrivateMembershipEncryptResponse
 import org.wfanet.panelmatch.client.privatemembership.QueryBundle
 import org.wfanet.panelmatch.client.privatemembership.QueryId
 import org.wfanet.panelmatch.client.privatemembership.Result
 import org.wfanet.panelmatch.client.privatemembership.ShardId
-import org.wfanet.panelmatch.client.privatemembership.decryptQueryResultsResponse
 import org.wfanet.panelmatch.client.privatemembership.decryptedQueryResult
-import org.wfanet.panelmatch.client.privatemembership.encryptQueriesResponse
 import org.wfanet.panelmatch.client.privatemembership.generateKeysResponse
+import org.wfanet.panelmatch.client.privatemembership.privateMembershipDecryptResponse
+import org.wfanet.panelmatch.client.privatemembership.privateMembershipEncryptResponse
 import org.wfanet.panelmatch.client.privatemembership.queryBundleOf
 import org.wfanet.panelmatch.client.privatemembership.queryMetadataOf
 import org.wfanet.panelmatch.common.toByteString
@@ -91,9 +91,11 @@ object PlaintextPrivateMembershipCryptor : PrivateMembershipCryptor {
    * Creates a fake set of ciphertexts where each ciphertext is just the serialized query bundles
    * for each shard
    */
-  override fun encryptQueries(request: EncryptQueriesRequest): EncryptQueriesResponse {
+  override fun encryptQueries(
+    request: PrivateMembershipEncryptRequest
+  ): PrivateMembershipEncryptResponse {
     val unencryptedQueries = request.unencryptedQueriesList
-    return encryptQueriesResponse {
+    return privateMembershipEncryptResponse {
       ciphertexts +=
         unencryptedQueries.groupBy { it.shardId }.map {
           makeQueryBundle(shard = it.key, queries = it.value.map { Pair(it.queryId, it.bucketId) })
@@ -104,8 +106,8 @@ object PlaintextPrivateMembershipCryptor : PrivateMembershipCryptor {
 
   /** Simple plaintext decrypter. Expects the encryptor to only populate the first ciphertext. */
   override fun decryptQueryResults(
-    request: DecryptQueryResultsRequest
-  ): DecryptQueryResultsResponse {
+    request: PrivateMembershipDecryptRequest
+  ): PrivateMembershipDecryptResponse {
     val encryptedQueryResults = request.encryptedQueryResultsList
     val decryptedResults: List<DecryptedQueryResult> =
       encryptedQueryResults.map { result ->
@@ -118,6 +120,6 @@ object PlaintextPrivateMembershipCryptor : PrivateMembershipCryptor {
         }
       }
 
-    return decryptQueryResultsResponse { decryptedQueryResults += decryptedResults }
+    return privateMembershipDecryptResponse { decryptedQueryResults += decryptedResults }
   }
 }

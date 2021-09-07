@@ -49,9 +49,9 @@ kt_jvm_test(
 )
 
 kt_jvm_test(
-    name = "PlaintextSymmetricPrivateMembershipCryptorTest",
-    srcs = ["PlaintextSymmetricPrivateMembershipCryptorTest.kt"],
-    test_class = "org.wfanet.panelmatch.client.privatemembership.testing.PlaintextSymmetricPrivateMembershipCryptorTest",
+    name = "PlaintextQueryResultsDecryptorTest",
+    srcs = ["PlaintextQueryResultsDecryptorTest.kt"],
+    test_class = "org.wfanet.panelmatch.client.privatemembership.testing.PlaintextQueryResultsDecryptorTest",
     deps = [
         "//imports/java/org/apache/beam:core",
         "//imports/java/org/apache/beam/extensions:protobuf",

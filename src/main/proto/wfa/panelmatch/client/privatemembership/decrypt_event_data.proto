@@ -17,7 +17,7 @@ syntax = "proto3";
 package wfa.panelmatch.client.privatemembership;
 
 import "wfa/panelmatch/client/privatemembership/query.proto";
-import "wfa/panelmatch/client/privatemembership/oblivious_query.proto";
+import "wfa/panelmatch/client/privatemembership/private_membership.proto";
 
 option java_package = "org.wfanet.panelmatch.client.privatemembership";
 option java_multiple_files = true;
@@ -37,7 +37,7 @@ message DecryptEventDataResponse {
 
 // Removes in one step both the private membership encryption as well as the
 // symmetric encryption that ensures the data is computationally symmetric.
-message SymmetricDecryptQueryResultsRequest {
+message DecryptQueryResultsRequest {
   bytes serialized_parameters = 1;
   bytes serialized_public_key = 2;
   bytes serialized_private_key = 3;
@@ -46,7 +46,7 @@ message SymmetricDecryptQueryResultsRequest {
   bytes hkdf_pepper = 6;
 }
 
-// Response of SymmetricDecryptQueryResultsRequest
-message SymmetricDecryptQueryResultsResponse {
+// Response of DecryptQueryResultsRequest
+message DecryptQueryResultsResponse {
   repeated DecryptedEventData decrypted_event_data = 1;
 }

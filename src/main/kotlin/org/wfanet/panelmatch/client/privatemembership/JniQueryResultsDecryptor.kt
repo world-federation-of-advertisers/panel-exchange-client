@@ -19,18 +19,17 @@ import org.wfanet.panelmatch.common.loadLibrary
 import org.wfanet.panelmatch.common.wrapJniException
 
 /**
- * A [SymmetricPrivateMembershipCryptor] implementation using the JNI
- * [SymmetricPrivateMembershipWrapper]. Keys should have been generated prior to this step using an
- * implementation of [PrivateMembershipWrapper].
+ * A [QueryResultsDecryptor] implementation using the JNI [QueryResultDecryptorWrapper]. Keys should
+ * have been generated prior to this step using an implementation of [PrivateMembershipCryptor].
  */
-class JniSymmetricPrivateMembershipCryptor : SymmetricPrivateMembershipCryptor {
+class JniQueryResultsDecryptor : QueryResultsDecryptor {
 
   override fun decryptQueryResults(
-    request: SymmetricDecryptQueryResultsRequest
-  ): SymmetricDecryptQueryResultsResponse {
+    request: DecryptQueryResultsRequest
+  ): DecryptQueryResultsResponse {
     return wrapJniException {
-      SymmetricDecryptQueryResultsResponse.parseFrom(
-        SymmetricPrivateMembershipWrapper.symmetricDecryptQueryResultsWrapper(request.toByteArray())
+      DecryptQueryResultsResponse.parseFrom(
+        DecryptQueryResultsWrapper.decryptQueryResultsWrapper(request.toByteArray())
       )
     }
   }
@@ -39,10 +38,10 @@ class JniSymmetricPrivateMembershipCryptor : SymmetricPrivateMembershipCryptor {
     private val SWIG_PATH =
       Paths.get(
         "panel_exchange_client/src/main/",
-        "swig/wfanet/panelmatch/client/privatemembership/symmetricprivatemembershipwrapper"
+        "swig/wfanet/panelmatch/client/privatemembership/decryptqueryresults"
       )
     init {
-      loadLibrary(name = "symmetric_private_membership_wrapper", directoryPath = SWIG_PATH)
+      loadLibrary(name = "decrypt_query_results", directoryPath = SWIG_PATH)
     }
   }
 }

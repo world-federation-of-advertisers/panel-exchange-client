@@ -39,7 +39,7 @@ message UnencryptedQuery {
 }
 
 // A request to encrypt a set of queries
-message EncryptQueriesRequest {
+message PrivateMembershipEncryptRequest {
   bytes serialized_parameters = 1;
   bytes serialized_public_key = 2;
   bytes serialized_private_key = 3;
@@ -53,14 +53,14 @@ message EncryptedQuery {
 }
 
 // A set of queries compressed and prepared for oblivious expansion
-message EncryptQueriesResponse {
+message PrivateMembershipEncryptResponse {
   repeated bytes ciphertexts = 1;
   repeated EncryptedQuery encrypted_query = 2;
   bytes metadata = 3;
 }
 
 // A request to remove RLWE-encryption from a set of results.
-message DecryptQueryResultsRequest {
+message PrivateMembershipDecryptRequest {
   bytes serialized_parameters = 1;
   bytes serialized_public_key = 2;
   bytes serialized_private_key = 3;
@@ -70,6 +70,6 @@ message DecryptQueryResultsRequest {
 // This response contains queries with RLWE-encryption removed. The query
 // results are encrypted with another encryption scheme separately which is not
 // removed during this step.
-message DecryptQueryResultsResponse {
+message PrivateMembershipDecryptResponse {
   repeated DecryptedQueryResult decrypted_query_results = 1;
 }

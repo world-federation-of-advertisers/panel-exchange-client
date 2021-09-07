@@ -18,7 +18,7 @@
 
 #include "absl/status/status.h"
 #include "common_cpp/fingerprinters/fingerprinters.h"
-#include "common_cpp/macros/macros.h"
+#include "glog/logging.h"
 #include "tink/util/secret_data.h"
 
 namespace wfa::panelmatch::common::crypto {
@@ -34,7 +34,7 @@ class PepperedFingerprinter : public wfa::Fingerprinter {
   ~PepperedFingerprinter() override = default;
 
   PepperedFingerprinter(const Fingerprinter* delegate, const SecretData& pepper)
-      : pepper_(pepper), delegate_(NULL_CHECK(delegate)) {}
+      : pepper_(pepper), delegate_(CHECK_NOTNULL(delegate)) {}
 
   // Uses 'delegate' to hash the concatenation of 'pepper' and 'item'
   uint64_t Fingerprint(absl::Span<const unsigned char> item) const override {

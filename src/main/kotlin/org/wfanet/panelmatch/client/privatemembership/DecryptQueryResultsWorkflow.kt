@@ -32,7 +32,7 @@ import org.wfanet.panelmatch.common.beam.parDo
  */
 class DecryptQueryResultsWorkflow(
   private val parameters: Parameters,
-  private val symmetricPrivateMembershipCryptor: SymmetricPrivateMembershipCryptor,
+  private val queryResultsDecryptor: QueryResultsDecryptor,
   private val hkdfPepper: ByteString,
 ) : Serializable {
 
@@ -63,7 +63,7 @@ class DecryptQueryResultsWorkflow(
         yield(kvOf(joinKeys.single(), encryptedQueryResultsList.single()))
       }
       .parDo(name = "Decrypt encrypted results") {
-        val request = symmetricDecryptQueryResultsRequest {
+        val request = decryptQueryResultsRequest {
           singleBlindedJoinkey = it.key
           this.encryptedQueryResults += it.value
           serializedParameters = parameters.serializedParameters
@@ -71,7 +71,7 @@ class DecryptQueryResultsWorkflow(
           serializedPrivateKey = parameters.serializedPrivateKey
           this.hkdfPepper = hkdfPepper
         }
-        val decryptedResults = symmetricPrivateMembershipCryptor.decryptQueryResults(request)
+        val decryptedResults = queryResultsDecryptor.decryptQueryResults(request)
         yieldAll(decryptedResults.decryptedEventDataList)
       }
   }

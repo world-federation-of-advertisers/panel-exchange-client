@@ -12,19 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "wfa/panelmatch/client/privatemembership/symmetric_private_membership_wrapper.h"
+package org.wfanet.panelmatch.client.privatemembership
 
-#include <string>
+import java.io.Serializable
 
-#include "absl/status/statusor.h"
-#include "common_cpp/jni/jni_wrap.h"
-#include "wfa/panelmatch/client/privatemembership/symmetric_private_membership.h"
+/**
+ * Provides a computationally symmetric form of private information query result decryption.
+ * Computationally symmetric forms of private information retrieval do not allow the querier to be
+ * able to access information for queries outside of their scope while still preventing the database
+ * from knowing what was queried.
+ */
+interface QueryResultsDecryptor : Serializable {
 
-namespace wfa::panelmatch::client::privatemembership {
-
-absl::StatusOr<std::string> SymmetricDecryptQueryResultsWrapper(
-    const std::string& serialized_request) {
-  return JniWrap(serialized_request, SymmetricDecryptQueryResults);
+  /** Decrypts a set of encrypted query results */
+  fun decryptQueryResults(request: DecryptQueryResultsRequest): DecryptQueryResultsResponse
 }
-
-}  // namespace wfa::panelmatch::client::privatemembership

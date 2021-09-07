@@ -54,7 +54,7 @@ class JniPrivateMembershipCryptorTest {
       this.serializedParameters = parameters.toByteString()
     }
     val generateKeysResponse = privateMembershipCryptor.generateKeys(generateKeysRequest)
-    val encryptQueriesRequest = encryptQueriesRequest {
+    val encryptQueriesRequest = privateMembershipEncryptRequest {
       unencryptedQueries +=
         listOf(
           unencryptedQueryOf(100, 1, 1),

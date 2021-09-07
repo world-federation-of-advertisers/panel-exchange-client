@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef SRC_MAIN_CC_WFA_PANELMATCH_CLIENT_PRIVATEMEMBERSHIP_SYMMETRIC_PRIVATE_MEMBERSHIP_H_
-#define SRC_MAIN_CC_WFA_PANELMATCH_CLIENT_PRIVATEMEMBERSHIP_SYMMETRIC_PRIVATE_MEMBERSHIP_H_
+#ifndef SRC_MAIN_CC_WFA_PANELMATCH_CLIENT_PRIVATEMEMBERSHIP_DECRYPT_QUERY_RESULTS_H_
+#define SRC_MAIN_CC_WFA_PANELMATCH_CLIENT_PRIVATEMEMBERSHIP_DECRYPT_QUERY_RESULTS_H_
 
 #include <string>
 
@@ -23,8 +23,7 @@
 #include "wfa/panelmatch/client/privatemembership/decrypt_event_data.pb.h"
 
 namespace wfa::panelmatch::client::privatemembership {
-absl::StatusOr<SymmetricDecryptQueryResultsResponse>
-SymmetricDecryptQueryResults(
-    const SymmetricDecryptQueryResultsRequest& request);
+absl::StatusOr<DecryptQueryResultsResponse> DecryptQueryResults(
+    const DecryptQueryResultsRequest& request);
 }  // namespace wfa::panelmatch::client::privatemembership
-#endif  // SRC_MAIN_CC_WFA_PANELMATCH_CLIENT_PRIVATEMEMBERSHIP_SYMMETRIC_PRIVATE_MEMBERSHIP_H_
+#endif  // SRC_MAIN_CC_WFA_PANELMATCH_CLIENT_PRIVATEMEMBERSHIP_DECRYPT_QUERY_RESULTS_H_

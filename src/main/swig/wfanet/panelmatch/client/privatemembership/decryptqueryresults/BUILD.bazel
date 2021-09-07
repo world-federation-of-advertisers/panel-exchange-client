@@ -6,11 +6,11 @@ package(default_visibility = [
 ])
 
 java_wrap_cc(
-    name = "symmetric_private_membership",
-    src = "symmetric_private_membership.swig",
-    module = "SymmetricPrivateMembershipWrapper",
+    name = "decrypt_query_results",
+    src = "decrypt_query_results.swig",
+    module = "DecryptQueryResultsWrapper",
     package = "org.wfanet.panelmatch.client.privatemembership",
     deps = [
-        "//src/main/cc/wfa/panelmatch/client/privatemembership:symmetric_private_membership_wrapper",
+        "//src/main/cc/wfa/panelmatch/client/privatemembership:decrypt_query_results_wrapper",
     ],
 )

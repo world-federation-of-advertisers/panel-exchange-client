@@ -12,16 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package org.wfanet.panelmatch.client.privatemembership.testing
+#include "wfa/panelmatch/client/privatemembership/decrypt_query_results_wrapper.h"
 
-import com.google.protobuf.ByteString
-import org.junit.runner.RunWith
-import org.junit.runners.JUnit4
+#include <string>
 
-@RunWith(JUnit4::class)
-class PlaintextDecryptQueryResultsWorkflowTest : AbstractDecryptQueryResultsWorkflowTest() {
-  override val queryResultsDecryptor = PlaintextQueryResultsDecryptor()
-  override val privateMembershipCryptor = PlaintextPrivateMembershipCryptor
-  override val privateMembershipCryptorHelper = PlaintextPrivateMembershipCryptorHelper
-  override val serializedParameters = ByteString.EMPTY
+#include "absl/status/statusor.h"
+#include "common_cpp/jni/jni_wrap.h"
+#include "wfa/panelmatch/client/privatemembership/decrypt_query_results.h"
+
+namespace wfa::panelmatch::client::privatemembership {
+
+absl::StatusOr<std::string> DecryptQueryResultsWrapper(
+    const std::string& serialized_request) {
+  return JniWrap(serialized_request, DecryptQueryResults);
 }
+
+}  // namespace wfa::panelmatch::client::privatemembership

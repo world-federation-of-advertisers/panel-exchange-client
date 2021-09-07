@@ -22,9 +22,9 @@ def panel_exchange_client_repositories():
     """Imports all direct dependencies for panel_exchange_client."""
     http_archive(
         name = "wfa_common_cpp",
-        sha256 = "dafd0e129c06fc67c48a714ba34e7503d6e767ae1f287b47f9ce4072401f5f8b",
-        strip_prefix = "common-cpp-f9c572d081e0c33ec1b094379e550e750d5baf15",
-        url = "https://github.com/world-federation-of-advertisers/common-cpp/archive/f9c572d081e0c33ec1b094379e550e750d5baf15.tar.gz",
+        sha256 = "18a53b316f5e9f491d14a81af553eb3b214e70c167d372837a1155a67a734ddc",
+        strip_prefix = "common-cpp-0.4.0",
+        url = "https://github.com/world-federation-of-advertisers/common-cpp/archive/v0.4.0.tar.gz",
     )
 
     http_archive(

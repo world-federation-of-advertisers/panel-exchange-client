@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "wfa/panelmatch/client/privatemembership/symmetric_private_membership.h"
+#include "wfa/panelmatch/client/privatemembership/decrypt_query_results.h"
 
 #include <google/protobuf/repeated_field.h>
 
@@ -38,11 +38,10 @@ using ClientDecryptQueriesRequest =
     ::private_membership::batch::DecryptQueriesRequest;
 using ClientDecryptQueriesResponse =
     ::private_membership::batch::DecryptQueriesResponse;
+using ::private_membership::batch::DecryptQueries;
 
-absl::StatusOr<SymmetricDecryptQueryResultsResponse>
-SymmetricDecryptQueryResults(
-    const SymmetricDecryptQueryResultsRequest& request) {
-  // Step 1: Decrypt the encrypted query response
+absl::StatusOr<ClientDecryptQueriesResponse> RemoveRlwe(
+    const DecryptQueryResultsRequest& request) {
   ClientDecryptQueriesRequest client_decrypt_queries_request;
   client_decrypt_queries_request.mutable_parameters()->ParseFromString(
       request.serialized_parameters());
@@ -65,11 +64,14 @@ SymmetricDecryptQueryResults(
         &client_encrypted_query_result);
   }
   ASSIGN_OR_RETURN(ClientDecryptQueriesResponse client_decrypt_queries_response,
-                   ::private_membership::batch::DecryptQueries(
-                       client_decrypt_queries_request));
+                   DecryptQueries(client_decrypt_queries_request));
+  return client_decrypt_queries_response;
+}
 
-  // Step 2: Decrypt the encrypted event data
-  SymmetricDecryptQueryResultsResponse result;
+absl::StatusOr<DecryptQueryResultsResponse> RemoveAes(
+    const DecryptQueryResultsRequest& request,
+    ClientDecryptQueriesResponse client_decrypt_queries_response) {
+  DecryptQueryResultsResponse result;
   for (const ClientDecryptedQueryResult& client_decrypted_query_result :
        client_decrypt_queries_response.result()) {
     DecryptEventDataRequest decrypt_event_data_request;
@@ -91,6 +93,17 @@ SymmetricDecryptQueryResults(
       result.add_decrypted_event_data()->Swap(&decrypted_event_data);
     }
   }
+  return result;
+}
+
+absl::StatusOr<DecryptQueryResultsResponse> DecryptQueryResults(
+    const DecryptQueryResultsRequest& request) {
+  // Step 1: Decrypt the encrypted query response
+  ASSIGN_OR_RETURN(ClientDecryptQueriesResponse client_decrypt_queries_response,
+                   RemoveRlwe(request));
+  // Step 2: Decrypt the encrypted event data
+  ASSIGN_OR_RETURN(DecryptQueryResultsResponse result,
+                   RemoveAes(request, client_decrypt_queries_response));
   return result;
 }
 }  // namespace wfa::panelmatch::client::privatemembership
