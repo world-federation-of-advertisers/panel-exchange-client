@@ -157,8 +157,8 @@ proto_library(
     srcs = ["decrypt_event_data.proto"],
     strip_import_prefix = "/src/main/proto",
     deps = [
-        "private_membership_proto",
-        "query_proto",
+        ":private_membership_proto",
+        ":query_proto",
     ],
 )
 

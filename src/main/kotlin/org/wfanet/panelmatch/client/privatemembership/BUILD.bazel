@@ -27,6 +27,6 @@ kt_jvm_library(
         "//src/main/swig/wfanet/panelmatch/client/privatemembership/decryptqueryresults:decrypt_query_results",
         "//src/main/swig/wfanet/panelmatch/client/privatemembership/querybuilder:private_membership",
         "//src/main/swig/wfanet/panelmatch/client/privatemembership/queryevaluator:query_evaluator",
-        "@wfa_common_jvm//imports/java/com/google/protobuf/util",
+        "@wfa_common_jvm//imports/java/com/google/protobuf",
     ],
 )
