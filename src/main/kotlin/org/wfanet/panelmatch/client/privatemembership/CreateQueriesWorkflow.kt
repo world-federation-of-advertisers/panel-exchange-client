@@ -14,6 +14,7 @@
 
 package org.wfanet.panelmatch.client.privatemembership
 
+import com.google.protobuf.ByteString
 import java.io.Serializable
 import java.util.BitSet
 import kotlin.math.abs
@@ -55,38 +56,89 @@ class CreateQueriesWorkflow(
     val numShards: Int,
     val numBucketsPerShard: Int,
     val totalQueriesPerShard: Int?,
-    val numQueries: Int
+    val numQueries: Int,
   ) : Serializable {
     init {
       require(numShards > 0)
       require(numBucketsPerShard > 0)
-      totalQueriesPerShard?.let { require(totalQueriesPerShard > numBucketsPerShard) }
+      totalQueriesPerShard?.let { require(totalQueriesPerShard >= numBucketsPerShard) }
     }
     constructor(
       numShards: Int,
       numBucketsPerShard: Int,
       totalQueriesPerShard: Int?
     ) : this(
-      numShards,
-      numBucketsPerShard,
-      totalQueriesPerShard,
-      if (totalQueriesPerShard == null) {
-        100000
-      } else {
-        numShards * totalQueriesPerShard
-      }
+      numShards = numShards,
+      numBucketsPerShard = numBucketsPerShard,
+      totalQueriesPerShard = totalQueriesPerShard,
+      numQueries =
+        if (totalQueriesPerShard == null) {
+          100000
+        } else {
+          numShards * totalQueriesPerShard
+        }
     )
   }
+
+  private data class ShardedData(
+    val shardId: ShardId,
+    val bucketId: BucketId,
+    val panelistKey: PanelistKey,
+    val joinKey: JoinKey
+  ) : Serializable
 
   /** Creates [EncryptQueriesResponse] on [data]. */
   fun batchCreateQueries(
     data: PCollection<KV<PanelistKey, JoinKey>>
   ): Pair<PCollection<KV<QueryId, PanelistKey>>, PCollection<PrivateMembershipEncryptResponse>> {
-    val mappedData = mapToQueryId(data)
-    // TODO add in padded queries after we get the unencrypted queries
+    val shardedData = shardJoinKeys(data)
+    val paddedData = addPaddedQueries(shardedData)
+    val mappedData = mapToQueryId(paddedData)
     val unencryptedQueries = buildUnencryptedQueryRequest(mappedData)
     val panelistToQueryIdMapping = getPanelistToQueryMapping(mappedData)
     return Pair(panelistToQueryIdMapping, getPrivateMembershipQueries(unencryptedQueries))
+  }
+
+  /** Deteremines shard and bucket for a [JoinKey]. */
+  private fun shardJoinKeys(data: PCollection<KV<PanelistKey, JoinKey>>): PCollection<ShardedData> {
+    val bucketing = Bucketing(parameters.numShards, parameters.numBucketsPerShard)
+    return data.map(name = "Map to ShardId") {
+      val (shardId, bucketId) = bucketing.hashAndApply(it.value)
+      ShardedData(shardId, bucketId, it.key, it.value)
+    }
+  }
+
+  /**
+   * Adds or deletes queries from sharded data until it is the desired size. We keep track of which
+   * queries are fake so we don't need to decrypt them in the end.
+   */
+  private fun addPaddedQueries(
+    data: PCollection<ShardedData>
+  ): PCollection<KV<Boolean, ShardedData>> {
+    if (parameters.totalQueriesPerShard == null) return data.map { kvOf(true, it) }
+    val totalQueriesPerShard = requireNotNull(parameters.totalQueriesPerShard)
+    return data.keyBy { it.shardId }.groupByKey("Group into shards").parDo<
+      KV<ShardId, Iterable<ShardedData>>, KV<Boolean, ShardedData>>(
+      name = "Equalized queries per shard"
+    ) {
+      var total: Int = 0
+      /** Filter out any real queries above the limit */
+      it.value.asSequence().forEach {
+        if (total < totalQueriesPerShard) {
+          total += 1
+          yield(kvOf(true, it))
+        }
+      }
+      /** Add queries to get to the limit */
+      for (i in total..totalQueriesPerShard - 1) {
+        yield(
+          kvOf(
+            false,
+            ShardedData(it.key, bucketIdOf(0), panelistKeyOf(0), joinKeyOf(ByteString.EMPTY))
+          )
+        )
+      }
+    }
   }
 
   /**
@@ -96,8 +148,8 @@ class CreateQueriesWorkflow(
    * the mapped space to 16 bits.
    */
   private fun mapToQueryId(
-    data: PCollection<KV<PanelistKey, JoinKey>>
-  ): PCollection<KV<KV<PanelistKey, QueryId>, JoinKey>> {
+    data: PCollection<KV<Boolean, ShardedData>>
+  ): PCollection<KV<QueryId, KV<Boolean, ShardedData>>> {
     return data.keyBy { 1 }.groupByKey().parDo {
       val queryIds: Iterator<Int> = iterator {
         val seen = BitSet()
@@ -112,29 +164,34 @@ class CreateQueriesWorkflow(
       it
         .value
         .asSequence()
-        .mapIndexed { index, kv ->
+        .mapIndexed { index, value ->
           require(index < parameters.numQueries) { "Too many queries" }
-          kvOf(kvOf(requireNotNull(kv.key), queryIdOf(queryIds.next())), requireNotNull(kv.value))
+          kvOf(queryIdOf(queryIds.next()), kvOf(value.key, value.value))
         }
         .also { yieldAll(it) }
     }
   }
 
-  /** Maps each [PanelistKey] to a unique [QueryId]. */
+  /** Maps each [PanelistKey] to a unique [QueryId]. We also filter out all the fake queryIds. */
   private fun getPanelistToQueryMapping(
-    data: PCollection<KV<KV<PanelistKey, QueryId>, JoinKey>>
+    data: PCollection<KV<QueryId, KV<Boolean, ShardedData>>>
   ): PCollection<KV<QueryId, PanelistKey>> {
-    return data.map("Map of PanelistKey to QueryId") { kvOf(it.key.value, it.key.key) }
+    return data.parDo<KV<QueryId, KV<Boolean, ShardedData>>, KV<QueryId, PanelistKey>> {
+      if (it.value.key) {
+        yield(kvOf(it.key, it.value.value.panelistKey))
+      }
+    }
   }
 
   /** Builds [EncryptedQuery] from the encrypted data join keys of [JoinKey]. */
   private fun buildUnencryptedQueryRequest(
-    data: PCollection<KV<KV<PanelistKey, QueryId>, JoinKey>>
+    data: PCollection<KV<QueryId, KV<Boolean, ShardedData>>>
   ): PCollection<KV<ShardId, UnencryptedQuery>> {
-    val bucketing = Bucketing(parameters.numShards, parameters.numBucketsPerShard)
     return data.map(name = "Map to UnencryptedQuery") {
-      val (shardId, bucketId) = bucketing.hashAndApply(it.value)
-      kvOf(shardId, unencryptedQueryOf(shardId, bucketId, it.key.value))
+      kvOf(
+        it.value.value.shardId,
+        unencryptedQueryOf(it.value.value.shardId, it.value.value.bucketId, it.key)
+      )
     }
   }
 

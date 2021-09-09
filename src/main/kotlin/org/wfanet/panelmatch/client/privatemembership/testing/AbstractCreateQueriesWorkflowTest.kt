@@ -22,6 +22,7 @@ import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
 import org.wfanet.panelmatch.client.privatemembership.CreateQueriesWorkflow
 import org.wfanet.panelmatch.client.privatemembership.CreateQueriesWorkflow.Parameters
+import org.wfanet.panelmatch.client.privatemembership.EncryptedQuery
 import org.wfanet.panelmatch.client.privatemembership.JoinKey
 import org.wfanet.panelmatch.client.privatemembership.PanelistKey
 import org.wfanet.panelmatch.client.privatemembership.PrivateMembershipCryptor
@@ -29,6 +30,7 @@ import org.wfanet.panelmatch.client.privatemembership.PrivateMembershipEncryptRe
 import org.wfanet.panelmatch.client.privatemembership.QueryId
 import org.wfanet.panelmatch.client.privatemembership.joinKeyOf
 import org.wfanet.panelmatch.client.privatemembership.panelistKeyOf
+import org.wfanet.panelmatch.client.privatemembership.shardIdOf
 import org.wfanet.panelmatch.common.beam.join
 import org.wfanet.panelmatch.common.beam.kvOf
 import org.wfanet.panelmatch.common.beam.map
@@ -64,16 +66,18 @@ abstract class AbstractCreateQueriesWorkflowTest : BeamTestBase() {
       key: QueryId,
       panelistKeys: Iterable<PanelistKey>,
       shardedQueries: Iterable<ShardedQuery> ->
-      yield(
-        kvOf(
-          key,
-          PanelistQuery(
-            shardedQueries.first().shardId.id,
-            panelistKeys.first().id,
-            shardedQueries.first().bucketId.id
+      if (panelistKeys.count() > 0) {
+        yield(
+          kvOf(
+            key,
+            PanelistQuery(
+              shardedQueries.single().shardId.id,
+              panelistKeys.single().id,
+              shardedQueries.single().bucketId.id
+            )
           )
         )
-      )
+      }
     }
   }
 
@@ -94,7 +98,61 @@ abstract class AbstractCreateQueriesWorkflowTest : BeamTestBase() {
       )
   }
 
-  // TODO add a test with padding
+  @Test
+  fun `Two Shards with extra padding`() {
+    val numShards = 2
+    val totalQueriesPerShard = 10
+    val numBucketsPerShard = 5
+    val parameters =
+      Parameters(
+        numShards = numShards,
+        numBucketsPerShard = numBucketsPerShard,
+        totalQueriesPerShard = totalQueriesPerShard
+      )
+    val (panelistKeyQueryId, encryptedResults) = runWorkflow(privateMembershipCryptor, parameters)
+    val decodedQueries = privateMembershipCryptorHelper.decodeEncryptedQuery(encryptedResults)
+    val panelistQueries = getPanelistQueries(decodedQueries, panelistKeyQueryId)
+    assertThat(panelistQueries.values())
+      .containsInAnyOrder(
+        PanelistQuery(0, 53L, 0),
+        PanelistQuery(1, 58L, 1),
+        PanelistQuery(1, 71L, 3),
+        PanelistQuery(1, 85L, 1),
+        PanelistQuery(1, 95L, 2),
+        PanelistQuery(0, 99L, 0)
+      )
+    assertThat(encryptedResults).satisfies {
+      val encryptedQueries: List<EncryptedQuery> = it.flatMap { it.encryptedQueryList }
+      for (i in 0..numShards - 1) {
+        val resultsPerShard = encryptedQueries.filter { it.shardId == shardIdOf(i) }
+        assertThat(resultsPerShard.count()).isEqualTo(totalQueriesPerShard)
+      }
+      null
+    }
+  }
+
+  @Test
+  fun `Two Shards with removed queries`() {
+    val numShards = 2
+    val totalQueriesPerShard = 3
+    val numBucketsPerShard = 3
+    val parameters =
+      Parameters(
+        numShards = numShards,
+        numBucketsPerShard = numBucketsPerShard,
+        totalQueriesPerShard = totalQueriesPerShard
+      )
+    val (panelistKeyQueryId, encryptedResults) = runWorkflow(privateMembershipCryptor, parameters)
+    val decodedQueries = privateMembershipCryptorHelper.decodeEncryptedQuery(encryptedResults)
+    assertThat(encryptedResults).satisfies {
+      val encryptedQueries: List<EncryptedQuery> = it.flatMap { it.encryptedQueryList }
+      for (i in 0..numShards - 1) {
+        val resultsPerShard = encryptedQueries.filter { it.shardId == shardIdOf(i) }
+        assertThat(resultsPerShard.count()).isEqualTo(totalQueriesPerShard)
+      }
+      null
+    }
+  }
 
   private fun databaseOf(
     vararg entries: Pair<Long, String>
