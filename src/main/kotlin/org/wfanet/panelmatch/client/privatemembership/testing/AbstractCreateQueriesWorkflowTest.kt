@@ -15,6 +15,9 @@
 package org.wfanet.panelmatch.client.privatemembership.testing
 
 import com.google.common.truth.Truth.assertThat
+import kotlin.test.assertFailsWith
+import org.apache.beam.sdk.metrics.MetricNameFilter
+import org.apache.beam.sdk.metrics.MetricsFilter
 import org.apache.beam.sdk.values.KV
 import org.apache.beam.sdk.values.PCollection
 import org.junit.Test
@@ -96,6 +99,7 @@ abstract class AbstractCreateQueriesWorkflowTest : BeamTestBase() {
         PanelistQuery(1, 95L, 2),
         PanelistQuery(0, 99L, 0)
       )
+    assertFailsWith(NoSuchElementException::class) { runPipelineAndGetNumberOfDiscardedQueries() }
   }
 
   @Test
@@ -129,6 +133,7 @@ abstract class AbstractCreateQueriesWorkflowTest : BeamTestBase() {
       }
       null
     }
+    assertThat(runPipelineAndGetNumberOfDiscardedQueries()).isEqualTo(0)
   }
 
   @Test
@@ -142,8 +147,8 @@ abstract class AbstractCreateQueriesWorkflowTest : BeamTestBase() {
         numBucketsPerShard = numBucketsPerShard,
         totalQueriesPerShard = totalQueriesPerShard
       )
-    val (panelistKeyQueryId, encryptedResults) = runWorkflow(privateMembershipCryptor, parameters)
-    val decodedQueries = privateMembershipCryptorHelper.decodeEncryptedQuery(encryptedResults)
+
+    val (_, encryptedResults) = runWorkflow(privateMembershipCryptor, parameters)
     assertThat(encryptedResults).satisfies {
       val encryptedQueries: List<EncryptedQuery> = it.flatMap { it.encryptedQueryList }
       for (i in 0..numShards - 1) {
@@ -152,6 +157,20 @@ abstract class AbstractCreateQueriesWorkflowTest : BeamTestBase() {
       }
       null
     }
+    assertThat(runPipelineAndGetNumberOfDiscardedQueries()).isEqualTo(1)
+  }
+
+  private fun runPipelineAndGetNumberOfDiscardedQueries(): Long {
+    val pipelineResult = pipeline.run()
+    pipelineResult.waitUntilFinish()
+    val filter =
+      MetricsFilter.builder()
+        .addNameFilter(
+          MetricNameFilter.named(CreateQueriesWorkflow::class.java, "discarded-queries")
+        )
+        .build()
+    val metrics = pipelineResult.metrics().queryMetrics(filter)
+    return metrics.distributions.map { it.committed.max }.first()
   }
 
   private fun databaseOf(
