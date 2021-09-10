@@ -146,7 +146,7 @@ class CreateQueriesWorkflow(
       var total: Int = 0
       var discardedQueries: Long = 0
       /** Filter out any real queries above the limit */
-      data.value.asSequence().forEach { shardedData ->
+      data.value.forEach { shardedData ->
         if (total < totalQueriesPerShard) {
           total += 1
           context.output(shardedData)
@@ -179,6 +179,7 @@ class CreateQueriesWorkflow(
   private fun mapToQueryId(data: PCollection<ShardedData>): PCollection<KV<QueryId, ShardedData>> {
     return data.keyBy { 1 }.groupByKey().parDo {
       val queryIds: Iterator<Int> = iterator {
+        // TODO - find a better way to do this. It uses too much memory.
         val seen = BitSet()
         while (seen.cardinality() < parameters.numQueries) {
           val id = abs(Random.nextInt())
