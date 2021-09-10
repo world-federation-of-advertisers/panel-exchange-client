@@ -140,7 +140,7 @@ abstract class AbstractCreateQueriesWorkflowTest : BeamTestBase() {
   fun `Two Shards with removed queries`() {
     val numShards = 2
     val totalQueriesPerShard = 3
-    val numBucketsPerShard = 3
+    val numBucketsPerShard = 4
     val parameters =
       Parameters(
         numShards = numShards,

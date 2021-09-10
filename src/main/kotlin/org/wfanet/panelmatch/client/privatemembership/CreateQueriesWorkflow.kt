@@ -67,7 +67,6 @@ class CreateQueriesWorkflow(
     init {
       require(numShards > 0)
       require(numBucketsPerShard > 0)
-      totalQueriesPerShard?.let { require(totalQueriesPerShard >= numBucketsPerShard) }
     }
     constructor(
       numShards: Int,
@@ -146,7 +145,7 @@ class CreateQueriesWorkflow(
       var total: Int = 0
       var discardedQueries: Long = 0
       /** Filter out any real queries above the limit */
-      data.value.forEach { shardedData ->
+      for (shardedData in data.value) {
         if (total < totalQueriesPerShard) {
           total += 1
           context.output(shardedData)
