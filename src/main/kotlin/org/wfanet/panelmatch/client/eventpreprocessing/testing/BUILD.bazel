@@ -11,6 +11,8 @@ kt_jvm_library(
     name = "testing",
     srcs = glob(["*.kt"]),
     deps = [
+        "//imports/java/org/apache/beam:core",
+        "//imports/java/org/apache/beam/extensions:protobuf",
         "//src/main/kotlin/org/wfanet/panelmatch/client/eventpreprocessing",
         "//src/main/kotlin/org/wfanet/panelmatch/common",
         "//src/main/kotlin/org/wfanet/panelmatch/common/beam",
