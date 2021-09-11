@@ -20,6 +20,7 @@ import org.wfanet.measurement.common.crypto.testing.FIXED_SERVER_CERT_PEM_FILE
 import org.wfanet.measurement.common.crypto.testing.FIXED_SERVER_KEY_FILE
 import org.wfanet.measurement.common.crypto.testing.KEY_ALGORITHM
 import org.wfanet.panelmatch.client.storage.testing.AbstractStorageTest
+import org.wfanet.panelmatch.client.storage.testing.InMemoryStorageClient
 
 class InMemoryStorageTest : AbstractStorageTest() {
   override val privateStorage =
