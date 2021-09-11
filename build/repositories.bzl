@@ -33,9 +33,9 @@ def panel_exchange_client_repositories():
 
     http_archive(
         name = "wfa_common_jvm",
-        sha256 = "99498e90f5854ebc101ead7accc7818463b203cec8cda6b4f0eeee70d45ad67b",
-        strip_prefix = "common-jvm-0.8.0",
-        url = "https://github.com/world-federation-of-advertisers/common-jvm/archive/v0.8.0.tar.gz",
+        sha256 = "81fe8d280134427b0911bb396cdd333be83fe4d4f5c5aa6afe6502f55e7a2ee8",
+        strip_prefix = "common-jvm-0.12.0",
+        url = "https://github.com/world-federation-of-advertisers/common-jvm/archive/v0.12.0.tar.gz",
     )
 
     # TODO: remove dependencies on wfa_measurement_system
