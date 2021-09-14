@@ -83,9 +83,6 @@ TEST(DecryptQueryResults, DecryptQueryResultsTest) {
   std::array<absl::string_view, 3> kTestBuckets = {ciphertext1, ciphertext2,
                                                    ciphertext3};
 
-  auto status = CreateTestDecryptQueriesRequest(kTestBuckets).status();
-  ASSERT_TRUE(status.ok()) << status;
-
   ASSERT_OK_AND_ASSIGN(ClientDecryptQueriesRequest request,
                        CreateTestDecryptQueriesRequest(kTestBuckets));
 
