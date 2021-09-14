@@ -68,28 +68,40 @@ absl::StatusOr<ClientDecryptQueriesResponse> RemoveRlwe(
   return client_decrypt_queries_response;
 }
 
+absl::StatusOr<DecryptEventDataResponse> RemoveAesFromDecryptedQueryResult(
+    const ClientDecryptedQueryResult& client_decrypted_query_result,
+    const std::string& single_blinded_joinkey, const std::string& hkdf_pepper) {
+  DecryptEventDataRequest decrypt_event_data_request;
+  decrypt_event_data_request.set_hkdf_pepper(hkdf_pepper);
+  decrypt_event_data_request.mutable_single_blinded_joinkey()->set_key(
+      single_blinded_joinkey);
+  decrypt_event_data_request.mutable_encrypted_event_data()
+      ->mutable_shard_id()
+      ->set_id(client_decrypted_query_result.query_metadata().shard_id());
+  decrypt_event_data_request.mutable_encrypted_event_data()
+      ->mutable_query_id()
+      ->set_id(client_decrypted_query_result.query_metadata().query_id());
+  QueryResult query_results;
+  query_results.ParseFromString(client_decrypted_query_result.result());
+  *decrypt_event_data_request.mutable_encrypted_event_data()
+       ->mutable_ciphertexts() =
+      *std::move(query_results.mutable_ciphertexts());
+  ASSIGN_OR_RETURN(DecryptEventDataResponse decrypt_event_data_response,
+                   DecryptEventData(decrypt_event_data_request));
+  return decrypt_event_data_response;
+}
+
 absl::StatusOr<DecryptQueryResultsResponse> RemoveAes(
     const DecryptQueryResultsRequest& request,
     const ClientDecryptQueriesResponse& client_decrypt_queries_response) {
   DecryptQueryResultsResponse result;
   for (const ClientDecryptedQueryResult& client_decrypted_query_result :
        client_decrypt_queries_response.result()) {
-    DecryptEventDataRequest decrypt_event_data_request;
-    decrypt_event_data_request.set_hkdf_pepper(request.hkdf_pepper());
-    decrypt_event_data_request.mutable_single_blinded_joinkey()->CopyFrom(
-        request.single_blinded_joinkey());
-    decrypt_event_data_request.mutable_encrypted_event_data()
-        ->mutable_shard_id()
-        ->set_id(client_decrypted_query_result.query_metadata().shard_id());
-    decrypt_event_data_request.mutable_encrypted_event_data()
-        ->mutable_query_id()
-        ->set_id(client_decrypted_query_result.query_metadata().query_id());
-    QueryResult query_results;
-    query_results.ParseFromString(client_decrypted_query_result.result());
-    *decrypt_event_data_request.mutable_encrypted_event_data()
-         ->mutable_ciphertexts() = *query_results.mutable_ciphertexts();
-    ASSIGN_OR_RETURN(DecryptEventDataResponse decrypt_event_data_response,
-                     DecryptEventData(decrypt_event_data_request));
+    ASSIGN_OR_RETURN(
+        DecryptEventDataResponse decrypt_event_data_response,
+        RemoveAesFromDecryptedQueryResult(
+            client_decrypted_query_result,
+            request.single_blinded_joinkey().key(), request.hkdf_pepper()));
     for (DecryptedEventData decrypted_event_data :
          *decrypt_event_data_response.mutable_decrypted_event_data()) {
       result.add_decrypted_event_data()->Swap(&decrypted_event_data);
