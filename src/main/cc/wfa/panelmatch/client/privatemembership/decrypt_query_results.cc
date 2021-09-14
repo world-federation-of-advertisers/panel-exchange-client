@@ -40,6 +40,7 @@ using ClientDecryptQueriesResponse =
     ::private_membership::batch::DecryptQueriesResponse;
 using ::private_membership::batch::DecryptQueries;
 
+namespace {
 absl::StatusOr<ClientDecryptQueriesResponse> RemoveRlwe(
     const DecryptQueryResultsRequest& request) {
   ClientDecryptQueriesRequest client_decrypt_queries_request;
@@ -86,9 +87,7 @@ absl::StatusOr<DecryptEventDataResponse> RemoveAesFromDecryptedQueryResult(
   *decrypt_event_data_request.mutable_encrypted_event_data()
        ->mutable_ciphertexts() =
       *std::move(query_results.mutable_ciphertexts());
-  ASSIGN_OR_RETURN(DecryptEventDataResponse decrypt_event_data_response,
-                   DecryptEventData(decrypt_event_data_request));
-  return decrypt_event_data_response;
+  return DecryptEventData(decrypt_event_data_request);
 }
 
 absl::StatusOr<DecryptQueryResultsResponse> RemoveAes(
@@ -102,13 +101,12 @@ absl::StatusOr<DecryptQueryResultsResponse> RemoveAes(
         RemoveAesFromDecryptedQueryResult(
             client_decrypted_query_result,
             request.single_blinded_joinkey().key(), request.hkdf_pepper()));
-    for (DecryptedEventData decrypted_event_data :
-         *decrypt_event_data_response.mutable_decrypted_event_data()) {
-      result.add_decrypted_event_data()->Swap(&decrypted_event_data);
-    }
+    result.mutable_decrypted_event_data()->MergeFrom(
+        *std::move(decrypt_event_data_response.mutable_decrypted_event_data()));
   }
   return result;
 }
+}  // namespace
 
 absl::StatusOr<DecryptQueryResultsResponse> DecryptQueryResults(
     const DecryptQueryResultsRequest& request) {

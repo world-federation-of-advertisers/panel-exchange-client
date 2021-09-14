@@ -59,10 +59,10 @@ absl::StatusOr<DecryptEventDataResponse> DecryptEventData(
       DecryptedEventData* decrypted_event_data =
           response.add_decrypted_event_data();
       decrypted_event_data->set_plaintext(*std::move(plaintext));
-      decrypted_event_data->mutable_query_id()->CopyFrom(
-          request.encrypted_event_data().query_id());
-      decrypted_event_data->mutable_shard_id()->CopyFrom(
-          request.encrypted_event_data().shard_id());
+      *decrypted_event_data->mutable_query_id() =
+          request.encrypted_event_data().query_id();
+      *decrypted_event_data->mutable_shard_id() =
+          request.encrypted_event_data().shard_id();
     }
   }
   return response;
