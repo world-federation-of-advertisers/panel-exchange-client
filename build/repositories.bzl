@@ -64,19 +64,19 @@ def panel_exchange_client_repositories():
         name = "tink_base",
         sha256 = "005e6c49b2b2df8a7dc670471ee45b6e09092bb05046eea358cd47f2703359c4",
         strip_prefix = "tink-7c93a224b8fa6a3babfaf71c18c5610052dcbd61/",
-        urls = ["https://github.com/google/tink/archive/7c93a224b8fa6a3babfaf71c18c5610052dcbd61.zip"],
+        url = "https://github.com/google/tink/archive/7c93a224b8fa6a3babfaf71c18c5610052dcbd61.zip",
     )
 
     http_archive(
         name = "tink_cc",
         sha256 = "005e6c49b2b2df8a7dc670471ee45b6e09092bb05046eea358cd47f2703359c4",
         strip_prefix = "tink-7c93a224b8fa6a3babfaf71c18c5610052dcbd61/cc",
-        urls = ["https://github.com/google/tink/archive/7c93a224b8fa6a3babfaf71c18c5610052dcbd61.zip"],
+        url = "https://github.com/google/tink/archive/7c93a224b8fa6a3babfaf71c18c5610052dcbd61.zip",
     )
 
     http_archive(
         name = "private_membership",
-        sha256 = "c47fb16e69c1c598f9efafdb642b99e1dd24caa27355ae1df8455e369e72908b",
-        strip_prefix = "private-membership-7d1b5ffbf4bf80d227a3a68e7b53786c6bb48601",
-        urls = ["https://github.com/google/private-membership/archive/7d1b5ffbf4bf80d227a3a68e7b53786c6bb48601.zip"],
+        sha256 = "5267803c14f1468947825fa1d1e6b810c277e13115877d2a86ad8a5028c99196",
+        strip_prefix = "private-membership-e111e973646aec4b7735d439082a030849967dc3",
+        url = "https://github.com/google/private-membership/archive/e111e973646aec4b7735d439082a030849967dc3.zip",
     )
