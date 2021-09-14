@@ -86,10 +86,8 @@ absl::StatusOr<DecryptQueryResultsResponse> RemoveAes(
         ->set_id(client_decrypted_query_result.query_metadata().query_id());
     QueryResult query_results;
     query_results.ParseFromString(client_decrypted_query_result.result());
-    for (const std::string& query_result : query_results.ciphertexts()) {
-      decrypt_event_data_request.mutable_encrypted_event_data()
-          ->add_ciphertexts(query_result);
-    }
+    *decrypt_event_data_request.mutable_encrypted_event_data()
+         ->mutable_ciphertexts() = *query_results.mutable_ciphertexts();
     ASSIGN_OR_RETURN(DecryptEventDataResponse decrypt_event_data_response,
                      DecryptEventData(decrypt_event_data_request));
     for (DecryptedEventData decrypted_event_data :

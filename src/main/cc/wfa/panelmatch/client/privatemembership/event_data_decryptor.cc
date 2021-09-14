@@ -51,16 +51,16 @@ absl::StatusOr<DecryptEventDataResponse> DecryptEventData(
   DecryptEventDataResponse response;
   for (const std::string& encrypted_event :
        request.encrypted_event_data().ciphertexts()) {
-    absl::StatusOr<std::string> plaintext_or_status = aes_hkdf.Decrypt(
+    absl::StatusOr<std::string> plaintext = aes_hkdf.Decrypt(
         encrypted_event,
         SecretDataFromStringView(request.single_blinded_joinkey().key()),
         SecretDataFromStringView(request.hkdf_pepper()));
-    if (plaintext_or_status.ok()) {
+    if (plaintext.ok()) {
       DecryptedEventData* decrypted_event_data =
           response.add_decrypted_event_data();
-      decrypted_event_data->set_plaintext(plaintext_or_status.value()),
-          decrypted_event_data->mutable_query_id()->CopyFrom(
-              request.encrypted_event_data().query_id());
+      decrypted_event_data->set_plaintext(*std::move(plaintext));
+      decrypted_event_data->mutable_query_id()->CopyFrom(
+          request.encrypted_event_data().query_id());
       decrypted_event_data->mutable_shard_id()->CopyFrom(
           request.encrypted_event_data().shard_id());
     }
