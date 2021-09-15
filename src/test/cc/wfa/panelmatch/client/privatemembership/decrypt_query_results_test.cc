@@ -97,9 +97,6 @@ TEST(DecryptQueryResults, DecryptQueryResultsTest) {
                                                    serialized_bucket_result2,
                                                    serialized_bucket_result3};
 
-  auto status = CreateTestDecryptQueriesRequest(kTestBuckets).status();
-  ASSERT_TRUE(status.ok()) << status;
-
   ASSERT_OK_AND_ASSIGN(ClientDecryptQueriesRequest request,
                        CreateTestDecryptQueriesRequest(kTestBuckets));
 
@@ -197,8 +194,6 @@ TEST(DecryptQueryResults, ParseCiphertextsWithDifferentKeys) {
                                                    serialized_bucket_result2,
                                                    serialized_bucket_result3};
 
-  auto status = CreateTestDecryptQueriesRequest(kTestBuckets).status();
-  ASSERT_TRUE(status.ok()) << status;
   ASSERT_OK_AND_ASSIGN(ClientDecryptQueriesRequest request,
                        CreateTestDecryptQueriesRequest(kTestBuckets));
 

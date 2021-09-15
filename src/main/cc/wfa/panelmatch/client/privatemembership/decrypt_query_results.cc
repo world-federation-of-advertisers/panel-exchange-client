@@ -20,6 +20,7 @@
 #include <string>
 #include <utility>
 
+#include "absl/algorithm/container.h"
 #include "absl/memory/memory.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
@@ -30,6 +31,8 @@
 #include "wfa/panelmatch/client/privatemembership/event_data_decryptor.h"
 
 namespace wfa::panelmatch::client::privatemembership {
+
+namespace {
 using ClientEncryptedQueryResult =
     ::private_membership::batch::EncryptedQueryResult;
 using ClientDecryptedQueryResult =
@@ -39,8 +42,6 @@ using ClientDecryptQueriesRequest =
 using ClientDecryptQueriesResponse =
     ::private_membership::batch::DecryptQueriesResponse;
 using ::private_membership::batch::DecryptQueries;
-
-namespace {
 absl::StatusOr<ClientDecryptQueriesResponse> RemoveRlwe(
     const DecryptQueryResultsRequest& request) {
   ClientDecryptQueriesRequest client_decrypt_queries_request;
@@ -101,8 +102,9 @@ absl::StatusOr<DecryptQueryResultsResponse> RemoveAes(
         RemoveAesFromDecryptedQueryResult(
             client_decrypted_query_result,
             request.single_blinded_joinkey().key(), request.hkdf_pepper()));
-    result.mutable_decrypted_event_data()->MergeFrom(
-        *std::move(decrypt_event_data_response.mutable_decrypted_event_data()));
+    absl::c_move(*decrypt_event_data_response.mutable_decrypted_event_data(),
+                 google::protobuf::RepeatedPtrFieldBackInserter(
+                     result.mutable_decrypted_event_data()));
   }
   return result;
 }
