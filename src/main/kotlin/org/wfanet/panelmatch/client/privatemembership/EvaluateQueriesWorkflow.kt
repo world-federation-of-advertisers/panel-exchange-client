@@ -41,7 +41,7 @@ class EvaluateQueriesWorkflow(
 ) : Serializable {
 
   /**
-   * Tuning knobs for the [BatchLookupWorkflow].
+   * Tuning knobs for the [EvaluateQueriesWorkflow].
    *
    * The [subshardSizeBytes] property should be set to the largest value possible such that the
    * pipeline does not experience out-of-memory errors, or is unable to exploit all available
@@ -79,6 +79,10 @@ class EvaluateQueriesWorkflow(
     return uncombinedResults
       .combinePerKey("Combine Subshard Results") { queryEvaluator.combineResults(it.asSequence()) }
       .values("Extract Results")
+      .map {
+        // TODO: consider batching calls to finalizeResults if JNI overhead is too large.
+        queryEvaluator.finalizeResults(sequenceOf(it)).single()
+      }
   }
 
   /** Joins the inputs to execute the queries on the appropriate shards. */
