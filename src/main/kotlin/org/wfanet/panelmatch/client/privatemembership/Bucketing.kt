@@ -44,7 +44,17 @@ class Bucketing(private val numShards: Int, private val numBucketsPerShard: Int)
 
   private fun bucket(value: Long): BucketId {
     val quotient = java.lang.Long.divideUnsigned(value, numShards.toLong())
-    val remainder = quotient % numBucketsPerShard
+    val remainder = java.lang.Long.remainderUnsigned(quotient, numBucketsPerShard.toLong())
+
+    check(remainder >= 0) {
+      """
+      Bucketing(numShards = $numShards, numBucketsPerShard = $numBucketsPerShard):
+        value = $value (unsigned: ${java.lang.Long.toUnsignedString(quotient)})
+        quotient = $quotient (unsigned: ${java.lang.Long.toUnsignedString(quotient)})
+        remainder = $remainder (unsigned: ${java.lang.Long.toUnsignedString(remainder)})
+      """.trimIndent()
+    }
+
     // The conversion here is safe because 0 <= remainder < numBucketsPerShard and
     // numBucketsPerShard is an Int.
     return bucketIdOf(remainder.toInt())

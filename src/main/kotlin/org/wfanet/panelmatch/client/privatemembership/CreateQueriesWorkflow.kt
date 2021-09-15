@@ -155,7 +155,7 @@ class CreateQueriesWorkflow(
       }
       discardedQueriesMetric.update(discardedQueries)
       /** Add queries to get to the limit */
-      for (i in total..totalQueriesPerShard - 1) {
+      for (i in total until totalQueriesPerShard) {
         // TODO If we add in query mitigation, the BucketId should be set to the fake bucket
         context.output(
           ShardedData(

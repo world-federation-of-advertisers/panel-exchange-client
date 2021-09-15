@@ -15,7 +15,7 @@
 package org.wfanet.panelmatch.client.privatemembership.testing
 
 import com.google.protobuf.ByteString
-import com.google.protobuf.ListValue
+import com.google.protobuf.listValue
 import com.google.protobuf.value
 import org.wfanet.panelmatch.client.privatemembership.BucketId
 import org.wfanet.panelmatch.client.privatemembership.GenerateKeysRequest
@@ -30,8 +30,6 @@ import org.wfanet.panelmatch.client.privatemembership.encryptedQuery
 import org.wfanet.panelmatch.client.privatemembership.generateKeysResponse
 import org.wfanet.panelmatch.client.privatemembership.privateMembershipEncryptResponse
 import org.wfanet.panelmatch.client.privatemembership.queryBundleOf
-import org.wfanet.panelmatch.client.privatemembership.queryMetadataOf
-import org.wfanet.panelmatch.common.toByteString
 
 /**
  * Fake [PlaintextPrivateMembershipCryptor] for testing purposes.
@@ -43,14 +41,12 @@ object PlaintextPrivateMembershipCryptor : PrivateMembershipCryptor {
   private fun makeQueryBundle(shard: ShardId, queries: List<Pair<QueryId, BucketId>>): QueryBundle {
     return queryBundleOf(
       shard,
-      queries.map { queryMetadataOf(it.first, ByteString.EMPTY) },
-      ListValue.newBuilder()
-        .apply {
+      queries.map { it.first },
+      listValue {
           for (query in queries) {
-            addValuesBuilder().stringValue = query.second.id.toString()
+            values += value { stringValue = query.second.id.toString() }
           }
         }
-        .build()
         .toByteString()
     )
   }
