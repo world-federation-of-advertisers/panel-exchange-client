@@ -14,15 +14,22 @@
 
 package org.wfanet.panelmatch.client.privatemembership.testing
 
-import org.wfanet.panelmatch.client.privatemembership.EvaluateQueriesWorkflow.Parameters
-import org.wfanet.panelmatch.client.privatemembership.QueryEvaluator
+import com.google.privatemembership.batch.ParametersKt.cryptoParameters
 
-class PlaintextEvaluateQueriesWorkflowEndToEndTest : AbstractEvaluateQueriesWorkflowEndToEndTest() {
-  override fun makeQueryEvaluator(parameters: Parameters): QueryEvaluator {
-    return PlaintextQueryEvaluator
-  }
-
-  override fun makeHelper(parameters: Parameters): QueryEvaluatorTestHelper {
-    return PlaintextQueryEvaluatorTestHelper
-  }
+/**
+ * Example test crypto parameters for Private Membership.
+ *
+ * The security of these parameters may be calculated using the code found at:
+ * https://bitbucket.org/malb/lwe-estimator/src/master/
+ */
+val PRIVATE_MEMBERSHIP_CRYPTO_PARAMETERS = cryptoParameters {
+  requestModulus += java.lang.Long.parseUnsignedLong("18446744073708380161")
+  requestModulus += 137438953471L
+  responseModulus += 2056193L
+  logDegree = 12
+  logT = 1
+  variance = 8
+  levelsOfRecursion = 2
+  logCompressionFactor = 4
+  logDecompositionModulus = 10
 }

@@ -75,6 +75,16 @@ class BucketingTest {
   }
 
   @Test
+  fun overflow() {
+    // This test is for a specific regression encountered.
+
+    val bucketing = Bucketing(numShards = 1, numBucketsPerShard = 10)
+
+    // -4228343866523403918 is 14218400207186147698 unsigned
+    assertThat(bucketing.apply(-4228343866523403918)).isEqualTo(shardIdOf(0) to bucketIdOf(8))
+  }
+
+  @Test
   fun `single shard`() {
     val bucketing = Bucketing(numShards = 1, numBucketsPerShard = 3)
     assertThat(bucketing.apply(0)).isEqualTo(shardIdOf(0) to bucketIdOf(0))
