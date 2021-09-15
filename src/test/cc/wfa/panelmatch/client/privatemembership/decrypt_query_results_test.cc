@@ -151,7 +151,7 @@ TEST(DecryptQueryResults, ParseCiphertextsWithDifferentKeys) {
   std::string key = "some-single-blinded-joinkey";
   JoinKey single_blinded_joinkey;
   single_blinded_joinkey.set_key(key);
-  std::string plaintext1 = "Some data to encrypt 1.";
+  std::string plaintext1 = "Some data to encrypt.";
   std::string ciphertext2 = "Some event data I should not be able to decrypt.";
   std::string plaintext3 = "Some other event data to encrypt.";
   std::string ciphertext4 = "Some event data I should not be able to decrypt.";
@@ -219,25 +219,28 @@ TEST(DecryptQueryResults, ParseCiphertextsWithDifferentKeys) {
         client_encrypted_query_result.query_metadata().shard_id());
   }
 
-  absl::StatusOr<DecryptQueryResultsResponse> test_response =
-      DecryptQueryResults(test_request);
-  DecryptQueryResultsResponse expected_response;
-  DecryptedEventData *expected_decrypted_event_data1 =
-      expected_response.add_decrypted_event_data();
-  expected_decrypted_event_data1->set_plaintext(plaintext1);
-  expected_decrypted_event_data1->mutable_query_id()->set_id(0);
-  expected_decrypted_event_data1->mutable_shard_id()->set_id(2);
-  DecryptedEventData *expected_decrypted_event_data2 =
-      expected_response.add_decrypted_event_data();
-  expected_decrypted_event_data2->set_plaintext(plaintext3);
-  expected_decrypted_event_data2->mutable_query_id()->set_id(0);
-  expected_decrypted_event_data2->mutable_shard_id()->set_id(2);
-  DecryptedEventData *expected_decrypted_event_data3 =
-      expected_response.add_decrypted_event_data();
-  expected_decrypted_event_data3->set_plaintext(plaintext5);
-  expected_decrypted_event_data3->mutable_query_id()->set_id(2);
-  expected_decrypted_event_data3->mutable_shard_id()->set_id(1);
-  EXPECT_THAT(test_response, IsOkAndHolds(EqualsProto(expected_response)));
+  ASSERT_OK_AND_ASSIGN(DecryptQueryResultsResponse test_response,
+                       DecryptQueryResults(test_request));
+
+  DecryptedEventData expected_decrypted_event_data1;
+  expected_decrypted_event_data1.set_plaintext(plaintext1);
+  expected_decrypted_event_data1.mutable_query_id()->set_id(0);
+  expected_decrypted_event_data1.mutable_shard_id()->set_id(2);
+
+  DecryptedEventData expected_decrypted_event_data2;
+  expected_decrypted_event_data2.set_plaintext(plaintext3);
+  expected_decrypted_event_data2.mutable_query_id()->set_id(0);
+  expected_decrypted_event_data2.mutable_shard_id()->set_id(2);
+
+  DecryptedEventData expected_decrypted_event_data3;
+  expected_decrypted_event_data3.set_plaintext(plaintext5);
+  expected_decrypted_event_data3.mutable_query_id()->set_id(2);
+  expected_decrypted_event_data3.mutable_shard_id()->set_id(1);
+  EXPECT_THAT(
+      test_response.decrypted_event_data(),
+      UnorderedElementsAre(EqualsProto(expected_decrypted_event_data1),
+                           EqualsProto(expected_decrypted_event_data2),
+                           EqualsProto(expected_decrypted_event_data3)));
 }
 
 }  // namespace
