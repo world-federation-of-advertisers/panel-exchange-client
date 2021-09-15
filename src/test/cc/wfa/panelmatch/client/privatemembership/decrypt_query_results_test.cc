@@ -79,9 +79,24 @@ TEST(DecryptQueryResults, DecryptQueryResultsTest) {
       std::string ciphertext3,
       aes_hkdf.Encrypt(plaintext3, SecretDataFromStringView(key),
                        SecretDataFromStringView(hkdf_pepper)));
+  QueryResult bucket_result1;
+  bucket_result1.add_ciphertexts(ciphertext1);
+  std::string serialized_bucket_result1;
+  bucket_result1.SerializeToString(&serialized_bucket_result1);
 
-  std::array<absl::string_view, 3> kTestBuckets = {ciphertext1, ciphertext2,
-                                                   ciphertext3};
+  QueryResult bucket_result2;
+  bucket_result2.add_ciphertexts(ciphertext2);
+  std::string serialized_bucket_result2;
+  bucket_result2.SerializeToString(&serialized_bucket_result2);
+
+  QueryResult bucket_result3;
+  bucket_result3.add_ciphertexts(ciphertext3);
+  std::string serialized_bucket_result3;
+  bucket_result3.SerializeToString(&serialized_bucket_result3);
+
+  std::array<absl::string_view, 3> kTestBuckets = {serialized_bucket_result1,
+                                                   serialized_bucket_result2,
+                                                   serialized_bucket_result3};
 
   ASSERT_OK_AND_ASSIGN(ClientDecryptQueriesRequest request,
                        CreateTestDecryptQueriesRequest(kTestBuckets));
