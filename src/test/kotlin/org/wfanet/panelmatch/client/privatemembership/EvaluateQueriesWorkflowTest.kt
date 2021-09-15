@@ -16,7 +16,6 @@ package org.wfanet.panelmatch.client.privatemembership
 
 import com.google.common.truth.Truth.assertThat
 import com.google.common.truth.extensions.proto.ProtoTruth.assertThat
-import com.google.protobuf.ByteString
 import kotlin.test.assertFails
 import org.apache.beam.sdk.metrics.MetricNameFilter
 import org.apache.beam.sdk.metrics.MetricsFilter
@@ -186,8 +185,8 @@ class EvaluateQueriesWorkflowTest : BeamTestBase() {
     assertThat(runWorkflow(queryBundles, parameters)).satisfies {
       val list = it.toList()
       assertThat(list).hasSize(1)
-      assertThat(list[0].queryMetadata).isEqualTo(queryMetadataOf(queryIdOf(17), ByteString.EMPTY))
-      assertThat(list[0].payload.toStringUtf8().toList())
+      assertThat(list[0].queryId).isEqualTo(queryIdOf(17))
+      assertThat(list[0].serializedEncryptedQueryResult.toStringUtf8().toList())
         .containsExactlyElementsIn("abcdefhijklm".toList())
       null
     }

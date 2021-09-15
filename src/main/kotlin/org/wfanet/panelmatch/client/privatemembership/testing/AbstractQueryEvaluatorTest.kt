@@ -33,6 +33,9 @@ import org.wfanet.panelmatch.common.toByteString
 
 /** Tests for [QueryEvaluator]s. */
 abstract class AbstractQueryEvaluatorTest {
+  protected val shardCount: Int = 128
+  protected val bucketsPerShardCount: Int = 16
+
   /** Provides a test subject. */
   abstract val evaluator: QueryEvaluator
 
@@ -53,7 +56,8 @@ abstract class AbstractQueryEvaluatorTest {
         queryBundleOf(shard = 102, queries = listOf(504 to 0, 505 to 1, 506 to 2, 507 to 3))
       )
     val results = evaluator.executeQueries(database, queryBundles)
-    assertThat(results.map { it.queryMetadata.queryId to helper.decodeResultData(it) })
+    val finalizedResults = evaluator.finalizeResults(results.asSequence()).toList()
+    assertThat(finalizedResults.map { it.queryId to helper.decodeResultData(it) })
       .containsExactly(
         queryIdOf(500) to makeFakeBucketData(bucket = 0, shard = 100),
         queryIdOf(501) to makeFakeBucketData(bucket = 1, shard = 100),
@@ -77,7 +81,8 @@ abstract class AbstractQueryEvaluatorTest {
       )
 
     val results = evaluator.executeQueries(database, queryBundles)
-    assertThat(results.map { helper.decodeResult(it) })
+    val finalizedResults = evaluator.finalizeResults(results.asSequence()).toList()
+    assertThat(finalizedResults.map { helper.decodeResult(it) })
       .containsExactly(
         DecodedResult(500, makeFakeBucketData(bucket = 1, shard = 100)),
         DecodedResult(501, makeFakeBucketData(bucket = 1, shard = 101))
@@ -92,7 +97,7 @@ abstract class AbstractQueryEvaluatorTest {
   @Test
   fun `combineResults mismatching queries`() {
     assertFailsWith<IllegalArgumentException> {
-      runCombineResults(resultOf(1, ByteString.EMPTY), resultOf(2, ByteString.EMPTY))
+      runCombineResults(helper.makeEmptyResult(queryIdOf(1)), helper.makeEmptyResult(queryIdOf(2)))
     }
   }
 
@@ -100,8 +105,9 @@ abstract class AbstractQueryEvaluatorTest {
   fun `combineResults single result`() {
     val queryId = 5
 
-    assertThat(runCombineResults(resultOf(queryId, ByteString.EMPTY)))
-      .isEqualTo(DecodedResult(queryId, ByteString.EMPTY))
+    val emptyResult = helper.makeEmptyResult(queryIdOf(queryId))
+
+    assertThat(runCombineResults(emptyResult)).isEqualTo(DecodedResult(queryId, ByteString.EMPTY))
 
     val rawPayload = "some-raw-payload".toByteString()
     assertThat(runCombineResults(resultOf(queryId, rawPayload)))
@@ -110,9 +116,9 @@ abstract class AbstractQueryEvaluatorTest {
 
   @Test
   fun `combineResults multiple results`() {
-    val queryId = 5
+    val queryId = 7
 
-    val emptyResult = resultOf(queryId, ByteString.EMPTY)
+    val emptyResult = helper.makeEmptyResult(queryIdOf(queryId))
     val payload = "some-payload".toByteString()
     val nonEmptyResult = resultOf(queryId, payload)
 
@@ -128,7 +134,9 @@ abstract class AbstractQueryEvaluatorTest {
   }
 
   private fun runCombineResults(vararg results: Result): DecodedResult {
-    return helper.decodeResult(evaluator.combineResults(results.asSequence()))
+    val combinedResult = evaluator.combineResults(results.asSequence())
+    val finalizedResult = evaluator.finalizeResults(sequenceOf(combinedResult)).single()
+    return helper.decodeResult(finalizedResult)
   }
 
   private fun queryBundleOf(shard: Int, queries: List<Pair<Int, Int>>): QueryBundle {

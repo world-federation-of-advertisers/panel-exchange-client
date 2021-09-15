@@ -14,23 +14,129 @@
 
 package org.wfanet.panelmatch.client.privatemembership
 
-import kotlin.test.assertFailsWith
+import com.google.common.truth.Truth.assertThat
+import com.google.privatemembership.batch.ParametersKt.shardParameters
+import com.google.privatemembership.batch.Shared.EncryptedQueryResult
+import com.google.privatemembership.batch.Shared.Parameters
+import com.google.privatemembership.batch.Shared.PublicKey
+import com.google.privatemembership.batch.client.Client.PrivateKey
+import com.google.privatemembership.batch.client.decryptQueriesRequest
+import com.google.privatemembership.batch.client.encryptQueriesRequest
+import com.google.privatemembership.batch.client.generateKeysRequest
+import com.google.privatemembership.batch.client.plaintextQuery
+import com.google.privatemembership.batch.parameters
+import com.google.privatemembership.batch.queryMetadata
+import com.google.protobuf.ByteString
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
+import org.wfanet.panelmatch.client.privatemembership.testing.AbstractQueryEvaluatorTest
+import org.wfanet.panelmatch.client.privatemembership.testing.PRIVATE_MEMBERSHIP_CRYPTO_PARAMETERS
+import org.wfanet.panelmatch.client.privatemembership.testing.QueryEvaluatorTestHelper
+import org.wfanet.panelmatch.common.toByteString
 
-// TODO(@efoxepstein): subclass AbstractQueryEvaluatorTest once implemented
 @RunWith(JUnit4::class)
-class JniQueryEvaluatorTest {
+class JniQueryEvaluatorTest : AbstractQueryEvaluatorTest() {
+  private val context: Context = Context(shardCount, bucketsPerShardCount)
+
+  override val evaluator: QueryEvaluator = JniQueryEvaluator(context.parameters)
+
+  override val helper: QueryEvaluatorTestHelper = JniQueryEvaluatorTestHelper(context)
+
   @Test
-  fun `executeQueries is unimplemented`() {
-    val queryEvaluator = JniQueryEvaluator(queryEvaluatorParameters {})
-    assertFailsWith<NotImplementedError> { queryEvaluator.executeQueries(emptyList(), emptyList()) }
+  fun `JniQueryEvaluatorTestHelper round trip`() {
+    val result: Result = helper.makeResult(queryIdOf(1), "abc".toByteString())
+    val finalizedResult = evaluator.finalizeResults(sequenceOf(result)).single()
+    val decodedResult: ByteString = helper.decodeResultData(finalizedResult)
+    assertThat(decodedResult.toStringUtf8()).isEqualTo("abc")
+  }
+}
+
+private class Context(shardCount: Int, bucketsPerShardCount: Int) {
+  val privateMembershipParameters: Parameters = parameters {
+    shardParameters =
+      shardParameters {
+        numberOfShards = shardCount
+        numberOfBucketsPerShard = bucketsPerShardCount
+      }
+    cryptoParameters = PRIVATE_MEMBERSHIP_CRYPTO_PARAMETERS
   }
 
-  @Test
-  fun `combineResults is unimplemented`() {
-    val queryEvaluator = JniQueryEvaluator(queryEvaluatorParameters {})
-    assertFailsWith<NotImplementedError> { queryEvaluator.combineResults(emptySequence()) }
+  val privateMembershipPublicKey: PublicKey
+  val privateMembershipPrivateKey: PrivateKey
+  init {
+    val response =
+      JniPrivateMembership.generateKeys(
+        generateKeysRequest { parameters = privateMembershipParameters }
+      )
+    privateMembershipPublicKey = response.publicKey
+    privateMembershipPrivateKey = response.privateKey
+  }
+
+  val parameters = queryEvaluatorParameters {
+    serializedPrivateMembershipParameters = privateMembershipParameters.toByteString()
+    serializedPublicKey = privateMembershipPublicKey.toByteString()
+  }
+}
+
+private class JniQueryEvaluatorTestHelper(private val context: Context) : QueryEvaluatorTestHelper {
+  override fun decodeResultData(result: Result): ByteString {
+    val encryptedQueryResult = EncryptedQueryResult.parseFrom(result.serializedEncryptedQueryResult)
+    val request = decryptQueriesRequest {
+      parameters = context.privateMembershipParameters
+      publicKey = context.privateMembershipPublicKey
+      privateKey = context.privateMembershipPrivateKey
+      encryptedQueries += encryptedQueryResult
+    }
+    val response = JniPrivateMembership.decryptQueries(request)
+    return response.resultList.single().result
+  }
+
+  override fun makeQueryBundle(
+    shard: ShardId,
+    queries: List<Pair<QueryId, BucketId>>
+  ): QueryBundle {
+    val request = encryptQueriesRequest {
+      parameters = context.privateMembershipParameters
+      publicKey = context.privateMembershipPublicKey
+      privateKey = context.privateMembershipPrivateKey
+      plaintextQueries +=
+        queries.map { (queryId, bucketId) ->
+          plaintextQuery {
+            this.bucketId = bucketId.id
+            queryMetadata =
+              queryMetadata {
+                shardId = shard.id
+                this.queryId = queryId.id
+              }
+          }
+        }
+    }
+    val response = JniPrivateMembership.encryptQueries(request)
+    return queryBundleOf(shard, queries.map { it.first }, response.encryptedQueries.toByteString())
+  }
+
+  override fun makeResult(query: QueryId, rawPayload: ByteString): Result {
+    // TODO(@efoxepstein): have private-membership expose a helper for this.
+    return JniQueryEvaluator(context.parameters)
+      .executeQueries(
+        listOf(databaseShardOf(shardIdOf(0), listOf(bucketOf(bucketIdOf(0), rawPayload)))),
+        listOf(makeQueryBundle(shardIdOf(0), listOf(query to bucketIdOf(0))))
+      )
+      .single()
+  }
+
+  override fun makeEmptyResult(query: QueryId): Result {
+    // TODO(@efoxepstein): have private-membership expose a helper for this.
+    val databaseShard =
+      databaseShardOf(
+        shardIdOf(0),
+        listOf(bucketOf(bucketIdOf(1), "some-unused-payload".toByteString()))
+      )
+    val queryBundle = makeQueryBundle(shardIdOf(0), listOf(query to bucketIdOf(0)))
+
+    return JniQueryEvaluator(context.parameters)
+      .executeQueries(listOf(databaseShard), listOf(queryBundle))
+      .single()
   }
 }

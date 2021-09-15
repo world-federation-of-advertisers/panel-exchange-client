@@ -54,13 +54,13 @@ object PlaintextQueryEvaluator : QueryEvaluator {
     val resultsList = results.toList()
     require(resultsList.isNotEmpty())
 
-    val queryId = resultsList.first().queryMetadata.queryId.id
+    val queryId = resultsList.first().queryId.id
 
     for (result in resultsList) {
-      require(result.queryMetadata.queryId.id == queryId)
+      require(result.queryId.id == queryId)
     }
 
-    val nonEmptyResults = resultsList.filter { !it.payload.isEmpty }
+    val nonEmptyResults = resultsList.filter { !it.serializedEncryptedQueryResult.isEmpty }
 
     return when (nonEmptyResults.size) {
       0 -> resultsList.first()
@@ -73,16 +73,16 @@ object PlaintextQueryEvaluator : QueryEvaluator {
   }
 
   private fun query(shard: DatabaseShard, bundle: QueryBundle): List<Result> {
-    val queriedBuckets = ListValue.parseFrom(bundle.payload)
-    require(queriedBuckets.valuesCount == bundle.queryMetadataList.size)
+    val queriedBuckets = ListValue.parseFrom(bundle.serializedEncryptedQueries)
+    require(queriedBuckets.valuesCount == bundle.queryIdsCount)
     val results = mutableListOf<Result>()
-    for ((metadata, queriedBucket) in bundle.queryMetadataList zip queriedBuckets.valuesList) {
+    for ((queryId, queriedBucket) in bundle.queryIdsList zip queriedBuckets.valuesList) {
       val result =
         shard
           .bucketsList
           .filter { it.bucketId.id == queriedBucket.stringValue.toInt() }
-          .map { resultOf(metadata, it.payload) }
-          .ifEmpty { listOf(resultOf(metadata, ByteString.EMPTY)) }
+          .map { resultOf(queryId, it.payload) }
+          .ifEmpty { listOf(resultOf(queryId, ByteString.EMPTY)) }
           .single()
       results.add(result)
     }

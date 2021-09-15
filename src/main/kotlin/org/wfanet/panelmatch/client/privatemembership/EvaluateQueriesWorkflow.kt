@@ -107,7 +107,7 @@ class EvaluateQueriesWorkflow(
       for (shard in nonEmptyShards) {
         val results = queryEvaluator.executeQueries(listOf(shard), queriesList)
         for (result in results) {
-          yield(kvOf(kvOf(key, result.queryMetadata.queryId), result))
+          yield(kvOf(kvOf(key, result.queryId), result))
         }
       }
     }
