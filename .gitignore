@@ -9,3 +9,5 @@
 /.idea/
 /*.iml
 
+# VIM swap files
+**/*.swp
