@@ -14,9 +14,31 @@
 
 package org.wfanet.panelmatch.client.launcher
 
+import java.lang.IllegalArgumentException
+import java.security.cert.X509Certificate
 import org.wfanet.measurement.api.v2alpha.ExchangeStep
+import org.wfanet.measurement.api.v2alpha.ExchangeWorkflow
+import org.wfanet.measurement.consent.client.dataprovider.verifyExchangeStepSignatures as dataProviderVerifySignatures
+import org.wfanet.measurement.consent.client.measurementconsumer.verifyExchangeStepSignatures as measurementConsumerVerifySignatures
 
-class ExchangeStepValidatorImpl : ExchangeStepValidator {
-  // TODO: implement validate logic.
-  override fun validate(exchangeStep: ExchangeStep) {}
+class ExchangeStepValidatorImpl(
+  partyType: ExchangeWorkflow.Party,
+  private val dataProviderCertificate: X509Certificate,
+  private val modelProviderCertificate: X509Certificate,
+) : ExchangeStepValidator {
+  val verifyExchangeStepSignatures = when (partyType) {
+    ExchangeWorkflow.Party.DATA_PROVIDER -> ::dataProviderVerifySignatures
+    ExchangeWorkflow.Party.MODEL_PROVIDER -> ::measurementConsumerVerifySignatures
+    else ->
+      throw IllegalArgumentException("Unexpected Party type for ExchangeStepValidator: $partyType")
+  }
+  override fun validate(exchangeStep: ExchangeStep) {
+   if (!verifyExchangeStepSignatures(
+       exchangeStep.signedExchangeWorkflow,
+       dataProviderCertificate,
+       modelProviderCertificate)
+   ) {
+      throw InvalidExchangeStepException("Double signature of Exchange Step Workflow is invalid")
+   }
+  }
 }
