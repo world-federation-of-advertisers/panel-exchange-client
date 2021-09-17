@@ -31,6 +31,7 @@ _ARTIFACTS = artifacts.dict_to_list({
     "com.google.cloud:google-cloud-nio": "0.122.0",
     "com.google.cloud:google-cloud-storage": "1.118.0",
     "com.google.code.gson:gson": "2.8.6",
+    "com.google.crypto.tink:tink": "1.6.0",
     "com.google.guava:guava": "30.1.1-jre",
     "com.google.http-client:google-http-client": "1.39.2",
     "io.grpc:grpc-api": "1.37.0",
