@@ -21,6 +21,7 @@ import org.apache.beam.sdk.values.KV
 import org.apache.beam.sdk.values.PCollection
 import org.apache.beam.sdk.values.PCollectionView
 import org.wfanet.panelmatch.client.combinedEvents
+import org.wfanet.panelmatch.client.common.CompressedEvents
 import org.wfanet.panelmatch.client.eventpreprocessing.EventCompressorTrainer.TrainedEventCompressor
 import org.wfanet.panelmatch.common.beam.groupByKey
 import org.wfanet.panelmatch.common.beam.kvOf
@@ -38,16 +39,11 @@ import org.wfanet.panelmatch.common.compression.Compressor
  */
 private const val OVERSAMPLING_FACTOR = 10L
 
-/** The results of training a [Compressor] and then applying it to a [PCollection]. */
-data class CompressedEvents(
-  val events: PCollection<KV<ByteString, ByteString>>,
-  val dictionary: PCollection<ByteString>
-)
-
 /** Trains a [Compressor] and applies it to a [PCollection]. */
 fun EventCompressorTrainer.compressByKey(
   events: PCollection<KV<ByteString, ByteString>>
 ): CompressedEvents {
+
   val trainedEventCompressor: PCollection<TrainedEventCompressor> =
     events
       .values()

@@ -17,6 +17,7 @@ package org.wfanet.panelmatch.client.eventpreprocessing
 import com.google.protobuf.ByteString
 import org.apache.beam.sdk.values.KV
 import org.apache.beam.sdk.values.PCollection
+import org.wfanet.panelmatch.client.common.CompressedEvents
 import org.wfanet.panelmatch.common.beam.parDo
 
 /**
