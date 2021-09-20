@@ -39,8 +39,18 @@ class BrotliCompressor(private val dictionary: ByteString) : Compressor {
     val serializedResponse = wrapJniException {
       Brotli.brotliDecompressWrapper(request.toByteArray())
     }
-    val response = CompressResponse.parseFrom(serializedResponse)
-    return response.compressedDataList.single()
+    val response = DecompressResponse.parseFrom(serializedResponse)
+    return response.decompressedDataList.single()
+  }
+
+  override fun equals(other: Any?): Boolean {
+    if (other == null) return false
+    if (other !is BrotliCompressor) return false
+    return dictionary == other.dictionary
+  }
+
+  override fun hashCode(): Int {
+    return dictionary.hashCode()
   }
 
   companion object {
