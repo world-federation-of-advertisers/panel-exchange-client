@@ -22,10 +22,6 @@ import com.google.privatemembership.batch.client.Client.GenerateKeysRequest
 import com.google.privatemembership.batch.client.Client.GenerateKeysResponse
 import com.google.privatemembership.batch.server.Server.ApplyQueriesRequest
 import com.google.privatemembership.batch.server.Server.ApplyQueriesResponse
-import com.google.privatemembership.batch.server.Server.FinalizeResultsRequest
-import com.google.privatemembership.batch.server.Server.FinalizeResultsResponse
-import com.google.privatemembership.batch.server.Server.SumCiphertextsRequest
-import com.google.privatemembership.batch.server.Server.SumCiphertextsResponse
 import org.wfanet.panelmatch.common.loadLibraryFromResource
 import org.wfanet.panelmatch.common.wrapJniException
 import org.wfanet.panelmatch.protocol.privatemembership.PrivateMembershipWrapperJNI
@@ -64,26 +60,10 @@ object JniPrivateMembership {
     }
   }
 
-  fun finalizeResults(request: FinalizeResultsRequest): FinalizeResultsResponse {
-    return wrapJniException {
-      FinalizeResultsResponse.parseFrom(
-        PrivateMembershipWrapperJNI.finalizeResultsWrapper(request.toByteArray())
-      )
-    }
-  }
-
   fun generateKeys(request: GenerateKeysRequest): GenerateKeysResponse {
     return wrapJniException {
       GenerateKeysResponse.parseFrom(
         PrivateMembershipWrapperJNI.generateKeysWrapper(request.toByteArray())
-      )
-    }
-  }
-
-  fun sumCiphertexts(request: SumCiphertextsRequest): SumCiphertextsResponse {
-    return wrapJniException {
-      SumCiphertextsResponse.parseFrom(
-        PrivateMembershipWrapperJNI.sumCiphertextsWrapper(request.toByteArray())
       )
     }
   }

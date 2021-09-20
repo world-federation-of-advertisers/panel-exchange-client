@@ -15,10 +15,8 @@
 package org.wfanet.panelmatch.client.privatemembership
 
 import com.google.privatemembership.batch.Shared.EncryptedQueries
-import com.google.privatemembership.batch.Shared.EncryptedQueryResult
 import com.google.privatemembership.batch.Shared.Parameters
 import com.google.privatemembership.batch.Shared.PublicKey
-import com.google.privatemembership.batch.encryptedQueryResult
 import com.google.privatemembership.batch.server.ApplyQueriesRequestKt.rawDatabase
 import com.google.privatemembership.batch.server.RawDatabaseShardKt.bucket
 import com.google.privatemembership.batch.server.Server.RawDatabaseShard
@@ -75,9 +73,6 @@ class JniQueryEvaluator(private val parameters: QueryEvaluatorParameters) : Quer
 
 private val QueryBundle.encryptedQueries: EncryptedQueries
   get() = EncryptedQueries.parseFrom(serializedEncryptedQueries)
-
-private val Result.encryptedQueryResult: EncryptedQueryResult
-  get() = EncryptedQueryResult.parseFrom(serializedEncryptedQueryResult)
 
 private fun DatabaseShard.toPrivateMembershipRawDatabaseShard(): RawDatabaseShard =
     rawDatabaseShard {

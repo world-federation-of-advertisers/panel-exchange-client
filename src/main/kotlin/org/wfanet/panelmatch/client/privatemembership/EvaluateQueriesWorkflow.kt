@@ -115,7 +115,7 @@ class EvaluateQueriesWorkflow(
 }
 
 /**
- * This makes a Distribution metric of the number of bytes in each subshard's buckets' payloads.
+ * This makes a Distribution metric of the number of bytes in each shard's buckets' payloads.
  *
  * Note that this is a different value than the size of the DatabaseShard as a serialized proto.
  */
@@ -127,7 +127,7 @@ private class DatabaseShardSizeObserver :
   @ProcessElement
   fun processElement(context: ProcessContext) {
     val bucketsList = context.element().value.bucketsList
-    val totalSize = bucketsList.fold(0L) { acc, bucket -> acc + bucket.payload.size() }
+    val totalSize = bucketsList.sumOf { it.payload.size().toLong() }
     sizeDistribution.update(totalSize)
     context.output(context.element())
   }

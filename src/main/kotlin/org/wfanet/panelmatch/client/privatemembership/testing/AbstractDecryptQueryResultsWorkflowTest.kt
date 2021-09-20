@@ -14,9 +14,7 @@
 
 package org.wfanet.panelmatch.client.privatemembership.testing
 
-import com.google.common.truth.Truth.assertThat
 import com.google.protobuf.ByteString
-import org.apache.beam.sdk.values.KV
 import org.apache.beam.sdk.values.PCollection
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -26,13 +24,10 @@ import org.wfanet.panelmatch.client.privatemembership.DecryptQueryResultsWorkflo
 import org.wfanet.panelmatch.client.privatemembership.DecryptedEventData
 import org.wfanet.panelmatch.client.privatemembership.EncryptedEventData
 import org.wfanet.panelmatch.client.privatemembership.EncryptedQueryResult
-import org.wfanet.panelmatch.client.privatemembership.JoinKey
 import org.wfanet.panelmatch.client.privatemembership.PrivateMembershipCryptor
-import org.wfanet.panelmatch.client.privatemembership.QueryId
 import org.wfanet.panelmatch.client.privatemembership.QueryResultsDecryptor
 import org.wfanet.panelmatch.client.privatemembership.generateKeysRequest
 import org.wfanet.panelmatch.client.privatemembership.joinKeyOf
-import org.wfanet.panelmatch.client.privatemembership.plaintextOf
 import org.wfanet.panelmatch.client.privatemembership.queryIdOf
 import org.wfanet.panelmatch.common.beam.kvOf
 import org.wfanet.panelmatch.common.beam.testing.BeamTestBase
@@ -74,7 +69,15 @@ abstract class AbstractDecryptQueryResultsWorkflowTest : BeamTestBase() {
       encryptedResultOf(
         privateMembershipCryptorHelper.makeEncryptedQueryResults(encryptedEventData)
       )
-    val joinkeyCollection = joinkeyCollectionOf(JOINKEYS)
+
+    val joinkeyCollection =
+      pcollectionOf(
+        "Create encryptedResults",
+        *JOINKEYS
+          .map { kvOf(queryIdOf(it.first), joinKeyOf(it.second.toByteString())) }
+          .toTypedArray()
+      )
+
     return DecryptQueryResultsWorkflow(
         parameters = parameters,
         queryResultsDecryptor = queryResultsDecryptor,
@@ -105,15 +108,6 @@ abstract class AbstractDecryptQueryResultsWorkflowTest : BeamTestBase() {
   private fun encryptedResultOf(
     entries: List<EncryptedQueryResult>
   ): PCollection<EncryptedQueryResult> {
-    return pcollectionOf("Create encryptedResults", *entries.map { it }.toTypedArray())
-  }
-
-  private fun joinkeyCollectionOf(
-    entries: List<Pair<Int, String>>
-  ): PCollection<KV<QueryId, JoinKey>> {
-    return pcollectionOf(
-      "Create encryptedResults",
-      *entries.map { kvOf(queryIdOf(it.first), joinKeyOf(it.second.toByteString())) }.toTypedArray()
-    )
+    return pcollectionOf("Create encryptedResults", *entries.toTypedArray())
   }
 }
