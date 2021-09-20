@@ -27,14 +27,11 @@ import org.wfanet.panelmatch.client.privatemembership.PrivateMembershipEncryptRe
 import org.wfanet.panelmatch.client.privatemembership.QueryBundle
 import org.wfanet.panelmatch.client.privatemembership.QueryId
 import org.wfanet.panelmatch.client.privatemembership.Result
-import org.wfanet.panelmatch.client.privatemembership.bucketIdOf
 import org.wfanet.panelmatch.client.privatemembership.decryptedQueryResult
 import org.wfanet.panelmatch.client.privatemembership.encryptedEventData
 import org.wfanet.panelmatch.client.privatemembership.encryptedQueryResult
 import org.wfanet.panelmatch.client.privatemembership.privateMembershipDecryptResponse
-import org.wfanet.panelmatch.client.privatemembership.queryIdOf
 import org.wfanet.panelmatch.client.privatemembership.resultOf
-import org.wfanet.panelmatch.client.privatemembership.shardIdOf
 import org.wfanet.panelmatch.common.beam.kvOf
 import org.wfanet.panelmatch.common.beam.parDo
 import org.wfanet.panelmatch.common.crypto.SymmetricCryptor
@@ -44,13 +41,6 @@ import org.wfanet.panelmatch.common.toByteString
 object PlaintextPrivateMembershipCryptorHelper : PrivateMembershipCryptorHelper {
 
   private val symmetricCryptor: SymmetricCryptor = ConcatSymmetricCryptor()
-
-  private fun queryBundleOf(shard: Int, queries: List<Pair<Int, Int>>): QueryBundle {
-    return PlaintextQueryEvaluatorTestHelper.makeQueryBundle(
-      shardIdOf(shard),
-      queries.map { queryIdOf(it.first) to bucketIdOf(it.second) }
-    )
-  }
 
   private fun decodeQueryBundle(queryBundle: QueryBundle): List<ShardedQuery> {
     val queryIdsList = queryBundle.queryIdsList

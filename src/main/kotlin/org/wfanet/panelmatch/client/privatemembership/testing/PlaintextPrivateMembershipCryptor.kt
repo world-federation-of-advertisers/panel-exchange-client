@@ -51,22 +51,6 @@ object PlaintextPrivateMembershipCryptor : PrivateMembershipCryptor {
     )
   }
 
-  /**
-   * Splits [combinedPayloads] into individual payloads.
-   *
-   * We assume that each individual payload's first and last characters are '<' and '>',
-   * respectively.
-   *
-   * TODO: This is not currently used but to better mimic the RLWE with FHE we should re-introduce
-   * ciphertext separators.
-   */
-  private fun splitConcatenatedPayloads(combinedPayloads: String): List<String> {
-    return Regex("(<[^>]+>)")
-      .findAll(combinedPayloads)
-      .map { match -> match.groupValues[1] }
-      .toList()
-  }
-
   override fun generateKeys(request: GenerateKeysRequest): GenerateKeysResponse {
     return generateKeysResponse {
       serializedPublicKey = ByteString.EMPTY
@@ -82,13 +66,13 @@ object PlaintextPrivateMembershipCryptor : PrivateMembershipCryptor {
     request: PrivateMembershipEncryptRequest
   ): PrivateMembershipEncryptResponse {
     val unencryptedQueries = request.unencryptedQueriesList
+    val queryBundles =
+      unencryptedQueries.groupBy { it.shardId }.map { kv ->
+        makeQueryBundle(shard = kv.key, queries = kv.value.map { it.queryId to it.bucketId })
+      }
     return privateMembershipEncryptResponse {
-      ciphertexts +=
-        unencryptedQueries.groupBy { it.shardId }.map {
-          makeQueryBundle(shard = it.key, queries = it.value.map { Pair(it.queryId, it.bucketId) })
-            .toByteString()
-        }
-      this.encryptedQuery +=
+      ciphertexts += queryBundles.map { it.toByteString() }
+      encryptedQuery +=
         unencryptedQueries.map {
           encryptedQuery {
             shardId = it.shardId

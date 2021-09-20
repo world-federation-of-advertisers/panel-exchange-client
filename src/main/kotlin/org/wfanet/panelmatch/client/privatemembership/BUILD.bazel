@@ -44,5 +44,6 @@ kt_jvm_library(
         "//src/main/swig/wfanet/panelmatch/client/privatemembership/decryptqueryresults:decrypt_query_results",
         "//src/main/swig/wfanet/panelmatch/client/privatemembership/privatemembership:private_membership",
         "@wfa_common_jvm//imports/java/com/google/protobuf",
+        "@wfa_common_jvm//src/main/kotlin/org/wfanet/measurement/common",
     ],
 )

@@ -14,12 +14,13 @@
 
 package org.wfanet.panelmatch.client.privatemembership
 
-import com.google.protobuf.ByteString
 import java.io.Serializable
+import java.lang.IllegalArgumentException
 import org.apache.beam.sdk.metrics.Metrics
 import org.apache.beam.sdk.transforms.DoFn
 import org.apache.beam.sdk.values.KV
 import org.apache.beam.sdk.values.PCollection
+import org.wfanet.measurement.common.flatten
 import org.wfanet.panelmatch.common.beam.groupByKey
 import org.wfanet.panelmatch.common.beam.join
 import org.wfanet.panelmatch.common.beam.keyBy
@@ -43,7 +44,8 @@ class EvaluateQueriesWorkflow(
    *
    * @property numShards the number of shards to split the database into
    * @property numBucketsPerShard the number of buckets each shard can have
-   * @property maxQueriesPerShard the number of queries each shard can have
+   * @property maxQueriesPerShard the number of queries each shard can have -- this is a safeguard
+   * against malicious behavior
    */
   data class Parameters(
     val numShards: Int,
@@ -86,8 +88,13 @@ class EvaluateQueriesWorkflow(
       }
 
       if (numQueries > 0) {
-        val shard = shards.singleOrNull() ?: databaseShardOf(key, emptyList())
-        yieldAll(queryEvaluator.executeQueries(listOf(shard), queriesList))
+        val shardsList = shards.toList()
+        // TODO(@efoxepstein): consider throwing an error when the size is 0, too.
+        when (shardsList.size) {
+          0 -> return@join
+          1 -> yieldAll(queryEvaluator.executeQueries(shardsList, queriesList))
+          else -> throw IllegalArgumentException("Too many DatabaseShards for shard $key")
+        }
       }
     }
   }
@@ -103,10 +110,9 @@ class EvaluateQueriesWorkflow(
         kvOf(shardId, bucketId)
       }
       .groupByKey("Group by Shard and Bucket")
-      .map {
-        val combinedValues =
-          it.value.fold(ByteString.EMPTY) { acc, e -> acc.concat(e.value.payload) }
-        kvOf(it.key.key, bucketOf(it.key.value, combinedValues))
+      .map { kv ->
+        val combinedValues = kv.value.map { it.value.payload }.flatten()
+        kvOf(kv.key.key, bucketOf(kv.key.value, combinedValues))
       }
       .groupByKey("Group by Shard")
       .map { kvOf(it.key, databaseShardOf(it.key, it.value.toList())) }
@@ -115,7 +121,7 @@ class EvaluateQueriesWorkflow(
 }
 
 /**
- * This makes a Distribution metric of the number of bytes in each subshard's buckets' payloads.
+ * This makes a Distribution metric of the number of bytes in each shard's buckets' payloads.
  *
  * Note that this is a different value than the size of the DatabaseShard as a serialized proto.
  */
@@ -127,7 +133,7 @@ private class DatabaseShardSizeObserver :
   @ProcessElement
   fun processElement(context: ProcessContext) {
     val bucketsList = context.element().value.bucketsList
-    val totalSize = bucketsList.fold(0L) { acc, bucket -> acc + bucket.payload.size() }
+    val totalSize = bucketsList.sumOf { it.payload.size().toLong() }
     sizeDistribution.update(totalSize)
     context.output(context.element())
   }

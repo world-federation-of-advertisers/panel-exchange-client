@@ -76,7 +76,9 @@ class BucketingTest {
 
   @Test
   fun overflow() {
-    // This test is for a specific regression encountered.
+    // This test is for a specific regression encountered. In particular, there was a bug where one
+    // of the mathematical operations did not treat a value as unsigned. This test case reproduces
+    // the bug to ensure it's not later re-introduced.
 
     val bucketing = Bucketing(numShards = 1, numBucketsPerShard = 10)
 

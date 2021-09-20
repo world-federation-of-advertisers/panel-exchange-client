@@ -74,8 +74,7 @@ class EvaluateQueriesWorkflowTest : BeamTestBase() {
     val queryBundles =
       listOf(
         queryBundleOf(shard = 0, listOf(100 to 4)),
-        queryBundleOf(shard = 1, listOf(101 to 0, 102 to 0, 103 to 1)),
-        queryBundleOf(shard = 2, listOf(104 to 0)),
+        queryBundleOf(shard = 1, listOf(101 to 0, 102 to 0, 103 to 1))
       )
 
     assertThat(runWorkflow(queryBundles, parameters))
@@ -83,8 +82,7 @@ class EvaluateQueriesWorkflowTest : BeamTestBase() {
         resultOf(100, "def"),
         resultOf(101, "hij"),
         resultOf(102, "hij"),
-        resultOf(103, "abc"),
-        resultOf(104, "")
+        resultOf(103, "abc")
       )
 
     assertThat(runPipelineAndGetActualMaxSubshardSize()).isEqualTo(9)
