@@ -21,6 +21,7 @@ import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
 import org.wfanet.panelmatch.client.CombinedEvents
 import org.wfanet.panelmatch.client.common.CompressedEvents
+import org.wfanet.panelmatch.client.common.testing.FakeEventCompressorTrainer
 import org.wfanet.panelmatch.client.common.testing.eventsOf
 import org.wfanet.panelmatch.client.eventpreprocessing.compressByKey
 import org.wfanet.panelmatch.common.beam.testing.BeamTestBase

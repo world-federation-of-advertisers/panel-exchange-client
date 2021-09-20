@@ -11,7 +11,6 @@ kt_jvm_test(
         "//src/main/kotlin/org/wfanet/panelmatch/client/eventpostprocessing",
         "//src/main/kotlin/org/wfanet/panelmatch/client/eventpostprocessing/testing",
         "//src/main/kotlin/org/wfanet/panelmatch/client/eventpreprocessing",
-        "//src/main/kotlin/org/wfanet/panelmatch/client/eventpreprocessing/testing",
         "//src/main/kotlin/org/wfanet/panelmatch/common",
         "//src/main/kotlin/org/wfanet/panelmatch/common/beam",
         "//src/main/kotlin/org/wfanet/panelmatch/common/beam/testing",

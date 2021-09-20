@@ -25,6 +25,10 @@ import org.wfanet.panelmatch.common.beam.map
 import org.wfanet.panelmatch.common.beam.parDoWithSideInput
 import org.wfanet.panelmatch.common.compression.Compressor
 
+/**
+ * Receives [CompressedEvents] consisting of a dictionary and events. It also receives a function to
+ * generate a [Compressor] from a dictionary. Compresses the events using the [Compressor].
+ */
 fun uncompressByKey(
   compressedEvents: CompressedEvents,
   getCompressor: (ByteString) -> Compressor

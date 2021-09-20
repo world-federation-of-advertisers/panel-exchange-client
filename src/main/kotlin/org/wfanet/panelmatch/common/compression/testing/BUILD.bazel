@@ -3,10 +3,7 @@ load("@io_bazel_rules_kotlin//kotlin:jvm.bzl", "kt_jvm_library")
 package(
     default_testonly = True,
     default_visibility = [
-        "//src/main/kotlin/org/wfanet/panelmatch/client/eventpostprocessing/testing:__subpackages__",
-        "//src/main/kotlin/org/wfanet/panelmatch/client/eventpreprocessing/testing:__subpackages__",
-        "//src/test/kotlin/org/wfanet/panelmatch/client/eventpostprocessing/testing:__subpackages__",
-        "//src/test/kotlin/org/wfanet/panelmatch/client/eventpreprocessing/testing:__subpackages__",
+        "//src/main/kotlin/org/wfanet/panelmatch/client/common/testing:__subpackages__",
         "//src/test/kotlin/org/wfanet/panelmatch/common/compression:__subpackages__",
     ],
 )

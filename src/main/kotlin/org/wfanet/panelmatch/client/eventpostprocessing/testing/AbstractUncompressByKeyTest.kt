@@ -20,9 +20,9 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
 import org.wfanet.panelmatch.client.common.CompressedEvents
+import org.wfanet.panelmatch.client.common.EventCompressorTrainer
 import org.wfanet.panelmatch.client.common.testing.eventsOf
 import org.wfanet.panelmatch.client.eventpostprocessing.uncompressByKey
-import org.wfanet.panelmatch.client.eventpreprocessing.EventCompressorTrainer
 import org.wfanet.panelmatch.client.eventpreprocessing.compressByKey
 import org.wfanet.panelmatch.common.beam.testing.BeamTestBase
 import org.wfanet.panelmatch.common.beam.testing.assertThat

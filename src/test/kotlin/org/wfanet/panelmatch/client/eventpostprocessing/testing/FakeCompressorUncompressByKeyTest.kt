@@ -17,7 +17,7 @@ package org.wfanet.panelmatch.client.eventpostprocessing.testing
 import com.google.protobuf.ByteString
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
-import org.wfanet.panelmatch.client.eventpreprocessing.testing.FakeEventCompressorTrainer
+import org.wfanet.panelmatch.client.common.testing.FakeEventCompressorTrainer
 import org.wfanet.panelmatch.common.compression.Compressor
 import org.wfanet.panelmatch.common.compression.testing.FakeCompressor
 

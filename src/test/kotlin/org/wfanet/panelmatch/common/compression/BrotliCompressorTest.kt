@@ -15,6 +15,7 @@
 package org.wfanet.panelmatch.common.compression
 
 import com.google.common.truth.Truth.assertThat
+import com.google.protobuf.ByteString
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
@@ -24,7 +25,7 @@ import org.wfanet.panelmatch.common.toByteString
 
 @RunWith(JUnit4::class)
 class BrotliCompressorTest : AbstractCompressorTest() {
-  val dictionary = "".toByteString()
+  val dictionary = ByteString.EMPTY
   override val compressor = BrotliCompressor(dictionary)
   private val eventList = listOf<String>("aaaaaaaaaaaaaaaa")
   override val events = combinedEvents { serializedEvents += eventList.map { it.toByteString() } }
