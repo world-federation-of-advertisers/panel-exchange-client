@@ -18,14 +18,10 @@ import com.google.protobuf.ByteString
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
 import org.wfanet.panelmatch.client.common.testing.FakeEventCompressorTrainer
-import org.wfanet.panelmatch.common.compression.Compressor
 import org.wfanet.panelmatch.common.compression.testing.FakeCompressor
 
 @RunWith(JUnit4::class)
 class FakeCompressorUncompressByKeyTest : AbstractUncompressByKeyTest() {
   override val eventCompressorTrainer = FakeEventCompressorTrainer()
-  override val getCompressor =
-    fun(dictionary: ByteString): Compressor {
-      return FakeCompressor()
-    }
+  override val getCompressor = { _: ByteString -> FakeCompressor() }
 }
