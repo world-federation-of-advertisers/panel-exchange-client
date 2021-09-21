@@ -21,7 +21,7 @@ import org.wfanet.panelmatch.client.common.testing.FakeEventCompressorTrainer
 import org.wfanet.panelmatch.common.compression.testing.FakeCompressor
 
 @RunWith(JUnit4::class)
-class FakeCompressorUncompressByKeyTest : AbstractUncompressByKeyTest() {
+class FakeCompressorUncompressEventsTest : AbstractUncompressEventsTest() {
   override val eventCompressorTrainer = FakeEventCompressorTrainer()
   override val getCompressor = { _: ByteString -> FakeCompressor() }
 }

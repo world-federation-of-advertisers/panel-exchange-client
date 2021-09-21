@@ -14,6 +14,6 @@
 
 package org.wfanet.panelmatch.common.crypto.testing
 
-class ConcatSymmetricCryptorTest : AbstractSymmetricCryptorTest() {
-  override val symmetricCryptor = ConcatSymmetricCryptor()
+class FakeSymmetricCryptorTest : AbstractSymmetricCryptorTest() {
+  override val symmetricCryptor = FakeSymmetricCryptor()
 }

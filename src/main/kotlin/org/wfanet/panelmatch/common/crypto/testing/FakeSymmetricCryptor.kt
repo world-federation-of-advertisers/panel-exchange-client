@@ -18,8 +18,8 @@ import com.google.protobuf.ByteString
 import org.wfanet.panelmatch.common.crypto.SymmetricCryptor
 import org.wfanet.panelmatch.common.toByteString
 
-/** Does no real crypto. It only xors [data] with [privateKey]. */
-class ConcatSymmetricCryptor : SymmetricCryptor {
+/** For testing only. Does not play nicely with non-Utf8 source data. */
+class FakeSymmetricCryptor : SymmetricCryptor {
 
   private val SEPARATOR = " encrypted by "
   override fun encrypt(privateKey: ByteString, data: ByteString): ByteString {

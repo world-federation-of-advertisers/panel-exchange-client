@@ -22,6 +22,7 @@ import org.wfanet.panelmatch.client.privatemembership.DecryptedEventData
 import org.wfanet.panelmatch.client.privatemembership.DecryptedQueryResult
 import org.wfanet.panelmatch.client.privatemembership.EncryptedEventData
 import org.wfanet.panelmatch.client.privatemembership.EncryptedQueryResult
+import org.wfanet.panelmatch.client.privatemembership.JoinKey
 import org.wfanet.panelmatch.client.privatemembership.PrivateMembershipDecryptRequest
 import org.wfanet.panelmatch.client.privatemembership.PrivateMembershipDecryptResponse
 import org.wfanet.panelmatch.client.privatemembership.PrivateMembershipEncryptResponse
@@ -38,16 +39,18 @@ import org.wfanet.panelmatch.client.privatemembership.queryIdOf
 import org.wfanet.panelmatch.client.privatemembership.queryMetadataOf
 import org.wfanet.panelmatch.client.privatemembership.resultOf
 import org.wfanet.panelmatch.client.privatemembership.shardIdOf
+import org.wfanet.panelmatch.common.beam.join
+import org.wfanet.panelmatch.common.beam.keyBy
 import org.wfanet.panelmatch.common.beam.kvOf
 import org.wfanet.panelmatch.common.beam.map
 import org.wfanet.panelmatch.common.beam.parDo
 import org.wfanet.panelmatch.common.crypto.SymmetricCryptor
-import org.wfanet.panelmatch.common.crypto.testing.ConcatSymmetricCryptor
+import org.wfanet.panelmatch.common.crypto.testing.FakeSymmetricCryptor
 import org.wfanet.panelmatch.common.toByteString
 
 object PlaintextPrivateMembershipCryptorHelper : PrivateMembershipCryptorHelper {
 
-  private val symmetricCryptor: SymmetricCryptor = ConcatSymmetricCryptor()
+  private val symmetricCryptor: SymmetricCryptor = FakeSymmetricCryptor()
 
   private fun queryBundleOf(shard: Int, queries: List<Pair<Int, Int>>): QueryBundle {
     return PlaintextQueryEvaluatorTestHelper.makeQueryBundle(
@@ -68,6 +71,20 @@ object PlaintextPrivateMembershipCryptorHelper : PrivateMembershipCryptorHelper 
   override fun makeEncryptedQueryResults(
     encryptedEventData: List<EncryptedEventData>
   ): List<EncryptedQueryResult> {
+    return encryptedEventData.map {
+      encryptedQueryResult {
+        queryId = it.queryId
+        shardId = it.shardId
+        ciphertexts +=
+          resultOf(queryMetadataOf(it.queryId, ByteString.EMPTY), it.ciphertextsList.single())
+            .toByteString()
+      }
+    }
+  }
+
+  override fun makeEncryptedQueryResults(
+    encryptedEventData: PCollection<EncryptedEventData>
+  ): PCollection<EncryptedQueryResult> {
     return encryptedEventData.map {
       encryptedQueryResult {
         queryId = it.queryId
@@ -101,13 +118,32 @@ object PlaintextPrivateMembershipCryptorHelper : PrivateMembershipCryptorHelper 
     plaintexts: List<DecryptedEventData>,
     joinkeys: List<Pair<Int, String>>
   ): List<EncryptedEventData> {
-    return plaintexts.zip(joinkeys).map { (plaintext, joinkeyList) ->
+    return plaintexts.zip(joinkeys).map { (plaintexts, joinkeyList) ->
       encryptedEventData {
-        queryId = plaintext.queryId
-        shardId = plaintext.shardId
+        queryId = plaintexts.queryId
+        shardId = plaintexts.shardId
         ciphertexts +=
-          symmetricCryptor.encrypt(joinkeyList.second.toByteString(), plaintext.plaintext)
+          symmetricCryptor.encrypt(joinkeyList.second.toByteString(), plaintexts.plaintext)
       }
+    }
+  }
+
+  override fun makeEncryptedEventData(
+    plaintexts: PCollection<DecryptedEventData>,
+    joinkeys: PCollection<KV<QueryId, JoinKey>>
+  ): PCollection<EncryptedEventData> {
+    return plaintexts.keyBy { it.queryId }.join(joinkeys) {
+      queryId: QueryId,
+      plaintextList: Iterable<DecryptedEventData>,
+      joinkeyList: Iterable<JoinKey> ->
+      yield(
+        encryptedEventData {
+          this.queryId = queryId
+          shardId = plaintextList.single().shardId
+          ciphertexts +=
+            symmetricCryptor.encrypt(joinkeyList.single().key, plaintextList.single().plaintext)
+        }
+      )
     }
   }
 

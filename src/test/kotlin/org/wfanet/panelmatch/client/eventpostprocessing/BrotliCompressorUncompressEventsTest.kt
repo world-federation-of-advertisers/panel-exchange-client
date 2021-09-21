@@ -17,11 +17,11 @@ package org.wfanet.panelmatch.client.eventpostprocessing
 import com.google.protobuf.ByteString
 import org.wfanet.panelmatch.client.common.BrotliEventCompressorTrainer
 import org.wfanet.panelmatch.client.common.EventCompressorTrainer
-import org.wfanet.panelmatch.client.eventpostprocessing.testing.AbstractUncompressByKeyTest
+import org.wfanet.panelmatch.client.eventpostprocessing.testing.AbstractUncompressEventsTest
 import org.wfanet.panelmatch.common.compression.BrotliCompressor
 import org.wfanet.panelmatch.common.compression.Compressor
 
-class BrotliCompressorUncompressByKeyTest : AbstractUncompressByKeyTest() {
+class BrotliCompressorUncompressEventsTest : AbstractUncompressEventsTest() {
   override val eventCompressorTrainer: EventCompressorTrainer = BrotliEventCompressorTrainer()
   override val getCompressor: (ByteString) -> Compressor = ::BrotliCompressor
 }

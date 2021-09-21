@@ -16,30 +16,36 @@ package org.wfanet.panelmatch.client.eventpostprocessing
 
 import com.google.protobuf.ByteString
 import org.apache.beam.sdk.transforms.View
-import org.apache.beam.sdk.values.KV
 import org.apache.beam.sdk.values.PCollection
 import org.wfanet.panelmatch.client.CombinedEvents
-import org.wfanet.panelmatch.client.common.CompressedEvents
-import org.wfanet.panelmatch.common.beam.kvOf
+import org.wfanet.panelmatch.client.privatemembership.DecryptedEventData
+import org.wfanet.panelmatch.client.privatemembership.decryptedEventData
 import org.wfanet.panelmatch.common.beam.map
 import org.wfanet.panelmatch.common.beam.parDoWithSideInput
 import org.wfanet.panelmatch.common.compression.Compressor
 
 /**
- * Receives [CompressedEvents] consisting of a dictionary and events. It also receives a function to
- * generate a [Compressor] from a dictionary. Compresses the events using the [Compressor].
+ * Receives [PCollection] of events and a dictionary. It also receives a function to generate a
+ * [Compressor] from a dictionary. Compresses the events using the [Compressor].
  */
-fun uncompressByKey(
-  compressedEvents: CompressedEvents,
+fun uncompressEvents(
+  compressedEvents: PCollection<DecryptedEventData>,
+  dictionary: PCollection<ByteString>,
   getCompressor: (ByteString) -> Compressor
-): PCollection<KV<ByteString, ByteString>> {
+): PCollection<DecryptedEventData> {
 
-  return compressedEvents.events.parDoWithSideInput(
-    compressedEvents.dictionary.apply(View.asSingleton())
-  ) { keyAndCompressedEvents: KV<ByteString, ByteString>, dictionary: ByteString ->
-    val compressor = getCompressor(dictionary)
-    CombinedEvents.parseFrom(compressor.uncompress(keyAndCompressedEvents.value))
-      .serializedEventsList
-      .map { yield(kvOf(keyAndCompressedEvents.key, it)) }
+  return compressedEvents.parDoWithSideInput(dictionary.apply(View.asSingleton())) {
+    events: DecryptedEventData,
+    dictionaryData: ByteString ->
+    val compressor = getCompressor(dictionaryData)
+    CombinedEvents.parseFrom(compressor.uncompress(events.plaintext)).serializedEventsList.map {
+      yield(
+        decryptedEventData {
+          plaintext = it
+          queryId = events.queryId
+          shardId = events.shardId
+        }
+      )
+    }
   }
 }
