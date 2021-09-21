@@ -36,6 +36,7 @@ import org.wfanet.measurement.common.crypto.testing.KEY_ALGORITHM
 import org.wfanet.measurement.common.flatten
 import org.wfanet.panelmatch.client.exchangetasks.ExchangeTask
 import org.wfanet.panelmatch.client.launcher.testing.FakeTimeout
+import org.wfanet.panelmatch.client.launcher.testing.buildExchangeStep
 import org.wfanet.panelmatch.client.launcher.testing.buildStep
 import org.wfanet.panelmatch.client.storage.VerifiedStorageClient
 import org.wfanet.panelmatch.client.storage.testing.InMemoryStorageClient
@@ -93,12 +94,18 @@ class ExchangeTaskExecutorTest {
 
     exchangeTaskExecutor.execute(
       ExchangeStepAttemptKey("w", "x", "y", "z"),
-      buildStep(
-        ENCRYPT_STEP,
-        privateInputLabels = mapOf("a" to "b"),
-        sharedInputLabels = mapOf("c" to "d"),
-        privateOutputLabels = mapOf("Out:c" to "e"),
-        sharedOutputLabels = mapOf("Out:a" to "f")
+      buildExchangeStep(
+        name = "some-name",
+        edpName = "some-edp",
+        mpName = "some-mp",
+        testedStep =
+          buildStep(
+            ENCRYPT_STEP,
+            privateInputLabels = mapOf("a" to "b"),
+            sharedInputLabels = mapOf("c" to "d"),
+            privateOutputLabels = mapOf("Out:c" to "e"),
+            sharedOutputLabels = mapOf("Out:a" to "f")
+          )
       )
     )
 
@@ -127,10 +134,16 @@ class ExchangeTaskExecutorTest {
     assertFailsWith<CancellationException> {
       exchangeTaskExecutor.execute(
         ExchangeStepAttemptKey("w", "x", "y", "z"),
-        buildStep(
-          ENCRYPT_STEP,
-          privateInputLabels = mapOf("a" to "b"),
-          sharedOutputLabels = mapOf("Out:a" to "c")
+        buildExchangeStep(
+          name = "some-name",
+          edpName = "some-edp",
+          mpName = "some-mp",
+          testedStep =
+            buildStep(
+              ENCRYPT_STEP,
+              privateInputLabels = mapOf("a" to "b"),
+              sharedOutputLabels = mapOf("Out:a" to "c")
+            )
         )
       )
     }

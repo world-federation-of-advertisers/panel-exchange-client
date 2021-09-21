@@ -18,6 +18,7 @@ import com.google.protobuf.ByteString
 import org.mockito.kotlin.any
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.whenever
+import org.wfanet.measurement.api.v2alpha.ExchangeStep
 import org.wfanet.measurement.api.v2alpha.ExchangeWorkflow
 import org.wfanet.panelmatch.common.toByteString
 import org.wfanet.panelmatch.protocol.common.DeterministicCommutativeCipher
@@ -66,6 +67,14 @@ fun buildMockCryptor(): DeterministicCommutativeCipher {
   return mockCryptor
 }
 
+fun buildWorkflow(
+  testedStep: ExchangeWorkflow.Step,
+  edpName: String,
+  mpName: String
+): ExchangeWorkflow {
+  return ExchangeWorkflow.newBuilder().addSteps(testedStep).build()
+}
+
 fun buildStep(
   stepType: ExchangeWorkflow.Step.StepCase,
   privateInputLabels: Map<String, String> = emptyMap(),
@@ -100,6 +109,23 @@ fun buildStep(
               .build()
         else -> error("Unsupported step config")
       }
+    }
+    .build()
+}
+
+fun buildExchangeStep(
+  name: String,
+  stepIndex: Int = 0,
+  edpName: String,
+  mpName: String,
+  testedStep: ExchangeWorkflow.Step
+): ExchangeStep {
+  return ExchangeStep.newBuilder()
+    .apply {
+      stepIndex
+      name
+      signedExchangeWorkflowBuilder.serializedExchangeWorkflow =
+        buildWorkflow(testedStep, edpName, mpName).toByteString()
     }
     .build()
 }
