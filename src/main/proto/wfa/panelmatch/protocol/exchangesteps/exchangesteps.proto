@@ -24,3 +24,12 @@ option java_multiple_files = true;
 message SharedInputs {
   repeated bytes data = 1;
 }
+
+// A format used for multipart uploads where each part is signed (say serialized
+// as the `data` portion of SignedData). Each piece has an index, so a reader
+// can verify that the proper number of chunks (and no duplicate chunks) are
+// included.
+message MultipartInput {
+  bytes data = 1;
+  int64 chunk_index = 2;
+}
