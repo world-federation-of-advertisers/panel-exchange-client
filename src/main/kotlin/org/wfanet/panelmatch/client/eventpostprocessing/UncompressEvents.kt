@@ -20,9 +20,10 @@ import org.apache.beam.sdk.values.PCollection
 import org.wfanet.panelmatch.client.CombinedEvents
 import org.wfanet.panelmatch.client.privatemembership.DecryptedEventData
 import org.wfanet.panelmatch.client.privatemembership.decryptedEventData
-import org.wfanet.panelmatch.common.beam.map
 import org.wfanet.panelmatch.common.beam.parDoWithSideInput
 import org.wfanet.panelmatch.common.compression.Compressor
+import org.wfanet.panelmatch.common.compression.CompressorFactory
+import org.wfanet.panelmatch.common.compression.FactoryBasedCompressor
 
 /**
  * Receives [PCollection] of events and a dictionary. It also receives a function to generate a
@@ -31,14 +32,14 @@ import org.wfanet.panelmatch.common.compression.Compressor
 fun uncompressEvents(
   compressedEvents: PCollection<DecryptedEventData>,
   dictionary: PCollection<ByteString>,
-  getCompressor: (ByteString) -> Compressor
+  compressorFactory: CompressorFactory
 ): PCollection<DecryptedEventData> {
 
   return compressedEvents.parDoWithSideInput(dictionary.apply(View.asSingleton())) {
     events: DecryptedEventData,
     dictionaryData: ByteString ->
-    val compressor = getCompressor(dictionaryData)
-    CombinedEvents.parseFrom(compressor.uncompress(events.plaintext)).serializedEventsList.map {
+    val compressor = FactoryBasedCompressor(dictionaryData, compressorFactory)
+    CombinedEvents.parseFrom(compressor.uncompress(events.plaintext)).serializedEventsList.forEach {
       yield(
         decryptedEventData {
           plaintext = it

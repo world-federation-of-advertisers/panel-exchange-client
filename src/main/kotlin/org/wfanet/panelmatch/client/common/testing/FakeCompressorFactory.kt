@@ -12,19 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package org.wfanet.panelmatch.client.common
+package org.wfanet.panelmatch.client.common.testing
 
 import com.google.protobuf.ByteString
-import org.wfanet.measurement.common.flatten
-import org.wfanet.panelmatch.common.compression.FactoryBasedCompressor
+import org.wfanet.panelmatch.common.compression.Compressor
+import org.wfanet.panelmatch.common.compression.CompressorFactory
+import org.wfanet.panelmatch.common.compression.testing.FakeCompressor
 
-/** [EventCompressorTrainer] that uses Brotli compression (via JNI). */
-class BrotliEventCompressorTrainer : EventCompressorTrainer {
-  // TODO(@efoxepstein): experimentally adjust this value
-  override val preferredSampleSize: Int = 1000
-
-  override fun train(eventsSample: Iterable<ByteString>): FactoryBasedCompressor {
-    val dictionary: ByteString = eventsSample.flatten()
-    return FactoryBasedCompressor(dictionary, BrotliCompressorFactory())
+class FakeCompressorFactory : CompressorFactory() {
+  override fun build(dictionary: ByteString): Compressor {
+    return FakeCompressor()
   }
 }

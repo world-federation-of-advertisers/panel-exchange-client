@@ -23,7 +23,7 @@ import org.wfanet.panelmatch.common.beam.join
 import org.wfanet.panelmatch.common.beam.keyBy
 import org.wfanet.panelmatch.common.beam.kvOf
 import org.wfanet.panelmatch.common.beam.parDo
-import org.wfanet.panelmatch.common.compression.Compressor
+import org.wfanet.panelmatch.common.compression.CompressorFactory
 
 /**
  * Implements a query result decryption engine in Apache Beam that decrypts a query result
@@ -38,7 +38,7 @@ class DecryptQueryResultsWorkflow(
   private val parameters: Parameters,
   private val queryResultsDecryptor: QueryResultsDecryptor,
   private val hkdfPepper: ByteString,
-  private val getCompressor: (ByteString) -> Compressor,
+  private val compressorFactory: CompressorFactory,
 ) : Serializable {
 
   /** Tuning knobs for the [DecryptQueriesWorkflow]. */
@@ -83,6 +83,6 @@ class DecryptQueryResultsWorkflow(
           val decryptedResults = queryResultsDecryptor.decryptQueryResults(request)
           yieldAll(decryptedResults.decryptedEventDataList)
         }
-    return uncompressEvents(decryptedQueryResults, dictionary, getCompressor)
+    return uncompressEvents(decryptedQueryResults, dictionary, compressorFactory)
   }
 }

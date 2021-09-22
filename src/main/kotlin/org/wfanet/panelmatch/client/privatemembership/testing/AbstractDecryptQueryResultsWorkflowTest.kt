@@ -43,7 +43,7 @@ import org.wfanet.panelmatch.common.beam.kvOf
 import org.wfanet.panelmatch.common.beam.map
 import org.wfanet.panelmatch.common.beam.testing.BeamTestBase
 import org.wfanet.panelmatch.common.beam.testing.assertThat
-import org.wfanet.panelmatch.common.compression.Compressor
+import org.wfanet.panelmatch.common.compression.CompressorFactory
 import org.wfanet.panelmatch.common.toByteString
 
 private val PLAINTEXTS =
@@ -71,7 +71,7 @@ abstract class AbstractDecryptQueryResultsWorkflowTest : BeamTestBase() {
   abstract val privateMembershipCryptorHelper: PrivateMembershipCryptorHelper
   abstract val serializedParameters: ByteString
   abstract val eventCompressorTrainer: EventCompressorTrainer
-  abstract val getCompressor: (ByteString) -> Compressor
+  abstract val compressorFactory: CompressorFactory
 
   private fun runWorkflow(
     queryResultsDecryptor: QueryResultsDecryptor,
@@ -94,7 +94,7 @@ abstract class AbstractDecryptQueryResultsWorkflowTest : BeamTestBase() {
         parameters = parameters,
         queryResultsDecryptor = queryResultsDecryptor,
         hkdfPepper = HKDF_PEPPER,
-        getCompressor = getCompressor,
+        compressorFactory = compressorFactory,
       )
       .batchDecryptQueryResults(
         encryptedQueryResults = encryptedResults,
