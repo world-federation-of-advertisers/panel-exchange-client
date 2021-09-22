@@ -19,10 +19,9 @@ import java.io.Serializable
 import org.apache.beam.sdk.values.KV
 import org.apache.beam.sdk.values.PCollection
 import org.wfanet.panelmatch.client.eventpostprocessing.uncompressEvents
-import org.wfanet.panelmatch.common.beam.join
 import org.wfanet.panelmatch.common.beam.keyBy
-import org.wfanet.panelmatch.common.beam.kvOf
 import org.wfanet.panelmatch.common.beam.parDo
+import org.wfanet.panelmatch.common.beam.strictOneToOneJoin
 import org.wfanet.panelmatch.common.compression.CompressorFactory
 
 /**
@@ -58,17 +57,14 @@ class DecryptQueryResultsWorkflow(
     queryIdToJoinKey: PCollection<KV<QueryId, JoinKey>>,
     dictionary: PCollection<ByteString>,
   ): PCollection<DecryptedEventData> {
+    val keyedEncryptedQueryResults =
+      encryptedQueryResults.keyBy<EncryptedQueryResult, QueryId>("Key by Query Id") {
+        requireNotNull(it.queryId)
+      }
     val decryptedQueryResults =
-      encryptedQueryResults
-        .keyBy<EncryptedQueryResult, QueryId>("Key by Query Id") { requireNotNull(it.queryId) }
-        .join<QueryId, EncryptedQueryResult, JoinKey, KV<JoinKey, EncryptedQueryResult>>(
-          queryIdToJoinKey
-        ) {
-          _: QueryId,
-          encryptedQueryResultsList: Iterable<EncryptedQueryResult>,
-          joinKeys: Iterable<JoinKey> ->
-          yield(kvOf(joinKeys.single(), encryptedQueryResultsList.single()))
-        }
+      queryIdToJoinKey.strictOneToOneJoin<QueryId, JoinKey, EncryptedQueryResult>(
+          keyedEncryptedQueryResults
+        )
         .parDo<KV<JoinKey, EncryptedQueryResult>, DecryptedEventData>(
           name = "Decrypt encrypted results"
         ) {

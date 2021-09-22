@@ -37,10 +37,11 @@ import org.wfanet.panelmatch.client.privatemembership.generateKeysRequest
 import org.wfanet.panelmatch.client.privatemembership.joinKeyOf
 import org.wfanet.panelmatch.client.privatemembership.plaintextOf
 import org.wfanet.panelmatch.client.privatemembership.queryIdOf
-import org.wfanet.panelmatch.common.beam.join
 import org.wfanet.panelmatch.common.beam.keyBy
 import org.wfanet.panelmatch.common.beam.kvOf
 import org.wfanet.panelmatch.common.beam.map
+import org.wfanet.panelmatch.common.beam.mapKeys
+import org.wfanet.panelmatch.common.beam.strictOneToOneJoin
 import org.wfanet.panelmatch.common.beam.testing.BeamTestBase
 import org.wfanet.panelmatch.common.beam.testing.assertThat
 import org.wfanet.panelmatch.common.compression.CompressorFactory
@@ -133,21 +134,12 @@ abstract class AbstractDecryptQueryResultsWorkflowTest : BeamTestBase() {
     events: PCollection<KV<ByteString, ByteString>>
   ): PCollection<EncryptedQueryResult> {
 
-    val mappedCompressedEvents =
-      events.map<KV<ByteString, ByteString>, KV<QueryId, ByteString>> {
-        kvOf(QueryId.parseFrom(it.key), it.value)
-      }
+    val mappedCompressedEvents = events.mapKeys { QueryId.parseFrom(it) }
     val compressedPlaintexts: PCollection<DecryptedEventData> =
       plaintextCollection
         .keyBy<DecryptedEventData, QueryId>("Key by QueryId") { requireNotNull(it.queryId) }
-        .join<QueryId, DecryptedEventData, ByteString, DecryptedEventData>(
-          mappedCompressedEvents
-        ) {
-          queryId: QueryId,
-          plaintexts: Iterable<DecryptedEventData>,
-          compresseds: Iterable<ByteString> ->
-          yield(plaintextOf(compresseds.single(), queryId, plaintexts.single().shardId))
-        }
+        .strictOneToOneJoin<QueryId, DecryptedEventData, ByteString>(mappedCompressedEvents)
+        .map { plaintextOf(it.value, it.key.queryId, it.key.shardId) }
 
     val encryptedEventData: PCollection<EncryptedEventData> =
       privateMembershipCryptorHelper.makeEncryptedEventData(compressedPlaintexts, joinkeyCollection)
