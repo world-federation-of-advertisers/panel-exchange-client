@@ -26,8 +26,8 @@ import org.wfanet.panelmatch.common.compression.CompressorFactory
 import org.wfanet.panelmatch.common.compression.FactoryBasedCompressor
 
 /**
- * Receives [PCollection] of events and a dictionary. It also receives a function to generate a
- * [Compressor] from a dictionary. Compresses the events using the [Compressor].
+ * Receives [PCollection] of events and a dictionary. Compresses the events using the [Compressor]
+ * generated using the [CompressorFactory] and dictionary.
  */
 fun uncompressEvents(
   compressedEvents: PCollection<DecryptedEventData>,
@@ -38,7 +38,7 @@ fun uncompressEvents(
   return compressedEvents.parDoWithSideInput(dictionary.apply(View.asSingleton())) {
     events: DecryptedEventData,
     dictionaryData: ByteString ->
-    val compressor = FactoryBasedCompressor(dictionaryData, compressorFactory)
+    val compressor: Compressor = FactoryBasedCompressor(dictionaryData, compressorFactory)
     CombinedEvents.parseFrom(compressor.uncompress(events.plaintext)).serializedEventsList.forEach {
       yield(
         decryptedEventData {

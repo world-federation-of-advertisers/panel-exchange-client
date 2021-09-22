@@ -32,7 +32,7 @@ import org.wfanet.panelmatch.common.compression.CompressorFactory
  * @param queryResultsDecryptor implementation of lower-level query result decryption and encrypted
  * event decryption
  * @param hkdfPepper used with joinkey to generate AES key
- * @param getCompressor used to data compressor
+ * @param compressFactory used to build Compressor
  */
 class DecryptQueryResultsWorkflow(
   private val parameters: Parameters,
@@ -41,7 +41,7 @@ class DecryptQueryResultsWorkflow(
   private val compressorFactory: CompressorFactory,
 ) : Serializable {
 
-  /** Tuning knobs for the [DecryptQueriesWorkflow]. */
+  /** Tuning knobs for the [DecryptQueryResultsWorkflow]. */
   data class Parameters(
     val serializedParameters: ByteString,
     val serializedPublicKey: ByteString,

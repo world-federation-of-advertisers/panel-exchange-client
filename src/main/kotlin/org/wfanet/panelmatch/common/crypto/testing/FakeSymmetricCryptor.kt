@@ -18,10 +18,11 @@ import com.google.protobuf.ByteString
 import org.wfanet.panelmatch.common.crypto.SymmetricCryptor
 import org.wfanet.panelmatch.common.toByteString
 
+private const val SEPARATOR = " encrypted by "
+
 /** For testing only. Does not play nicely with non-Utf8 source data. */
 class FakeSymmetricCryptor : SymmetricCryptor {
 
-  private val SEPARATOR = " encrypted by "
   override fun encrypt(privateKey: ByteString, data: ByteString): ByteString {
     return data.concat(SEPARATOR.toByteString()).concat(privateKey)
   }
