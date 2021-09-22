@@ -22,6 +22,7 @@ import org.wfanet.panelmatch.client.privatemembership.QueryBundle
 import org.wfanet.panelmatch.client.privatemembership.bucketIdOf
 import org.wfanet.panelmatch.client.privatemembership.decryptedQueryOf
 import org.wfanet.panelmatch.client.privatemembership.encryptedEventDataOf
+import org.wfanet.panelmatch.client.privatemembership.generateKeysRequest
 import org.wfanet.panelmatch.client.privatemembership.privateMembershipDecryptRequest
 import org.wfanet.panelmatch.client.privatemembership.privateMembershipEncryptRequest
 import org.wfanet.panelmatch.client.privatemembership.queryBundleOf
@@ -30,6 +31,8 @@ import org.wfanet.panelmatch.client.privatemembership.shardIdOf
 import org.wfanet.panelmatch.client.privatemembership.unencryptedQueryOf
 import org.wfanet.panelmatch.common.toByteString
 
+private val SERIALIZED_PARAMETERS = "some-serialized-parameters".toByteString()
+
 @RunWith(JUnit4::class)
 class PlaintextPrivateMembershipCryptorTest {
   val privateMembershipCryptor = PlaintextPrivateMembershipCryptor
@@ -37,7 +40,14 @@ class PlaintextPrivateMembershipCryptorTest {
 
   @Test
   fun `encryptQueries with multiple shards`() {
+    val generatePlaintextKeysRequest = generateKeysRequest {
+      serializedParameters = SERIALIZED_PARAMETERS
+    }
+    val generateKeysResponse = privateMembershipCryptor.generateKeys(generatePlaintextKeysRequest)
     val privateMembershipEncryptRequest = privateMembershipEncryptRequest {
+      serializedParameters = SERIALIZED_PARAMETERS
+      serializedPublicKey = generateKeysResponse.serializedPublicKey
+      serializedPrivateKey = generateKeysResponse.serializedPrivateKey
       unencryptedQueries +=
         listOf(
           unencryptedQueryOf(100, 1, 1),
@@ -56,6 +66,10 @@ class PlaintextPrivateMembershipCryptorTest {
 
   @Test
   fun `decryptQueries`() {
+    val generatePlaintextKeysRequest = generateKeysRequest {
+      serializedParameters = SERIALIZED_PARAMETERS
+    }
+    val generateKeysResponse = privateMembershipCryptor.generateKeys(generatePlaintextKeysRequest)
     val encryptedEventData =
       listOf(
         encryptedEventDataOf("<some encrypted data a>".toByteString(), 1, 6),
@@ -67,6 +81,9 @@ class PlaintextPrivateMembershipCryptorTest {
     val queriedEncryptedResults =
       privateMembershipCryptorHelper.makeEncryptedQueryResults(encryptedEventData)
     val decryptRequest = privateMembershipDecryptRequest {
+      serializedParameters = SERIALIZED_PARAMETERS
+      serializedPublicKey = generateKeysResponse.serializedPublicKey
+      serializedPrivateKey = generateKeysResponse.serializedPrivateKey
       encryptedQueryResults += queriedEncryptedResults
     }
 

@@ -30,6 +30,7 @@ import org.wfanet.panelmatch.client.privatemembership.encryptedQuery
 import org.wfanet.panelmatch.client.privatemembership.generateKeysResponse
 import org.wfanet.panelmatch.client.privatemembership.privateMembershipEncryptResponse
 import org.wfanet.panelmatch.client.privatemembership.queryBundleOf
+import org.wfanet.panelmatch.common.toByteString
 
 /**
  * Fake [PlaintextPrivateMembershipCryptor] for testing purposes.
@@ -52,9 +53,12 @@ object PlaintextPrivateMembershipCryptor : PrivateMembershipCryptor {
   }
 
   override fun generateKeys(request: GenerateKeysRequest): GenerateKeysResponse {
+    require(request.serializedParameters != ByteString.EMPTY) {
+      "Must set serializedParameters: ${request.serializedParameters}"
+    }
     return generateKeysResponse {
-      serializedPublicKey = ByteString.EMPTY
-      serializedPrivateKey = ByteString.EMPTY
+      serializedPublicKey = "some public key".toByteString()
+      serializedPrivateKey = "some private key".toByteString()
     }
   }
 
@@ -65,6 +69,15 @@ object PlaintextPrivateMembershipCryptor : PrivateMembershipCryptor {
   override fun encryptQueries(
     request: PrivateMembershipEncryptRequest
   ): PrivateMembershipEncryptResponse {
+    require(request.serializedParameters != ByteString.EMPTY) {
+      "Must set serializedParameters: ${request.serializedParameters}"
+    }
+    require(request.serializedPublicKey != ByteString.EMPTY) {
+      "Must set serializedPublicKey: ${request.serializedPublicKey}"
+    }
+    require(request.serializedPrivateKey != ByteString.EMPTY) {
+      "Must set serializedPrivateKey: ${request.serializedPrivateKey}"
+    }
     val unencryptedQueries = request.unencryptedQueriesList
     val queryBundles =
       unencryptedQueries.groupBy { it.shardId }.map { kv ->

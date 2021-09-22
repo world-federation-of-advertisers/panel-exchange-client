@@ -59,6 +59,9 @@ class CreateQueriesWorkflow(
    * place. TODO: Implement totalQueriesPerShard
    */
   data class Parameters(
+    val serializedParameters: ByteString,
+    val serializedPublicKey: ByteString,
+    val serializedPrivateKey: ByteString,
     val numShards: Int,
     val numBucketsPerShard: Int,
     val totalQueriesPerShard: Int?
@@ -213,16 +216,17 @@ class CreateQueriesWorkflow(
   private fun getPrivateMembershipQueries(
     data: PCollection<KV<ShardId, UnencryptedQuery>>
   ): PCollection<PrivateMembershipEncryptResponse> {
-    return data
-      .groupByKey("Group by Shard")
-      .map<KV<ShardId, Iterable<UnencryptedQuery>>, KV<ShardId, PrivateMembershipEncryptResponse>>(
+    return data.groupByKey("Group by Shard").map<
+        KV<ShardId, Iterable<UnencryptedQuery>>, PrivateMembershipEncryptResponse>(
         name = "Map to EncryptQueriesResponse"
       ) {
-        val encryptQueriesRequest = privateMembershipEncryptRequest {
-          unencryptedQueries += it.value
-        }
-        kvOf(it.key, privateMembershipCryptor.encryptQueries(encryptQueriesRequest))
+      val encryptQueriesRequest = privateMembershipEncryptRequest {
+        unencryptedQueries += it.value
+        serializedParameters = parameters.serializedParameters
+        serializedPublicKey = parameters.serializedPublicKey
+        serializedPrivateKey = parameters.serializedPrivateKey
       }
-      .values("Extract Results")
+      privateMembershipCryptor.encryptQueries(encryptQueriesRequest)
+    }
   }
 }

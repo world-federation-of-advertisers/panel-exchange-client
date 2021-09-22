@@ -41,7 +41,7 @@ class DecryptQueryResultsWorkflow(
   data class Parameters(
     val serializedParameters: ByteString,
     val serializedPublicKey: ByteString,
-    val serializedPrivateKey: ByteString
+    val serializedPrivateKey: ByteString,
   ) : Serializable
 
   /**

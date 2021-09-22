@@ -31,6 +31,7 @@ import org.wfanet.panelmatch.client.privatemembership.PanelistKey
 import org.wfanet.panelmatch.client.privatemembership.PrivateMembershipCryptor
 import org.wfanet.panelmatch.client.privatemembership.PrivateMembershipEncryptResponse
 import org.wfanet.panelmatch.client.privatemembership.QueryId
+import org.wfanet.panelmatch.client.privatemembership.generateKeysRequest
 import org.wfanet.panelmatch.client.privatemembership.joinKeyOf
 import org.wfanet.panelmatch.client.privatemembership.panelistKeyOf
 import org.wfanet.panelmatch.client.privatemembership.shardIdOf
@@ -40,6 +41,8 @@ import org.wfanet.panelmatch.common.beam.testing.BeamTestBase
 import org.wfanet.panelmatch.common.beam.testing.assertThat
 import org.wfanet.panelmatch.common.beam.values
 import org.wfanet.panelmatch.common.toByteString
+
+private val SERIALIZED_PARAMETERS = "some serialized parameters".toByteString()
 
 @RunWith(JUnit4::class)
 abstract class AbstractCreateQueriesWorkflowTest : BeamTestBase() {
@@ -85,7 +88,19 @@ abstract class AbstractCreateQueriesWorkflowTest : BeamTestBase() {
 
   @Test
   fun `Two Shards with no padding`() {
-    val parameters = Parameters(numShards = 2, numBucketsPerShard = 5, totalQueriesPerShard = null)
+    val generatePlaintextKeysRequest = generateKeysRequest {
+      serializedParameters = SERIALIZED_PARAMETERS
+    }
+    val generateKeysResponse = privateMembershipCryptor.generateKeys(generatePlaintextKeysRequest)
+    val parameters =
+      Parameters(
+        serializedParameters = SERIALIZED_PARAMETERS,
+        serializedPublicKey = generateKeysResponse.serializedPublicKey,
+        serializedPrivateKey = generateKeysResponse.serializedPrivateKey,
+        numShards = 2,
+        numBucketsPerShard = 5,
+        totalQueriesPerShard = null,
+      )
     val (panelistKeyQueryId, encryptedResults) = runWorkflow(privateMembershipCryptor, parameters)
     val decodedQueries = privateMembershipCryptorHelper.decodeEncryptedQuery(encryptedResults)
     val panelistQueries = getPanelistQueries(decodedQueries, panelistKeyQueryId)
@@ -103,11 +118,18 @@ abstract class AbstractCreateQueriesWorkflowTest : BeamTestBase() {
 
   @Test
   fun `Two Shards with extra padding`() {
+    val generatePlaintextKeysRequest = generateKeysRequest {
+      serializedParameters = SERIALIZED_PARAMETERS
+    }
+    val generateKeysResponse = privateMembershipCryptor.generateKeys(generatePlaintextKeysRequest)
     val numShards = 2
     val totalQueriesPerShard = 10
     val numBucketsPerShard = 5
     val parameters =
       Parameters(
+        serializedParameters = SERIALIZED_PARAMETERS,
+        serializedPublicKey = generateKeysResponse.serializedPublicKey,
+        serializedPrivateKey = generateKeysResponse.serializedPrivateKey,
         numShards = numShards,
         numBucketsPerShard = numBucketsPerShard,
         totalQueriesPerShard = totalQueriesPerShard
@@ -138,11 +160,18 @@ abstract class AbstractCreateQueriesWorkflowTest : BeamTestBase() {
 
   @Test
   fun `Two Shards with removed queries`() {
+    val generatePlaintextKeysRequest = generateKeysRequest {
+      serializedParameters = SERIALIZED_PARAMETERS
+    }
+    val generateKeysResponse = privateMembershipCryptor.generateKeys(generatePlaintextKeysRequest)
     val numShards = 2
     val totalQueriesPerShard = 3
     val numBucketsPerShard = 4
     val parameters =
       Parameters(
+        serializedParameters = SERIALIZED_PARAMETERS,
+        serializedPublicKey = generateKeysResponse.serializedPublicKey,
+        serializedPrivateKey = generateKeysResponse.serializedPrivateKey,
         numShards = numShards,
         numBucketsPerShard = numBucketsPerShard,
         totalQueriesPerShard = totalQueriesPerShard

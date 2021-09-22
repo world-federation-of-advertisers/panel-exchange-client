@@ -20,6 +20,7 @@ import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
 import org.wfanet.panelmatch.client.privatemembership.EncryptedEventData
 import org.wfanet.panelmatch.client.privatemembership.decryptQueryResultsRequest
+import org.wfanet.panelmatch.client.privatemembership.generateKeysRequest
 import org.wfanet.panelmatch.client.privatemembership.joinKeyOf
 import org.wfanet.panelmatch.client.privatemembership.plaintextOf
 import org.wfanet.panelmatch.common.toByteString
@@ -41,16 +42,21 @@ private val JOINKEYS =
     Pair(5, "some joinkey 1")
   )
 private val HKDF_PEPPER = "some-pepper".toByteString()
-private val PUBLIC_KEY = "some public key".toByteString()
-private val PRIVATE_KEY = "some public key".toByteString()
+private val SERIALIZED_PARAMETERS = "some-serialized-parameters".toByteString()
 
 @RunWith(JUnit4::class)
 class PlaintextQueryResultsDecryptorTest {
   val queryResultsDecryptor = PlaintextQueryResultsDecryptor()
+  val privateMembershipCryptor = PlaintextPrivateMembershipCryptor
   val privateMembershipCryptorHelper = PlaintextPrivateMembershipCryptorHelper
 
   @Test
   fun `decryptQueries`() {
+    val generatePlaintextKeysRequest = generateKeysRequest {
+      serializedParameters = SERIALIZED_PARAMETERS
+    }
+    val generateKeysResponse = privateMembershipCryptor.generateKeys(generatePlaintextKeysRequest)
+
     val encryptedEventData: List<EncryptedEventData> =
       privateMembershipCryptorHelper.makeEncryptedEventData(PLAINTEXTS, JOINKEYS)
     val encryptedQueryResults =
@@ -59,10 +65,11 @@ class PlaintextQueryResultsDecryptorTest {
     val decryptedQueries =
       encryptedQueryResults.zip(JOINKEYS).map { (encryptedQueryResult, joinkeyList) ->
         val request = decryptQueryResultsRequest {
+          serializedParameters = SERIALIZED_PARAMETERS
+          serializedPublicKey = generateKeysResponse.serializedPublicKey
+          serializedPrivateKey = generateKeysResponse.serializedPrivateKey
           singleBlindedJoinkey = joinKeyOf(joinkeyList.second.toByteString())
           this.encryptedQueryResults += encryptedQueryResult
-          serializedPublicKey = PUBLIC_KEY
-          serializedPrivateKey = PRIVATE_KEY
           hkdfPepper = HKDF_PEPPER
         }
         queryResultsDecryptor.decryptQueryResults(request).decryptedEventDataList.single()

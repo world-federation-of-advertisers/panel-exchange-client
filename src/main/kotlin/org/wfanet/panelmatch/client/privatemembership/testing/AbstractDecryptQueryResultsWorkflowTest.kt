@@ -62,7 +62,7 @@ abstract class AbstractDecryptQueryResultsWorkflowTest : BeamTestBase() {
   abstract val queryResultsDecryptor: QueryResultsDecryptor
   abstract val privateMembershipCryptor: PrivateMembershipCryptor
   abstract val privateMembershipCryptorHelper: PrivateMembershipCryptorHelper
-  abstract val serializedParameters: ByteString
+  abstract val privateMembershipSerializedParameters: ByteString
 
   private fun runWorkflow(
     queryResultsDecryptor: QueryResultsDecryptor,
@@ -88,13 +88,13 @@ abstract class AbstractDecryptQueryResultsWorkflowTest : BeamTestBase() {
 
   @Test
   fun `Decrypt simple set of results`() {
-    val generateKeysRequest = generateKeysRequest {
-      this.serializedParameters = serializedParameters
+    val keysRequest = generateKeysRequest {
+      serializedParameters = privateMembershipSerializedParameters
     }
-    val generateKeysResponse = privateMembershipCryptor.generateKeys(generateKeysRequest)
+    val generateKeysResponse = privateMembershipCryptor.generateKeys(keysRequest)
     val parameters =
       Parameters(
-        serializedParameters = serializedParameters,
+        serializedParameters = privateMembershipSerializedParameters,
         serializedPrivateKey = generateKeysResponse.serializedPrivateKey,
         serializedPublicKey = generateKeysResponse.serializedPublicKey
       )

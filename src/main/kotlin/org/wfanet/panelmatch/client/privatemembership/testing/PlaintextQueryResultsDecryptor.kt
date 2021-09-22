@@ -14,6 +14,7 @@
 
 package org.wfanet.panelmatch.client.privatemembership.testing
 
+import com.google.protobuf.ByteString
 import org.wfanet.panelmatch.client.privatemembership.DecryptQueryResultsRequest
 import org.wfanet.panelmatch.client.privatemembership.DecryptQueryResultsResponse
 import org.wfanet.panelmatch.client.privatemembership.QueryResultsDecryptor
@@ -32,6 +33,15 @@ class PlaintextQueryResultsDecryptor(
   override fun decryptQueryResults(
     request: DecryptQueryResultsRequest
   ): DecryptQueryResultsResponse {
+    require(request.serializedParameters != ByteString.EMPTY) {
+      "Must set serializedParameters: ${request.serializedParameters}"
+    }
+    require(request.serializedPublicKey != ByteString.EMPTY) {
+      "Must set serializedPublicKey: ${request.serializedPublicKey}"
+    }
+    require(request.serializedPrivateKey != ByteString.EMPTY) {
+      "Must set serializedPrivateKey: ${request.serializedPrivateKey}"
+    }
     val decryptRequest = privateMembershipDecryptRequest {
       serializedParameters = request.serializedParameters
       serializedPublicKey = request.serializedPublicKey
