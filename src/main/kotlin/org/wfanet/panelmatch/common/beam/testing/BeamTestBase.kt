@@ -49,10 +49,18 @@ open class BeamTestBase {
     vararg values: T,
     coder: Coder<T>? = null
   ): PCollection<T> {
+    return pcollectionOf(name, values.asIterable(), coder)
+  }
+
+  inline fun <reified T> pcollectionOf(
+    name: String,
+    values: Iterable<T>,
+    coder: Coder<T>? = null
+  ): PCollection<T> {
     if (coder != null) {
-      return pipeline.apply(name, Create.of(values.asIterable()).withCoder(coder))
+      return pipeline.apply(name, Create.of(values).withCoder(coder))
     }
-    return pipeline.apply(name, Create.of(values.asIterable()))
+    return pipeline.apply(name, Create.of(values))
   }
 
   inline fun <reified T : Any> pcollectionViewOf(name: String, value: T): PCollectionView<T> {
