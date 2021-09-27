@@ -21,33 +21,31 @@ import org.junit.runners.JUnit4
 import org.wfanet.measurement.api.v2alpha.ExchangeWorkflowKt.StepKt.encryptStep
 import org.wfanet.measurement.api.v2alpha.ExchangeWorkflowKt.step
 import org.wfanet.panelmatch.client.launcher.testing.inputStep
-import org.wfanet.panelmatch.client.storage.testing.makeTestVerifiedStorageClient
 import org.wfanet.panelmatch.common.crypto.testing.FakeDeterministicCommutativeCipher
 import org.wfanet.panelmatch.common.testing.runBlockingTest
 
 @RunWith(JUnit4::class)
 class ExchangeTaskMapperForJoinKeyExchangeTest {
-  private val privateStorage = makeTestVerifiedStorageClient()
-  private val sharedStorage = makeTestVerifiedStorageClient()
   private val deterministicCommutativeCryptor = FakeDeterministicCommutativeCipher()
 
   private val exchangeTaskMapper =
     ExchangeTaskMapperForJoinKeyExchange(
-      deterministicCommutativeCryptor = deterministicCommutativeCryptor,
-      privateStorage = privateStorage
+      deterministicCommutativeCryptor = deterministicCommutativeCryptor
     )
 
   @Test
   fun `map input task`() = runBlockingTest {
     val testStep = inputStep("a" to "b")
-    val exchangeTask: ExchangeTask = exchangeTaskMapper.getExchangeTaskForStep(testStep)
-    assertThat(exchangeTask).isInstanceOf(InputTask::class.java)
+    val exchangeTaskDetails: ExchangeTaskDetails =
+      exchangeTaskMapper.getExchangeTaskForStep(testStep)
+    assertThat(exchangeTaskDetails.exchangeTask).isInstanceOf(InputTask::class.java)
   }
 
   @Test
   fun `map crypto task`() = runBlockingTest {
     val testStep = step { encryptStep = encryptStep {} }
-    val exchangeTask: ExchangeTask = exchangeTaskMapper.getExchangeTaskForStep(testStep)
-    assertThat(exchangeTask).isInstanceOf(CryptorExchangeTask::class.java)
+    val exchangeTaskDetails: ExchangeTaskDetails =
+      exchangeTaskMapper.getExchangeTaskForStep(testStep)
+    assertThat(exchangeTaskDetails.exchangeTask).isInstanceOf(CryptorExchangeTask::class.java)
   }
 }

@@ -16,6 +16,8 @@ package org.wfanet.panelmatch.client.exchangetasks
 
 import com.google.protobuf.ByteString
 import kotlinx.coroutines.flow.Flow
+import org.wfanet.measurement.api.v2alpha.ExchangeWorkflow
+import org.wfanet.panelmatch.client.storage.VerifiedStorageClient
 import org.wfanet.panelmatch.client.storage.VerifiedStorageClient.VerifiedBlob
 
 /** Interface for ExchangeTask. */
@@ -27,4 +29,12 @@ interface ExchangeTask {
    * @return Executed output. It is a map from the labels to the payload associated with the label.
    */
   suspend fun execute(input: Map<String, VerifiedBlob>): Map<String, Flow<ByteString>>
+
+  suspend fun executeWithStorage(
+    input: Map<String, VerifiedBlob>,
+    storage: VerifiedStorageClient,
+    step: ExchangeWorkflow.Step
+  ): Map<String, Flow<ByteString>> {
+    throw IllegalArgumentException("Unsupported task type.")
+  }
 }

@@ -15,6 +15,7 @@
 package org.wfanet.panelmatch.client.launcher
 
 import com.google.protobuf.ByteString
+import java.security.PrivateKey
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
@@ -22,12 +23,16 @@ import org.wfanet.measurement.api.v2alpha.ExchangeStep
 import org.wfanet.measurement.api.v2alpha.ExchangeStepAttempt
 import org.wfanet.measurement.api.v2alpha.ExchangeStepAttemptKey
 import org.wfanet.measurement.api.v2alpha.ExchangeWorkflow
-import org.wfanet.panelmatch.client.exchangetasks.ExchangeTask
+import org.wfanet.panelmatch.client.exchangetasks.ExchangeTaskDetails
+import org.wfanet.panelmatch.client.exchangetasks.ExchangeTaskMapper
+import org.wfanet.panelmatch.client.exchangetasks.ExchangeTaskStorageType
 import org.wfanet.panelmatch.client.logger.addToTaskLog
 import org.wfanet.panelmatch.client.logger.getAndClearTaskLog
 import org.wfanet.panelmatch.client.logger.loggerFor
+import org.wfanet.panelmatch.client.storage.StorageSelector
 import org.wfanet.panelmatch.client.storage.VerifiedStorageClient
 import org.wfanet.panelmatch.client.storage.VerifiedStorageClient.VerifiedBlob
+import org.wfanet.panelmatch.common.CertificateMapper
 import org.wfanet.panelmatch.common.Timeout
 
 /**
@@ -36,10 +41,15 @@ import org.wfanet.panelmatch.common.Timeout
  */
 class ExchangeTaskExecutor(
   private val apiClient: ApiClient,
+  private val certificateMapper: CertificateMapper,
   private val timeout: Timeout,
-  private val privateStorage: VerifiedStorageClient,
-  private val getExchangeTaskForStep: suspend (ExchangeWorkflow.Step) -> ExchangeTask
+  private val storageSelector: StorageSelector,
+  private val exchangeTaskMapper: ExchangeTaskMapper,
+  private val privateKey: PrivateKey
 ) : ExchangeStepExecutor {
+
+  private lateinit var privateStorage: VerifiedStorageClient
+
   /**
    * Reads inputs for [step], executes [step], and writes the outputs to appropriate
    * [VerifiedStorageClient].
@@ -49,7 +59,9 @@ class ExchangeTaskExecutor(
       try {
         val workflow =
           ExchangeWorkflow.parseFrom(exchangeStep.signedExchangeWorkflow.serializedExchangeWorkflow)
-        tryExecute(attemptKey, workflow.getSteps(exchangeStep.stepIndex))
+        val wfStep = workflow.getSteps(exchangeStep.stepIndex)
+
+        tryExecute(attemptKey, wfStep, workflow.exchangeIdentifiers)
       } catch (e: Exception) {
         logger.addToTaskLog(e.toString())
         markAsFinished(attemptKey, ExchangeStepAttempt.State.FAILED)
@@ -58,15 +70,15 @@ class ExchangeTaskExecutor(
     }
   }
 
-  private suspend fun readInputs(step: ExchangeWorkflow.Step): Map<String, VerifiedBlob> {
-    return privateStorage.verifiedBatchRead(inputLabels = step.inputLabelsMap)
+  private suspend fun readInputs(inputLabelsMap: Map<String, String>): Map<String, VerifiedBlob> {
+    return privateStorage.verifiedBatchRead(inputLabels = inputLabelsMap)
   }
 
   private suspend fun writeOutputs(
-    step: ExchangeWorkflow.Step,
+    outputLabelsMap: Map<String, String>,
     taskOutput: Map<String, Flow<ByteString>>
   ) {
-    privateStorage.verifiedBatchWrite(outputLabels = step.outputLabelsMap, data = taskOutput)
+    privateStorage.verifiedBatchWrite(outputLabels = outputLabelsMap, data = taskOutput)
   }
 
   private suspend fun markAsFinished(
@@ -76,13 +88,78 @@ class ExchangeTaskExecutor(
     apiClient.finishExchangeStepAttempt(attemptKey, state, getAndClearTaskLog())
   }
 
-  private suspend fun tryExecute(attemptKey: ExchangeStepAttemptKey, step: ExchangeWorkflow.Step) {
-    logger.addToTaskLog("Executing $step with attempt $attemptKey")
-    val exchangeTask: ExchangeTask = getExchangeTaskForStep(step)
+  private suspend fun tryExecute(
+    attemptKey: ExchangeStepAttemptKey,
+    step: ExchangeWorkflow.Step,
+    workflowIds: ExchangeWorkflow.ExchangeIdentifiers
+  ) {
+    val exchangeTaskDetails: ExchangeTaskDetails = exchangeTaskMapper.getExchangeTaskForStep(step)
+    logger.addToTaskLog("Executing ${step.stepId} with attempt ${attemptKey.exchangeStepAttemptId}")
+
     timeout.runWithTimeout {
-      val taskInput: Map<String, VerifiedBlob> = readInputs(step)
-      val taskOutput: Map<String, Flow<ByteString>> = exchangeTask.execute(taskInput)
-      writeOutputs(step, taskOutput)
+
+      // We only bother initializing storage if the task is marked as using it
+      if (exchangeTaskDetails.readsInput ||
+          exchangeTaskDetails.writesOutput ||
+          exchangeTaskDetails.requiredStorageClient == ExchangeTaskStorageType.PRIVATE
+      ) {
+        privateStorage =
+          storageSelector.getPrivateStorage(
+            attemptKey,
+            certificateMapper.getExchangeCertificate(
+              false,
+              attemptKey.recurringExchangeId,
+              attemptKey.exchangeId,
+              workflowIds.dataProvider,
+              workflowIds.modelProvider,
+              step.party
+            ),
+            privateKey
+          )
+      }
+
+      val taskInput: Map<String, VerifiedBlob> =
+        if (exchangeTaskDetails.readsInput) {
+          readInputs(step.inputLabelsMap)
+        } else {
+          emptyMap()
+        }
+
+      val taskOutput: Map<String, Flow<ByteString>> =
+        when (exchangeTaskDetails.requiredStorageClient) {
+          ExchangeTaskStorageType.SHARED, ->
+            exchangeTaskDetails.exchangeTask.executeWithStorage(
+              taskInput,
+              storageSelector.getSharedStorage(
+                workflowIds.storage,
+                attemptKey,
+                certificateMapper.getExchangeCertificate(
+                  true,
+                  attemptKey.recurringExchangeId,
+                  attemptKey.exchangeId,
+                  workflowIds.dataProvider,
+                  workflowIds.modelProvider,
+                  step.party
+                ),
+                certificateMapper.getExchangeCertificate(
+                  false,
+                  attemptKey.recurringExchangeId,
+                  attemptKey.exchangeId,
+                  workflowIds.dataProvider,
+                  workflowIds.modelProvider,
+                  step.party
+                ),
+                privateKey
+              ),
+              step
+            )
+          ExchangeTaskStorageType.PRIVATE ->
+            exchangeTaskDetails.exchangeTask.executeWithStorage(taskInput, privateStorage, step)
+          else -> exchangeTaskDetails.exchangeTask.execute(taskInput)
+        }
+      if (exchangeTaskDetails.writesOutput) {
+        writeOutputs(step.outputLabelsMap, taskOutput)
+      }
     }
     markAsFinished(attemptKey, ExchangeStepAttempt.State.SUCCEEDED)
   }

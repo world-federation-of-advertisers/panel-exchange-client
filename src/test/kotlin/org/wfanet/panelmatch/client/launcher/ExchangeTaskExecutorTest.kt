@@ -15,50 +15,58 @@
 package org.wfanet.panelmatch.client.launcher
 
 import com.google.common.truth.Truth.assertThat
-import com.google.protobuf.ByteString
 import kotlin.test.assertFails
 import kotlin.test.assertFailsWith
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.runBlocking
+import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
 import org.mockito.kotlin.mock
 import org.wfanet.measurement.api.v2alpha.ExchangeStepAttemptKey
+import org.wfanet.measurement.api.v2alpha.ExchangeWorkflow
 import org.wfanet.measurement.api.v2alpha.ExchangeWorkflowKt.StepKt.encryptStep
 import org.wfanet.measurement.api.v2alpha.ExchangeWorkflowKt.step
 import org.wfanet.measurement.common.asBufferedFlow
-import org.wfanet.measurement.common.flatten
-import org.wfanet.panelmatch.client.exchangetasks.ExchangeTask
+import org.wfanet.measurement.common.crypto.readPrivateKey
+import org.wfanet.measurement.common.crypto.testing.FIXED_SERVER_KEY_FILE
+import org.wfanet.measurement.common.crypto.testing.KEY_ALGORITHM
+import org.wfanet.measurement.storage.StorageClient
+import org.wfanet.measurement.storage.testing.InMemoryStorageClient
+import org.wfanet.panelmatch.client.exchangetasks.testing.ExchangeMapperForTesting
 import org.wfanet.panelmatch.client.launcher.testing.FakeTimeout
 import org.wfanet.panelmatch.client.launcher.testing.buildExchangeStep
-import org.wfanet.panelmatch.client.storage.VerifiedStorageClient
+import org.wfanet.panelmatch.client.storage.testing.TestStorageSelector
 import org.wfanet.panelmatch.client.storage.testing.makeTestVerifiedStorageClient
+import org.wfanet.panelmatch.common.testing.TestCertificateMapper
 import org.wfanet.panelmatch.common.testing.runBlockingTest
 import org.wfanet.panelmatch.common.toByteString
 
 @RunWith(JUnit4::class)
 class ExchangeTaskExecutorTest {
   private val apiClient: ApiClient = mock()
-  private val storage = makeTestVerifiedStorageClient()
+  private val underlyingStorage: StorageClient = InMemoryStorageClient()
+  private val storage = makeTestVerifiedStorageClient(underlyingStorage)
+  private val testStorageSelector: TestStorageSelector = TestStorageSelector(underlyingStorage)
 
   private val timeout = FakeTimeout()
 
-  private val exchangeTask =
-    object : ExchangeTask {
-      override suspend fun execute(
-        input: Map<String, VerifiedStorageClient.VerifiedBlob>
-      ): Map<String, Flow<ByteString>> {
-        return input.mapKeys { "Out:${it.key}" }.mapValues {
-          val valString: String = it.value.read(1024).flatten().toStringUtf8()
-          "Out:$valString".toByteString().asBufferedFlow(1024)
-        }
-      }
-    }
+  private lateinit var exchangeTaskExecutor: ExchangeTaskExecutor
 
-  private val exchangeTaskExecutor =
-    ExchangeTaskExecutor(apiClient, timeout, storage) { exchangeTask }
+  @Before
+  fun getExchangeTaskExecutor() = runBlocking {
+    exchangeTaskExecutor =
+      ExchangeTaskExecutor(
+        apiClient,
+        TestCertificateMapper(),
+        timeout,
+        testStorageSelector,
+        ExchangeMapperForTesting(),
+        readPrivateKey(FIXED_SERVER_KEY_FILE, KEY_ALGORITHM)
+      )
+  }
 
   @Test
   fun `reads inputs and writes outputs`() = runBlockingTest {
@@ -80,6 +88,8 @@ class ExchangeTaskExecutorTest {
             encryptStep = encryptStep {}
             inputLabels["a"] = "b"
             outputLabels["Out:a"] = "c"
+            stepId = "stepId"
+            party = ExchangeWorkflow.Party.DATA_PROVIDER
           }
       )
     )
@@ -107,6 +117,7 @@ class ExchangeTaskExecutorTest {
               encryptStep = encryptStep {}
               inputLabels["a"] = "b"
               outputLabels["Out:a"] = "c"
+              party = ExchangeWorkflow.Party.DATA_PROVIDER
             }
         )
       )

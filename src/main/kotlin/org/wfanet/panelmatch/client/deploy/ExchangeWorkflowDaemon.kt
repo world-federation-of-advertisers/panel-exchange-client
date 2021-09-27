@@ -14,8 +14,10 @@
 
 package org.wfanet.panelmatch.client.deploy
 
+import com.google.protobuf.ByteString
 import java.time.Clock
 import kotlinx.coroutines.runBlocking
+import org.wfanet.measurement.api.v2alpha.CertificatesGrpcKt.CertificatesCoroutineStub
 import org.wfanet.measurement.api.v2alpha.ExchangeStepAttemptsGrpcKt.ExchangeStepAttemptsCoroutineStub
 import org.wfanet.measurement.api.v2alpha.ExchangeStepsGrpcKt.ExchangeStepsCoroutineStub
 import org.wfanet.measurement.common.crypto.SigningCerts
@@ -30,7 +32,9 @@ import org.wfanet.panelmatch.client.launcher.ExchangeStepValidator
 import org.wfanet.panelmatch.client.launcher.ExchangeTaskExecutor
 import org.wfanet.panelmatch.client.launcher.GrpcApiClient
 import org.wfanet.panelmatch.client.launcher.Identity
+import org.wfanet.panelmatch.client.storage.StorageSelectorImpl
 import org.wfanet.panelmatch.client.storage.VerifiedStorageClient
+import org.wfanet.panelmatch.common.GrpcCertificateMapper
 import org.wfanet.panelmatch.common.SecretSet
 import org.wfanet.panelmatch.common.asTimeout
 import org.wfanet.panelmatch.common.crypto.JniDeterministicCommutativeCipher
@@ -42,11 +46,13 @@ abstract class ExchangeWorkflowDaemon : Runnable {
   protected lateinit var flags: ExchangeWorkflowFlags
     private set
 
-  /** [VerifiedStorageClient] for payloads to be shared with the other party. */
-  abstract val sharedStorage: VerifiedStorageClient
-
   /** [VerifiedStorageClient] for payloads that should NOT shared with the other party. */
-  abstract val privateStorage: VerifiedStorageClient
+  abstract val privateStorage: Map<String, ByteString>
+  abstract val sharedStorage: Map<String, ByteString>
+  abstract val defaultPrivateStorage: ByteString
+
+  /** [CertificateService] providing a trust exchange of certificates for each exchange */
+  abstract val certificateService: CertificatesCoroutineStub
 
   /** [SecretSet] containing all of the valid serialized ExchangeWorkflows. */
   abstract val validExchangeWorkflows: SecretSet<ExchangeStepValidator.ValidationKey>
@@ -80,18 +86,21 @@ abstract class ExchangeWorkflowDaemon : Runnable {
 
     val pollingThrottler = MinimumIntervalThrottler(Clock.systemUTC(), flags.pollingInterval)
 
-    val exchangeTaskMapper =
-      ExchangeTaskMapperForJoinKeyExchange(
-        deterministicCommutativeCryptor = JniDeterministicCommutativeCipher(),
-        privateStorage = privateStorage
-      )
+    val certificateMapper: GrpcCertificateMapper = GrpcCertificateMapper(certificateService)
 
     val stepExecutor =
       ExchangeTaskExecutor(
         apiClient = grpcApiClient,
+        certificateMapper = certificateMapper,
         timeout = flags.taskTimeout.asTimeout(),
-        privateStorage = privateStorage,
-        getExchangeTaskForStep = exchangeTaskMapper::getExchangeTaskForStep
+        storageSelector =
+          StorageSelectorImpl(
+            privateStorageInfo = privateStorage,
+            sharedStorageInfo = sharedStorage,
+            defaultPrivateStorageInfo = defaultPrivateStorage
+          ),
+        ExchangeTaskMapperForJoinKeyExchange(JniDeterministicCommutativeCipher()),
+        clientCerts.privateKey
       )
 
     val launcher = CoroutineLauncher(stepExecutor = stepExecutor)

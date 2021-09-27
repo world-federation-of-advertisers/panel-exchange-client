@@ -103,6 +103,6 @@ fun buildExchangeStep(
 fun inputStep(label: Pair<String, String>): Step {
   return step {
     inputStep = inputStep {}
-    outputLabels[label.first] = label.second
+    inputLabels[label.first] = label.second
   }
 }

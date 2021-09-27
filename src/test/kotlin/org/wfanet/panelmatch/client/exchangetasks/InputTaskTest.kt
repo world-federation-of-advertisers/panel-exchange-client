@@ -70,36 +70,41 @@ class InputTaskTest {
   @Test
   fun `wait on input`() = runBlockingTest {
     val step = inputStep("input" to "mp-crypto-key")
-    val task = InputTask(step, throttler, storage)
+    val task = InputTask(throttler)
 
-    whenever(underlyingStorage.getBlob("mp-crypto-key"))
+    whenever(underlyingStorage.getBlob("test-prefix/mp-crypto-key"))
       .thenReturn(null)
       .thenReturn(null)
       .thenReturn(null)
       .thenReturn(null)
       .thenReturn(secretKeySourceBlob)
 
-    whenever(underlyingStorage.getBlob("mp-crypto-key_signature"))
+    whenever(underlyingStorage.getBlob("test-prefix/mp-crypto-key_signature"))
       .thenReturn(secretKeySourceBlobSignature)
 
-    val result: Map<String, Flow<ByteString>> = task.execute(emptyMap())
+    val result: Map<String, Flow<ByteString>> = task.executeWithStorage(emptyMap(), storage, step)
 
     assertThat(result).isEmpty()
 
-    verify(underlyingStorage, times(5)).getBlob("mp-crypto-key")
-    verify(underlyingStorage, times(1)).getBlob("mp-crypto-key_signature")
+    verify(underlyingStorage, times(5)).getBlob("test-prefix/mp-crypto-key")
+    verify(underlyingStorage, times(1)).getBlob("test-prefix/mp-crypto-key_signature")
     verify(underlyingStorage, times(1)).defaultBufferSizeBytes
   }
 
   @Test
   fun `invalid inputs`() = runBlockingTest {
-    fun runTest(step: ExchangeWorkflow.Step) {
-      if (step.inputLabelsCount == 0 && step.outputLabelsCount == 1) {
+    whenever(underlyingStorage.getBlob("test-prefix/b")).thenReturn(secretKeySourceBlob)
+    whenever(underlyingStorage.getBlob("test-prefix/b_signature"))
+      .thenReturn(secretKeySourceBlobSignature)
+
+    suspend fun runTest(step: ExchangeWorkflow.Step) {
+      val inputTask = InputTask(throttler)
+      if (step.inputLabelsCount == 1 && step.outputLabelsCount == 0) {
         // Expect no failure.
-        InputTask(step, throttler, storage)
+        inputTask.executeWithStorage(emptyMap(), storage, step)
       } else {
         assertFailsWith<IllegalArgumentException>(step.toString()) {
-          InputTask(step, throttler, storage)
+          inputTask.executeWithStorage(emptyMap(), storage, step)
         }
       }
     }
@@ -117,6 +122,14 @@ class InputTaskTest {
           }
         )
       }
+    }
+  }
+
+  @Test
+  fun `input fails at execute()`() = runBlockingTest {
+    val inputTask = InputTask(throttler)
+    assertFailsWith<IllegalArgumentException>("InputTask does not support execute.") {
+      inputTask.execute(emptyMap())
     }
   }
 }

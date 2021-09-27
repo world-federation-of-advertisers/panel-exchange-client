@@ -14,6 +14,8 @@
 
 package org.wfanet.panelmatch.client.deploy
 
+import com.google.protobuf.ByteString
+import org.wfanet.measurement.api.v2alpha.CertificatesGrpcKt
 import org.wfanet.measurement.common.commandLineMain
 import org.wfanet.panelmatch.client.launcher.ExchangeStepValidator.ValidationKey
 import org.wfanet.panelmatch.client.storage.VerifiedStorageClient
@@ -31,9 +33,14 @@ private object UnimplementedExchangeWorkflowDaemon : ExchangeWorkflowDaemon() {
   lateinit var approvedWorkflowFlags: PlaintextApprovedWorkflowFileFlags
     private set
 
-  override val sharedStorage: VerifiedStorageClient
+  // TODO: Implement these using a map version of SecretSet or similar.
+  override val sharedStorage: Map<String, ByteString>
     get() = TODO("Not yet implemented")
-  override val privateStorage: VerifiedStorageClient
+  override val privateStorage: Map<String, ByteString>
+    get() = TODO("Not yet implemented")
+  override val defaultPrivateStorage: ByteString
+    get() = TODO("Not yet implemented")
+  override val certificateService: CertificatesGrpcKt.CertificatesCoroutineStub
     get() = TODO("Not yet implemented")
 
   override val validExchangeWorkflows: SecretSet<ValidationKey> by lazy {
