@@ -48,9 +48,9 @@ def panel_exchange_client_repositories():
 
     http_archive(
         name = "wfa_measurement_proto",
-        sha256 = "4045a4f05a37dc893096bcd0fe7392a23269560ca137b2164e39c3dd089c8cd6",
-        strip_prefix = "cross-media-measurement-api-0.7.0",
-        url = "https://github.com/world-federation-of-advertisers/cross-media-measurement-api/archive/v0.7.0.tar.gz",
+        sha256 = "ea943e080ffabe58e168c79706f395e4e2e0d3a5f2870546c714c2e41edcd915",
+        strip_prefix = "cross-media-measurement-api-0.7.1",
+        url = "https://github.com/world-federation-of-advertisers/cross-media-measurement-api/archive/v0.7.1.tar.gz",
     )
 
     http_archive(
