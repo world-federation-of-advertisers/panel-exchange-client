@@ -2,16 +2,16 @@ load("@io_bazel_rules_kotlin//kotlin:jvm.bzl", "kt_jvm_library")
 
 package(default_visibility = [
     "//src/main/kotlin/org/wfanet/panelmatch/client/deploy:__subpackages__",
-    "//src/main/kotlin/org/wfanet/panelmatch/client/exchangetasks:__subpackages__",
     "//src/main/kotlin/org/wfanet/panelmatch/client/launcher:__subpackages__",
     "//src/test/kotlin/org/wfanet/panelmatch/client/exchangetasks:__subpackages__",
     "//src/test/kotlin/org/wfanet/panelmatch/client/launcher:__subpackages__",
 ])
 
 kt_jvm_library(
-    name = "exchangetasks",
+    name = "testing",
     srcs = glob(["*.kt"]),
     deps = [
+        "//src/main/kotlin/org/wfanet/panelmatch/client/exchangetasks",
         "//src/main/kotlin/org/wfanet/panelmatch/client/logger",
         "//src/main/kotlin/org/wfanet/panelmatch/client/privatemembership",
         "//src/main/kotlin/org/wfanet/panelmatch/client/storage",

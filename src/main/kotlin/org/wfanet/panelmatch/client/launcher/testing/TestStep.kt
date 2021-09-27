@@ -15,9 +15,14 @@
 package org.wfanet.panelmatch.client.launcher.testing
 
 import com.google.protobuf.ByteString
+import java.security.cert.X509Certificate
+import org.mockito.kotlin.UseConstructor
 import org.mockito.kotlin.any
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.whenever
+import org.wfanet.measurement.api.v2alpha.Certificate
+import org.wfanet.measurement.api.v2alpha.CertificatesGrpcKt
+import org.wfanet.measurement.api.v2alpha.CertificatesGrpcKt.CertificatesCoroutineStub
 import org.wfanet.measurement.api.v2alpha.ExchangeStep
 import org.wfanet.measurement.api.v2alpha.ExchangeStep.SignedExchangeWorkflow
 import org.wfanet.measurement.api.v2alpha.ExchangeStepKt.signedExchangeWorkflow
@@ -26,8 +31,12 @@ import org.wfanet.measurement.api.v2alpha.ExchangeWorkflow.Step
 import org.wfanet.measurement.api.v2alpha.ExchangeWorkflowKt.StepKt.inputStep
 import org.wfanet.measurement.api.v2alpha.ExchangeWorkflowKt.exchangeIdentifiers
 import org.wfanet.measurement.api.v2alpha.ExchangeWorkflowKt.step
+import org.wfanet.measurement.api.v2alpha.certificate
 import org.wfanet.measurement.api.v2alpha.exchangeStep
 import org.wfanet.measurement.api.v2alpha.exchangeWorkflow
+import org.wfanet.measurement.common.crypto.readCertificate
+import org.wfanet.measurement.common.crypto.testing.FIXED_SERVER_CERT_PEM_FILE
+import org.wfanet.measurement.common.grpc.testing.GrpcTestServerRule
 import org.wfanet.panelmatch.common.toByteString
 import org.wfanet.panelmatch.protocol.common.DeterministicCommutativeCipher
 
@@ -75,6 +84,23 @@ fun buildMockCryptor(): DeterministicCommutativeCipher {
   return mockCryptor
 }
 
+suspend fun buildMockCertService(): CertificatesCoroutineStub {
+
+  val SERVER_CERTIFICATE: X509Certificate = readCertificate(FIXED_SERVER_CERT_PEM_FILE)
+  val SERVER_CERTIFICATE_DER = ByteString.copyFrom(SERVER_CERTIFICATE.encoded)
+  val LOCAL_CERTIFICATE: Certificate = certificate {
+    name = "DATA_PROVIDER_CERTIFICATE_NAME"
+    x509Der = SERVER_CERTIFICATE_DER
+  }
+
+  val mockCertService: CertificatesGrpcKt.CertificatesCoroutineImplBase =
+    mock(useConstructor = UseConstructor.parameterless())
+  whenever(mockCertService.getCertificate(any())).thenReturn(LOCAL_CERTIFICATE)
+
+  val grpcTestServerRule = GrpcTestServerRule { addService(mockCertService) }
+  return CertificatesCoroutineStub(grpcTestServerRule.channel)
+}
+
 fun buildWorkflow(
   testedStep: Step,
   dataProviderName: String,
@@ -115,6 +141,6 @@ fun buildExchangeStep(
 fun inputStep(label: Pair<String, String>): Step {
   return step {
     inputStep = inputStep {}
-    outputLabels[label.first] = label.second
+    inputLabels[label.first] = label.second
   }
 }
