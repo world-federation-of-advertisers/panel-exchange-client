@@ -17,10 +17,11 @@ package org.wfanet.panelmatch.client.privatemembership.testing
 import com.google.protobuf.ByteString
 import org.wfanet.panelmatch.client.privatemembership.DecryptQueryResultsRequest
 import org.wfanet.panelmatch.client.privatemembership.DecryptQueryResultsResponse
+import org.wfanet.panelmatch.client.privatemembership.EncryptedEventData
 import org.wfanet.panelmatch.client.privatemembership.QueryResultsDecryptor
 import org.wfanet.panelmatch.client.privatemembership.decryptQueryResultsResponse
-import org.wfanet.panelmatch.client.privatemembership.decryptedEventData
-import org.wfanet.panelmatch.client.privatemembership.privateMembershipDecryptRequest
+import org.wfanet.panelmatch.client.privatemembership.decryptedEventDataSet
+import org.wfanet.panelmatch.client.privatemembership.plaintext
 import org.wfanet.panelmatch.common.crypto.SymmetricCryptor
 import org.wfanet.panelmatch.common.crypto.testing.ConcatSymmetricCryptor
 
@@ -42,20 +43,22 @@ class PlaintextQueryResultsDecryptor(
     require(request.serializedPrivateKey != ByteString.EMPTY) {
       "Must set serializedPrivateKey: ${request.serializedPrivateKey}"
     }
-    val decryptRequest = privateMembershipDecryptRequest {
-      serializedParameters = request.serializedParameters
-      serializedPublicKey = request.serializedPublicKey
-      serializedPrivateKey = request.serializedPrivateKey
-      encryptedQueryResults += request.encryptedQueryResultsList
-    }
-    val decryptResponse = privateMembershipCryptorHelper.decryptQueryResults(decryptRequest)
+    val decryptedQueryResults =
+      request.encryptedQueryResultsList.map {
+        privateMembershipCryptorHelper.decodeEncryptedQueryResult(it)
+      }
     return decryptQueryResultsResponse {
-      decryptedEventData +=
-        decryptResponse.decryptedQueryResultsList.map {
-          decryptedEventData {
-            queryId = it.queryId
-            shardId = it.shardId
-            plaintext = symmetricCryptor.decrypt(request.singleBlindedJoinkey.key, it.queryResult)
+      eventDataSets +=
+        decryptedQueryResults.map { decryptedResult ->
+          val eventData = EncryptedEventData.parseFrom(decryptedResult.queryResult)
+          decryptedEventDataSet {
+            queryId = decryptedResult.queryId
+            decryptedEventData +=
+              eventData.ciphertextsList.map { ciphertext ->
+                plaintext {
+                  payload = symmetricCryptor.decrypt(request.singleBlindedJoinkey.key, ciphertext)
+                }
+              }
           }
         }
     }

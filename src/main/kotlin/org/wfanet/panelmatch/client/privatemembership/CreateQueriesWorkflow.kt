@@ -89,7 +89,7 @@ class CreateQueriesWorkflow(
   /** Creates [PrivateMembershipEncryptResponse] from [data]. */
   fun batchCreateQueries(
     data: PCollection<KV<PanelistKey, JoinKey>>
-  ): Pair<PCollection<KV<QueryId, PanelistKey>>, PCollection<PrivateMembershipEncryptResponse>> {
+  ): Pair<PCollection<KV<QueryId, PanelistKey>>, PCollection<KV<ShardId, ByteString>>> {
     val shardedData = shardJoinKeys(data)
     val paddedData = addPaddedQueries(shardedData)
     val mappedData = mapToQueryId(paddedData)
@@ -215,18 +215,17 @@ class CreateQueriesWorkflow(
   /** Batch gets the oblivious queries grouped by [ShardId]. */
   private fun getPrivateMembershipQueries(
     data: PCollection<KV<ShardId, UnencryptedQuery>>
-  ): PCollection<PrivateMembershipEncryptResponse> {
+  ): PCollection<KV<ShardId, ByteString>> {
     return data.groupByKey("Group by Shard").map<
-        KV<ShardId, Iterable<UnencryptedQuery>>, PrivateMembershipEncryptResponse>(
+        KV<ShardId, Iterable<UnencryptedQuery>>, KV<ShardId, ByteString>>(
         name = "Map to EncryptQueriesResponse"
       ) {
-      val encryptQueriesRequest = privateMembershipEncryptRequest {
-        unencryptedQueries += it.value
-        serializedParameters = parameters.serializedParameters
-        serializedPublicKey = parameters.serializedPublicKey
-        serializedPrivateKey = parameters.serializedPrivateKey
-      }
-      privateMembershipCryptor.encryptQueries(encryptQueriesRequest)
+      val keys =
+        PrivateMembershipKeys(
+          serializedPrivateKey = parameters.serializedPrivateKey,
+          serializedPublicKey = parameters.serializedPublicKey,
+        )
+      kvOf(it.key, privateMembershipCryptor.encryptQueries(it.value, keys))
     }
   }
 }

@@ -21,16 +21,17 @@ import org.apache.beam.sdk.values.PCollection
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
+import org.wfanet.panelmatch.client.privatemembership.DecryptEventDataRequest.EncryptedEventDataSet
 import org.wfanet.panelmatch.client.privatemembership.DecryptQueryResultsWorkflow
 import org.wfanet.panelmatch.client.privatemembership.DecryptQueryResultsWorkflow.Parameters
-import org.wfanet.panelmatch.client.privatemembership.DecryptedEventData
-import org.wfanet.panelmatch.client.privatemembership.EncryptedEventData
+import org.wfanet.panelmatch.client.privatemembership.DecryptedEventDataSet
 import org.wfanet.panelmatch.client.privatemembership.EncryptedQueryResult
 import org.wfanet.panelmatch.client.privatemembership.JoinKey
+import org.wfanet.panelmatch.client.privatemembership.Plaintext
 import org.wfanet.panelmatch.client.privatemembership.PrivateMembershipCryptor
+import org.wfanet.panelmatch.client.privatemembership.PrivateMembershipKeys
 import org.wfanet.panelmatch.client.privatemembership.QueryId
 import org.wfanet.panelmatch.client.privatemembership.QueryResultsDecryptor
-import org.wfanet.panelmatch.client.privatemembership.generateKeysRequest
 import org.wfanet.panelmatch.client.privatemembership.joinKeyOf
 import org.wfanet.panelmatch.client.privatemembership.plaintextOf
 import org.wfanet.panelmatch.client.privatemembership.queryIdOf
@@ -39,22 +40,14 @@ import org.wfanet.panelmatch.common.beam.testing.BeamTestBase
 import org.wfanet.panelmatch.common.beam.testing.assertThat
 import org.wfanet.panelmatch.common.toByteString
 
-private val PLAINTEXTS =
+private val PLAINTEXTS: List<Pair<Int, List<Plaintext>>> =
   listOf(
-    plaintextOf("<some long data a>", 1, 6),
-    plaintextOf("<some long data b>", 2, 7),
-    plaintextOf("<some long data c>", 3, 8),
-    plaintextOf("<some long data d>", 4, 9),
-    plaintextOf("<some long data e>", 5, 10)
+    Pair(1, listOf(plaintextOf("<some long data a>"), plaintextOf("<some long data b>"))),
+    Pair(2, listOf(plaintextOf("<some long data c>"), plaintextOf("<some long data d>"))),
+    Pair(3, listOf(plaintextOf("<some long data e>")))
   )
 private val JOINKEYS =
-  listOf(
-    Pair(1, "some joinkey 1"),
-    Pair(2, "some joinkey 1"),
-    Pair(3, "some joinkey 1"),
-    Pair(4, "some joinkey 1"),
-    Pair(5, "some joinkey 1")
-  )
+  listOf(Pair(1, "some joinkey 1"), Pair(2, "some joinkey 1"), Pair(3, "some joinkey 1"))
 private val HKDF_PEPPER = "some-pepper".toByteString()
 
 @RunWith(JUnit4::class)
@@ -67,12 +60,19 @@ abstract class AbstractDecryptQueryResultsWorkflowTest : BeamTestBase() {
   private fun runWorkflow(
     queryResultsDecryptor: QueryResultsDecryptor,
     parameters: Parameters
-  ): PCollection<DecryptedEventData> {
-    val encryptedEventData: List<EncryptedEventData> =
-      privateMembershipCryptorHelper.makeEncryptedEventData(PLAINTEXTS, JOINKEYS)
+  ): PCollection<DecryptedEventDataSet> {
+    val encryptedEventDataSet: List<EncryptedEventDataSet> =
+      privateMembershipCryptorHelper.makeEncryptedEventDataSet(PLAINTEXTS, JOINKEYS)
+    val keys =
+      PrivateMembershipKeys(
+        serializedPrivateKey = parameters.serializedPrivateKey,
+        serializedPublicKey = parameters.serializedPublicKey
+      )
     val encryptedResults: PCollection<EncryptedQueryResult> =
       encryptedResultOf(
-        privateMembershipCryptorHelper.makeEncryptedQueryResults(encryptedEventData)
+        encryptedEventDataSet.map {
+          privateMembershipCryptorHelper.makeEncryptedQueryResult(keys, it)
+        }
       )
     val joinkeyCollection = joinkeyCollectionOf(JOINKEYS)
     return DecryptQueryResultsWorkflow(
@@ -88,18 +88,31 @@ abstract class AbstractDecryptQueryResultsWorkflowTest : BeamTestBase() {
 
   @Test
   fun `Decrypt simple set of results`() {
-    val keysRequest = generateKeysRequest {
-      serializedParameters = privateMembershipSerializedParameters
-    }
-    val generateKeysResponse = privateMembershipCryptor.generateKeys(keysRequest)
+    val keys = privateMembershipCryptor.generateKeys()
     val parameters =
       Parameters(
         serializedParameters = privateMembershipSerializedParameters,
-        serializedPrivateKey = generateKeysResponse.serializedPrivateKey,
-        serializedPublicKey = generateKeysResponse.serializedPublicKey
+        serializedPrivateKey = keys.serializedPrivateKey,
+        serializedPublicKey = keys.serializedPublicKey
       )
     val decryptedResults = runWorkflow(queryResultsDecryptor, parameters)
-    assertThat(decryptedResults).containsInAnyOrder(PLAINTEXTS)
+    assertThat(decryptedResults).satisfies {
+      assertThat(
+          it
+            .map { dataset ->
+              dataset.decryptedEventDataList.map { plaintext -> Pair(dataset.queryId, plaintext) }
+            }
+            .flatten()
+        )
+        .containsExactly(
+          Pair(queryIdOf(1), plaintextOf("<some long data a>")),
+          Pair(queryIdOf(1), plaintextOf("<some long data b>")),
+          Pair(queryIdOf(2), plaintextOf("<some long data c>")),
+          Pair(queryIdOf(2), plaintextOf("<some long data d>")),
+          Pair(queryIdOf(3), plaintextOf("<some long data e>")),
+        )
+      null
+    }
   }
 
   private fun encryptedResultOf(

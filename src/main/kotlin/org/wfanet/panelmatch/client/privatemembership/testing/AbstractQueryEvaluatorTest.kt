@@ -19,7 +19,7 @@ import com.google.protobuf.ByteString
 import org.junit.Test
 import org.wfanet.panelmatch.client.privatemembership.Bucket
 import org.wfanet.panelmatch.client.privatemembership.DatabaseShard
-import org.wfanet.panelmatch.client.privatemembership.QueryBundle
+import org.wfanet.panelmatch.client.privatemembership.EncryptedQueryBundle
 import org.wfanet.panelmatch.client.privatemembership.QueryEvaluator
 import org.wfanet.panelmatch.client.privatemembership.bucketIdOf
 import org.wfanet.panelmatch.client.privatemembership.bucketOf
@@ -89,7 +89,7 @@ abstract class AbstractQueryEvaluatorTest {
       )
   }
 
-  private fun queryBundleOf(shard: Int, queries: List<Pair<Int, Int>>): QueryBundle {
+  private fun queryBundleOf(shard: Int, queries: List<Pair<Int, Int>>): EncryptedQueryBundle {
     return helper.makeQueryBundle(
       shardIdOf(shard),
       queries.map { queryIdOf(it.first) to bucketIdOf(it.second) }

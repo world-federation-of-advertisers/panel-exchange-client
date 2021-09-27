@@ -22,7 +22,3 @@ option java_multiple_files = true;
 message DatabaseKey {
   fixed64 id = 1;
 }
-
-message Plaintext {
-  bytes payload = 1;
-}

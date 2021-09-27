@@ -52,7 +52,7 @@ class DecryptQueryResultsWorkflow(
   fun batchDecryptQueryResults(
     encryptedQueryResults: PCollection<EncryptedQueryResult>,
     queryIdToJoinKey: PCollection<KV<QueryId, JoinKey>>
-  ): PCollection<DecryptedEventData> {
+  ): PCollection<DecryptedEventDataSet> {
     return encryptedQueryResults
       .keyBy<EncryptedQueryResult, QueryId>("Key by Query Id") { requireNotNull(it.queryId) }
       .join<QueryId, EncryptedQueryResult, JoinKey, KV<JoinKey, EncryptedQueryResult>>(
@@ -73,7 +73,7 @@ class DecryptQueryResultsWorkflow(
           this.hkdfPepper = hkdfPepper
         }
         val decryptedResults = queryResultsDecryptor.decryptQueryResults(request)
-        yieldAll(decryptedResults.decryptedEventDataList)
+        yieldAll(decryptedResults.eventDataSetsList)
       }
   }
 }

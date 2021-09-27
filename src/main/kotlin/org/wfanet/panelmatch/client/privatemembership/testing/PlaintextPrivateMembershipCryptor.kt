@@ -15,21 +15,9 @@
 package org.wfanet.panelmatch.client.privatemembership.testing
 
 import com.google.protobuf.ByteString
-import com.google.protobuf.listValue
-import com.google.protobuf.value
-import org.wfanet.panelmatch.client.privatemembership.BucketId
-import org.wfanet.panelmatch.client.privatemembership.GenerateKeysRequest
-import org.wfanet.panelmatch.client.privatemembership.GenerateKeysResponse
 import org.wfanet.panelmatch.client.privatemembership.PrivateMembershipCryptor
-import org.wfanet.panelmatch.client.privatemembership.PrivateMembershipEncryptRequest
-import org.wfanet.panelmatch.client.privatemembership.PrivateMembershipEncryptResponse
-import org.wfanet.panelmatch.client.privatemembership.QueryBundle
-import org.wfanet.panelmatch.client.privatemembership.QueryId
-import org.wfanet.panelmatch.client.privatemembership.ShardId
-import org.wfanet.panelmatch.client.privatemembership.encryptedQuery
-import org.wfanet.panelmatch.client.privatemembership.generateKeysResponse
-import org.wfanet.panelmatch.client.privatemembership.privateMembershipEncryptResponse
-import org.wfanet.panelmatch.client.privatemembership.queryBundleOf
+import org.wfanet.panelmatch.client.privatemembership.PrivateMembershipKeys
+import org.wfanet.panelmatch.client.privatemembership.UnencryptedQuery
 import org.wfanet.panelmatch.common.toByteString
 
 /**
@@ -37,29 +25,15 @@ import org.wfanet.panelmatch.common.toByteString
  *
  * Built to be compatible with the [PlaintextQueryEvaluator].
  */
-object PlaintextPrivateMembershipCryptor : PrivateMembershipCryptor {
+class PlaintextPrivateMembershipCryptor(private val serializedParameters: ByteString) :
+  PrivateMembershipCryptor(serializedParameters) {
+  private val privateMembershipCryptorHelper = PlaintextPrivateMembershipCryptorHelper
 
-  private fun makeQueryBundle(shard: ShardId, queries: List<Pair<QueryId, BucketId>>): QueryBundle {
-    return queryBundleOf(
-      shard,
-      queries.map { it.first },
-      listValue {
-          for (query in queries) {
-            values += value { stringValue = query.second.id.toString() }
-          }
-        }
-        .toByteString()
+  override fun generateKeys(): PrivateMembershipKeys {
+    return PrivateMembershipKeys(
+      serializedPublicKey = "some public key".toByteString(),
+      serializedPrivateKey = "some private key".toByteString(),
     )
-  }
-
-  override fun generateKeys(request: GenerateKeysRequest): GenerateKeysResponse {
-    require(request.serializedParameters != ByteString.EMPTY) {
-      "Must set serializedParameters: ${request.serializedParameters}"
-    }
-    return generateKeysResponse {
-      serializedPublicKey = "some public key".toByteString()
-      serializedPrivateKey = "some private key".toByteString()
-    }
   }
 
   /**
@@ -67,31 +41,18 @@ object PlaintextPrivateMembershipCryptor : PrivateMembershipCryptor {
    * for each shard
    */
   override fun encryptQueries(
-    request: PrivateMembershipEncryptRequest
-  ): PrivateMembershipEncryptResponse {
-    require(request.serializedParameters != ByteString.EMPTY) {
-      "Must set serializedParameters: ${request.serializedParameters}"
+    unencryptedQueries: Iterable<UnencryptedQuery>,
+    keys: PrivateMembershipKeys,
+  ): ByteString {
+    val shardId = unencryptedQueries.first().shardId
+    unencryptedQueries.forEach {
+      require(it.shardId == shardId) { "All queries must be from the same shard" }
     }
-    require(request.serializedPublicKey != ByteString.EMPTY) {
-      "Must set serializedPublicKey: ${request.serializedPublicKey}"
-    }
-    require(request.serializedPrivateKey != ByteString.EMPTY) {
-      "Must set serializedPrivateKey: ${request.serializedPrivateKey}"
-    }
-    val unencryptedQueries = request.unencryptedQueriesList
-    val queryBundles =
-      unencryptedQueries.groupBy { it.shardId }.map { kv ->
-        makeQueryBundle(shard = kv.key, queries = kv.value.map { it.queryId to it.bucketId })
-      }
-    return privateMembershipEncryptResponse {
-      ciphertexts += queryBundles.map { it.toByteString() }
-      encryptedQuery +=
-        unencryptedQueries.map {
-          encryptedQuery {
-            shardId = it.shardId
-            queryId = it.queryId
-          }
-        }
-    }
+    return privateMembershipCryptorHelper
+      .makeEncryptedQuery(
+        shard = shardId,
+        queries = unencryptedQueries.map { it.queryId to it.bucketId }
+      )
+      .toByteString()
   }
 }

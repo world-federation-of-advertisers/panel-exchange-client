@@ -20,8 +20,9 @@ import org.wfanet.panelmatch.common.toByteString
 
 @RunWith(JUnit4::class)
 class PlaintextDecryptQueryResultsWorkflowTest : AbstractDecryptQueryResultsWorkflowTest() {
-  override val queryResultsDecryptor = PlaintextQueryResultsDecryptor()
-  override val privateMembershipCryptor = PlaintextPrivateMembershipCryptor
-  override val privateMembershipCryptorHelper = PlaintextPrivateMembershipCryptorHelper
   override val privateMembershipSerializedParameters = "some serialized parameters".toByteString()
+  override val queryResultsDecryptor = PlaintextQueryResultsDecryptor()
+  override val privateMembershipCryptor =
+    PlaintextPrivateMembershipCryptor(privateMembershipSerializedParameters)
+  override val privateMembershipCryptorHelper = PlaintextPrivateMembershipCryptorHelper
 }

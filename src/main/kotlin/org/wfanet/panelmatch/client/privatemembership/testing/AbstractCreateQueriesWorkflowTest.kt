@@ -15,6 +15,7 @@
 package org.wfanet.panelmatch.client.privatemembership.testing
 
 import com.google.common.truth.Truth.assertThat
+import com.google.protobuf.ByteString
 import kotlin.test.assertFailsWith
 import org.apache.beam.sdk.metrics.MetricNameFilter
 import org.apache.beam.sdk.metrics.MetricsFilter
@@ -25,13 +26,11 @@ import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
 import org.wfanet.panelmatch.client.privatemembership.CreateQueriesWorkflow
 import org.wfanet.panelmatch.client.privatemembership.CreateQueriesWorkflow.Parameters
-import org.wfanet.panelmatch.client.privatemembership.EncryptedQuery
 import org.wfanet.panelmatch.client.privatemembership.JoinKey
 import org.wfanet.panelmatch.client.privatemembership.PanelistKey
 import org.wfanet.panelmatch.client.privatemembership.PrivateMembershipCryptor
-import org.wfanet.panelmatch.client.privatemembership.PrivateMembershipEncryptResponse
 import org.wfanet.panelmatch.client.privatemembership.QueryId
-import org.wfanet.panelmatch.client.privatemembership.generateKeysRequest
+import org.wfanet.panelmatch.client.privatemembership.ShardId
 import org.wfanet.panelmatch.client.privatemembership.joinKeyOf
 import org.wfanet.panelmatch.client.privatemembership.panelistKeyOf
 import org.wfanet.panelmatch.client.privatemembership.shardIdOf
@@ -49,13 +48,14 @@ abstract class AbstractCreateQueriesWorkflowTest : BeamTestBase() {
   private val database by lazy {
     databaseOf(53L to "abc", 58L to "def", 71L to "hij", 85L to "klm", 95L to "nop", 99L to "qrs")
   }
+  abstract val privateMembershipSerializedParameters: ByteString
   abstract val privateMembershipCryptor: PrivateMembershipCryptor
   abstract val privateMembershipCryptorHelper: PrivateMembershipCryptorHelper
 
   private fun runWorkflow(
     privateMembershipCryptor: PrivateMembershipCryptor,
     parameters: Parameters
-  ): Pair<PCollection<KV<QueryId, PanelistKey>>, PCollection<PrivateMembershipEncryptResponse>> {
+  ): Pair<PCollection<KV<QueryId, PanelistKey>>, PCollection<KV<ShardId, ByteString>>> {
     return CreateQueriesWorkflow(
         parameters = parameters,
         privateMembershipCryptor = privateMembershipCryptor
@@ -88,15 +88,12 @@ abstract class AbstractCreateQueriesWorkflowTest : BeamTestBase() {
 
   @Test
   fun `Two Shards with no padding`() {
-    val generatePlaintextKeysRequest = generateKeysRequest {
-      serializedParameters = SERIALIZED_PARAMETERS
-    }
-    val generateKeysResponse = privateMembershipCryptor.generateKeys(generatePlaintextKeysRequest)
+    val keys = privateMembershipCryptor.generateKeys()
     val parameters =
       Parameters(
         serializedParameters = SERIALIZED_PARAMETERS,
-        serializedPublicKey = generateKeysResponse.serializedPublicKey,
-        serializedPrivateKey = generateKeysResponse.serializedPrivateKey,
+        serializedPublicKey = keys.serializedPublicKey,
+        serializedPrivateKey = keys.serializedPrivateKey,
         numShards = 2,
         numBucketsPerShard = 5,
         totalQueriesPerShard = null,
@@ -118,24 +115,21 @@ abstract class AbstractCreateQueriesWorkflowTest : BeamTestBase() {
 
   @Test
   fun `Two Shards with extra padding`() {
-    val generatePlaintextKeysRequest = generateKeysRequest {
-      serializedParameters = SERIALIZED_PARAMETERS
-    }
-    val generateKeysResponse = privateMembershipCryptor.generateKeys(generatePlaintextKeysRequest)
+    val keys = privateMembershipCryptor.generateKeys()
     val numShards = 2
     val totalQueriesPerShard = 10
     val numBucketsPerShard = 5
     val parameters =
       Parameters(
         serializedParameters = SERIALIZED_PARAMETERS,
-        serializedPublicKey = generateKeysResponse.serializedPublicKey,
-        serializedPrivateKey = generateKeysResponse.serializedPrivateKey,
+        serializedPublicKey = keys.serializedPublicKey,
+        serializedPrivateKey = keys.serializedPrivateKey,
         numShards = numShards,
         numBucketsPerShard = numBucketsPerShard,
         totalQueriesPerShard = totalQueriesPerShard
       )
-    val (panelistKeyQueryId, encryptedResults) = runWorkflow(privateMembershipCryptor, parameters)
-    val decodedQueries = privateMembershipCryptorHelper.decodeEncryptedQuery(encryptedResults)
+    val (panelistKeyQueryId, encryptedQueries) = runWorkflow(privateMembershipCryptor, parameters)
+    val decodedQueries = privateMembershipCryptorHelper.decodeEncryptedQuery(encryptedQueries)
     val panelistQueries = getPanelistQueries(decodedQueries, panelistKeyQueryId)
     assertThat(panelistQueries.values())
       .containsInAnyOrder(
@@ -146,11 +140,9 @@ abstract class AbstractCreateQueriesWorkflowTest : BeamTestBase() {
         PanelistQuery(1, 95L, 2),
         PanelistQuery(0, 99L, 0)
       )
-    assertThat(encryptedResults).satisfies { encryptedResultsIterable ->
-      val encryptedQueries: List<EncryptedQuery> =
-        encryptedResultsIterable.flatMap { it.encryptedQueryList }
+    assertThat(decodedQueries.values()).satisfies { shardedQueries ->
       for (i in 0 until numShards) {
-        val resultsPerShard = encryptedQueries.filter { it.shardId == shardIdOf(i) }
+        val resultsPerShard = shardedQueries.filter { it.shardId == shardIdOf(i) }
         assertThat(resultsPerShard.count()).isEqualTo(totalQueriesPerShard)
       }
       null
@@ -160,29 +152,25 @@ abstract class AbstractCreateQueriesWorkflowTest : BeamTestBase() {
 
   @Test
   fun `Two Shards with removed queries`() {
-    val generatePlaintextKeysRequest = generateKeysRequest {
-      serializedParameters = SERIALIZED_PARAMETERS
-    }
-    val generateKeysResponse = privateMembershipCryptor.generateKeys(generatePlaintextKeysRequest)
+    val keys = privateMembershipCryptor.generateKeys()
     val numShards = 2
     val totalQueriesPerShard = 3
     val numBucketsPerShard = 4
     val parameters =
       Parameters(
         serializedParameters = SERIALIZED_PARAMETERS,
-        serializedPublicKey = generateKeysResponse.serializedPublicKey,
-        serializedPrivateKey = generateKeysResponse.serializedPrivateKey,
+        serializedPublicKey = keys.serializedPublicKey,
+        serializedPrivateKey = keys.serializedPrivateKey,
         numShards = numShards,
         numBucketsPerShard = numBucketsPerShard,
         totalQueriesPerShard = totalQueriesPerShard
       )
 
     val (_, encryptedResults) = runWorkflow(privateMembershipCryptor, parameters)
-    assertThat(encryptedResults).satisfies { encryptedResultsIterable ->
-      val encryptedQueries: List<EncryptedQuery> =
-        encryptedResultsIterable.flatMap { it.encryptedQueryList }
+    val decodedQueries = privateMembershipCryptorHelper.decodeEncryptedQuery(encryptedResults)
+    assertThat(decodedQueries.values()).satisfies { shardedQueries ->
       for (i in 0 until numShards) {
-        val resultsPerShard = encryptedQueries.filter { it.shardId == shardIdOf(i) }
+        val resultsPerShard = shardedQueries.filter { it.shardId == shardIdOf(i) }
         assertThat(resultsPerShard.count()).isEqualTo(totalQueriesPerShard)
       }
       null

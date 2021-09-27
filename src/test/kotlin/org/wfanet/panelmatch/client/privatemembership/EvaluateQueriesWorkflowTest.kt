@@ -39,9 +39,9 @@ class EvaluateQueriesWorkflowTest : BeamTestBase() {
   }
 
   private fun runWorkflow(
-    queryBundles: List<QueryBundle>,
+    queryBundles: List<EncryptedQueryBundle>,
     parameters: Parameters
-  ): PCollection<Result> {
+  ): PCollection<EncryptedQueryResult> {
     return EvaluateQueriesWorkflow(parameters, PlaintextQueryEvaluator)
       .batchEvaluateQueries(
         database,
@@ -50,7 +50,7 @@ class EvaluateQueriesWorkflowTest : BeamTestBase() {
   }
 
   @Test
-  fun `single QueryBundle`() {
+  fun `single EncryptedQueryBundle`() {
     // With `parameters`, we expect database to have:
     //  - Shard 0 to have bucket 4 with "def" in it
     //  - Shard 1 to have buckets 0 with "hij", 1 with "abc", and 2 with "klm"
@@ -170,11 +170,11 @@ class EvaluateQueriesWorkflowTest : BeamTestBase() {
   }
 }
 
-private fun resultOf(query: Int, rawPayload: String): Result {
+private fun resultOf(query: Int, rawPayload: String): EncryptedQueryResult {
   return PlaintextQueryEvaluatorTestHelper.makeResult(queryIdOf(query), rawPayload.toByteString())
 }
 
-private fun queryBundleOf(shard: Int, queries: List<Pair<Int, Int>>): QueryBundle {
+private fun queryBundleOf(shard: Int, queries: List<Pair<Int, Int>>): EncryptedQueryBundle {
   return PlaintextQueryEvaluatorTestHelper.makeQueryBundle(
     shardIdOf(shard),
     queries.map { queryIdOf(it.first) to bucketIdOf(it.second) }
