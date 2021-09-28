@@ -12,16 +12,22 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package org.wfanet.panelmatch.client.eventpostprocessing.testing
+package org.wfanet.panelmatch.common.beam
 
-import com.google.protobuf.ByteString
-import org.junit.runner.RunWith
-import org.junit.runners.JUnit4
-import org.wfanet.panelmatch.client.common.testing.FakeEventCompressorTrainer
-import org.wfanet.panelmatch.common.compression.testing.FakeCompressor
+private val FILE_SPEC_PATTERN = "^(.+)/([^/]+)-\\*-of-(\\d+)$".toRegex()
 
-@RunWith(JUnit4::class)
-class FakeCompressorUncompressByKeyTest : AbstractUncompressByKeyTest() {
-  override val eventCompressorTrainer = FakeEventCompressorTrainer()
-  override val getCompressor = { _: ByteString -> FakeCompressor() }
+internal class FileSpecBreakdown(fileSpecUri: String) {
+  val directoryUri: String
+  val prefix: String
+  val shardCount: Int
+
+  init {
+    val matchResult =
+      requireNotNull(FILE_SPEC_PATTERN.matchEntire(fileSpecUri)) {
+        "Invalid fileSpec string: $fileSpecUri"
+      }
+    directoryUri = matchResult.groupValues[1]
+    prefix = matchResult.groupValues[2]
+    shardCount = matchResult.groupValues[3].toInt()
+  }
 }

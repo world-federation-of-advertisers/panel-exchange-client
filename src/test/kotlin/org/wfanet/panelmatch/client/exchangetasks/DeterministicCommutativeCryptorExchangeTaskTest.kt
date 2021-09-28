@@ -19,7 +19,6 @@ import com.google.protobuf.ByteString
 import kotlin.test.assertFailsWith
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.fold
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import org.junit.Test
@@ -29,11 +28,6 @@ import org.mockito.kotlin.any
 import org.mockito.kotlin.verifyZeroInteractions
 import org.mockito.kotlin.whenever
 import org.wfanet.measurement.common.asBufferedFlow
-import org.wfanet.measurement.common.crypto.readCertificate
-import org.wfanet.measurement.common.crypto.readPrivateKey
-import org.wfanet.measurement.common.crypto.testing.FIXED_SERVER_CERT_PEM_FILE
-import org.wfanet.measurement.common.crypto.testing.FIXED_SERVER_KEY_FILE
-import org.wfanet.measurement.common.crypto.testing.KEY_ALGORITHM
 import org.wfanet.measurement.common.flatten
 import org.wfanet.panelmatch.client.launcher.testing.DOUBLE_BLINDED_KEYS
 import org.wfanet.panelmatch.client.launcher.testing.JOIN_KEYS
@@ -41,8 +35,7 @@ import org.wfanet.panelmatch.client.launcher.testing.LOOKUP_KEYS
 import org.wfanet.panelmatch.client.launcher.testing.MP_0_SECRET_KEY
 import org.wfanet.panelmatch.client.launcher.testing.SINGLE_BLINDED_KEYS
 import org.wfanet.panelmatch.client.launcher.testing.buildMockCryptor
-import org.wfanet.panelmatch.client.storage.VerifiedStorageClient
-import org.wfanet.panelmatch.client.storage.testing.InMemoryStorageClient
+import org.wfanet.panelmatch.client.storage.testing.makeTestVerifiedStorageClient
 import org.wfanet.panelmatch.protocol.common.makeSerializedSharedInputFlow
 import org.wfanet.panelmatch.protocol.common.makeSerializedSharedInputs
 
@@ -54,14 +47,8 @@ private const val ATTEMPT_KEY = "some-arbitrary-attempt-key"
 
 @RunWith(JUnit4::class)
 class DeterministicCommutativeCryptorExchangeTaskTest {
-  private val mockStorage =
-    VerifiedStorageClient(
-      InMemoryStorageClient(keyPrefix = "mock"),
-      readCertificate(FIXED_SERVER_CERT_PEM_FILE),
-      readCertificate(FIXED_SERVER_CERT_PEM_FILE),
-      readPrivateKey(FIXED_SERVER_KEY_FILE, KEY_ALGORITHM)
-    )
-  val deterministicCommutativeCryptor = buildMockCryptor()
+  private val mockStorage = makeTestVerifiedStorageClient()
+  private val deterministicCommutativeCryptor = buildMockCryptor()
 
   @Test
   fun `decrypt with valid inputs`() = withTestContext {
@@ -232,7 +219,7 @@ class DeterministicCommutativeCryptorExchangeTaskTest {
     whenever(deterministicCommutativeCryptor.reEncrypt(any(), any()))
       .thenReturn(DOUBLE_BLINDED_KEYS)
 
-    val result =
+    val result: Map<String, ByteString> =
       CryptorExchangeTask.forReEncryption(deterministicCommutativeCryptor)
         .execute(
           mapOf(
@@ -251,7 +238,7 @@ class DeterministicCommutativeCryptorExchangeTaskTest {
               )
           )
         )
-        .mapValues { it.value.fold(ByteString.EMPTY, { agg, chunk -> agg.concat(chunk) }) }
+        .mapValues { it.value.flatten() }
     assertThat(result)
       .containsExactly("reencrypted-data", makeSerializedSharedInputs(DOUBLE_BLINDED_KEYS))
   }

@@ -15,32 +15,56 @@
 package org.wfanet.panelmatch.client.eventpostprocessing.testing
 
 import com.google.common.truth.Truth.assertThat
-import com.google.protobuf.ByteString
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
 import org.wfanet.panelmatch.client.common.CompressedEvents
 import org.wfanet.panelmatch.client.common.EventCompressorTrainer
 import org.wfanet.panelmatch.client.common.testing.eventsOf
-import org.wfanet.panelmatch.client.eventpostprocessing.uncompressByKey
+import org.wfanet.panelmatch.client.eventpostprocessing.uncompressEvents
 import org.wfanet.panelmatch.client.eventpreprocessing.compressByKey
+import org.wfanet.panelmatch.client.privatemembership.decryptedEventDataSet
+import org.wfanet.panelmatch.client.privatemembership.plaintext
+import org.wfanet.panelmatch.client.privatemembership.queryId
+import org.wfanet.panelmatch.common.beam.map
 import org.wfanet.panelmatch.common.beam.testing.BeamTestBase
 import org.wfanet.panelmatch.common.beam.testing.assertThat
-import org.wfanet.panelmatch.common.compression.Compressor
+import org.wfanet.panelmatch.common.compression.CompressorFactory
 
 @RunWith(JUnit4::class)
-abstract class AbstractUncompressByKeyTest : BeamTestBase() {
+abstract class AbstractUncompressEventsTest : BeamTestBase() {
   abstract val eventCompressorTrainer: EventCompressorTrainer
-  abstract val getCompressor: (ByteString) -> Compressor
+  abstract val compressorFactory: CompressorFactory
 
   @Test
-  fun compressByKey() {
-    val events = eventsOf("A" to "W", "A" to "X", "B" to "Y", "C" to "Z")
+  fun uncompressEvents() {
+    val events = eventsOf("A" to "W1", "A" to "X1", "B" to "Y1", "C" to "Z1")
     val compressedEvents: CompressedEvents = eventCompressorTrainer.compressByKey(events)
-    val uncompressedEvents = uncompressByKey(compressedEvents, getCompressor)
+    val eventData =
+      compressedEvents.events.map {
+        decryptedEventDataSet {
+          decryptedEventData += plaintext { payload = requireNotNull(it.value) }
+          this.queryId = queryId { id = it.key.toStringUtf8().first().toInt() }
+        }
+      }
+    val uncompressedEvents =
+      uncompressEvents(eventData, compressedEvents.dictionary, compressorFactory)
     assertThat(uncompressedEvents).satisfies {
-      assertThat(it.map { kv -> kv.key.toStringUtf8() to kv.value.toStringUtf8() })
-        .containsExactlyElementsIn(listOf("A" to "W", "A" to "X", "B" to "Y", "C" to "Z"))
+      assertThat(
+          it
+            .map { dataset ->
+              dataset.decryptedEventDataList.map { plaintext ->
+                dataset.queryId.id to plaintext.payload.toStringUtf8()
+              }
+            }
+            .flatten()
+        )
+        .containsExactly(
+          65 to "W1",
+          65 to "X1",
+          66 to "Y1",
+          67 to "Z1",
+        )
       null
     }
   }

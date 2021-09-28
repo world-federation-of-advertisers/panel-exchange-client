@@ -26,8 +26,7 @@ data class PrivateMembershipKeys(
  * Provides oblivious query compression encryption and decryption for use in private information
  * retrieval
  */
-abstract class PrivateMembershipCryptor(private val serializedParameters: ByteString) :
-  Serializable {
+interface PrivateMembershipCryptor : Serializable {
 
   /** Generates a public and private key for query compression and expansion */
   abstract fun generateKeys(): PrivateMembershipKeys

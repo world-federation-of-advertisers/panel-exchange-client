@@ -16,6 +16,8 @@ package org.wfanet.panelmatch.client.privatemembership.testing
 
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
+import org.wfanet.panelmatch.client.common.testing.FakeCompressorFactory
+import org.wfanet.panelmatch.client.common.testing.FakeEventCompressorTrainer
 import org.wfanet.panelmatch.common.toByteString
 
 @RunWith(JUnit4::class)
@@ -25,4 +27,6 @@ class PlaintextDecryptQueryResultsWorkflowTest : AbstractDecryptQueryResultsWork
   override val privateMembershipCryptor =
     PlaintextPrivateMembershipCryptor(privateMembershipSerializedParameters)
   override val privateMembershipCryptorHelper = PlaintextPrivateMembershipCryptorHelper
+  override val eventCompressorTrainer = FakeEventCompressorTrainer()
+  override val compressorFactory = FakeCompressorFactory()
 }

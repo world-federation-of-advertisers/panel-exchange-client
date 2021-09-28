@@ -33,24 +33,24 @@ def panel_exchange_client_repositories():
 
     http_archive(
         name = "wfa_common_jvm",
-        sha256 = "81fe8d280134427b0911bb396cdd333be83fe4d4f5c5aa6afe6502f55e7a2ee8",
-        strip_prefix = "common-jvm-0.12.0",
-        url = "https://github.com/world-federation-of-advertisers/common-jvm/archive/v0.12.0.tar.gz",
+        sha256 = "f9b2be33d3515a66e28feff14ca7405a73b4853f28912f69175bddc183805b92",
+        strip_prefix = "common-jvm-0.13.0",
+        url = "https://github.com/world-federation-of-advertisers/common-jvm/archive/v0.13.0.tar.gz",
     )
 
     # TODO: remove dependencies on wfa_measurement_system
     http_archive(
         name = "wfa_measurement_system",
-        sha256 = "6e76b7ad3d7f4b005a091343ec8845fac0d1d6c5f24c6ac25d1f27b41a72585c",
-        strip_prefix = "cross-media-measurement-3fd2a7fde637f633588a64e39620f47bddaeb004",
-        url = "https://github.com/world-federation-of-advertisers/cross-media-measurement/archive/3fd2a7fde637f633588a64e39620f47bddaeb004.tar.gz",
+        sha256 = "9d531684e3da0fd6a15260c591474802305748f42cb5af32893f84f516a19024",
+        strip_prefix = "cross-media-measurement-37267399a1563ded00375a7562bfcf8c44520531",
+        url = "https://github.com/world-federation-of-advertisers/cross-media-measurement/archive/37267399a1563ded00375a7562bfcf8c44520531.tar.gz",
     )
 
     http_archive(
         name = "wfa_measurement_proto",
-        sha256 = "9dbefb535010f08d1133c122a30d406b48fe6149d264ca9c1aa508a1afd2f818",
-        strip_prefix = "cross-media-measurement-api-9f3a39e9d0270a8e0f7db7a94740e581eb937f70",
-        url = "https://github.com/world-federation-of-advertisers/cross-media-measurement-api/archive/9f3a39e9d0270a8e0f7db7a94740e581eb937f70.tar.gz",
+        sha256 = "4045a4f05a37dc893096bcd0fe7392a23269560ca137b2164e39c3dd089c8cd6",
+        strip_prefix = "cross-media-measurement-api-0.7.0",
+        url = "https://github.com/world-federation-of-advertisers/cross-media-measurement-api/archive/v0.7.0.tar.gz",
     )
 
     http_archive(

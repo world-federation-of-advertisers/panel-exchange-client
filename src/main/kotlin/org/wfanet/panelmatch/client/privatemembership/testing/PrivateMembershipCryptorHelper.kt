@@ -14,18 +14,16 @@
 
 package org.wfanet.panelmatch.client.privatemembership.testing
 
-import com.google.protobuf.ByteString
 import java.io.Serializable
-import org.apache.beam.sdk.values.KV
-import org.apache.beam.sdk.values.PCollection
 import org.wfanet.panelmatch.client.privatemembership.BucketId
 import org.wfanet.panelmatch.client.privatemembership.DecryptEventDataRequest.EncryptedEventDataSet
+import org.wfanet.panelmatch.client.privatemembership.DecryptedEventDataSet
 import org.wfanet.panelmatch.client.privatemembership.DecryptedQueryResult
 import org.wfanet.panelmatch.client.privatemembership.EncryptedEventData
 import org.wfanet.panelmatch.client.privatemembership.EncryptedQueryBundle
 import org.wfanet.panelmatch.client.privatemembership.EncryptedQueryResult
+import org.wfanet.panelmatch.client.privatemembership.JoinKey
 import org.wfanet.panelmatch.client.privatemembership.PanelistKey
-import org.wfanet.panelmatch.client.privatemembership.Plaintext
 import org.wfanet.panelmatch.client.privatemembership.PrivateMembershipKeys
 import org.wfanet.panelmatch.client.privatemembership.QueryId
 import org.wfanet.panelmatch.client.privatemembership.ShardId
@@ -37,44 +35,32 @@ import org.wfanet.panelmatch.client.privatemembership.shardIdOf
 /** Used for testing CreateQueriesWorkflow (eg reversing some of the operations) */
 interface PrivateMembershipCryptorHelper : Serializable {
 
-  fun makeEncryptedQuery(
+  /** Constructs an encrypted query bundle */
+  abstract fun makeEncryptedQueryBundle(
     shard: ShardId,
     queries: List<Pair<QueryId, BucketId>>
   ): EncryptedQueryBundle
 
-  /**
-   * Takes a queryId and [EncryptedEventData] and returns an encrypted list of
-   * [EncryptedQueryResult]
-   */
-  fun makeEncryptedQueryResult(
+  /** Decodes an encrypted query bundle */
+  abstract fun decodeEncryptedQueryBundle(queryBundle: EncryptedQueryBundle): List<ShardedQuery>
+
+  /** Constructs and encrypted query result */
+  abstract fun makeEncryptedQueryResult(
     keys: PrivateMembershipKeys,
     encryptedEventDataSet: EncryptedEventDataSet
   ): EncryptedQueryResult
+
+  /** Decodes an encrypted query result */
+  abstract fun decodeEncryptedQueryResult(result: EncryptedQueryResult): DecryptedQueryResult
 
   /**
    * Takes a list [DecryptedEventData] and a list of pairs of (QueryId, ByteString) and returns an
    * encrypted list of [EncryptedEventData]
    */
-  fun makeEncryptedEventDataSet(
-    plaintexts: List<Pair<Int, List<Plaintext>>>,
-    joinkeys: List<Pair<Int, String>>
-  ): List<EncryptedEventDataSet>
-
-  /**
-   * Takes an [PrivateMembershipEncryptResponse] and reverses the process to yield the underlying
-   * decrypted [ShardedQuery] for each [QueryId]
-   */
-  fun decodeEncryptedQuery(
-    data: PCollection<KV<ShardId, ByteString>>
-  ): PCollection<KV<QueryId, ShardedQuery>>
-
-  fun decodeEncryptedQueryResult(result: EncryptedQueryResult): DecryptedQueryResult
-}
-
-data class DecodedResult(val queryId: Int, val data: ByteString) : Serializable {
-  override fun toString(): String {
-    return "DecodedResult(query=$queryId, data=${data.toStringUtf8()})"
-  }
+  abstract fun makeEncryptedEventDataSet(
+    plaintext: DecryptedEventDataSet,
+    joinkey: Pair<QueryId, JoinKey>
+  ): EncryptedEventDataSet
 }
 
 data class ShardedQuery(val shardId: ShardId, val queryId: QueryId, val bucketId: BucketId) :

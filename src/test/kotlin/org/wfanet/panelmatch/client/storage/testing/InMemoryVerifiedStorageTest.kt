@@ -12,8 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package org.wfanet.panelmatch.common.crypto.testing
+package org.wfanet.panelmatch.client.storage.testing
 
-class ConcatSymmetricCryptorTest : AbstractSymmetricCryptorTest() {
-  override val symmetricCryptor = ConcatSymmetricCryptor()
+class InMemoryVerifiedStorageTest : AbstractVerifiedStorageTest() {
+  override val privateStorage = makeTestVerifiedStorageClient(InMemoryStorageClient())
+  override val sharedStorage = makeTestVerifiedStorageClient(InMemoryStorageClient())
 }

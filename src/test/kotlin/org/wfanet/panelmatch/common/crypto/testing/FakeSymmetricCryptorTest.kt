@@ -12,13 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package org.wfanet.panelmatch.common
+package org.wfanet.panelmatch.common.crypto.testing
 
-import java.nio.file.Path
-import java.nio.file.Paths
-
-/** Creates a [Path] from a POSIX path string */
-fun pathOf(pathParts: String, separator: String = "/"): Path {
-  val s = String()
-  return Paths.get(s, *pathParts.split(separator).toTypedArray())
+class FakeSymmetricCryptorTest : AbstractSymmetricCryptorTest() {
+  override val symmetricCryptor = FakeSymmetricCryptor()
 }

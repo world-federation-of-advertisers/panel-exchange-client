@@ -15,16 +15,12 @@
 package org.wfanet.panelmatch.common.compression.testing
 
 import com.google.protobuf.ByteString
-import org.wfanet.panelmatch.client.CombinedEvents
 import org.wfanet.panelmatch.common.compression.Compressor
 import org.wfanet.panelmatch.common.toByteString
 
+/** For testing only. Does not play nicely with non-Utf8 source data. */
 class FakeCompressor : Compressor {
   override fun compress(events: ByteString): ByteString {
-    val x = CombinedEvents.parseFrom(events)
-    for (f in x.serializedEventsList) {
-      require(f.size() == 1) { "FakeCompressor only works on events of length 1" }
-    }
     return PREFIX.toByteString().concat(events)
   }
 
@@ -33,6 +29,6 @@ class FakeCompressor : Compressor {
   }
 
   companion object {
-    val PREFIX = "Compressed"
+    const val PREFIX = "Compressed"
   }
 }

@@ -12,12 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package org.wfanet.panelmatch.client.launcher
+package org.wfanet.panelmatch.client.eventpostprocessing.testing
 
-import org.wfanet.measurement.api.v2alpha.ExchangeStep
-import org.wfanet.measurement.api.v2alpha.ExchangeStepAttemptKey
+import org.junit.runner.RunWith
+import org.junit.runners.JUnit4
+import org.wfanet.panelmatch.client.common.testing.FakeCompressorFactory
+import org.wfanet.panelmatch.client.common.testing.FakeEventCompressorTrainer
 
-class BlockingJobLauncher : JobLauncher {
-  // TODO: implement execute method.
-  override suspend fun execute(exchangeStep: ExchangeStep, attemptKey: ExchangeStepAttemptKey) {}
+@RunWith(JUnit4::class)
+class FakeCompressorUncompressEventsTest : AbstractUncompressEventsTest() {
+  override val eventCompressorTrainer = FakeEventCompressorTrainer()
+  override val compressorFactory = FakeCompressorFactory()
 }

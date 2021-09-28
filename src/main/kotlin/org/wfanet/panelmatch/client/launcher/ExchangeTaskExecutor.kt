@@ -16,12 +16,9 @@ package org.wfanet.panelmatch.client.launcher
 
 import com.google.protobuf.ByteString
 import kotlinx.coroutines.CoroutineName
-import kotlinx.coroutines.CoroutineStart
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
+import org.wfanet.measurement.api.v2alpha.ExchangeStep
 import org.wfanet.measurement.api.v2alpha.ExchangeStepAttempt
 import org.wfanet.measurement.api.v2alpha.ExchangeStepAttemptKey
 import org.wfanet.measurement.api.v2alpha.ExchangeWorkflow
@@ -40,18 +37,19 @@ import org.wfanet.panelmatch.common.Timeout
 class ExchangeTaskExecutor(
   private val apiClient: ApiClient,
   private val timeout: Timeout,
-  private val sharedStorage: VerifiedStorageClient,
   private val privateStorage: VerifiedStorageClient,
   private val getExchangeTaskForStep: suspend (ExchangeWorkflow.Step) -> ExchangeTask
 ) : ExchangeStepExecutor {
   /**
-   * Reads inputs for [step], executes [step], and writes the outputs to appropriate [StorageClient]
-   * .
+   * Reads inputs for [step], executes [step], and writes the outputs to appropriate
+   * [VerifiedStorageClient].
    */
-  override suspend fun execute(attemptKey: ExchangeStepAttemptKey, step: ExchangeWorkflow.Step) {
+  override suspend fun execute(attemptKey: ExchangeStepAttemptKey, exchangeStep: ExchangeStep) {
     withContext(CoroutineName(attemptKey.exchangeStepAttemptId)) {
       try {
-        tryExecute(attemptKey, step)
+        val workflow =
+          ExchangeWorkflow.parseFrom(exchangeStep.signedExchangeWorkflow.serializedExchangeWorkflow)
+        tryExecute(attemptKey, workflow.getSteps(exchangeStep.stepIndex))
       } catch (e: Exception) {
         logger.addToTaskLog(e.toString())
         markAsFinished(attemptKey, ExchangeStepAttempt.State.FAILED)
@@ -60,37 +58,15 @@ class ExchangeTaskExecutor(
     }
   }
 
-  private suspend fun readInputs(step: ExchangeWorkflow.Step): Map<String, VerifiedBlob> =
-      coroutineScope {
-    val privateInputLabels = step.privateInputLabelsMap
-    val sharedInputLabels = step.sharedInputLabelsMap
-    awaitAll(
-      async(start = CoroutineStart.DEFAULT) {
-        privateStorage.verifiedBatchRead(inputLabels = privateInputLabels)
-      },
-      async(start = CoroutineStart.DEFAULT) {
-        sharedStorage.verifiedBatchRead(inputLabels = sharedInputLabels)
-      }
-    )
-      .reduce { a, b -> a.toMutableMap().apply { putAll(b) } }
+  private suspend fun readInputs(step: ExchangeWorkflow.Step): Map<String, VerifiedBlob> {
+    return privateStorage.verifiedBatchRead(inputLabels = step.inputLabelsMap)
   }
 
   private suspend fun writeOutputs(
     step: ExchangeWorkflow.Step,
     taskOutput: Map<String, Flow<ByteString>>
   ) {
-    coroutineScope {
-      val privateOutputLabels = step.privateOutputLabelsMap
-      val sharedOutputLabels = step.sharedOutputLabelsMap
-      awaitAll(
-        async {
-          privateStorage.verifiedBatchWrite(outputLabels = privateOutputLabels, data = taskOutput)
-        },
-        async {
-          sharedStorage.verifiedBatchWrite(outputLabels = sharedOutputLabels, data = taskOutput)
-        }
-      )
-    }
+    privateStorage.verifiedBatchWrite(outputLabels = step.outputLabelsMap, data = taskOutput)
   }
 
   private suspend fun markAsFinished(

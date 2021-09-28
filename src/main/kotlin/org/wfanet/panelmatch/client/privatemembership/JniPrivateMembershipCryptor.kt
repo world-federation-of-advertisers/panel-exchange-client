@@ -27,7 +27,7 @@ import org.wfanet.panelmatch.protocol.privatemembership.PrivateMembershipWrapper
 
 /** A [PrivateMembershipCryptor] implementation using the JNI [PrivateMembershipWrapper]. */
 class JniPrivateMembershipCryptor(private val serializedParameters: ByteString) :
-  PrivateMembershipCryptor(serializedParameters) {
+  PrivateMembershipCryptor {
 
   override fun generateKeys(): PrivateMembershipKeys {
     val request = generateKeysRequest {

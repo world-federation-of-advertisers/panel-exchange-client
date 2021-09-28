@@ -12,15 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package org.wfanet.panelmatch.common.crypto
+package org.wfanet.panelmatch.client.common
 
 import com.google.protobuf.ByteString
-import java.io.Serializable
+import org.wfanet.panelmatch.common.compression.BrotliCompressor
+import org.wfanet.panelmatch.common.compression.Compressor
+import org.wfanet.panelmatch.common.compression.CompressorFactory
 
-/** Performs symmetric encryption using a private key. */
-interface SymmetricCryptor : Serializable {
-
-  fun encrypt(privateKey: ByteString, data: ByteString): ByteString
-
-  fun decrypt(privateKey: ByteString, data: ByteString): ByteString
+class BrotliCompressorFactory : CompressorFactory() {
+  override fun build(dictionary: ByteString): Compressor {
+    return BrotliCompressor(dictionary)
+  }
 }

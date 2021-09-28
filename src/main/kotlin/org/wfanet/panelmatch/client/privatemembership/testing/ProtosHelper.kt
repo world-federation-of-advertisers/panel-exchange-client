@@ -18,6 +18,7 @@ import com.google.protobuf.ByteString
 import org.wfanet.panelmatch.client.privatemembership.DecryptEventDataRequest.EncryptedEventDataSet
 import org.wfanet.panelmatch.client.privatemembership.DecryptEventDataRequestKt.encryptedEventDataSet
 import org.wfanet.panelmatch.client.privatemembership.DecryptedQueryResult
+import org.wfanet.panelmatch.client.privatemembership.JoinKey
 import org.wfanet.panelmatch.client.privatemembership.Plaintext
 import org.wfanet.panelmatch.client.privatemembership.QueryId
 import org.wfanet.panelmatch.client.privatemembership.ShardId
@@ -25,6 +26,7 @@ import org.wfanet.panelmatch.client.privatemembership.UnencryptedQuery
 import org.wfanet.panelmatch.client.privatemembership.bucketIdOf
 import org.wfanet.panelmatch.client.privatemembership.decryptedQueryOf
 import org.wfanet.panelmatch.client.privatemembership.encryptedEventData
+import org.wfanet.panelmatch.client.privatemembership.joinKeyOf
 import org.wfanet.panelmatch.client.privatemembership.plaintextOf
 import org.wfanet.panelmatch.client.privatemembership.queryIdOf
 import org.wfanet.panelmatch.client.privatemembership.shardIdOf
@@ -49,8 +51,10 @@ fun encryptedEventDataSetOf(ciphertexts: List<String>, query: Int): EncryptedEve
     encryptedEventData { this.ciphertexts += ciphertexts.map { it.toByteString() } }
 }
 
-fun plaintextOf(payload: String): Plaintext = plaintextOf(payload.toByteString())
-
 /** Constructs a [DecryptedQueryResult]. */
 fun decryptedQueryOf(queryResult: ByteString, query: Int): DecryptedQueryResult =
   decryptedQueryOf(queryResult, queryIdOf(query))
+
+fun plaintextOf(payload: String): Plaintext = plaintextOf(payload.toByteString())
+
+fun joinKeyOf(key: String): JoinKey = joinKeyOf(key.toByteString())

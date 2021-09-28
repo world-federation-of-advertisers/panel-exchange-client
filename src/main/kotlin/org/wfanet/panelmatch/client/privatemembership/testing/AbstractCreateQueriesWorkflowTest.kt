@@ -16,6 +16,7 @@ package org.wfanet.panelmatch.client.privatemembership.testing
 
 import com.google.common.truth.Truth.assertThat
 import com.google.protobuf.ByteString
+import com.google.protobuf.ListValue
 import kotlin.test.assertFailsWith
 import org.apache.beam.sdk.metrics.MetricNameFilter
 import org.apache.beam.sdk.metrics.MetricsFilter
@@ -26,6 +27,7 @@ import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
 import org.wfanet.panelmatch.client.privatemembership.CreateQueriesWorkflow
 import org.wfanet.panelmatch.client.privatemembership.CreateQueriesWorkflow.Parameters
+import org.wfanet.panelmatch.client.privatemembership.EncryptedQueryBundle
 import org.wfanet.panelmatch.client.privatemembership.JoinKey
 import org.wfanet.panelmatch.client.privatemembership.PanelistKey
 import org.wfanet.panelmatch.client.privatemembership.PrivateMembershipCryptor
@@ -36,6 +38,7 @@ import org.wfanet.panelmatch.client.privatemembership.panelistKeyOf
 import org.wfanet.panelmatch.client.privatemembership.shardIdOf
 import org.wfanet.panelmatch.common.beam.join
 import org.wfanet.panelmatch.common.beam.kvOf
+import org.wfanet.panelmatch.common.beam.parDo
 import org.wfanet.panelmatch.common.beam.testing.BeamTestBase
 import org.wfanet.panelmatch.common.beam.testing.assertThat
 import org.wfanet.panelmatch.common.beam.values
@@ -99,7 +102,7 @@ abstract class AbstractCreateQueriesWorkflowTest : BeamTestBase() {
         totalQueriesPerShard = null,
       )
     val (panelistKeyQueryId, encryptedResults) = runWorkflow(privateMembershipCryptor, parameters)
-    val decodedQueries = privateMembershipCryptorHelper.decodeEncryptedQuery(encryptedResults)
+    val decodedQueries = decodeEncryptedQueryBundle(encryptedResults)
     val panelistQueries = getPanelistQueries(decodedQueries, panelistKeyQueryId)
     assertThat(panelistQueries.values())
       .containsInAnyOrder(
@@ -129,7 +132,7 @@ abstract class AbstractCreateQueriesWorkflowTest : BeamTestBase() {
         totalQueriesPerShard = totalQueriesPerShard
       )
     val (panelistKeyQueryId, encryptedQueries) = runWorkflow(privateMembershipCryptor, parameters)
-    val decodedQueries = privateMembershipCryptorHelper.decodeEncryptedQuery(encryptedQueries)
+    val decodedQueries = decodeEncryptedQueryBundle(encryptedQueries)
     val panelistQueries = getPanelistQueries(decodedQueries, panelistKeyQueryId)
     assertThat(panelistQueries.values())
       .containsInAnyOrder(
@@ -167,7 +170,7 @@ abstract class AbstractCreateQueriesWorkflowTest : BeamTestBase() {
       )
 
     val (_, encryptedResults) = runWorkflow(privateMembershipCryptor, parameters)
-    val decodedQueries = privateMembershipCryptorHelper.decodeEncryptedQuery(encryptedResults)
+    val decodedQueries = decodeEncryptedQueryBundle(encryptedResults)
     assertThat(decodedQueries.values()).satisfies { shardedQueries ->
       for (i in 0 until numShards) {
         val resultsPerShard = shardedQueries.filter { it.shardId == shardIdOf(i) }
@@ -200,5 +203,28 @@ abstract class AbstractCreateQueriesWorkflowTest : BeamTestBase() {
         .map { kvOf(panelistKeyOf(it.first), joinKeyOf(it.second.toByteString())) }
         .toTypedArray()
     )
+  }
+
+  fun decodeEncryptedQueryBundle(
+    data: PCollection<KV<ShardId, ByteString>>
+  ): PCollection<KV<QueryId, ShardedQuery>> {
+    return data.values().parDo("Map to ShardedQuery") { encryptedQueriesData ->
+      // privateMembershipCryptorHelper.decodeEncryptedQueryBundle(
+      //  EncryptedQueryBundle.parseFrom(encryptedQueriesData)
+      // )
+      val queryBundle = EncryptedQueryBundle.parseFrom(encryptedQueriesData)
+      val queryIdsList = queryBundle.queryIdsList
+      val bucketValuesList =
+        ListValue.parseFrom(queryBundle.serializedEncryptedQueries).valuesList.map {
+          it.stringValue.toInt()
+        }
+      yieldAll(
+        queryIdsList
+          .zip(bucketValuesList) { queryId: QueryId, bucketValue: Int ->
+            ShardedQuery(requireNotNull(queryBundle.shardId).id, queryId.id, bucketValue)
+          }
+          .map { kvOf(it.queryId, ShardedQuery(it.shardId.id, it.queryId.id, it.bucketId.id)) }
+      )
+    }
   }
 }

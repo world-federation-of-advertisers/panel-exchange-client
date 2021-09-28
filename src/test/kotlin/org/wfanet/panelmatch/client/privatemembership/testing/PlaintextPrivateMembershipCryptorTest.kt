@@ -22,10 +22,8 @@ import org.wfanet.panelmatch.client.privatemembership.EncryptedEventData
 import org.wfanet.panelmatch.client.privatemembership.EncryptedQueryBundle
 import org.wfanet.panelmatch.client.privatemembership.bucketIdOf
 import org.wfanet.panelmatch.client.privatemembership.decryptedQueryOf
-import org.wfanet.panelmatch.client.privatemembership.queryBundleOf
 import org.wfanet.panelmatch.client.privatemembership.queryIdOf
 import org.wfanet.panelmatch.client.privatemembership.shardIdOf
-import org.wfanet.panelmatch.client.privatemembership.unencryptedQueryOf
 import org.wfanet.panelmatch.common.toByteString
 
 private val SERIALIZED_PARAMETERS = "some-serialized-parameters".toByteString()
@@ -53,13 +51,13 @@ class PlaintextPrivateMembershipCryptorTest {
       unencryptedQueriesList.map { privateMembershipCryptor.encryptQueries(it, keys) }
     assertThat(encryptedQueriesList.map { EncryptedQueryBundle.parseFrom(it) })
       .containsExactly(
-        queryBundleOf(shard = 100, listOf(1 to 1, 2 to 2)),
-        queryBundleOf(shard = 101, listOf(3 to 1, 4 to 5))
+        encryptedQueryBundleOf(shard = 100, listOf(1 to 1, 2 to 2)),
+        encryptedQueryBundleOf(shard = 101, listOf(3 to 1, 4 to 5))
       )
   }
 
   @Test
-  fun `decryptQueries`() {
+  fun decryptQueries() {
     val keys = privateMembershipCryptor.generateKeys()
     val encryptedEventData =
       listOf(
@@ -107,8 +105,11 @@ class PlaintextPrivateMembershipCryptorTest {
       )
   }
 
-  private fun queryBundleOf(shard: Int, queries: List<Pair<Int, Int>>): EncryptedQueryBundle {
-    return privateMembershipCryptorHelper.makeEncryptedQuery(
+  private fun encryptedQueryBundleOf(
+    shard: Int,
+    queries: List<Pair<Int, Int>>
+  ): EncryptedQueryBundle {
+    return privateMembershipCryptorHelper.makeEncryptedQueryBundle(
       shardIdOf(shard),
       queries.map { queryIdOf(it.first) to bucketIdOf(it.second) }
     )

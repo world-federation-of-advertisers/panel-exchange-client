@@ -14,39 +14,35 @@
 
 package org.wfanet.panelmatch.client.privatemembership.testing
 
-import com.google.protobuf.ByteString
 import com.google.protobuf.ListValue
 import com.google.protobuf.listValue
 import com.google.protobuf.value
-import org.apache.beam.sdk.values.KV
-import org.apache.beam.sdk.values.PCollection
 import org.wfanet.panelmatch.client.privatemembership.BucketId
 import org.wfanet.panelmatch.client.privatemembership.DecryptEventDataRequest.EncryptedEventDataSet
 import org.wfanet.panelmatch.client.privatemembership.DecryptEventDataRequestKt.encryptedEventDataSet
+import org.wfanet.panelmatch.client.privatemembership.DecryptedEventDataSet
 import org.wfanet.panelmatch.client.privatemembership.DecryptedQueryResult
 import org.wfanet.panelmatch.client.privatemembership.EncryptedQueryBundle
 import org.wfanet.panelmatch.client.privatemembership.EncryptedQueryResult
-import org.wfanet.panelmatch.client.privatemembership.Plaintext
+import org.wfanet.panelmatch.client.privatemembership.JoinKey
 import org.wfanet.panelmatch.client.privatemembership.PrivateMembershipKeys
 import org.wfanet.panelmatch.client.privatemembership.QueryId
 import org.wfanet.panelmatch.client.privatemembership.ShardId
 import org.wfanet.panelmatch.client.privatemembership.decryptedQueryResult
 import org.wfanet.panelmatch.client.privatemembership.encryptedEventData
 import org.wfanet.panelmatch.client.privatemembership.queryBundleOf
-import org.wfanet.panelmatch.client.privatemembership.queryIdOf
 import org.wfanet.panelmatch.client.privatemembership.resultOf
-import org.wfanet.panelmatch.common.beam.kvOf
-import org.wfanet.panelmatch.common.beam.parDo
+import org.wfanet.panelmatch.common.beam.map
 import org.wfanet.panelmatch.common.beam.values
 import org.wfanet.panelmatch.common.crypto.SymmetricCryptor
-import org.wfanet.panelmatch.common.crypto.testing.ConcatSymmetricCryptor
+import org.wfanet.panelmatch.common.crypto.testing.FakeSymmetricCryptor
 import org.wfanet.panelmatch.common.toByteString
 
 object PlaintextPrivateMembershipCryptorHelper : PrivateMembershipCryptorHelper {
 
-  private val symmetricCryptor: SymmetricCryptor = ConcatSymmetricCryptor()
+  private val symmetricCryptor: SymmetricCryptor = FakeSymmetricCryptor()
 
-  override fun makeEncryptedQuery(
+  override fun makeEncryptedQueryBundle(
     shard: ShardId,
     queries: List<Pair<QueryId, BucketId>>
   ): EncryptedQueryBundle {
@@ -62,7 +58,7 @@ object PlaintextPrivateMembershipCryptorHelper : PrivateMembershipCryptorHelper 
     )
   }
 
-  private fun decodeEncryptedQuery(queryBundle: EncryptedQueryBundle): List<ShardedQuery> {
+  override fun decodeEncryptedQueryBundle(queryBundle: EncryptedQueryBundle): List<ShardedQuery> {
     val queryIdsList = queryBundle.queryIdsList
     val bucketValuesList =
       ListValue.parseFrom(queryBundle.serializedEncryptedQueries).valuesList.map {
@@ -91,32 +87,19 @@ object PlaintextPrivateMembershipCryptorHelper : PrivateMembershipCryptorHelper 
   }
 
   override fun makeEncryptedEventDataSet(
-    plaintexts: List<Pair<Int, List<Plaintext>>>,
-    joinkeys: List<Pair<Int, String>>
-  ): List<EncryptedEventDataSet> {
-    return plaintexts.zip(joinkeys).map { (plaintextList, joinkeyList) ->
-      encryptedEventDataSet {
-        queryId = queryIdOf(plaintextList.first)
-        encryptedEventData =
-          encryptedEventData {
-            ciphertexts +=
-              plaintextList.second.map { plaintext ->
-                symmetricCryptor.encrypt(joinkeyList.second.toByteString(), plaintext.payload)
-              }
-          }
-      }
-    }
-  }
-
-  override fun decodeEncryptedQuery(
-    data: PCollection<KV<ShardId, ByteString>>
-  ): PCollection<KV<QueryId, ShardedQuery>> {
-    return data.values().parDo("Map to ShardedQuery") { encryptedQueriesData ->
-      yieldAll(
-        decodeEncryptedQuery(EncryptedQueryBundle.parseFrom(encryptedQueriesData)).map {
-          kvOf(it.queryId, ShardedQuery(it.shardId.id, it.queryId.id, it.bucketId.id))
+    plaintext: DecryptedEventDataSet,
+    joinkey: Pair<QueryId, JoinKey>
+  ): EncryptedEventDataSet {
+    require(plaintext.queryId == joinkey.first) { "QueryId must be the same" }
+    return encryptedEventDataSet {
+      queryId = plaintext.queryId
+      encryptedEventData =
+        encryptedEventData {
+          ciphertexts +=
+            plaintext.decryptedEventDataList.map {
+              symmetricCryptor.encrypt(joinkey.second.key, it.payload)
+            }
         }
-      )
     }
   }
 }

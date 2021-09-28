@@ -16,9 +16,16 @@ syntax = "proto3";
 
 package wfa.panelmatch.client.privatemembership;
 
+import "wfa/panelmatch/client/privatemembership/query.proto";
+
 option java_package = "org.wfanet.panelmatch.client.privatemembership";
 option java_multiple_files = true;
 
 message DatabaseKey {
   fixed64 id = 1;
+}
+
+message DatabaseEntry {
+  DatabaseKey database_key = 1;
+  Plaintext plaintext = 2;
 }

@@ -23,12 +23,12 @@ import org.wfanet.panelmatch.client.privatemembership.decryptQueryResultsRespons
 import org.wfanet.panelmatch.client.privatemembership.decryptedEventDataSet
 import org.wfanet.panelmatch.client.privatemembership.plaintext
 import org.wfanet.panelmatch.common.crypto.SymmetricCryptor
-import org.wfanet.panelmatch.common.crypto.testing.ConcatSymmetricCryptor
+import org.wfanet.panelmatch.common.crypto.testing.FakeSymmetricCryptor
 
 class PlaintextQueryResultsDecryptor(
   private val privateMembershipCryptorHelper: PrivateMembershipCryptorHelper =
     PlaintextPrivateMembershipCryptorHelper,
-  private val symmetricCryptor: SymmetricCryptor = ConcatSymmetricCryptor(),
+  private val symmetricCryptor: SymmetricCryptor = FakeSymmetricCryptor(),
 ) : QueryResultsDecryptor {
 
   override fun decryptQueryResults(

@@ -21,6 +21,7 @@ import org.junit.runners.JUnit4
 import org.wfanet.panelmatch.client.privatemembership.DecryptEventDataRequest.EncryptedEventDataSet
 import org.wfanet.panelmatch.client.privatemembership.Plaintext
 import org.wfanet.panelmatch.client.privatemembership.decryptQueryResultsRequest
+import org.wfanet.panelmatch.client.privatemembership.decryptedEventDataSet
 import org.wfanet.panelmatch.client.privatemembership.joinKeyOf
 import org.wfanet.panelmatch.client.privatemembership.plaintextOf
 import org.wfanet.panelmatch.client.privatemembership.queryIdOf
@@ -28,12 +29,11 @@ import org.wfanet.panelmatch.common.toByteString
 
 private val PLAINTEXTS: List<Pair<Int, List<Plaintext>>> =
   listOf(
-    Pair(1, listOf(plaintextOf("<some long data a>"), plaintextOf("<some long data b>"))),
-    Pair(2, listOf(plaintextOf("<some long data c>"), plaintextOf("<some long data d>"))),
-    Pair(3, listOf(plaintextOf("<some long data e>")))
+    1 to listOf(plaintextOf("<some long data a>"), plaintextOf("<some long data b>")),
+    2 to listOf(plaintextOf("<some long data c>"), plaintextOf("<some long data d>")),
+    3 to listOf(plaintextOf("<some long data e>"))
   )
-private val JOINKEYS =
-  listOf(Pair(1, "some joinkey 1"), Pair(2, "some joinkey 1"), Pair(3, "some joinkey 1"))
+private val JOINKEYS = listOf(1 to "some joinkey 1", 2 to "some joinkey 2", 3 to "some joinkey 3")
 private val HKDF_PEPPER = "some-pepper".toByteString()
 private val SERIALIZED_PARAMETERS = "some-serialized-parameters".toByteString()
 
@@ -48,7 +48,15 @@ class PlaintextQueryResultsDecryptorTest {
     val keys = privateMembershipCryptor.generateKeys()
 
     val encryptedEventData: List<EncryptedEventDataSet> =
-      privateMembershipCryptorHelper.makeEncryptedEventDataSet(PLAINTEXTS, JOINKEYS)
+      (PLAINTEXTS zip JOINKEYS).map {
+        privateMembershipCryptorHelper.makeEncryptedEventDataSet(
+          decryptedEventDataSet {
+            queryId = queryIdOf(it.first.first)
+            decryptedEventData += it.first.second
+          },
+          queryIdOf(it.second.first) to joinKeyOf(it.second.second)
+        )
+      }
     val encryptedQueryResults =
       encryptedEventData.map { privateMembershipCryptorHelper.makeEncryptedQueryResult(keys, it) }
 

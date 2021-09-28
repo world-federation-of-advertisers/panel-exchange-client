@@ -2,6 +2,7 @@ load("@io_bazel_rules_kotlin//kotlin:jvm.bzl", "kt_jvm_test")
 
 kt_jvm_test(
     name = "BeamTest",
+    timeout = "short",
     srcs = ["BeamTest.kt"],
     test_class = "org.wfanet.panelmatch.common.beam.BeamTest",
     deps = [
@@ -11,5 +12,23 @@ kt_jvm_test(
         "//src/main/kotlin/org/wfanet/panelmatch/common/beam/testing",
         "@wfa_common_jvm//imports/java/com/google/common/truth",
         "@wfa_common_jvm//imports/java/org/junit",
+    ],
+)
+
+kt_jvm_test(
+    name = "SignedFilesTest",
+    timeout = "short",
+    srcs = ["SignedFilesTest.kt"],
+    test_class = "org.wfanet.panelmatch.common.beam.SignedFilesTest",
+    deps = [
+        "//imports/java/com/google/common:guava",
+        "//imports/java/org/apache/beam:core",
+        "//src/main/kotlin/org/wfanet/panelmatch/common/beam",
+        "//src/main/kotlin/org/wfanet/panelmatch/common/beam/testing",
+        "@wfa_common_jvm//imports/java/com/google/common/truth",
+        "@wfa_common_jvm//imports/java/org/junit",
+        "@wfa_common_jvm//imports/kotlin/kotlin/test",
+        "@wfa_common_jvm//src/main/kotlin/org/wfanet/measurement/common/crypto:security_provider",
+        "@wfa_common_jvm//src/main/kotlin/org/wfanet/measurement/common/crypto/testing",
     ],
 )

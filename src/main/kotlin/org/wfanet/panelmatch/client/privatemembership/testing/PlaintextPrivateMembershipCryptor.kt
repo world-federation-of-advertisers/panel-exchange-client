@@ -26,7 +26,7 @@ import org.wfanet.panelmatch.common.toByteString
  * Built to be compatible with the [PlaintextQueryEvaluator].
  */
 class PlaintextPrivateMembershipCryptor(private val serializedParameters: ByteString) :
-  PrivateMembershipCryptor(serializedParameters) {
+  PrivateMembershipCryptor {
   private val privateMembershipCryptorHelper = PlaintextPrivateMembershipCryptorHelper
 
   override fun generateKeys(): PrivateMembershipKeys {
@@ -49,7 +49,7 @@ class PlaintextPrivateMembershipCryptor(private val serializedParameters: ByteSt
       require(it.shardId == shardId) { "All queries must be from the same shard" }
     }
     return privateMembershipCryptorHelper
-      .makeEncryptedQuery(
+      .makeEncryptedQueryBundle(
         shard = shardId,
         queries = unencryptedQueries.map { it.queryId to it.bucketId }
       )

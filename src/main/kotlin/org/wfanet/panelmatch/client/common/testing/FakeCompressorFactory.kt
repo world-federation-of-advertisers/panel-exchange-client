@@ -12,16 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package org.wfanet.panelmatch.client.eventpostprocessing
+package org.wfanet.panelmatch.client.common.testing
 
 import com.google.protobuf.ByteString
-import org.wfanet.panelmatch.client.common.BrotliEventCompressorTrainer
-import org.wfanet.panelmatch.client.common.EventCompressorTrainer
-import org.wfanet.panelmatch.client.eventpostprocessing.testing.AbstractUncompressByKeyTest
-import org.wfanet.panelmatch.common.compression.BrotliCompressor
 import org.wfanet.panelmatch.common.compression.Compressor
+import org.wfanet.panelmatch.common.compression.CompressorFactory
+import org.wfanet.panelmatch.common.compression.testing.FakeCompressor
 
-class BrotliCompressorUncompressByKeyTest : AbstractUncompressByKeyTest() {
-  override val eventCompressorTrainer: EventCompressorTrainer = BrotliEventCompressorTrainer()
-  override val getCompressor: (ByteString) -> Compressor = ::BrotliCompressor
+class FakeCompressorFactory : CompressorFactory() {
+  override fun build(dictionary: ByteString): Compressor {
+    return FakeCompressor()
+  }
 }

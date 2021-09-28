@@ -22,11 +22,13 @@ import org.mockito.kotlin.any
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
-import org.wfanet.measurement.api.v2alpha.ExchangeStep
 import org.wfanet.measurement.api.v2alpha.ExchangeStepAttemptKey
-import org.wfanet.measurement.api.v2alpha.ExchangeWorkflow
+import org.wfanet.measurement.api.v2alpha.ExchangeWorkflowKt.StepKt.encryptStep
+import org.wfanet.measurement.api.v2alpha.ExchangeWorkflowKt.step
+import org.wfanet.measurement.api.v2alpha.exchangeStep
 import org.wfanet.measurement.common.CountDownLatch
-import org.wfanet.panelmatch.client.launcher.testing.buildStep
+import org.wfanet.panelmatch.client.launcher.testing.buildSignedExchangeWorkflow
+import org.wfanet.panelmatch.client.launcher.testing.buildWorkflow
 import org.wfanet.panelmatch.common.testing.runBlockingTest
 
 @RunWith(JUnit4::class)
@@ -35,15 +37,14 @@ class CoroutineLauncherTest {
   private val launcher = CoroutineLauncher(stepExecutor = stepExecutor)
 
   @Test
-  fun `launches`() = runBlockingTest {
-    val workflowStep = buildStep(ExchangeWorkflow.Step.StepCase.ENCRYPT_STEP)
-    val step =
-      ExchangeStep.newBuilder()
-        .apply {
-          name = "some-exchange-step-name"
-          signedExchangeWorkflowBuilder.serializedExchangeWorkflow = workflowStep.toByteString()
-        }
-        .build()
+  fun launches() = runBlockingTest {
+    val workflowStep = step { encryptStep = encryptStep {} }
+    val workflow = buildWorkflow(workflowStep, "some-edp", "some-mp")
+    val step = exchangeStep {
+      name = "some-exchange-step-name"
+      stepIndex = 0
+      signedExchangeWorkflow = buildSignedExchangeWorkflow(workflow)
+    }
 
     val startLatch = CountDownLatch(1)
     val middleLatch = CountDownLatch(1)
@@ -63,6 +64,6 @@ class CoroutineLauncherTest {
     middleLatch.countDown()
     endLatch.await()
 
-    verify(stepExecutor).execute(attemptKey, workflowStep)
+    verify(stepExecutor).execute(attemptKey, step)
   }
 }

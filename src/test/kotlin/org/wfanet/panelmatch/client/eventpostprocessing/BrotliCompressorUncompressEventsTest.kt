@@ -12,21 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package org.wfanet.panelmatch.common.beam.testing
+package org.wfanet.panelmatch.client.eventpostprocessing
 
-import com.google.protobuf.ByteString
-import java.io.ByteArrayInputStream
-import java.io.ByteArrayOutputStream
-import org.apache.beam.sdk.coders.Coder
+import org.wfanet.panelmatch.client.common.BrotliCompressorFactory
+import org.wfanet.panelmatch.client.common.BrotliEventCompressorTrainer
+import org.wfanet.panelmatch.client.common.EventCompressorTrainer
+import org.wfanet.panelmatch.client.eventpostprocessing.testing.AbstractUncompressEventsTest
 
-data class CoderResult<T>(val encodedData: ByteString, val result: T)
-
-fun <T> Coder<T>.roundtrip(item: T): CoderResult<T> {
-  val output = ByteArrayOutputStream()
-
-  encode(item, output)
-  val bytes = output.toByteArray()
-  val input = ByteArrayInputStream(bytes)
-
-  return CoderResult(ByteString.copyFrom(bytes), decode(input))
+class BrotliCompressorUncompressEventsTest : AbstractUncompressEventsTest() {
+  override val eventCompressorTrainer: EventCompressorTrainer = BrotliEventCompressorTrainer()
+  override val compressorFactory = BrotliCompressorFactory()
 }
