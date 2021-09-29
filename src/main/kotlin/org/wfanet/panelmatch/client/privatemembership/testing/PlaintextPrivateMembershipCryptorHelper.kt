@@ -38,7 +38,7 @@ import org.wfanet.panelmatch.common.crypto.SymmetricCryptor
 import org.wfanet.panelmatch.common.crypto.testing.FakeSymmetricCryptor
 import org.wfanet.panelmatch.common.toByteString
 
-object PlaintextPrivateMembershipCryptorHelper : PrivateMembershipCryptorHelper {
+class PlaintextPrivateMembershipCryptorHelper : PrivateMembershipCryptorHelper {
 
   private val symmetricCryptor: SymmetricCryptor = FakeSymmetricCryptor()
 

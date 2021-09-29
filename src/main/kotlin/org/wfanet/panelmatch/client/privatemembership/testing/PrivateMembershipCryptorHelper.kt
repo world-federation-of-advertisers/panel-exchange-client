@@ -19,7 +19,6 @@ import org.wfanet.panelmatch.client.privatemembership.BucketId
 import org.wfanet.panelmatch.client.privatemembership.DecryptEventDataRequest.EncryptedEventDataSet
 import org.wfanet.panelmatch.client.privatemembership.DecryptedEventDataSet
 import org.wfanet.panelmatch.client.privatemembership.DecryptedQueryResult
-import org.wfanet.panelmatch.client.privatemembership.EncryptedEventData
 import org.wfanet.panelmatch.client.privatemembership.EncryptedQueryBundle
 import org.wfanet.panelmatch.client.privatemembership.EncryptedQueryResult
 import org.wfanet.panelmatch.client.privatemembership.JoinKey
@@ -44,7 +43,7 @@ interface PrivateMembershipCryptorHelper : Serializable {
   /** Decodes an encrypted query bundle */
   abstract fun decodeEncryptedQueryBundle(queryBundle: EncryptedQueryBundle): List<ShardedQuery>
 
-  /** Constructs and encrypted query result */
+  /** Constructs an [EncryptedQueryResult] from an [EncryptedEventDataSet] */
   abstract fun makeEncryptedQueryResult(
     keys: PrivateMembershipKeys,
     encryptedEventDataSet: EncryptedEventDataSet
@@ -54,8 +53,8 @@ interface PrivateMembershipCryptorHelper : Serializable {
   abstract fun decodeEncryptedQueryResult(result: EncryptedQueryResult): DecryptedQueryResult
 
   /**
-   * Takes a list [DecryptedEventData] and a list of pairs of (QueryId, ByteString) and returns an
-   * encrypted list of [EncryptedEventData]
+   * Takes a [DecryptedEventDataSet] and a list of pairs of (QueryId, JoinKey) and returns a
+   * [EncryptedEventDataSet]
    */
   abstract fun makeEncryptedEventDataSet(
     plaintext: DecryptedEventDataSet,

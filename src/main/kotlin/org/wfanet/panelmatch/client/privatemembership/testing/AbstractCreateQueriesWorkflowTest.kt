@@ -16,7 +16,6 @@ package org.wfanet.panelmatch.client.privatemembership.testing
 
 import com.google.common.truth.Truth.assertThat
 import com.google.protobuf.ByteString
-import com.google.protobuf.ListValue
 import kotlin.test.assertFailsWith
 import org.apache.beam.sdk.metrics.MetricNameFilter
 import org.apache.beam.sdk.metrics.MetricsFilter
@@ -66,29 +65,6 @@ abstract class AbstractCreateQueriesWorkflowTest : BeamTestBase() {
       .batchCreateQueries(database)
   }
 
-  private fun getPanelistQueries(
-    decryptedQueries: PCollection<KV<QueryId, ShardedQuery>>,
-    panelistKeyQueryId: PCollection<KV<QueryId, PanelistKey>>
-  ): PCollection<KV<QueryId, PanelistQuery>> {
-    return panelistKeyQueryId.join(decryptedQueries) {
-      key: QueryId,
-      panelistKeys: Iterable<PanelistKey>,
-      shardedQueries: Iterable<ShardedQuery> ->
-      if (panelistKeys.count() > 0) {
-        yield(
-          kvOf(
-            key,
-            PanelistQuery(
-              shardedQueries.single().shardId.id,
-              panelistKeys.single().id,
-              shardedQueries.single().bucketId.id
-            )
-          )
-        )
-      }
-    }
-  }
-
   @Test
   fun `Two Shards with no padding`() {
     val keys = privateMembershipCryptor.generateKeys()
@@ -102,7 +78,8 @@ abstract class AbstractCreateQueriesWorkflowTest : BeamTestBase() {
         totalQueriesPerShard = null,
       )
     val (panelistKeyQueryId, encryptedResults) = runWorkflow(privateMembershipCryptor, parameters)
-    val decodedQueries = decodeEncryptedQueryBundle(encryptedResults)
+    val decodedQueries =
+      decodeEncryptedQueryBundle(privateMembershipCryptorHelper, encryptedResults)
     val panelistQueries = getPanelistQueries(decodedQueries, panelistKeyQueryId)
     assertThat(panelistQueries.values())
       .containsInAnyOrder(
@@ -132,7 +109,8 @@ abstract class AbstractCreateQueriesWorkflowTest : BeamTestBase() {
         totalQueriesPerShard = totalQueriesPerShard
       )
     val (panelistKeyQueryId, encryptedQueries) = runWorkflow(privateMembershipCryptor, parameters)
-    val decodedQueries = decodeEncryptedQueryBundle(encryptedQueries)
+    val decodedQueries =
+      decodeEncryptedQueryBundle(privateMembershipCryptorHelper, encryptedQueries)
     val panelistQueries = getPanelistQueries(decodedQueries, panelistKeyQueryId)
     assertThat(panelistQueries.values())
       .containsInAnyOrder(
@@ -170,7 +148,8 @@ abstract class AbstractCreateQueriesWorkflowTest : BeamTestBase() {
       )
 
     val (_, encryptedResults) = runWorkflow(privateMembershipCryptor, parameters)
-    val decodedQueries = decodeEncryptedQueryBundle(encryptedResults)
+    val decodedQueries =
+      decodeEncryptedQueryBundle(privateMembershipCryptorHelper, encryptedResults)
     assertThat(decodedQueries.values()).satisfies { shardedQueries ->
       for (i in 0 until numShards) {
         val resultsPerShard = shardedQueries.filter { it.shardId == shardIdOf(i) }
@@ -206,25 +185,38 @@ abstract class AbstractCreateQueriesWorkflowTest : BeamTestBase() {
   }
 
   fun decodeEncryptedQueryBundle(
+    privateMembershipCryptorHelper: PrivateMembershipCryptorHelper,
     data: PCollection<KV<ShardId, ByteString>>
   ): PCollection<KV<QueryId, ShardedQuery>> {
     return data.values().parDo("Map to ShardedQuery") { encryptedQueriesData ->
-      // privateMembershipCryptorHelper.decodeEncryptedQueryBundle(
-      //  EncryptedQueryBundle.parseFrom(encryptedQueriesData)
-      // )
-      val queryBundle = EncryptedQueryBundle.parseFrom(encryptedQueriesData)
-      val queryIdsList = queryBundle.queryIdsList
-      val bucketValuesList =
-        ListValue.parseFrom(queryBundle.serializedEncryptedQueries).valuesList.map {
-          it.stringValue.toInt()
-        }
-      yieldAll(
-        queryIdsList
-          .zip(bucketValuesList) { queryId: QueryId, bucketValue: Int ->
-            ShardedQuery(requireNotNull(queryBundle.shardId).id, queryId.id, bucketValue)
-          }
-          .map { kvOf(it.queryId, ShardedQuery(it.shardId.id, it.queryId.id, it.bucketId.id)) }
-      )
+      val shardedQueries =
+        privateMembershipCryptorHelper.decodeEncryptedQueryBundle(
+          EncryptedQueryBundle.parseFrom(encryptedQueriesData)
+        )
+      yieldAll(shardedQueries.map { kvOf(it.queryId, it) })
+    }
+  }
+
+  private fun getPanelistQueries(
+    decryptedQueries: PCollection<KV<QueryId, ShardedQuery>>,
+    panelistKeyQueryId: PCollection<KV<QueryId, PanelistKey>>
+  ): PCollection<KV<QueryId, PanelistQuery>> {
+    return panelistKeyQueryId.join(decryptedQueries) {
+      key: QueryId,
+      panelistKeys: Iterable<PanelistKey>,
+      shardedQueries: Iterable<ShardedQuery> ->
+      if (panelistKeys.count() > 0) {
+        yield(
+          kvOf(
+            key,
+            PanelistQuery(
+              shardedQueries.single().shardId.id,
+              panelistKeys.single().id,
+              shardedQueries.single().bucketId.id
+            )
+          )
+        )
+      }
     }
   }
 }

@@ -26,7 +26,7 @@ class PlaintextDecryptQueryResultsWorkflowTest : AbstractDecryptQueryResultsWork
   override val queryResultsDecryptor = PlaintextQueryResultsDecryptor()
   override val privateMembershipCryptor =
     PlaintextPrivateMembershipCryptor(privateMembershipSerializedParameters)
-  override val privateMembershipCryptorHelper = PlaintextPrivateMembershipCryptorHelper
+  override val privateMembershipCryptorHelper = PlaintextPrivateMembershipCryptorHelper()
   override val eventCompressorTrainer = FakeEventCompressorTrainer()
   override val compressorFactory = FakeCompressorFactory()
 }

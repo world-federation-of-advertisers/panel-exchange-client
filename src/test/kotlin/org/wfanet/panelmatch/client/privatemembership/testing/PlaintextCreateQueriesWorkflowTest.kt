@@ -23,5 +23,5 @@ class PlaintextCreateQueriesWorkflowTest : AbstractCreateQueriesWorkflowTest() {
   override val privateMembershipSerializedParameters = "some serialized parameters".toByteString()
   override val privateMembershipCryptor =
     PlaintextPrivateMembershipCryptor(privateMembershipSerializedParameters)
-  override val privateMembershipCryptorHelper = PlaintextPrivateMembershipCryptorHelper
+  override val privateMembershipCryptorHelper = PlaintextPrivateMembershipCryptorHelper()
 }

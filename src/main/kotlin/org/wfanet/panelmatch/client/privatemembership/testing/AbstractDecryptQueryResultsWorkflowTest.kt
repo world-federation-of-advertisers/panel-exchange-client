@@ -37,12 +37,10 @@ import org.wfanet.panelmatch.client.privatemembership.PrivateMembershipKeys
 import org.wfanet.panelmatch.client.privatemembership.QueryId
 import org.wfanet.panelmatch.client.privatemembership.QueryResultsDecryptor
 import org.wfanet.panelmatch.client.privatemembership.decryptedEventDataSet
-import org.wfanet.panelmatch.client.privatemembership.encryptedEventData
 import org.wfanet.panelmatch.client.privatemembership.joinKeyOf
 import org.wfanet.panelmatch.client.privatemembership.plaintext
 import org.wfanet.panelmatch.client.privatemembership.plaintextOf
 import org.wfanet.panelmatch.client.privatemembership.queryIdOf
-import org.wfanet.panelmatch.client.privatemembership.resultOf
 import org.wfanet.panelmatch.common.beam.groupByKey
 import org.wfanet.panelmatch.common.beam.kvOf
 import org.wfanet.panelmatch.common.beam.map
@@ -51,8 +49,6 @@ import org.wfanet.panelmatch.common.beam.strictOneToOneJoin
 import org.wfanet.panelmatch.common.beam.testing.BeamTestBase
 import org.wfanet.panelmatch.common.beam.testing.assertThat
 import org.wfanet.panelmatch.common.compression.CompressorFactory
-import org.wfanet.panelmatch.common.crypto.SymmetricCryptor
-import org.wfanet.panelmatch.common.crypto.testing.FakeSymmetricCryptor
 import org.wfanet.panelmatch.common.toByteString
 
 private val PLAINTEXTS: List<Pair<Int, List<Plaintext>>> =
@@ -103,7 +99,13 @@ abstract class AbstractDecryptQueryResultsWorkflowTest : BeamTestBase() {
         "Create joinkey data",
         JOINKEYS.map { kvOf(queryIdOf(it.first), joinKeyOf(it.second)) }
       )
-    val encryptedResults = makeEncryptedResults(keys, joinkeyCollection, compressedEvents.events)
+    val encryptedResults =
+      makeEncryptedResults(
+        privateMembershipCryptorHelper,
+        keys,
+        joinkeyCollection,
+        compressedEvents.events
+      )
 
     return DecryptQueryResultsWorkflow(
         parameters = parameters,
@@ -162,6 +164,7 @@ abstract class AbstractDecryptQueryResultsWorkflowTest : BeamTestBase() {
   }
 
   private fun makeEncryptedResults(
+    privateMembershipCryptorHelper: PrivateMembershipCryptorHelper,
     keys: PrivateMembershipKeys,
     joinkeyCollection: PCollection<KV<QueryId, JoinKey>>,
     events: PCollection<KV<ByteString, ByteString>>
@@ -178,32 +181,18 @@ abstract class AbstractDecryptQueryResultsWorkflowTest : BeamTestBase() {
           }
         )
       }
-    val symmetricCryptor: SymmetricCryptor = FakeSymmetricCryptor()
     val encryptedEventDataSet: PCollection<EncryptedEventDataSet> =
       compressedPlaintexts.strictOneToOneJoin<QueryId, DecryptedEventDataSet, JoinKey>(
           joinkeyCollection
         )
         .map {
-          /*privateMembershipCryptorHelper.makeEncryptedEventDataSet(
-          it.key,
-          it.key.queryId to it.value
-          */
-          val plaintext: DecryptedEventDataSet = it.key
-          val joinkey: Pair<QueryId, JoinKey> = it.key.queryId to it.value
-          encryptedEventDataSet {
-            queryId = plaintext.queryId
-            encryptedEventData =
-              encryptedEventData {
-                ciphertexts +=
-                  plaintext.decryptedEventDataList.map {
-                    symmetricCryptor.encrypt(joinkey.second.key, it.payload)
-                  }
-              }
-          }
+          privateMembershipCryptorHelper.makeEncryptedEventDataSet(
+            it.key,
+            it.key.queryId to it.value
+          )
         }
     return encryptedEventDataSet.map {
-      // privateMembershipCryptorHelper.makeEncryptedQueryResult(keys, it)
-      resultOf(it.queryId, it.encryptedEventData.toByteString())
+      privateMembershipCryptorHelper.makeEncryptedQueryResult(keys, it)
     }
   }
 }

@@ -57,7 +57,8 @@ class ExecutePrivateMembershipQueriesWorkflow(
         kvOf(databaseEntry.databaseKey, databaseEntry.plaintext)
       }
 
-    val queries = inputs["encrypted-queries"]!!.map { EncryptedQueryBundle.parseFrom(it) }
+    val queries =
+      requireNotNull(inputs["encrypted-queries"]).map { EncryptedQueryBundle.parseFrom(it) }
 
     val results = evaluateQueriesWorkflow.batchEvaluateQueries(database, queries)
 

@@ -41,7 +41,7 @@ private val SERIALIZED_PARAMETERS = "some-serialized-parameters".toByteString()
 class PlaintextQueryResultsDecryptorTest {
   val queryResultsDecryptor = PlaintextQueryResultsDecryptor()
   val privateMembershipCryptor = PlaintextPrivateMembershipCryptor(SERIALIZED_PARAMETERS)
-  val privateMembershipCryptorHelper = PlaintextPrivateMembershipCryptorHelper
+  val privateMembershipCryptorHelper = PlaintextPrivateMembershipCryptorHelper()
 
   @Test
   fun `decryptQueries`() {

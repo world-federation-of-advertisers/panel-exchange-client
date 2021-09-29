@@ -27,7 +27,7 @@ import org.wfanet.panelmatch.common.toByteString
  */
 class PlaintextPrivateMembershipCryptor(private val serializedParameters: ByteString) :
   PrivateMembershipCryptor {
-  private val privateMembershipCryptorHelper = PlaintextPrivateMembershipCryptorHelper
+  private val privateMembershipCryptorHelper = PlaintextPrivateMembershipCryptorHelper()
 
   override fun generateKeys(): PrivateMembershipKeys {
     return PrivateMembershipKeys(

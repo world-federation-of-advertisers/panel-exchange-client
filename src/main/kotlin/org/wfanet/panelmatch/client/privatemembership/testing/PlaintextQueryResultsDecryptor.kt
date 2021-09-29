@@ -27,7 +27,7 @@ import org.wfanet.panelmatch.common.crypto.testing.FakeSymmetricCryptor
 
 class PlaintextQueryResultsDecryptor(
   private val privateMembershipCryptorHelper: PrivateMembershipCryptorHelper =
-    PlaintextPrivateMembershipCryptorHelper,
+    PlaintextPrivateMembershipCryptorHelper(),
   private val symmetricCryptor: SymmetricCryptor = FakeSymmetricCryptor(),
 ) : QueryResultsDecryptor {
 
