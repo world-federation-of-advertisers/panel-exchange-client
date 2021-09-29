@@ -89,7 +89,7 @@ class CreateQueriesWorkflow(
   /** Creates [PrivateMembershipEncryptResponse] from [data]. */
   fun batchCreateQueries(
     data: PCollection<KV<PanelistKey, JoinKey>>
-  ): Pair<PCollection<KV<QueryId, PanelistKey>>, PCollection<KV<ShardId, ByteString>>> {
+  ): Pair<PCollection<QueryIdAndPanelistKey>, PCollection<EncryptedQueryBundle>> {
     val shardedData = shardJoinKeys(data)
     val paddedData = addPaddedQueries(shardedData)
     val mappedData = mapToQueryId(paddedData)
@@ -195,12 +195,17 @@ class CreateQueriesWorkflow(
   /** Maps each [PanelistKey] to a unique [QueryId]. We also filter out all the fake queryIds. */
   private fun getPanelistToQueryMapping(
     data: PCollection<KV<QueryId, ShardedData>>
-  ): PCollection<KV<QueryId, PanelistKey>> {
+  ): PCollection<QueryIdAndPanelistKey> {
     return data
       .filter("Filter out padded queries") {
         it.value.panelistKey.id != FAKE_PANELIST_ID && it.value.joinKey.key != FAKE_JOIN_KEY
       }
-      .map("Map to PanelistKey") { kvOf(it.key, it.value.panelistKey) }
+      .map("Map to QueryIdAndPanelistKey") {
+        queryIdAndPanelistKey {
+          queryId = it.key
+          panelistKey = it.value.panelistKey
+        }
+      }
   }
 
   /** Builds [EncryptedQuery] from the encrypted data join keys of [JoinKey]. */
@@ -215,9 +220,9 @@ class CreateQueriesWorkflow(
   /** Batch gets the oblivious queries grouped by [ShardId]. */
   private fun getPrivateMembershipQueries(
     data: PCollection<KV<ShardId, UnencryptedQuery>>
-  ): PCollection<KV<ShardId, ByteString>> {
+  ): PCollection<EncryptedQueryBundle> {
     return data.groupByKey("Group by Shard").map<
-        KV<ShardId, Iterable<UnencryptedQuery>>, KV<ShardId, ByteString>>(
+        KV<ShardId, Iterable<UnencryptedQuery>>, EncryptedQueryBundle>(
         name = "Map to EncryptQueriesResponse"
       ) {
       val keys =
@@ -225,7 +230,11 @@ class CreateQueriesWorkflow(
           serializedPrivateKey = parameters.serializedPrivateKey,
           serializedPublicKey = parameters.serializedPublicKey,
         )
-      kvOf(it.key, privateMembershipCryptor.encryptQueries(it.value, keys))
+      encryptedQueryBundle {
+        shardId = it.key
+        queryIds += it.value.map { it.queryId }
+        serializedEncryptedQueries = privateMembershipCryptor.encryptQueries(it.value, keys)
+      }
     }
   }
 }

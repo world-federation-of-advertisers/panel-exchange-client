@@ -28,6 +28,7 @@ message BucketId {
   int32 id = 1;
 }
 
+// A new id assigned to each individual query unique to that transaction.
 // These cannot be randomly generated. For 30k QueryIds, the odds of collision
 // in 32 bit space are 1/10.
 message QueryId {
@@ -60,7 +61,19 @@ message EncryptedQueryBundle {
   bytes serialized_encrypted_queries = 3;
 }
 
-// A full or partial result for an oblivious query.
+// Pair of QueryId and JoinKey
+message QueryIdAndJoinKey {
+  QueryId query_id = 1;
+  JoinKey join_key = 2;
+}
+
+// Pair of QueryId and PanelistKey
+message QueryIdAndPanelistKey {
+  QueryId query_id = 1;
+  PanelistKey panelist_key = 2;
+}
+
+// Generic message type holding an encrypted query result
 message EncryptedQueryResult {
   QueryId query_id = 1;
 

@@ -31,11 +31,12 @@ import org.wfanet.panelmatch.client.privatemembership.JoinKey
 import org.wfanet.panelmatch.client.privatemembership.PanelistKey
 import org.wfanet.panelmatch.client.privatemembership.PrivateMembershipCryptor
 import org.wfanet.panelmatch.client.privatemembership.QueryId
-import org.wfanet.panelmatch.client.privatemembership.ShardId
+import org.wfanet.panelmatch.client.privatemembership.QueryIdAndPanelistKey
 import org.wfanet.panelmatch.client.privatemembership.joinKeyOf
 import org.wfanet.panelmatch.client.privatemembership.panelistKeyOf
 import org.wfanet.panelmatch.client.privatemembership.shardIdOf
 import org.wfanet.panelmatch.common.beam.join
+import org.wfanet.panelmatch.common.beam.keyBy
 import org.wfanet.panelmatch.common.beam.kvOf
 import org.wfanet.panelmatch.common.beam.parDo
 import org.wfanet.panelmatch.common.beam.testing.BeamTestBase
@@ -57,7 +58,7 @@ abstract class AbstractCreateQueriesWorkflowTest : BeamTestBase() {
   private fun runWorkflow(
     privateMembershipCryptor: PrivateMembershipCryptor,
     parameters: Parameters
-  ): Pair<PCollection<KV<QueryId, PanelistKey>>, PCollection<KV<ShardId, ByteString>>> {
+  ): Pair<PCollection<QueryIdAndPanelistKey>, PCollection<EncryptedQueryBundle>> {
     return CreateQueriesWorkflow(
         parameters = parameters,
         privateMembershipCryptor = privateMembershipCryptor
@@ -186,12 +187,12 @@ abstract class AbstractCreateQueriesWorkflowTest : BeamTestBase() {
 
   fun decodeEncryptedQueryBundle(
     privateMembershipCryptorHelper: PrivateMembershipCryptorHelper,
-    data: PCollection<KV<ShardId, ByteString>>
+    data: PCollection<EncryptedQueryBundle>
   ): PCollection<KV<QueryId, ShardedQuery>> {
-    return data.values().parDo("Map to ShardedQuery") { encryptedQueriesData ->
+    return data.parDo("Map to ShardedQuery") { encryptedQueriesData ->
       val shardedQueries =
         privateMembershipCryptorHelper.decodeEncryptedQueryBundle(
-          EncryptedQueryBundle.parseFrom(encryptedQueriesData)
+          EncryptedQueryBundle.parseFrom(encryptedQueriesData.serializedEncryptedQueries)
         )
       yieldAll(shardedQueries.map { kvOf(it.queryId, it) })
     }
@@ -199,11 +200,11 @@ abstract class AbstractCreateQueriesWorkflowTest : BeamTestBase() {
 
   private fun getPanelistQueries(
     decryptedQueries: PCollection<KV<QueryId, ShardedQuery>>,
-    panelistKeyQueryId: PCollection<KV<QueryId, PanelistKey>>
+    panelistKeyQueryId: PCollection<QueryIdAndPanelistKey>
   ): PCollection<KV<QueryId, PanelistQuery>> {
-    return panelistKeyQueryId.join(decryptedQueries) {
+    return panelistKeyQueryId.keyBy { it.queryId }.join(decryptedQueries) {
       key: QueryId,
-      panelistKeys: Iterable<PanelistKey>,
+      panelistKeys: Iterable<QueryIdAndPanelistKey>,
       shardedQueries: Iterable<ShardedQuery> ->
       if (panelistKeys.count() > 0) {
         yield(
@@ -211,7 +212,7 @@ abstract class AbstractCreateQueriesWorkflowTest : BeamTestBase() {
             key,
             PanelistQuery(
               shardedQueries.single().shardId.id,
-              panelistKeys.single().id,
+              panelistKeys.single().panelistKey.id,
               shardedQueries.single().bucketId.id
             )
           )
