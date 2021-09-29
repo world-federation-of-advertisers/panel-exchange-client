@@ -141,11 +141,11 @@ abstract class AbstractDecryptQueryResultsWorkflowTest : BeamTestBase() {
             .flatten()
         )
         .containsExactly(
-          Pair(1, plaintextOf("<some long data a>")),
-          Pair(1, plaintextOf("<some long data b>")),
-          Pair(2, plaintextOf("<some long data c>")),
-          Pair(2, plaintextOf("<some long data d>")),
-          Pair(3, plaintextOf("<some long data e>")),
+          1 to plaintextOf("<some long data a>"),
+          1 to plaintextOf("<some long data b>"),
+          2 to plaintextOf("<some long data c>"),
+          2 to plaintextOf("<some long data d>"),
+          3 to plaintextOf("<some long data e>"),
         )
       null
     }
