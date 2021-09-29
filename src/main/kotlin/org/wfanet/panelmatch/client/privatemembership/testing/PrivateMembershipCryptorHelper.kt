@@ -35,28 +35,28 @@ import org.wfanet.panelmatch.client.privatemembership.shardIdOf
 interface PrivateMembershipCryptorHelper : Serializable {
 
   /** Constructs an encrypted query bundle */
-  abstract fun makeEncryptedQueryBundle(
+  fun makeEncryptedQueryBundle(
     shard: ShardId,
     queries: List<Pair<QueryId, BucketId>>
   ): EncryptedQueryBundle
 
   /** Decodes an encrypted query bundle */
-  abstract fun decodeEncryptedQueryBundle(queryBundle: EncryptedQueryBundle): List<ShardedQuery>
+  fun decodeEncryptedQueryBundle(queryBundle: EncryptedQueryBundle): List<ShardedQuery>
 
   /** Constructs an [EncryptedQueryResult] from an [EncryptedEventDataSet] */
-  abstract fun makeEncryptedQueryResult(
+  fun makeEncryptedQueryResult(
     keys: PrivateMembershipKeys,
     encryptedEventDataSet: EncryptedEventDataSet
   ): EncryptedQueryResult
 
   /** Decodes an encrypted query result */
-  abstract fun decodeEncryptedQueryResult(result: EncryptedQueryResult): DecryptedQueryResult
+  fun decodeEncryptedQueryResult(result: EncryptedQueryResult): DecryptedQueryResult
 
   /**
    * Takes a [DecryptedEventDataSet] and a list of pairs of (QueryId, JoinKey) and returns a
    * [EncryptedEventDataSet]
    */
-  abstract fun makeEncryptedEventDataSet(
+  fun makeEncryptedEventDataSet(
     plaintext: DecryptedEventDataSet,
     joinkey: Pair<QueryId, JoinKey>
   ): EncryptedEventDataSet

@@ -29,10 +29,10 @@ data class PrivateMembershipKeys(
 interface PrivateMembershipCryptor : Serializable {
 
   /** Generates a public and private key for query compression and expansion */
-  abstract fun generateKeys(): PrivateMembershipKeys
+  fun generateKeys(): PrivateMembershipKeys
 
   /** encrypts a set of unencrypted queries */
-  abstract fun encryptQueries(
+  fun encryptQueries(
     unencryptedQueries: Iterable<UnencryptedQuery>,
     keys: PrivateMembershipKeys
   ): ByteString

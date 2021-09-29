@@ -66,14 +66,15 @@ class DecryptPrivateMembershipResultsTask(
 
     val hkdfPepper = input.getValue("hkdf-pepper").toByteString()
 
-    val DecryptedEventDataSet: PCollection<DecryptedEventDataSet> =
+    val decryptedEventDataSet: PCollection<DecryptedEventDataSet> =
       DecryptQueryResultsWorkflow(parameters, queryResultsDecryptor, hkdfPepper, compressorFactory)
         .batchDecryptQueryResults(encryptedQueryResults, queryToJoinKey, dictionary)
 
     // TODO: pick the number of shards dynamically.
     val numShards = 100
     val fileSpec = "$outputUriPrefix/decrypted-event-data-*-of-$numShards"
-    DecryptedEventDataSet.map { it.toByteString() }
+    decryptedEventDataSet
+      .map { it.toByteString() }
       .apply(SignedFiles.write(fileSpec, privateKey, localCertificate))
 
     pipeline.run()
