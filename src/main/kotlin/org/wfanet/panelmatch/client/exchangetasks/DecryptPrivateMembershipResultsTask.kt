@@ -42,7 +42,7 @@ class DecryptPrivateMembershipResultsTask(
   private val partnerCertificate: X509Certificate,
   private val outputUriPrefix: String,
   private val privateKey: PrivateKey,
-  private val numOutputFiles: Int,
+  private val decryptedEventDataSetFileCount: Int,
 ) : ExchangeTask {
   override suspend fun execute(input: Map<String, VerifiedBlob>): Map<String, Flow<ByteString>> {
     val pipeline = Pipeline.create()
@@ -71,7 +71,7 @@ class DecryptPrivateMembershipResultsTask(
       DecryptQueryResultsWorkflow(parameters, queryResultsDecryptor, hkdfPepper, compressorFactory)
         .batchDecryptQueryResults(encryptedQueryResults, queryToJoinKey, dictionary)
 
-    val fileSpec = "$outputUriPrefix/decrypted-event-data-*-of-$numOutputFiles"
+    val fileSpec = "$outputUriPrefix/decrypted-event-data-*-of-$decryptedEventDataSetFileCount"
     decryptedEventDataSet
       .map { it.toByteString() }
       .apply(SignedFiles.write(fileSpec, privateKey, localCertificate))
