@@ -15,10 +15,10 @@
 package org.wfanet.panelmatch.client.privatemembership
 
 import com.google.common.truth.Truth.assertThat
-import com.google.privatemembership.batch.ParametersKt.cryptoParameters
 import com.google.privatemembership.batch.ParametersKt.shardParameters
 import com.google.privatemembership.batch.client.Client.EncryptQueriesResponse
 import com.google.privatemembership.batch.parameters as clientParameters
+import com.google.protobuf.ByteString
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
@@ -28,7 +28,7 @@ import org.wfanet.panelmatch.client.privatemembership.testing.unencryptedQueryOf
 
 @RunWith(JUnit4::class)
 class JniPrivateMembershipCryptorTest {
-  val serializedParameters =
+  private val serializedParameters: ByteString =
     clientParameters {
         shardParameters =
           shardParameters {
