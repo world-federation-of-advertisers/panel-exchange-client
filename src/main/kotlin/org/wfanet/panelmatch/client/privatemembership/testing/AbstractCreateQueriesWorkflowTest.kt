@@ -48,7 +48,7 @@ private val SERIALIZED_PARAMETERS = "some serialized parameters".toByteString()
 
 @RunWith(JUnit4::class)
 abstract class AbstractCreateQueriesWorkflowTest : BeamTestBase() {
-  private val database by lazy {
+  private val panelistKeyandJoinKey by lazy {
     getPanelistKeyAndJoinKey(
       53L to "abc",
       58L to "def",
@@ -70,7 +70,7 @@ abstract class AbstractCreateQueriesWorkflowTest : BeamTestBase() {
         parameters = parameters,
         privateMembershipCryptor = privateMembershipCryptor
       )
-      .batchCreateQueries(database)
+      .batchCreateQueries(panelistKeyandJoinKey)
   }
 
   @Test
@@ -185,7 +185,7 @@ abstract class AbstractCreateQueriesWorkflowTest : BeamTestBase() {
     vararg entries: Pair<Long, String>
   ): PCollection<PanelistKeyAndJoinKey> {
     return pcollectionOf(
-      "Create Database",
+      "Create PanelistKeyandJoinKey",
       *entries
         .map {
           panelistKeyAndJoinKey {
