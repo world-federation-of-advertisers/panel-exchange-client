@@ -1,0 +1,19 @@
+load("@wfa_common_jvm//src/main/kotlin/org/wfanet/measurement/gcloud/spanner/testing:macros.bzl", "spanner_emulator_test")
+
+spanner_emulator_test(
+    name = "InProcessPanelMatchIntegrationTest",
+    size = "large",
+    srcs = ["InProcessPanelMatchIntegrationTest.kt"],
+    resources = [
+        "//src/test/kotlin/org/wfanet/panelmatch/integration/config",
+    ],
+    test_class = "org.wfanet.panelmatch.integration.InProcessPanelMatchIntegrationTest",
+    deps = [
+        "//src/main/kotlin/org/wfanet/panelmatch/client/launcher",
+        "//src/main/proto/wfa/measurement/api/v2alpha:exchange_step_attempt_kt_jvm_proto",
+        "//src/main/proto/wfa/measurement/api/v2alpha:exchange_workflow_kt_jvm_proto",
+        "@wfa_common_jvm//src/main/proto/google/type:date_kt_jvm_proto",
+        "@wfa_measurement_system//src/main/kotlin/org/wfanet/measurement/api/v2alpha:resource_key",
+        "@wfa_measurement_system//src/main/kotlin/org/wfanet/measurement/kingdom/service/internal/testing/integration",
+    ],
+)
