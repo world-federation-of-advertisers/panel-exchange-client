@@ -14,10 +14,10 @@
 
 package org.wfanet.panelmatch.client.launcher
 
-import com.google.protobuf.Timestamp
-import com.google.protobuf.timestamp
-import java.time.Clock
 import java.time.Instant
+import java.time.Clock
+import org.wfanet.measurement.api.v2alpha.AppendLogEntryRequest
+import org.wfanet.measurement.api.v2alpha.ClaimReadyExchangeStepRequest
 import org.wfanet.measurement.api.v2alpha.DataProviderKey
 import org.wfanet.measurement.api.v2alpha.ExchangeStepAttempt
 import org.wfanet.measurement.api.v2alpha.ExchangeStepAttemptKey
@@ -30,6 +30,7 @@ import org.wfanet.measurement.api.v2alpha.appendLogEntryRequest
 import org.wfanet.measurement.api.v2alpha.claimReadyExchangeStepRequest
 import org.wfanet.measurement.api.v2alpha.finishExchangeStepAttemptRequest
 import org.wfanet.measurement.common.grpc.grpcRequireNotNull
+import org.wfanet.measurement.common.toProtoTime
 import org.wfanet.panelmatch.client.launcher.ApiClient.ClaimedExchangeStep
 
 class GrpcApiClient(
@@ -87,11 +88,4 @@ class GrpcApiClient(
       this.message = message
     }
   }
-}
-
-// TODO(@yunyeng): Import from cross-media-measurement/ProtoUtils.
-/** Converts Instant to Timestamp. */
-fun Instant.toProtoTime(): Timestamp = timestamp {
-  seconds = epochSecond
-  nanos = nano
 }
