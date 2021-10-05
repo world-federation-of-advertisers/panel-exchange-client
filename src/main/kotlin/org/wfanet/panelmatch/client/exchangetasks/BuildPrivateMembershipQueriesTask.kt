@@ -35,21 +35,21 @@ import org.wfanet.panelmatch.common.beam.mapWithSideInput
 import org.wfanet.panelmatch.common.beam.toSingletonView
 import org.wfanet.panelmatch.common.toByteString
 
-data class BuildPrivateMembershipQueriesTaskOutput(
-  val encryptedQueriesFileName: String,
-  val encryptedQueriesFileCount: Int,
-  val queryIdAndPanelistKeyFileName: String,
-  val queryIdAndPanelistKeyFileCount: Int
-)
-
 class BuildPrivateMembershipQueriesTask(
   override val localCertificate: X509Certificate,
   override val uriPrefix: String,
   override val privateKey: PrivateKey,
   private val parameters: CreateQueriesWorkflow.Parameters,
   private val privateMembershipCryptor: PrivateMembershipCryptor,
-  private val buildPrivateMembershipQueriesTaskOutput: BuildPrivateMembershipQueriesTaskOutput
+  private val outputs: BuildPrivateMembershipQueriesTask.Outputs
 ) : ApacheBeamTask() {
+
+  data class Outputs(
+    val encryptedQueriesFileName: String,
+    val encryptedQueriesFileCount: Int,
+    val queryIdAndPanelistKeyFileName: String,
+    val queryIdAndPanelistKeyFileCount: Int
+  )
 
   override suspend fun execute(input: Map<String, VerifiedBlob>): Map<String, Flow<ByteString>> {
     val pipeline = Pipeline.create()
@@ -87,25 +87,13 @@ class BuildPrivateMembershipQueriesTask(
         .batchCreateQueries(panelistKeyAndJoinKeys, privateMembershipKeys)
 
     val queryDecryptionKeysFileSpec =
-      ShardedFileName(
-        buildPrivateMembershipQueriesTaskOutput.queryIdAndPanelistKeyFileName,
-        buildPrivateMembershipQueriesTaskOutput.queryIdAndPanelistKeyFileCount
-      )
-    require(
-      queryDecryptionKeysFileSpec.shardCount ==
-        buildPrivateMembershipQueriesTaskOutput.queryIdAndPanelistKeyFileCount
-    )
+      ShardedFileName(outputs.queryIdAndPanelistKeyFileName, outputs.queryIdAndPanelistKeyFileCount)
+    require(queryDecryptionKeysFileSpec.shardCount == outputs.queryIdAndPanelistKeyFileCount)
     queryIdAndPanelistKeys.map { it.toByteString() }.write(queryDecryptionKeysFileSpec)
 
     val encryptedQueriesFileSpec =
-      ShardedFileName(
-        buildPrivateMembershipQueriesTaskOutput.encryptedQueriesFileName,
-        buildPrivateMembershipQueriesTaskOutput.encryptedQueriesFileCount
-      )
-    require(
-      encryptedQueriesFileSpec.shardCount ==
-        buildPrivateMembershipQueriesTaskOutput.encryptedQueriesFileCount
-    )
+      ShardedFileName(outputs.encryptedQueriesFileName, outputs.encryptedQueriesFileCount)
+    require(encryptedQueriesFileSpec.shardCount == outputs.encryptedQueriesFileCount)
     encryptedResponses.map { it.toByteString() }.write(encryptedQueriesFileSpec)
 
     pipeline.run()

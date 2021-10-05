@@ -33,11 +33,6 @@ import org.wfanet.panelmatch.common.beam.map
 import org.wfanet.panelmatch.common.beam.toSingletonView
 import org.wfanet.panelmatch.common.toByteString
 
-data class ExecutePrivateMembershipQueriesTaskOutput(
-  val encryptedQueryResultFileName: String,
-  val encryptedQueryResultFileCount: Int
-)
-
 /** Runs [EvaluateQueriesWorkflow]. */
 class ExecutePrivateMembershipQueriesTask(
   override val uriPrefix: String,
@@ -46,8 +41,14 @@ class ExecutePrivateMembershipQueriesTask(
   private val workflowParameters: EvaluateQueriesWorkflow.Parameters,
   private val queryEvaluator: QueryEvaluator,
   private val partnerCertificate: X509Certificate,
-  private val executePrivateMembershipQueriesTaskOutput: ExecutePrivateMembershipQueriesTaskOutput
+  private val outputs: ExecutePrivateMembershipQueriesTask.Outputs
 ) : ApacheBeamTask() {
+
+  data class Outputs(
+    val encryptedQueryResultFileName: String,
+    val encryptedQueryResultFileCount: Int
+  )
+
   override suspend fun execute(input: Map<String, VerifiedBlob>): Map<String, Flow<ByteString>> {
     val pipeline = Pipeline.create()
 
@@ -73,14 +74,8 @@ class ExecutePrivateMembershipQueriesTask(
       evaluateQueriesWorkflow.batchEvaluateQueries(database, queries, privateMembershipPublicKey)
 
     val encryptedResultsFileSpec =
-      ShardedFileName(
-        executePrivateMembershipQueriesTaskOutput.encryptedQueryResultFileName,
-        executePrivateMembershipQueriesTaskOutput.encryptedQueryResultFileCount
-      )
-    require(
-      encryptedResultsFileSpec.shardCount ==
-        executePrivateMembershipQueriesTaskOutput.encryptedQueryResultFileCount
-    )
+      ShardedFileName(outputs.encryptedQueryResultFileName, outputs.encryptedQueryResultFileCount)
+    require(encryptedResultsFileSpec.shardCount == outputs.encryptedQueryResultFileCount)
     results.map { it.toByteString() }.write(encryptedResultsFileSpec)
 
     pipeline.run()
