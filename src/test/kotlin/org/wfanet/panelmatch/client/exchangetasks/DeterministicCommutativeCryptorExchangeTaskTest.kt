@@ -28,7 +28,6 @@ import org.wfanet.measurement.common.flatten
 import org.wfanet.panelmatch.client.launcher.testing.JOIN_KEYS
 import org.wfanet.panelmatch.client.storage.testing.makeTestVerifiedStorageClient
 import org.wfanet.panelmatch.common.crypto.testing.FakeDeterministicCommutativeCipher
-import org.wfanet.panelmatch.common.crypto.testing.INVALID_KEY
 import org.wfanet.panelmatch.protocol.common.makeSerializedSharedInputFlow
 import org.wfanet.panelmatch.protocol.common.makeSerializedSharedInputs
 
@@ -50,7 +49,7 @@ class DeterministicCommutativeCryptorExchangeTaskTest {
     FakeDeterministicCommutativeCipher().reEncrypt(dpSecretKey, singleBlindedKeys)
   private val lookupKeys =
     FakeDeterministicCommutativeCipher().decrypt(mpSecretKey, doubleBlindedKeys)
-  private val invalidKey = INVALID_KEY
+  private val invalidKey = FakeDeterministicCommutativeCipher.INVALID_KEY
 
   @Test
   fun `decrypt with valid inputs`() = withTestContext {
