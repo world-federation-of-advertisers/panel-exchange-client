@@ -35,9 +35,9 @@ class FakeSymmetricCryptor : SymmetricCryptor {
     return plaintexts.map { it.concat(SEPARATOR.toByteString()).concat(privateKey) }
   }
 
-  override fun decrypt(privateKey: ByteString, encryptedTexts: List<ByteString>): List<ByteString> {
+  override fun decrypt(privateKey: ByteString, ciphertexts: List<ByteString>): List<ByteString> {
     val suffix = SEPARATOR + privateKey.toStringUtf8()
-    return encryptedTexts.map {
+    return ciphertexts.map {
       val dataString = it.toStringUtf8()
       require(dataString.endsWith(suffix))
       dataString.removeSuffix(suffix).toByteString()

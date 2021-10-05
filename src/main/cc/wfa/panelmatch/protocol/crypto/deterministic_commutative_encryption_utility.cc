@@ -59,7 +59,7 @@ absl::StatusOr<CryptorEncryptResponse> DeterministicCommutativeEncrypt(
   ASSIGN_OR_RETURN(auto cipher, NewDeterministicCommutativeCipher(key));
 
   for (absl::string_view plaintext : request.plaintexts()) {
-    ASSIGN_OR_RETURN(*response.add_encrypted_texts(),
+    ASSIGN_OR_RETURN(*response.add_ciphertexts(),
                      cipher->Encrypt(plaintext));
   }
 
@@ -75,7 +75,7 @@ absl::StatusOr<CryptorDecryptResponse> DeterministicCommutativeDecrypt(
   ASSIGN_OR_RETURN(SecretData key, LoadKey(request.encryption_key()));
   ASSIGN_OR_RETURN(auto cipher, NewDeterministicCommutativeCipher(key));
 
-  for (absl::string_view ciphertext : request.encrypted_texts()) {
+  for (absl::string_view ciphertext : request.ciphertexts()) {
     ASSIGN_OR_RETURN(*response.add_decrypted_texts(),
                      cipher->Decrypt(ciphertext));
   }
@@ -92,8 +92,8 @@ absl::StatusOr<CryptorReEncryptResponse> DeterministicCommutativeReEncrypt(
   ASSIGN_OR_RETURN(SecretData key, LoadKey(request.encryption_key()));
   ASSIGN_OR_RETURN(auto cipher, NewDeterministicCommutativeCipher(key));
 
-  for (absl::string_view ciphertext : request.encrypted_texts()) {
-    ASSIGN_OR_RETURN(*response.add_reencrypted_texts(),
+  for (absl::string_view ciphertext : request.ciphertexts()) {
+    ASSIGN_OR_RETURN(*response.add_ciphertexts(),
                      cipher->ReEncrypt(ciphertext));
   }
 

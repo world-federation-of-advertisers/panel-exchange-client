@@ -36,14 +36,14 @@ class JniDeterministicCommutativeCipher : DeterministicCommutativeCipher {
 
   override fun generateKey(): ByteString {
     val request = cryptorGenerateKeyRequest {}
-    val data = wrapJniException {
+    val response = wrapJniException {
       CryptorGenerateKeyResponse.parseFrom(
         DeterministicCommutativeEncryptionWrapper.deterministicCommutativeGenerateKeyWrapper(
           request.toByteArray()
         )
       )
     }
-    return data.key
+    return response.key
   }
 
   override fun encrypt(privateKey: ByteString, plaintexts: List<ByteString>): List<ByteString> {
@@ -51,47 +51,47 @@ class JniDeterministicCommutativeCipher : DeterministicCommutativeCipher {
       encryptionKey = privateKey
       this.plaintexts += plaintexts
     }
-    val data = wrapJniException {
+    val response = wrapJniException {
       CryptorEncryptResponse.parseFrom(
         DeterministicCommutativeEncryptionWrapper.deterministicCommutativeEncryptWrapper(
           request.toByteArray()
         )
       )
     }
-    return data.encryptedTextsList
+    return response.ciphertextsList
   }
 
   override fun reEncrypt(
     privateKey: ByteString,
-    encryptedTexts: List<ByteString>
+    ciphertexts: List<ByteString>
   ): List<ByteString> {
     val request = cryptorReEncryptRequest {
       encryptionKey = privateKey
-      this.encryptedTexts += encryptedTexts
+      this.ciphertexts += ciphertexts
     }
-    val data = wrapJniException {
+    val response = wrapJniException {
       CryptorReEncryptResponse.parseFrom(
         DeterministicCommutativeEncryptionWrapper.deterministicCommutativeReEncryptWrapper(
           request.toByteArray()
         )
       )
     }
-    return data.reencryptedTextsList
+    return response.ciphertextsList
   }
 
-  override fun decrypt(privateKey: ByteString, encryptedTexts: List<ByteString>): List<ByteString> {
+  override fun decrypt(privateKey: ByteString, ciphertexts: List<ByteString>): List<ByteString> {
     val request = cryptorDecryptRequest {
       encryptionKey = privateKey
-      this.encryptedTexts += encryptedTexts
+      this.ciphertexts += ciphertexts
     }
-    val data = wrapJniException {
+    val response = wrapJniException {
       CryptorDecryptResponse.parseFrom(
         DeterministicCommutativeEncryptionWrapper.deterministicCommutativeDecryptWrapper(
           request.toByteArray()
         )
       )
     }
-    return data.decryptedTextsList
+    return response.decryptedTextsList
   }
 
   companion object {

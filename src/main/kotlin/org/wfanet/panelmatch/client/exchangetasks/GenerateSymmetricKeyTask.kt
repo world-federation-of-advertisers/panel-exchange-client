@@ -16,7 +16,7 @@ package org.wfanet.panelmatch.client.exchangetasks
 
 import com.google.protobuf.ByteString
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.asFlow
+import kotlinx.coroutines.flow.flowOf
 import org.wfanet.panelmatch.client.logger.addToTaskLog
 import org.wfanet.panelmatch.client.logger.loggerFor
 import org.wfanet.panelmatch.client.storage.VerifiedStorageClient.VerifiedBlob
@@ -30,7 +30,7 @@ class GenerateSymmetricKeyTask(
     logger.addToTaskLog("Executing operation: $operation")
 
     val key = operation()
-    return mapOf(outputDataLabel to listOf(key).asFlow())
+    return mapOf(outputDataLabel to flowOf(key))
   }
 
   companion object {

@@ -27,5 +27,5 @@ interface SymmetricCryptor : Serializable {
   fun encrypt(privateKey: ByteString, plaintexts: List<ByteString>): List<ByteString>
 
   /** Decrypts text */
-  fun decrypt(privateKey: ByteString, encryptedTexts: List<ByteString>): List<ByteString>
+  fun decrypt(privateKey: ByteString, ciphertexts: List<ByteString>): List<ByteString>
 }
