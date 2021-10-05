@@ -37,6 +37,11 @@ import org.wfanet.panelmatch.common.beam.toSingletonView
 import org.wfanet.panelmatch.common.compression.CompressorFactory
 import org.wfanet.panelmatch.common.toByteString
 
+data class DecryptPrivateMembershipResultsTaskOutput(
+  val decryptedEventDataSetFileName: String,
+  val decryptedEventDataSetFileCount: Int
+)
+
 class DecryptPrivateMembershipResultsTask(
   override val uriPrefix: String,
   override val privateKey: PrivateKey,
@@ -45,8 +50,7 @@ class DecryptPrivateMembershipResultsTask(
   private val queryResultsDecryptor: QueryResultsDecryptor,
   private val compressorFactory: CompressorFactory,
   private val partnerCertificate: X509Certificate,
-  private val decryptedEventDataSetFileCount: Int,
-  private val output: Map<String, VerifiedBlob>
+  private val decryptPrivateMembershipResultsTaskOutput: DecryptPrivateMembershipResultsTaskOutput
 ) : ApacheBeamTask() {
   override suspend fun execute(input: Map<String, VerifiedBlob>): Map<String, Flow<ByteString>> {
     val pipeline = Pipeline.create()
@@ -106,11 +110,14 @@ class DecryptPrivateMembershipResultsTask(
 
     val decryptedEventDataSetFileSpec =
       ShardedFileName(
-        output.getValue("decrypted-event-data").toStringUtf8(),
-        decryptedEventDataSetFileCount
+        decryptPrivateMembershipResultsTaskOutput.decryptedEventDataSetFileName,
+        decryptPrivateMembershipResultsTaskOutput.decryptedEventDataSetFileCount
       )
     decryptedEventDataSet.map { it.toByteString() }.write(decryptedEventDataSetFileSpec)
-    require(decryptedEventDataSetFileSpec.shardCount == decryptedEventDataSetFileCount)
+    require(
+      decryptedEventDataSetFileSpec.shardCount ==
+        decryptPrivateMembershipResultsTaskOutput.decryptedEventDataSetFileCount
+    )
 
     pipeline.run()
 
