@@ -28,7 +28,7 @@ import org.wfanet.panelmatch.client.privatemembership.PanelistKeyAndJoinKey
 import org.wfanet.panelmatch.client.privatemembership.PrivateMembershipCryptor
 import org.wfanet.panelmatch.client.privatemembership.PrivateMembershipKeys
 import org.wfanet.panelmatch.client.privatemembership.QueryIdAndPanelistKey
-import org.wfanet.panelmatch.client.storage.VerifiedStorageClient
+import org.wfanet.panelmatch.client.storage.VerifiedStorageClient.VerifiedBlob
 import org.wfanet.panelmatch.common.ShardedFileName
 import org.wfanet.panelmatch.common.beam.map
 import org.wfanet.panelmatch.common.beam.mapWithSideInput
@@ -43,11 +43,10 @@ class BuildPrivateMembershipQueriesTask(
   private val privateMembershipCryptor: PrivateMembershipCryptor,
   private val encryptedQueryBundleFileCount: Int,
   private val queryIdAndPanelistKeyFileCount: Int,
+  private val output: Map<String, VerifiedBlob>
 ) : ApacheBeamTask() {
 
-  override suspend fun execute(
-    input: Map<String, VerifiedStorageClient.VerifiedBlob>
-  ): Map<String, Flow<ByteString>> {
+  override suspend fun execute(input: Map<String, VerifiedBlob>): Map<String, Flow<ByteString>> {
     val pipeline = Pipeline.create()
 
     // TODO: previous steps need to output in this format.
@@ -84,16 +83,18 @@ class BuildPrivateMembershipQueriesTask(
 
     val queryDecryptionKeysFileSpec =
       ShardedFileName(
-        input.getValue("query-decryption-keys").toStringUtf8(),
+        output.getValue("query-decryption-keys").toStringUtf8(),
         queryIdAndPanelistKeyFileCount
       )
+    require(queryDecryptionKeysFileSpec.shardCount == queryIdAndPanelistKeyFileCount)
     queryIdAndPanelistKeys.map { it.toByteString() }.write(queryDecryptionKeysFileSpec)
 
     val encryptedQueriesFileSpec =
       ShardedFileName(
-        input.getValue("encrypted-queries").toStringUtf8(),
+        output.getValue("encrypted-queries").toStringUtf8(),
         encryptedQueryBundleFileCount
       )
+    require(encryptedQueriesFileSpec.shardCount == encryptedQueryBundleFileCount)
     encryptedResponses.map { it.toByteString() }.write(encryptedQueriesFileSpec)
 
     pipeline.run()

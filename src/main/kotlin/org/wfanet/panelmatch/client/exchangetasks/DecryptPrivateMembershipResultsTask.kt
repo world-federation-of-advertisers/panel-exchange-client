@@ -46,6 +46,7 @@ class DecryptPrivateMembershipResultsTask(
   private val compressorFactory: CompressorFactory,
   private val partnerCertificate: X509Certificate,
   private val decryptedEventDataSetFileCount: Int,
+  private val output: Map<String, VerifiedBlob>
 ) : ApacheBeamTask() {
   override suspend fun execute(input: Map<String, VerifiedBlob>): Map<String, Flow<ByteString>> {
     val pipeline = Pipeline.create()
@@ -103,15 +104,18 @@ class DecryptPrivateMembershipResultsTask(
           privateMembershipKeys
         )
 
-    val fileSpec =
+    val decryptedEventDataSetFileSpec =
       ShardedFileName(
-        input.getValue("decrypted-event-data").toStringUtf8(),
+        output.getValue("decrypted-event-data").toStringUtf8(),
         decryptedEventDataSetFileCount
       )
-    decryptedEventDataSet.map { it.toByteString() }.write(fileSpec)
+    decryptedEventDataSet.map { it.toByteString() }.write(decryptedEventDataSetFileSpec)
+    require(decryptedEventDataSetFileSpec.shardCount == decryptedEventDataSetFileCount)
 
     pipeline.run()
 
-    return mapOf("decrypted-event-data" to flowOf(fileSpec.spec.toByteString()))
+    return mapOf(
+      "decrypted-event-data" to flowOf(decryptedEventDataSetFileSpec.spec.toByteString())
+    )
   }
 }

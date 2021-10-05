@@ -42,6 +42,7 @@ class ExecutePrivateMembershipQueriesTask(
   private val queryEvaluator: QueryEvaluator,
   private val partnerCertificate: X509Certificate,
   private val encryptedQueryResultFileCount: Int,
+  private val output: Map<String, VerifiedBlob>
 ) : ApacheBeamTask() {
   override suspend fun execute(input: Map<String, VerifiedBlob>): Map<String, Flow<ByteString>> {
     val pipeline = Pipeline.create()
@@ -67,15 +68,16 @@ class ExecutePrivateMembershipQueriesTask(
     val results: PCollection<EncryptedQueryResult> =
       evaluateQueriesWorkflow.batchEvaluateQueries(database, queries, privateMembershipPublicKey)
 
-    val resultsFileName =
+    val encryptedResultsFileSpec =
       ShardedFileName(
-        input.getValue("encrypted-results").toStringUtf8(),
+        output.getValue("encrypted-results").toStringUtf8(),
         encryptedQueryResultFileCount
       )
-    results.map { it.toByteString() }.write(resultsFileName)
+    require(encryptedResultsFileSpec.shardCount == encryptedQueryResultFileCount)
+    results.map { it.toByteString() }.write(encryptedResultsFileSpec)
 
     pipeline.run()
 
-    return mapOf("encrypted-results" to flowOf(resultsFileName.spec.toByteString()))
+    return mapOf("encrypted-results" to flowOf(encryptedResultsFileSpec.spec.toByteString()))
   }
 }
