@@ -48,9 +48,9 @@ def panel_exchange_client_repositories():
 
     http_archive(
         name = "wfa_measurement_proto",
-        sha256 = "ea943e080ffabe58e168c79706f395e4e2e0d3a5f2870546c714c2e41edcd915",
-        strip_prefix = "cross-media-measurement-api-0.7.1",
-        url = "https://github.com/world-federation-of-advertisers/cross-media-measurement-api/archive/v0.7.1.tar.gz",
+        sha256 = "1ce85f62abe07fc6921d0b6599289844ffca7b39c56cd6bd8121ada19d1c4ec2",
+        strip_prefix = "cross-media-measurement-api-0.7.2",
+        url = "https://github.com/world-federation-of-advertisers/cross-media-measurement-api/archive/v0.7.2.tar.gz",
     )
 
     http_archive(
@@ -62,9 +62,9 @@ def panel_exchange_client_repositories():
 
     http_archive(
         name = "wfa_consent_signaling_client",
-        sha256 = "a97c4b1350eaca3e33eacf5f91611c4009c90a7abf7b2db1394ec0fa8bbaa5e0",
-        strip_prefix = "consent-signaling-client-0.6.0",
-        url = "https://github.com/world-federation-of-advertisers/consent-signaling-client/archive/refs/tags/v0.6.0.tar.gz",
+        sha256 = "b46a870d5be459f8db2f136e2685d9310580bf0c4a0c9e1fef5fb61d8f8beb5a",
+        strip_prefix = "consent-signaling-client-0.8.1",
+        url = "https://github.com/world-federation-of-advertisers/consent-signaling-client/archive/v0.8.1.tar.gz",
     )
 
     http_archive(
