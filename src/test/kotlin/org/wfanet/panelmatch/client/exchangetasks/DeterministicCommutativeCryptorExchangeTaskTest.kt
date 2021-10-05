@@ -24,12 +24,11 @@ import kotlinx.coroutines.withContext
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
-import org.wfanet.measurement.common.asBufferedFlow
 import org.wfanet.measurement.common.flatten
 import org.wfanet.panelmatch.client.launcher.testing.JOIN_KEYS
 import org.wfanet.panelmatch.client.storage.testing.makeTestVerifiedStorageClient
 import org.wfanet.panelmatch.common.crypto.testing.FakeDeterministicCommutativeCipher
-import org.wfanet.panelmatch.common.toByteString
+import org.wfanet.panelmatch.common.crypto.testing.INVALID_KEY
 import org.wfanet.panelmatch.protocol.common.makeSerializedSharedInputFlow
 import org.wfanet.panelmatch.protocol.common.makeSerializedSharedInputs
 
@@ -51,7 +50,7 @@ class DeterministicCommutativeCryptorExchangeTaskTest {
     FakeDeterministicCommutativeCipher().reEncrypt(dpSecretKey, singleBlindedKeys)
   private val lookupKeys =
     FakeDeterministicCommutativeCipher().decrypt(mpSecretKey, doubleBlindedKeys)
-  private val invalidKey = "invalid key".toByteString()
+  private val invalidKey = INVALID_KEY
 
   @Test
   fun `decrypt with valid inputs`() = withTestContext {
@@ -59,11 +58,7 @@ class DeterministicCommutativeCryptorExchangeTaskTest {
       CryptorExchangeTask.forDecryption(deterministicCommutativeCryptor)
         .execute(
           mapOf(
-            "encryption-key" to
-              storage.createBlob(
-                "encryption-key",
-                mpSecretKey.asBufferedFlow(storage.defaultBufferSizeBytes)
-              ),
+            "encryption-key" to storage.createBlob("encryption-key", mpSecretKey),
             "encrypted-data" to
               storage.createBlob(
                 "encrypted-data",
@@ -82,11 +77,7 @@ class DeterministicCommutativeCryptorExchangeTaskTest {
         CryptorExchangeTask.forDecryption(deterministicCommutativeCryptor)
           .execute(
             mapOf(
-              "encryption-key" to
-                storage.createBlob(
-                  "encryption-key",
-                  invalidKey.asBufferedFlow(storage.defaultBufferSizeBytes)
-                ),
+              "encryption-key" to storage.createBlob("encryption-key", invalidKey),
               "encrypted-data" to
                 storage.createBlob(
                   "encrypted-data",
@@ -114,15 +105,7 @@ class DeterministicCommutativeCryptorExchangeTaskTest {
     }
     assertFailsWith(IllegalArgumentException::class) {
       CryptorExchangeTask.forDecryption(deterministicCommutativeCryptor)
-        .execute(
-          mapOf(
-            "encryption-key" to
-              storage.createBlob(
-                "encryption-key",
-                mpSecretKey.asBufferedFlow(storage.defaultBufferSizeBytes)
-              )
-          )
-        )
+        .execute(mapOf("encryption-key" to storage.createBlob("encryption-key", mpSecretKey)))
     }
   }
 
@@ -132,11 +115,7 @@ class DeterministicCommutativeCryptorExchangeTaskTest {
       CryptorExchangeTask.forEncryption(deterministicCommutativeCryptor)
         .execute(
           mapOf(
-            "encryption-key" to
-              storage.createBlob(
-                "encryption-key",
-                mpSecretKey.asBufferedFlow(storage.defaultBufferSizeBytes)
-              ),
+            "encryption-key" to storage.createBlob("encryption-key", mpSecretKey),
             "unencrypted-data" to
               storage.createBlob(
                 "unencrypted-data",
@@ -156,11 +135,7 @@ class DeterministicCommutativeCryptorExchangeTaskTest {
         CryptorExchangeTask.forEncryption(deterministicCommutativeCryptor)
           .execute(
             mapOf(
-              "encryption-key" to
-                storage.createBlob(
-                  "encryption-key",
-                  invalidKey.asBufferedFlow(storage.defaultBufferSizeBytes)
-                ),
+              "encryption-key" to storage.createBlob("encryption-key", invalidKey),
               "unencrypted-data" to
                 storage.createBlob(
                   "unencrypted-data",
@@ -188,15 +163,7 @@ class DeterministicCommutativeCryptorExchangeTaskTest {
     }
     assertFailsWith(IllegalArgumentException::class) {
       CryptorExchangeTask.forEncryption(deterministicCommutativeCryptor)
-        .execute(
-          mapOf(
-            "encryption-key" to
-              storage.createBlob(
-                "encryption-key",
-                mpSecretKey.asBufferedFlow(storage.defaultBufferSizeBytes)
-              )
-          )
-        )
+        .execute(mapOf("encryption-key" to storage.createBlob("encryption-key", mpSecretKey)))
     }
   }
 
@@ -206,11 +173,7 @@ class DeterministicCommutativeCryptorExchangeTaskTest {
       CryptorExchangeTask.forReEncryption(deterministicCommutativeCryptor)
         .execute(
           mapOf(
-            "encryption-key" to
-              storage.createBlob(
-                "encryption-key",
-                dpSecretKey.asBufferedFlow(storage.defaultBufferSizeBytes)
-              ),
+            "encryption-key" to storage.createBlob("encryption-key", dpSecretKey),
             "encrypted-data" to
               storage.createBlob(
                 "encrypted-data",
@@ -230,11 +193,7 @@ class DeterministicCommutativeCryptorExchangeTaskTest {
         CryptorExchangeTask.forReEncryption(deterministicCommutativeCryptor)
           .execute(
             mapOf(
-              "encryption-key" to
-                storage.createBlob(
-                  "encryption-key",
-                  invalidKey.asBufferedFlow(storage.defaultBufferSizeBytes)
-                ),
+              "encryption-key" to storage.createBlob("encryption-key", invalidKey),
               "encrypted-data" to
                 storage.createBlob(
                   "encrypted-data",
@@ -262,15 +221,7 @@ class DeterministicCommutativeCryptorExchangeTaskTest {
     }
     assertFailsWith(IllegalArgumentException::class) {
       CryptorExchangeTask.forReEncryption(deterministicCommutativeCryptor)
-        .execute(
-          mapOf(
-            "encryption-key" to
-              storage.createBlob(
-                "encryption-key",
-                mpSecretKey.asBufferedFlow(storage.defaultBufferSizeBytes)
-              )
-          )
-        )
+        .execute(mapOf("encryption-key" to storage.createBlob("encryption-key", mpSecretKey)))
     }
   }
 }

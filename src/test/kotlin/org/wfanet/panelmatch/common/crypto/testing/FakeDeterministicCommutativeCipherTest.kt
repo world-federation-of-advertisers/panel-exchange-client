@@ -18,12 +18,11 @@ import com.google.protobuf.ByteString
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
 import org.wfanet.panelmatch.common.crypto.DeterministicCommutativeCipher
-import org.wfanet.panelmatch.common.toByteString
 
 @RunWith(JUnit4::class)
 class FakeDeterministicCommutativeCipherTest : AbstractDeterministicCommutativeCipherTest() {
   override val cipher: DeterministicCommutativeCipher = FakeDeterministicCommutativeCipher()
-  override val invalidKey: ByteString = "invalid key".toByteString()
+  override val invalidKey: ByteString = INVALID_KEY
   override val privateKey1 = cipher.generateKey()
   override val privateKey2 = cipher.generateKey()
 }
