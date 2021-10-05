@@ -47,7 +47,7 @@ import org.wfanet.panelmatch.common.toByteString
 @RunWith(JUnit4::class)
 abstract class AbstractCreateQueriesWorkflowTest : BeamTestBase() {
   private val panelistKeyAndJoinKeys by lazy {
-    getPanelistKeyAndJoinKey(
+    getPanelistKeyAndJoinKeys(
       53L to "abc",
       58L to "def",
       71L to "hij",
@@ -169,7 +169,7 @@ abstract class AbstractCreateQueriesWorkflowTest : BeamTestBase() {
     return metrics.distributions.map { it.committed.max }.first()
   }
 
-  private fun getPanelistKeyAndJoinKey(
+  private fun getPanelistKeyAndJoinKeys(
     vararg entries: Pair<Long, String>
   ): PCollection<PanelistKeyAndJoinKey> {
     return pcollectionOf(
