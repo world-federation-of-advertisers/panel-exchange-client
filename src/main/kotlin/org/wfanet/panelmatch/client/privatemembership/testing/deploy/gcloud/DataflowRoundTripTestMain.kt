@@ -71,7 +71,7 @@ interface Options : DataflowPipelineOptions {
 }
 
 private const val SHARD_COUNT = 100
-private const val BUCKETS_PER_SHARD_COUNT = 1 shl 10
+private const val BUCKETS_PER_SHARD_COUNT = 1 shl 11
 private const val QUERIES_PER_SHARD_COUNT = 16
 private const val JOINKEY_UNIVERSE_SIZE = SHARD_COUNT * BUCKETS_PER_SHARD_COUNT
 
@@ -152,11 +152,12 @@ fun main(args: Array<String>) {
   val database: PCollection<KV<DatabaseKey, Plaintext>> =
     pipeline.apply("Create Database", Create.of(0 until SHARD_COUNT)).parDo("Populate Database") { i
       ->
+      val prefix = (0 until 2000).joinToString { "_" }
       for (j in 0 until BUCKETS_PER_SHARD_COUNT / 2) {
         yield(
           kvOf(
             databaseKeyOf(Random.nextLong()),
-            plaintextOf("small-payload-${i + j * SHARD_COUNT}".toByteString())
+            plaintextOf("$prefix-${i + j * SHARD_COUNT}".toByteString())
           )
         )
       }
