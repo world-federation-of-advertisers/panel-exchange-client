@@ -34,16 +34,15 @@
 namespace wfa::panelmatch::protocol::crypto {
 namespace {
 using ::crypto::tink::util::SecretData;
-using ::crypto::tink::util::SecretDataFromStringView;
 using ::crypto::tink::util::SecretDataAsStringView;
+using ::crypto::tink::util::SecretDataFromStringView;
+using ::wfa::panelmatch::common::crypto::EcCommutativeCipherKeyGenerator;
 using ::wfa::panelmatch::common::crypto::LoadKey;
 using ::wfa::panelmatch::common::crypto::NewDeterministicCommutativeCipher;
-using ::wfa::panelmatch::common::crypto::EcCommutativeCipherKeyGenerator;
 }  // namespace
 
 absl::StatusOr<CryptorGenerateKeyResponse> DeterministicCommutativeGenerateKey(
     const CryptorGenerateKeyRequest& request) {
-
   EcCommutativeCipherKeyGenerator generator;
   ASSIGN_OR_RETURN(SecretData key, generator.GenerateKey());
   CryptorGenerateKeyResponse response;

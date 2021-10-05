@@ -18,11 +18,8 @@ import com.google.common.truth.Truth.assertThat
 import com.google.protobuf.ByteString
 import kotlin.test.assertFails
 import org.junit.Test
-import org.wfanet.panelmatch.common.toByteString
-import org.wfanet.panelmatch.protocol.CryptorDecryptRequest
-import org.wfanet.panelmatch.protocol.CryptorEncryptRequest
-import org.wfanet.panelmatch.protocol.CryptorReEncryptRequest
 import org.wfanet.panelmatch.common.crypto.DeterministicCommutativeCipher
+import org.wfanet.panelmatch.common.toByteString
 
 private val PLAINTEXTS: List<ByteString> =
   listOf(
@@ -64,15 +61,14 @@ abstract class AbstractDeterministicCommutativeCipherTest {
     val decryptedTexts4 = cipher.decrypt(privateKey2, reEncryptedTexts2)
     assertThat(decryptedTexts3).isEqualTo(encryptedTexts1)
     assertThat(decryptedTexts4).isEqualTo(encryptedTexts1)
-
   }
 
   @Test
   fun `invalid key`() {
     val localInvalidKey = invalidKey
-      assertFails { cipher.encrypt(localInvalidKey, PLAINTEXTS) }
-      assertFails { cipher.decrypt(localInvalidKey, PLAINTEXTS) }
-      assertFails { cipher.reEncrypt(localInvalidKey, PLAINTEXTS) }
+    assertFails { cipher.encrypt(localInvalidKey, PLAINTEXTS) }
+    assertFails { cipher.decrypt(localInvalidKey, PLAINTEXTS) }
+    assertFails { cipher.reEncrypt(localInvalidKey, PLAINTEXTS) }
   }
 
   @Test
@@ -81,5 +77,4 @@ abstract class AbstractDeterministicCommutativeCipherTest {
     assertFails { cipher.decrypt(key, CIPHERTEXTS) }
     assertFails { cipher.reEncrypt(key, CIPHERTEXTS) }
   }
-
 }

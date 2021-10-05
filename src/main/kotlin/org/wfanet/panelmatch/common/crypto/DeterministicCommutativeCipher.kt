@@ -15,26 +15,19 @@
 package org.wfanet.panelmatch.common.crypto
 
 import com.google.protobuf.ByteString
-import org.wfanet.panelmatch.protocol.CryptorDecryptRequest
-import org.wfanet.panelmatch.protocol.CryptorDecryptResponse
-import org.wfanet.panelmatch.protocol.CryptorEncryptRequest
-import org.wfanet.panelmatch.protocol.CryptorEncryptResponse
-import org.wfanet.panelmatch.protocol.CryptorReEncryptRequest
-import org.wfanet.panelmatch.protocol.CryptorReEncryptResponse
 
 /** Core deterministic, commutative cryptographic operations. */
-interface DeterministicCommutativeCipher:SymmetricCryptor {
+interface DeterministicCommutativeCipher : SymmetricCryptor {
 
-  /** Generates key. */
+  /** Generates privateKey. */
   override fun generateKey(): ByteString
 
   /** Encrypts plaintexts. */
-  //fun encrypt(key: ByteString, plaintexts: List<ByteString>): List<ByteString>
+  override fun encrypt(privateKey: ByteString, plaintexts: List<ByteString>): List<ByteString>
 
   /** Adds an additional layer of encryption to ciphertexts. */
   fun reEncrypt(privateKey: ByteString, encryptedTexts: List<ByteString>): List<ByteString>
 
   /** Removes a layer of encryption from ciphertexts. */
-  //fun decrypt(key: ByteString, encryptedTexts: List<ByteString>): List<ByteString>
-
+  override fun decrypt(privateKey: ByteString, encryptedTexts: List<ByteString>): List<ByteString>
 }

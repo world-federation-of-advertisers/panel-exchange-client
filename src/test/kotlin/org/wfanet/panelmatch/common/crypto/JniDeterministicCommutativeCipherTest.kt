@@ -14,16 +14,11 @@
 
 package org.wfanet.panelmatch.common.crypto
 
-import com.google.common.truth.Truth.assertThat
 import com.google.protobuf.ByteString
-import kotlin.test.assertFailsWith
-import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
-import org.wfanet.panelmatch.common.JniException
-import org.wfanet.panelmatch.common.toByteString
-import org.wfanet.panelmatch.protocol.CryptorReEncryptRequest
 import org.wfanet.panelmatch.common.crypto.testing.AbstractDeterministicCommutativeCipherTest
+import org.wfanet.panelmatch.common.toByteString
 
 @RunWith(JUnit4::class)
 class JniDeterministicCommutativeCipherTest : AbstractDeterministicCommutativeCipherTest() {

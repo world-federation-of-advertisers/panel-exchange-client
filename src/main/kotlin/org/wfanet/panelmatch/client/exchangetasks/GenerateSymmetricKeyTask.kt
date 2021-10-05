@@ -22,18 +22,18 @@ import org.wfanet.panelmatch.client.logger.loggerFor
 import org.wfanet.panelmatch.client.storage.VerifiedStorageClient.VerifiedBlob
 
 class GenerateSymmetricKeyTask(
-    private val operation: () -> ByteString,
-    private val outputDataLabel: String = "symmetric-key",
+  private val operation: () -> ByteString,
+  private val outputDataLabel: String = "symmetric-key",
 ) : ExchangeTask {
 
-    override suspend fun execute(input: Map<String, VerifiedBlob>): Map<String, Flow<ByteString>> {
-        logger.addToTaskLog("Executing operation: $operation")
+  override suspend fun execute(input: Map<String, VerifiedBlob>): Map<String, Flow<ByteString>> {
+    logger.addToTaskLog("Executing operation: $operation")
 
-        val key = operation()
-        return mapOf(outputDataLabel to listOf(key).asFlow())
-    }
+    val key = operation()
+    return mapOf(outputDataLabel to listOf(key).asFlow())
+  }
 
-    companion object {
-        private val logger by loggerFor()
-    }
+  companion object {
+    private val logger by loggerFor()
+  }
 }

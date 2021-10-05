@@ -37,17 +37,17 @@ using ::testing::Eq;
 using ::testing::Ne;
 using ::testing::Not;
 using ::testing::Pointwise;
-using ::wfa::panelmatch::protocol::CryptorGenerateKeyRequest;
-using ::wfa::panelmatch::protocol::CryptorGenerateKeyResponse;
 using ::wfa::panelmatch::protocol::CryptorDecryptRequest;
 using ::wfa::panelmatch::protocol::CryptorDecryptResponse;
 using ::wfa::panelmatch::protocol::CryptorEncryptRequest;
 using ::wfa::panelmatch::protocol::CryptorEncryptResponse;
+using ::wfa::panelmatch::protocol::CryptorGenerateKeyRequest;
+using ::wfa::panelmatch::protocol::CryptorGenerateKeyResponse;
 using ::wfa::panelmatch::protocol::CryptorReEncryptRequest;
 using ::wfa::panelmatch::protocol::CryptorReEncryptResponse;
-using ::wfa::panelmatch::protocol::crypto::DeterministicCommutativeGenerateKey;
 using ::wfa::panelmatch::protocol::crypto::DeterministicCommutativeDecrypt;
 using ::wfa::panelmatch::protocol::crypto::DeterministicCommutativeEncrypt;
+using ::wfa::panelmatch::protocol::crypto::DeterministicCommutativeGenerateKey;
 using ::wfa::panelmatch::protocol::crypto::DeterministicCommutativeReEncrypt;
 
 TEST(PanelMatchTest, DeterministicCommutativeEncryptionUtility) {
@@ -57,13 +57,15 @@ TEST(PanelMatchTest, DeterministicCommutativeEncryptionUtility) {
   RepeatedPtrField<std::string> plaintext_batch(plaintexts.begin(),
                                                 plaintexts.end());
   CryptorGenerateKeyRequest generate_key_request1;
-  ASSERT_OK_AND_ASSIGN(CryptorGenerateKeyResponse generate_key_response1,
-                       DeterministicCommutativeGenerateKey(generate_key_request1));
+  ASSERT_OK_AND_ASSIGN(
+      CryptorGenerateKeyResponse generate_key_response1,
+      DeterministicCommutativeGenerateKey(generate_key_request1));
   std::string random_key_1 = generate_key_response1.key();
 
   CryptorGenerateKeyRequest generate_key_request2;
-  ASSERT_OK_AND_ASSIGN(CryptorGenerateKeyResponse generate_key_response2,
-                       DeterministicCommutativeGenerateKey(generate_key_request2));
+  ASSERT_OK_AND_ASSIGN(
+      CryptorGenerateKeyResponse generate_key_response2,
+      DeterministicCommutativeGenerateKey(generate_key_request2));
   std::string random_key_2 = generate_key_response2.key();
 
   CryptorEncryptRequest encrypt_request1;

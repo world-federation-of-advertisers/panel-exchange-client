@@ -20,8 +20,7 @@ option java_package = "org.wfanet.panelmatch.protocol";
 option java_multiple_files = true;
 
 // Request to Generate Key
-message CryptorGenerateKeyRequest {
-}
+message CryptorGenerateKeyRequest {}
 
 // Response to Generate Key
 message CryptorGenerateKeyResponse {

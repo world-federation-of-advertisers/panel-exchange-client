@@ -18,11 +18,10 @@ kt_jvm_library(
     srcs = glob(["*.kt"]),
     runtime_deps = [":swig_resources"],
     deps = [
+        "//src/main/kotlin/org/wfanet/panelmatch/common",
         "//src/main/proto/wfa/panelmatch/protocol/crypto:deterministic_commutative_cryptor_kt_jvm_proto",
         "//src/main/proto/wfa/panelmatch/protocol/exchangesteps:exchangesteps_kt_jvm_proto",
         "//src/main/swig/wfanet/panelmatch/protocol/crypto:deterministic_commutative_encryption",
-        "//src/main/kotlin/org/wfanet/panelmatch/common",
-        "@wfa_common_jvm//imports/java/com/google/protobuf"
+        "@wfa_common_jvm//imports/java/com/google/protobuf",
     ],
 )
-

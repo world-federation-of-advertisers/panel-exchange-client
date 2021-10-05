@@ -28,8 +28,8 @@ import org.wfanet.measurement.api.v2alpha.ExchangeWorkflowKt.exchangeIdentifiers
 import org.wfanet.measurement.api.v2alpha.ExchangeWorkflowKt.step
 import org.wfanet.measurement.api.v2alpha.exchangeStep
 import org.wfanet.measurement.api.v2alpha.exchangeWorkflow
-import org.wfanet.panelmatch.common.toByteString
 import org.wfanet.panelmatch.common.crypto.DeterministicCommutativeCipher
+import org.wfanet.panelmatch.common.toByteString
 
 val MP_0_SECRET_KEY: ByteString = "random-mp-string-0".toByteString()
 

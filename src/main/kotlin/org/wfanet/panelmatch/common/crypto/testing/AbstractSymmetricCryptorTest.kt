@@ -15,13 +15,20 @@
 package org.wfanet.panelmatch.common.crypto.testing
 
 import com.google.common.truth.Truth.assertThat
+import com.google.protobuf.ByteString
 import kotlinx.coroutines.runBlocking
 import org.junit.Test
 import org.wfanet.panelmatch.common.crypto.SymmetricCryptor
 import org.wfanet.panelmatch.common.toByteString
-import com.google.protobuf.ByteString
 
-private val PLAINTEXT = "some-long-long-plaintext".toByteString()
+private val PLAINTEXTS: List<ByteString> =
+  listOf(
+    "some plaintext0".toByteString(),
+    "some plaintext1".toByteString(),
+    "some plaintext2".toByteString(),
+    "some plaintext3".toByteString(),
+    "some plaintext4".toByteString()
+  )
 
 abstract class AbstractSymmetricCryptorTest {
   protected abstract val cipher: SymmetricCryptor
@@ -35,20 +42,20 @@ abstract class AbstractSymmetricCryptorTest {
 
   @Test
   fun `encrypt result should not equal original data`() {
-    assertThat(cipher.encrypt(privateKey1, listOf(PLAINTEXT)).single()).isNotEqualTo(PLAINTEXT)
+    assertThat(cipher.encrypt(privateKey1, PLAINTEXTS)).isNotEqualTo(PLAINTEXTS)
   }
 
   @Test
   fun `encrypt data and then decrypt result should equal original data`() = runBlocking {
-    val encryptedValues = cipher.encrypt(privateKey1, listOf(PLAINTEXT))
+    val encryptedValues = cipher.encrypt(privateKey1, PLAINTEXTS)
     val decryptedValues = cipher.decrypt(privateKey1, encryptedValues)
-    assertThat(decryptedValues.single()).isEqualTo(PLAINTEXT)
+    assertThat(decryptedValues).isEqualTo(PLAINTEXTS)
   }
 
   @Test
   fun `encrypt data with two different keys should not be equal`() = runBlocking {
-    val encryptedValues1 = cipher.encrypt(privateKey1, listOf(PLAINTEXT))
-    val encryptedValues2 = cipher.encrypt(privateKey2, listOf(PLAINTEXT))
-    assertThat(encryptedValues1.single()).isNotEqualTo(encryptedValues2.single())
+    val encryptedValues1 = cipher.encrypt(privateKey1, PLAINTEXTS)
+    val encryptedValues2 = cipher.encrypt(privateKey2, PLAINTEXTS)
+    assertThat(encryptedValues1).isNotEqualTo(encryptedValues2)
   }
 }
