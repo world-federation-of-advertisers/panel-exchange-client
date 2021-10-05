@@ -61,10 +61,7 @@ class JniDeterministicCommutativeCipher : DeterministicCommutativeCipher {
     return response.ciphertextsList
   }
 
-  override fun reEncrypt(
-    privateKey: ByteString,
-    ciphertexts: List<ByteString>
-  ): List<ByteString> {
+  override fun reEncrypt(privateKey: ByteString, ciphertexts: List<ByteString>): List<ByteString> {
     val request = cryptorReEncryptRequest {
       encryptionKey = privateKey
       this.ciphertexts += ciphertexts

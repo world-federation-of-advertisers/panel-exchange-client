@@ -22,14 +22,14 @@ import org.wfanet.panelmatch.client.logger.loggerFor
 import org.wfanet.panelmatch.client.storage.VerifiedStorageClient.VerifiedBlob
 
 class GenerateSymmetricKeyTask(
-  private val operation: () -> ByteString,
+  private val generateKey: () -> ByteString,
   private val outputDataLabel: String = "symmetric-key",
 ) : ExchangeTask {
 
   override suspend fun execute(input: Map<String, VerifiedBlob>): Map<String, Flow<ByteString>> {
-    logger.addToTaskLog("Executing operation: $operation")
+    logger.addToTaskLog("Executing generate key: $generateKey")
 
-    val key = operation()
+    val key = generateKey()
     return mapOf(outputDataLabel to flowOf(key))
   }
 

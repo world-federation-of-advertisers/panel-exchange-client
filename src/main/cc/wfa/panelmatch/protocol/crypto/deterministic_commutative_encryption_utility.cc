@@ -59,8 +59,7 @@ absl::StatusOr<CryptorEncryptResponse> DeterministicCommutativeEncrypt(
   ASSIGN_OR_RETURN(auto cipher, NewDeterministicCommutativeCipher(key));
 
   for (absl::string_view plaintext : request.plaintexts()) {
-    ASSIGN_OR_RETURN(*response.add_ciphertexts(),
-                     cipher->Encrypt(plaintext));
+    ASSIGN_OR_RETURN(*response.add_ciphertexts(), cipher->Encrypt(plaintext));
   }
 
   response.set_elapsed_cpu_time_millis(timer.ElapsedMillis());

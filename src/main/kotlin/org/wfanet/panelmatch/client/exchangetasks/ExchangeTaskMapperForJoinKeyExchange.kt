@@ -45,7 +45,7 @@ class ExchangeTaskMapperForJoinKeyExchange(
           minimumOverlap = step.intersectAndValidateStep.minimumOverlap
         )
       StepCase.GENERATE_COMMUTATIVE_DETERMINISTIC_KEY_STEP ->
-        GenerateSymmetricKeyTask(operation = deterministicCommutativeCryptor::generateKey)
+        GenerateSymmetricKeyTask(generateKey = deterministicCommutativeCryptor::generateKey)
       StepCase.EXECUTE_PRIVATE_MEMBERSHIP_QUERIES_STEP -> TODO()
       StepCase.BUILD_PRIVATE_MEMBERSHIP_QUERIES_STEP -> TODO()
       StepCase.DECRYPT_PRIVATE_MEMBERSHIP_QUERY_RESULTS_STEP -> TODO()
