@@ -28,16 +28,28 @@
 #include "common_cpp/time/started_thread_cpu_timer.h"
 #include "tink/util/secret_data.h"
 #include "wfa/panelmatch/common/crypto/deterministic_commutative_cipher.h"
+#include "wfa/panelmatch/common/crypto/ec_commutative_cipher_key_generator.h"
 #include "wfa/panelmatch/common/crypto/key_loader.h"
-#include "wfa/panelmatch/protocol/crypto/cryptor.pb.h"
 
 namespace wfa::panelmatch::protocol::crypto {
 namespace {
 using ::crypto::tink::util::SecretData;
 using ::crypto::tink::util::SecretDataFromStringView;
+using ::crypto::tink::util::SecretDataAsStringView;
 using ::wfa::panelmatch::common::crypto::LoadKey;
 using ::wfa::panelmatch::common::crypto::NewDeterministicCommutativeCipher;
+using ::wfa::panelmatch::common::crypto::EcCommutativeCipherKeyGenerator;
 }  // namespace
+
+absl::StatusOr<CryptorGenerateKeyResponse> DeterministicCommutativeGenerateKey(
+    const CryptorGenerateKeyRequest& request) {
+
+  EcCommutativeCipherKeyGenerator generator;
+  ASSIGN_OR_RETURN(SecretData key, generator.GenerateKey());
+  CryptorGenerateKeyResponse response;
+  response.set_key(std::string(SecretDataAsStringView(key)).data());
+  return response;
+}
 
 absl::StatusOr<CryptorEncryptResponse> DeterministicCommutativeEncrypt(
     const CryptorEncryptRequest& request) {

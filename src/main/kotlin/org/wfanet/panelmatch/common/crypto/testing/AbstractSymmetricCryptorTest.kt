@@ -19,30 +19,36 @@ import kotlinx.coroutines.runBlocking
 import org.junit.Test
 import org.wfanet.panelmatch.common.crypto.SymmetricCryptor
 import org.wfanet.panelmatch.common.toByteString
+import com.google.protobuf.ByteString
 
 private val PLAINTEXT = "some-long-long-plaintext".toByteString()
-private val PRIVATE_KEY1 = "some-private-key".toByteString()
-private val PRIVATE_KEY2 = "some-other-private-key".toByteString()
 
 abstract class AbstractSymmetricCryptorTest {
-  protected abstract val symmetricCryptor: SymmetricCryptor
+  protected abstract val cipher: SymmetricCryptor
+  protected abstract val privateKey1: ByteString
+  protected abstract val privateKey2: ByteString
+
+  @Test
+  fun `generate keys should generate unique keys each time`() {
+    assertThat(cipher.generateKey()).isNotEqualTo(cipher.generateKey())
+  }
 
   @Test
   fun `encrypt result should not equal original data`() {
-    assertThat(symmetricCryptor.encrypt(PRIVATE_KEY1, PLAINTEXT)).isNotEqualTo(PLAINTEXT)
+    assertThat(cipher.encrypt(privateKey1, listOf(PLAINTEXT)).single()).isNotEqualTo(PLAINTEXT)
   }
 
   @Test
   fun `encrypt data and then decrypt result should equal original data`() = runBlocking {
-    val encryptedValue = symmetricCryptor.encrypt(PRIVATE_KEY1, PLAINTEXT)
-    val decryptedValue = symmetricCryptor.decrypt(PRIVATE_KEY1, encryptedValue)
-    assertThat(decryptedValue).isEqualTo(PLAINTEXT)
+    val encryptedValues = cipher.encrypt(privateKey1, listOf(PLAINTEXT))
+    val decryptedValues = cipher.decrypt(privateKey1, encryptedValues)
+    assertThat(decryptedValues.single()).isEqualTo(PLAINTEXT)
   }
 
   @Test
   fun `encrypt data with two different keys should not be equal`() = runBlocking {
-    val encryptedValue1 = symmetricCryptor.encrypt(PRIVATE_KEY1, PLAINTEXT)
-    val encryptedValue2 = symmetricCryptor.encrypt(PRIVATE_KEY2, PLAINTEXT)
-    assertThat(encryptedValue1).isNotEqualTo(encryptedValue2)
+    val encryptedValues1 = cipher.encrypt(privateKey1, listOf(PLAINTEXT))
+    val encryptedValues2 = cipher.encrypt(privateKey2, listOf(PLAINTEXT))
+    assertThat(encryptedValues1.single()).isNotEqualTo(encryptedValues2.single())
   }
 }

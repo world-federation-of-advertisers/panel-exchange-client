@@ -19,6 +19,15 @@ package wfa.panelmatch.protocol;
 option java_package = "org.wfanet.panelmatch.protocol";
 option java_multiple_files = true;
 
+// Request to Generate Key
+message CryptorGenerateKeyRequest {
+}
+
+// Response to Generate Key
+message CryptorGenerateKeyResponse {
+  bytes key = 1;
+}
+
 // The request to encrypt.
 message CryptorEncryptRequest {
   repeated bytes plaintexts = 1;

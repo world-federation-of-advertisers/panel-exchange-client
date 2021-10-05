@@ -23,14 +23,26 @@ private const val SEPARATOR = " encrypted by "
 /** For testing only. Does not play nicely with non-Utf8 source data. */
 class FakeSymmetricCryptor : SymmetricCryptor {
 
-  override fun encrypt(privateKey: ByteString, data: ByteString): ByteString {
-    return data.concat(SEPARATOR.toByteString()).concat(privateKey)
+  override fun generateKey(): ByteString {
+    var key = ""
+    for (i in 1..20) {
+      key += ('A'..'Z').random()
+    }
+    return key.toByteString()
   }
 
-  override fun decrypt(privateKey: ByteString, data: ByteString): ByteString {
+  override fun encrypt(privateKey: ByteString, plaintexts: List<ByteString>): List<ByteString> {
+    return plaintexts.map{
+      it.concat(SEPARATOR.toByteString()).concat(privateKey);
+    }
+  }
+
+  override fun decrypt(privateKey: ByteString, encryptedTexts: List<ByteString>): List<ByteString> {
     val suffix = SEPARATOR + privateKey.toStringUtf8()
-    val dataString = data.toStringUtf8()
-    require(dataString.endsWith(suffix))
-    return dataString.removeSuffix(suffix).toByteString()
+    return encryptedTexts.map{
+      val dataString = it.toStringUtf8()
+      require(dataString.endsWith(suffix))
+      dataString.removeSuffix(suffix).toByteString()
+    }
   }
 }

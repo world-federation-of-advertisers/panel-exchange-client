@@ -21,7 +21,7 @@ import org.wfanet.measurement.api.v2alpha.ExchangeWorkflow.Step.StepCase
 import org.wfanet.measurement.common.throttler.MinimumIntervalThrottler
 import org.wfanet.measurement.common.throttler.Throttler
 import org.wfanet.panelmatch.client.storage.VerifiedStorageClient
-import org.wfanet.panelmatch.protocol.common.DeterministicCommutativeCipher
+import org.wfanet.panelmatch.common.crypto.DeterministicCommutativeCipher
 
 /** Maps join key exchange steps to exchange tasks */
 class ExchangeTaskMapperForJoinKeyExchange(
@@ -43,6 +43,10 @@ class ExchangeTaskMapperForJoinKeyExchange(
         IntersectValidateTask(
           maxSize = step.intersectAndValidateStep.maxSize,
           minimumOverlap = step.intersectAndValidateStep.minimumOverlap
+        )
+      StepCase.GENERATE_COMMUTATIVE_DETERMINISTIC_KEY_STEP ->
+        GenerateSymmetricKeyTask(
+          operation = deterministicCommutativeCryptor::generateKey
         )
       StepCase.EXECUTE_PRIVATE_MEMBERSHIP_QUERIES_STEP -> TODO()
       StepCase.BUILD_PRIVATE_MEMBERSHIP_QUERIES_STEP -> TODO()
