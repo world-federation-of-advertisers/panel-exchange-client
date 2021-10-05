@@ -59,9 +59,15 @@ class BuildPrivateMembershipQueriesTask(
       }
 
     val privateKeys =
-      readFileAsSingletonPCollection("rlwe-serialized-private-key", localCertificate)
+      readFileAsSingletonPCollection(
+        input.getValue("rlwe-serialized-private-key").toStringUtf8(),
+        localCertificate
+      )
     val publicKeyView =
-      readFileAsSingletonPCollection("rlwe-serialized-public-key", localCertificate)
+      readFileAsSingletonPCollection(
+          input.getValue("rlwe-serialized-public-key").toStringUtf8(),
+          localCertificate
+        )
         .toSingletonView()
     val privateMembershipKeys: PCollectionView<PrivateMembershipKeys> =
       privateKeys
@@ -77,11 +83,17 @@ class BuildPrivateMembershipQueriesTask(
         .batchCreateQueries(panelistKeyAndJoinKeys, privateMembershipKeys)
 
     val queryDecryptionKeysFileSpec =
-      ShardedFileName("query-decryption-keys", queryIdAndPanelistKeyFileCount)
+      ShardedFileName(
+        input.getValue("query-decryption-keys").toStringUtf8(),
+        queryIdAndPanelistKeyFileCount
+      )
     queryIdAndPanelistKeys.map { it.toByteString() }.write(queryDecryptionKeysFileSpec)
 
     val encryptedQueriesFileSpec =
-      ShardedFileName("encrypted-queries", encryptedQueryBundleFileCount)
+      ShardedFileName(
+        input.getValue("encrypted-queries").toStringUtf8(),
+        encryptedQueryBundleFileCount
+      )
     encryptedResponses.map { it.toByteString() }.write(encryptedQueriesFileSpec)
 
     pipeline.run()

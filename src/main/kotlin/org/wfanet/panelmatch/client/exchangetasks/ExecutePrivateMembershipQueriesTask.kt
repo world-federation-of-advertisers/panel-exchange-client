@@ -67,7 +67,11 @@ class ExecutePrivateMembershipQueriesTask(
     val results: PCollection<EncryptedQueryResult> =
       evaluateQueriesWorkflow.batchEvaluateQueries(database, queries, privateMembershipPublicKey)
 
-    val resultsFileName = ShardedFileName("encrypted-results", encryptedQueryResultFileCount)
+    val resultsFileName =
+      ShardedFileName(
+        input.getValue("encrypted-results").toStringUtf8(),
+        encryptedQueryResultFileCount
+      )
     results.map { it.toByteString() }.write(resultsFileName)
 
     pipeline.run()

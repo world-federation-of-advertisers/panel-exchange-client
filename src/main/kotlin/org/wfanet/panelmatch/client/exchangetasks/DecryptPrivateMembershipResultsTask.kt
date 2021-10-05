@@ -63,14 +63,24 @@ class DecryptPrivateMembershipResultsTask(
       }
 
     val dictionary =
-      readFileAsSingletonPCollection("compression-dictionary", partnerCertificate).toSingletonView()
+      readFileAsSingletonPCollection(
+          input.getValue("compression-dictionary").toStringUtf8(),
+          partnerCertificate
+        )
+        .toSingletonView()
 
     val hkdfPepper = input.getValue("hkdf-pepper").toByteString()
 
     val privateKeys =
-      readFileAsSingletonPCollection("rlwe-serialized-private-key", localCertificate)
+      readFileAsSingletonPCollection(
+        input.getValue("rlwe-serialized-private-key").toStringUtf8(),
+        localCertificate
+      )
     val publicKeyView =
-      readFileAsSingletonPCollection("rlwe-serialized-public-key", localCertificate)
+      readFileAsSingletonPCollection(
+          input.getValue("rlwe-serialized-public-key").toStringUtf8(),
+          localCertificate
+        )
         .toSingletonView()
     val privateMembershipKeys: PCollectionView<PrivateMembershipKeys> =
       privateKeys
@@ -93,7 +103,11 @@ class DecryptPrivateMembershipResultsTask(
           privateMembershipKeys
         )
 
-    val fileSpec = ShardedFileName("decrypted-event-data", decryptedEventDataSetFileCount)
+    val fileSpec =
+      ShardedFileName(
+        input.getValue("decrypted-event-data").toStringUtf8(),
+        decryptedEventDataSetFileCount
+      )
     decryptedEventDataSet.map { it.toByteString() }.write(fileSpec)
 
     pipeline.run()
