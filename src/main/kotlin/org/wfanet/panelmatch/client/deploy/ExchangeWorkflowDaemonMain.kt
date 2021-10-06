@@ -14,6 +14,7 @@
 
 package org.wfanet.panelmatch.client.deploy
 
+import java.security.cert.X509Certificate
 import org.wfanet.measurement.common.commandLineMain
 import org.wfanet.panelmatch.client.launcher.ExchangeStepValidator.ValidationKey
 import org.wfanet.panelmatch.client.storage.VerifiedStorageClient
@@ -35,6 +36,10 @@ private object UnimplementedExchangeWorkflowDaemon : ExchangeWorkflowDaemon() {
     get() = TODO("Not yet implemented")
   override val privateStorage: VerifiedStorageClient
     get() = TODO("Not yet implemented")
+  override val localCertificate: X509Certificate
+    get() = TODO("Not yet implemented")
+  override val uriPrefix: String
+    get() = TODO("Not yet implemented: coming from client storage")
 
   override val validExchangeWorkflows: SecretSet<ValidationKey> by lazy {
     approvedWorkflowFlags.secretSet
