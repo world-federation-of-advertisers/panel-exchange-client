@@ -14,7 +14,6 @@
 
 package org.wfanet.panelmatch.client.deploy
 
-import com.google.protobuf.ByteString
 import java.time.Clock
 import kotlinx.coroutines.runBlocking
 import org.wfanet.measurement.api.v2alpha.ExchangeStepAttemptsGrpcKt.ExchangeStepAttemptsCoroutineStub
@@ -84,9 +83,8 @@ abstract class ExchangeWorkflowDaemon : Runnable {
 
     val exchangeTaskMapper =
       ExchangeTaskMapperForJoinKeyExchange(
-        getDeterministicCommutativeCryptor = fun() = JniDeterministicCommutativeCipher(),
-        getPrivateMembershipCryptor =
-          fun(serializedParameters: ByteString) = JniPrivateMembershipCryptor(serializedParameters),
+        getDeterministicCommutativeCryptor = ::JniDeterministicCommutativeCipher,
+        getPrivateMembershipCryptor = ::JniPrivateMembershipCryptor,
         privateStorage = privateStorage
       )
 

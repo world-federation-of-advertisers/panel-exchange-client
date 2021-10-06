@@ -15,7 +15,6 @@
 package org.wfanet.panelmatch.client.exchangetasks
 
 import com.google.common.truth.Truth.assertThat
-import com.google.protobuf.ByteString
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
@@ -34,10 +33,8 @@ class ExchangeTaskMapperForJoinKeyExchangeTest {
 
   private val exchangeTaskMapper =
     ExchangeTaskMapperForJoinKeyExchange(
-      getDeterministicCommutativeCryptor = fun() = FakeDeterministicCommutativeCipher(),
-      getPrivateMembershipCryptor =
-        fun(serializedParameters: ByteString) =
-          PlaintextPrivateMembershipCryptor(serializedParameters),
+      getDeterministicCommutativeCryptor = ::FakeDeterministicCommutativeCipher,
+      getPrivateMembershipCryptor = ::PlaintextPrivateMembershipCryptor,
       privateStorage = privateStorage
     )
 
