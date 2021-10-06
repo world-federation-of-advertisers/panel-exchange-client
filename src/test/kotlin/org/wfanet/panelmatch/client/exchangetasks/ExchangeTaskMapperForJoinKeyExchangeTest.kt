@@ -15,12 +15,14 @@
 package org.wfanet.panelmatch.client.exchangetasks
 
 import com.google.common.truth.Truth.assertThat
+import com.google.protobuf.ByteString
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
 import org.wfanet.measurement.api.v2alpha.ExchangeWorkflowKt.StepKt.encryptStep
 import org.wfanet.measurement.api.v2alpha.ExchangeWorkflowKt.step
 import org.wfanet.panelmatch.client.launcher.testing.inputStep
+import org.wfanet.panelmatch.client.privatemembership.testing.PlaintextPrivateMembershipCryptor
 import org.wfanet.panelmatch.client.storage.testing.makeTestVerifiedStorageClient
 import org.wfanet.panelmatch.common.crypto.testing.FakeDeterministicCommutativeCipher
 import org.wfanet.panelmatch.common.testing.runBlockingTest
@@ -29,11 +31,13 @@ import org.wfanet.panelmatch.common.testing.runBlockingTest
 class ExchangeTaskMapperForJoinKeyExchangeTest {
   private val privateStorage = makeTestVerifiedStorageClient()
   private val sharedStorage = makeTestVerifiedStorageClient()
-  private val deterministicCommutativeCryptor = FakeDeterministicCommutativeCipher()
 
   private val exchangeTaskMapper =
     ExchangeTaskMapperForJoinKeyExchange(
-      deterministicCommutativeCryptor = deterministicCommutativeCryptor,
+      getDeterministicCommutativeCryptor = fun() = FakeDeterministicCommutativeCipher(),
+      getPrivateMembershipCryptor =
+        fun(serializedParameters: ByteString) =
+          PlaintextPrivateMembershipCryptor(serializedParameters),
       privateStorage = privateStorage
     )
 
