@@ -15,12 +15,14 @@
 package org.wfanet.panelmatch.client.exchangetasks
 
 import com.google.protobuf.ByteString
+import java.security.cert.X509Certificate
 import java.time.Clock
 import java.time.Duration
 import org.wfanet.measurement.api.v2alpha.ExchangeWorkflow
 import org.wfanet.measurement.api.v2alpha.ExchangeWorkflow.Step.StepCase
 import org.wfanet.measurement.common.throttler.MinimumIntervalThrottler
 import org.wfanet.measurement.common.throttler.Throttler
+import org.wfanet.panelmatch.client.privatemembership.CreateQueriesWorkflow
 import org.wfanet.panelmatch.client.privatemembership.PrivateMembershipCryptor
 import org.wfanet.panelmatch.client.storage.VerifiedStorageClient
 import org.wfanet.panelmatch.common.crypto.DeterministicCommutativeCipher
@@ -29,9 +31,11 @@ import org.wfanet.panelmatch.common.crypto.DeterministicCommutativeCipher
 class ExchangeTaskMapperForJoinKeyExchange(
   private val getDeterministicCommutativeCryptor: () -> DeterministicCommutativeCipher,
   private val getPrivateMembershipCryptor: (ByteString) -> PrivateMembershipCryptor,
+  private val localCertificate: X509Certificate,
   private val privateStorage: VerifiedStorageClient,
   private val throttler: Throttler =
-    MinimumIntervalThrottler(Clock.systemUTC(), Duration.ofMillis(100))
+    MinimumIntervalThrottler(Clock.systemUTC(), Duration.ofMillis(100)),
+  private val uriPrefix: String,
 ) : ExchangeTaskMapper {
 
   override suspend fun getExchangeTaskForStep(step: ExchangeWorkflow.Step): ExchangeTask {
@@ -58,7 +62,25 @@ class ExchangeTaskMapperForJoinKeyExchange(
       }
       StepCase.GENERATE_CERTIFICATE_STEP -> TODO()
       StepCase.EXECUTE_PRIVATE_MEMBERSHIP_QUERIES_STEP -> TODO()
-      StepCase.BUILD_PRIVATE_MEMBERSHIP_QUERIES_STEP -> TODO()
+      StepCase.BUILD_PRIVATE_MEMBERSHIP_QUERIES_STEP -> {
+        val privateMembershipCryptor =
+          getPrivateMembershipCryptor(step.buildPrivateMembershipQueriesStep.serializedParameters)
+        BuildPrivateMembershipQueriesTask(
+          localCertificate = localCertificate,
+          uriPrefix = uriPrefix,
+          parameters = CreateQueriesWorkflow.Parameters(
+            numShards = step.buildPrivateMembershipQueriesStep.numShards,
+            numBucketsPerShard = step.buildPrivateMembershipQueriesStep.numBucketsPerShard,
+            totalQueriesPerShard = step.buildPrivateMembershipQueriesStep.numQueriesPerShard,
+          ),
+          privateKey = privateStorage.privateKey,
+          privateMembershipCryptor = privateMembershipCryptor,
+          encryptedQueryBundleFileCount =
+            step.buildPrivateMembershipQueriesStep.encryptedQueryBundleFileCount,
+          queryIdAndPanelistKeyFileCount =
+            step.buildPrivateMembershipQueriesStep.queryIdAndPanelistKeyFileCount,
+        )
+      }
       StepCase.DECRYPT_PRIVATE_MEMBERSHIP_QUERY_RESULTS_STEP -> TODO()
       StepCase.COPY_FROM_SHARED_STORAGE_STEP -> TODO()
       StepCase.COPY_TO_SHARED_STORAGE_STEP -> TODO()
