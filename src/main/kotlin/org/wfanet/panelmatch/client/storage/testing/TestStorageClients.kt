@@ -16,6 +16,8 @@ package org.wfanet.panelmatch.client.storage.testing
 
 import java.security.PrivateKey
 import java.security.cert.X509Certificate
+import org.wfanet.measurement.api.v2alpha.ExchangeStepAttemptKey
+import org.wfanet.measurement.api.v2alpha.ExchangeWorkflow
 import org.wfanet.measurement.common.crypto.readCertificate
 import org.wfanet.measurement.common.crypto.readPrivateKey
 import org.wfanet.measurement.common.crypto.testing.FIXED_SERVER_CERT_PEM_FILE
@@ -23,14 +25,39 @@ import org.wfanet.measurement.common.crypto.testing.FIXED_SERVER_KEY_FILE
 import org.wfanet.measurement.common.crypto.testing.KEY_ALGORITHM
 import org.wfanet.measurement.storage.StorageClient
 import org.wfanet.measurement.storage.testing.InMemoryStorageClient
+import org.wfanet.panelmatch.client.storage.StorageSelector
 import org.wfanet.panelmatch.client.storage.VerifiedStorageClient
 
 private val certificate: X509Certificate by lazy { readCertificate(FIXED_SERVER_CERT_PEM_FILE) }
 
 private val privateKey: PrivateKey by lazy { readPrivateKey(FIXED_SERVER_KEY_FILE, KEY_ALGORITHM) }
 
+class TestStorageSelector(private val underlyingClient: StorageClient = InMemoryStorageClient()) :
+  StorageSelector {
+
+  override suspend fun getPrivateStorage(
+    attemptKey: ExchangeStepAttemptKey,
+  ): VerifiedStorageClient {
+    return makeTestVerifiedStorageClient(underlyingClient)
+  }
+
+  override suspend fun getSharedStorage(
+    storageType: ExchangeWorkflow.StorageType,
+    attemptKey: ExchangeStepAttemptKey,
+    partnerName: String
+  ): VerifiedStorageClient {
+    return makeTestVerifiedStorageClient(underlyingClient)
+  }
+}
+
 fun makeTestVerifiedStorageClient(
   underlyingClient: StorageClient = InMemoryStorageClient()
 ): VerifiedStorageClient {
-  return VerifiedStorageClient(underlyingClient, certificate, certificate, privateKey)
+  return VerifiedStorageClient(
+    underlyingClient,
+    "test-prefix",
+    certificate,
+    certificate,
+    privateKey
+  )
 }
