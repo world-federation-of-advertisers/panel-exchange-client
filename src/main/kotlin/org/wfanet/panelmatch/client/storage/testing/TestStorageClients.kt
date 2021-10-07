@@ -14,11 +14,38 @@
 
 package org.wfanet.panelmatch.client.storage.testing
 
+import com.google.common.collect.ImmutableMap
 import org.wfanet.measurement.api.v2alpha.ExchangeKey
 import org.wfanet.measurement.storage.StorageClient
 import org.wfanet.measurement.storage.testing.InMemoryStorageClient
+import org.wfanet.panelmatch.client.storage.StorageDetails
+import org.wfanet.panelmatch.client.storage.StorageDetailsKt.gcsStorage
+import org.wfanet.panelmatch.client.storage.StorageSelector
 import org.wfanet.panelmatch.client.storage.VerifiedStorageClient
+import org.wfanet.panelmatch.client.storage.storageDetails
 import org.wfanet.panelmatch.common.certificates.testing.TestCertificateManager
+import org.wfanet.panelmatch.common.secrets.SecretMap
+
+fun makeTestStorageSelector(secretMap: SecretMap): StorageSelector {
+
+  return StorageSelector(
+    secretMap,
+    secretMap,
+    storageDetails { gcs = gcsStorage {} }.toByteString(),
+    TestCertificateManager(),
+    "owner",
+    ImmutableMap.of(
+      StorageDetails.PlatformCase.FILE,
+      ::InMemoryStorageFactory,
+      StorageDetails.PlatformCase.AWS,
+      ::InMemoryStorageFactory,
+      StorageDetails.PlatformCase.GCS,
+      ::InMemoryStorageFactory,
+      StorageDetails.PlatformCase.PLATFORM_NOT_SET,
+      ::InMemoryStorageFactory,
+    )
+  )
+}
 
 fun makeTestVerifiedStorageClient(
   underlyingClient: StorageClient = InMemoryStorageClient()

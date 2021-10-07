@@ -14,13 +14,11 @@
 
 package org.wfanet.panelmatch.client.storage
 
-import java.io.File
 import org.wfanet.measurement.storage.StorageClient
-import org.wfanet.measurement.storage.filesystem.FileSystemStorageClient
 
-class FileSystemStorageFactory(private val storageDetails: StorageDetails) : StorageFactory {
+class AwsS3StorageFactory(private val storageDetails: StorageDetails) : StorageFactory {
 
   override fun build(): StorageClient {
-    return FileSystemStorageClient(File(storageDetails.file.path))
+    TODO("Not yet implemented")
   }
 }
