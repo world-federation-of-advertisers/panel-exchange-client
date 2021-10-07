@@ -14,13 +14,16 @@
 
 package org.wfanet.panelmatch.client.storage
 
-import java.io.File
+import com.google.cloud.storage.StorageOptions
+import org.wfanet.measurement.gcloud.gcs.GcsStorageClient
 import org.wfanet.measurement.storage.StorageClient
-import org.wfanet.measurement.storage.filesystem.FileSystemStorageClient
 
-class FileSystemStorageFactory(private val storageDetails: StorageDetails) : StorageFactory {
+class GcsStorageFactory(private val storageDetails: StorageDetails) : StorageFactory {
 
   override fun build(): StorageClient {
-    return FileSystemStorageClient(File(storageDetails.file.path))
+    return GcsStorageClient(
+      StorageOptions.newBuilder().setProjectId(storageDetails.gcs.projectName).build().service,
+      storageDetails.gcs.bucket
+    )
   }
 }
