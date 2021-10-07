@@ -18,9 +18,11 @@ import com.google.common.truth.Truth.assertThat
 import com.google.protobuf.ByteString
 import org.junit.Test
 import org.wfanet.panelmatch.client.privatemembership.Bucket
+import org.wfanet.panelmatch.client.privatemembership.BucketContents
 import org.wfanet.panelmatch.client.privatemembership.DatabaseShard
 import org.wfanet.panelmatch.client.privatemembership.EncryptedQueryBundle
 import org.wfanet.panelmatch.client.privatemembership.QueryEvaluator
+import org.wfanet.panelmatch.client.privatemembership.bucketContents
 import org.wfanet.panelmatch.client.privatemembership.bucketIdOf
 import org.wfanet.panelmatch.client.privatemembership.bucketOf
 import org.wfanet.panelmatch.client.privatemembership.databaseShardOf
@@ -35,10 +37,10 @@ abstract class AbstractQueryEvaluatorTest {
   protected val bucketsPerShardCount: Int = 16
 
   /** Provides a test subject. */
-  abstract val evaluator: QueryEvaluator
+  protected abstract val evaluator: QueryEvaluator
 
   /** Provides a helper for the test subject. */
-  abstract val helper: QueryEvaluatorTestHelper
+  protected abstract val helper: QueryEvaluatorTestHelper
 
   @Test
   fun `executeQueries on multiple shards with multiple QueryBundles`() {
@@ -56,16 +58,16 @@ abstract class AbstractQueryEvaluatorTest {
           queries = listOf(504 to 0, 505 to 1, 506 to 2, 507 to 3)
         )
       )
-    val results = evaluator.executeQueries(database, queryBundles)
+    val results = evaluator.executeQueries(database, queryBundles, helper.serializedPublicKey)
     assertThat(results.map { it.queryId to helper.decodeResultData(it) })
       .containsExactly(
         queryIdOf(500) to makeFakeBucketData(bucket = 0, shard = 100),
         queryIdOf(501) to makeFakeBucketData(bucket = 1, shard = 100),
-        queryIdOf(502) to ByteString.EMPTY,
-        queryIdOf(503) to ByteString.EMPTY,
-        queryIdOf(504) to ByteString.EMPTY,
-        queryIdOf(505) to ByteString.EMPTY,
-        queryIdOf(506) to ByteString.EMPTY,
+        queryIdOf(502) to bucketContents {},
+        queryIdOf(503) to bucketContents {},
+        queryIdOf(504) to bucketContents {},
+        queryIdOf(505) to bucketContents {},
+        queryIdOf(506) to bucketContents {},
         queryIdOf(507) to makeFakeBucketData(bucket = 3, shard = 101),
       )
   }
@@ -84,7 +86,7 @@ abstract class AbstractQueryEvaluatorTest {
         encryptedQueryBundleOf(shard = 101, queries = listOf(501 to 1))
       )
 
-    val results = evaluator.executeQueries(database, queryBundles)
+    val results = evaluator.executeQueries(database, queryBundles, helper.serializedPublicKey)
     assertThat(results.map { helper.decodeResult(it) })
       .containsExactly(
         DecodedResult(500, makeFakeBucketData(bucket = 1, shard = 100)),
@@ -104,16 +106,16 @@ abstract class AbstractQueryEvaluatorTest {
 }
 
 private fun bucketOf(id: Int, data: ByteString): Bucket {
-  return bucketOf(bucketIdOf(id), data)
+  return bucketOf(bucketIdOf(id), listOf(data))
 }
 
 private fun databaseShardOf(shard: Int, buckets: List<Int>): DatabaseShard {
   return databaseShardOf(
     shardIdOf(shard),
-    buckets.map { bucketOf(it, makeFakeBucketData(it, shard)) }
+    buckets.map { bucketOf(it, makeFakeBucketData(it, shard).itemsList.single()) }
   )
 }
 
-private fun makeFakeBucketData(bucket: Int, shard: Int): ByteString {
-  return "bucket:$bucket-shard:$shard".toByteString()
+private fun makeFakeBucketData(bucket: Int, shard: Int): BucketContents {
+  return bucketContents { items += "bucket:$bucket-shard:$shard".toByteString() }
 }

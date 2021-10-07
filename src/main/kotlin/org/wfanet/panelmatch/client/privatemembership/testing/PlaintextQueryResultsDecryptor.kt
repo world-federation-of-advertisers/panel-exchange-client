@@ -50,13 +50,17 @@ class PlaintextQueryResultsDecryptor(
     return decryptQueryResultsResponse {
       eventDataSets +=
         decryptedQueryResults.map { decryptedResult ->
-          val eventData = EncryptedEventData.parseFrom(decryptedResult.queryResult)
+          val eventData =
+            EncryptedEventData.parseFrom(decryptedResult.queryResult.itemsList.single())
           decryptedEventDataSet {
             queryId = decryptedResult.queryId
             decryptedEventData +=
               eventData.ciphertextsList.map { ciphertext ->
                 plaintext {
-                  payload = symmetricCryptor.decrypt(request.singleBlindedJoinkey.key, ciphertext)
+                  payload =
+                    symmetricCryptor
+                      .decrypt(request.singleBlindedJoinkey.key, listOf(ciphertext))
+                      .single()
                 }
               }
           }

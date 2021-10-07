@@ -28,15 +28,13 @@ import org.wfanet.panelmatch.client.privatemembership.JoinKey
 import org.wfanet.panelmatch.client.privatemembership.PrivateMembershipKeys
 import org.wfanet.panelmatch.client.privatemembership.QueryId
 import org.wfanet.panelmatch.client.privatemembership.ShardId
+import org.wfanet.panelmatch.client.privatemembership.bucketContents
 import org.wfanet.panelmatch.client.privatemembership.decryptedQueryResult
 import org.wfanet.panelmatch.client.privatemembership.encryptedEventData
 import org.wfanet.panelmatch.client.privatemembership.queryBundleOf
 import org.wfanet.panelmatch.client.privatemembership.resultOf
-import org.wfanet.panelmatch.common.beam.map
-import org.wfanet.panelmatch.common.beam.values
 import org.wfanet.panelmatch.common.crypto.SymmetricCryptor
 import org.wfanet.panelmatch.common.crypto.testing.FakeSymmetricCryptor
-import org.wfanet.panelmatch.common.toByteString
 
 class PlaintextPrivateMembershipCryptorHelper : PrivateMembershipCryptorHelper {
 
@@ -82,7 +80,7 @@ class PlaintextPrivateMembershipCryptorHelper : PrivateMembershipCryptorHelper {
   override fun decodeEncryptedQueryResult(result: EncryptedQueryResult): DecryptedQueryResult {
     return decryptedQueryResult {
       queryId = result.queryId
-      queryResult = result.serializedEncryptedQueryResult
+      queryResult = bucketContents { items += result.serializedEncryptedQueryResult }
     }
   }
 
@@ -97,7 +95,7 @@ class PlaintextPrivateMembershipCryptorHelper : PrivateMembershipCryptorHelper {
         encryptedEventData {
           ciphertexts +=
             plaintext.decryptedEventDataList.map {
-              symmetricCryptor.encrypt(joinkey.second.key, it.payload)
+              symmetricCryptor.encrypt(joinkey.second.key, listOf(it.payload)).single()
             }
         }
     }

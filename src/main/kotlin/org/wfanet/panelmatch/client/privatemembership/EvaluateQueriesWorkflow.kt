@@ -14,22 +14,31 @@
 
 package org.wfanet.panelmatch.client.privatemembership
 
+import com.google.protobuf.ByteString
 import java.io.Serializable
 import java.lang.IllegalArgumentException
 import org.apache.beam.sdk.metrics.Metrics
 import org.apache.beam.sdk.transforms.DoFn
+import org.apache.beam.sdk.transforms.PTransform
+import org.apache.beam.sdk.transforms.ParDo
+import org.apache.beam.sdk.transforms.join.CoGbkResult
+import org.apache.beam.sdk.transforms.join.CoGroupByKey
+import org.apache.beam.sdk.transforms.join.KeyedPCollectionTuple
 import org.apache.beam.sdk.values.KV
 import org.apache.beam.sdk.values.PCollection
-import org.wfanet.measurement.common.flatten
+import org.apache.beam.sdk.values.PCollectionView
+import org.apache.beam.sdk.values.TupleTag
 import org.wfanet.panelmatch.common.beam.groupByKey
-import org.wfanet.panelmatch.common.beam.join
 import org.wfanet.panelmatch.common.beam.keyBy
 import org.wfanet.panelmatch.common.beam.kvOf
 import org.wfanet.panelmatch.common.beam.map
-import org.wfanet.panelmatch.common.beam.parDo
+import org.wfanet.panelmatch.common.beam.values
+import org.wfanet.panelmatch.common.withTime
 
 /**
  * Implements a batch query engine in Apache Beam using homomorphic encryption.
+ *
+ * TODO: consider passing in `queryEvaluator` as a parameter to `batchEvaluateQueries`
  *
  * @param parameters tuning knobs for the workflow
  * @param queryEvaluator implementation of lower-level homomorphic operations
@@ -37,7 +46,7 @@ import org.wfanet.panelmatch.common.beam.parDo
 class EvaluateQueriesWorkflow(
   private val parameters: Parameters,
   private val queryEvaluator: QueryEvaluator
-) : Serializable {
+) {
 
   /**
    * Tuning knobs for the [EvaluateQueriesWorkflow].
@@ -62,79 +71,159 @@ class EvaluateQueriesWorkflow(
   /** Evaluates [queryBundles] on [database]. */
   fun batchEvaluateQueries(
     database: PCollection<KV<DatabaseKey, Plaintext>>,
-    queryBundles: PCollection<EncryptedQueryBundle>
+    queryBundles: PCollection<EncryptedQueryBundle>,
+    serializedPublicKey: PCollectionView<ByteString>
   ): PCollection<EncryptedQueryResult> {
-    val shardedDatabase: PCollection<KV<ShardId, DatabaseShard>> = shardDatabase(database)
+    val bucketing = Bucketing(parameters.numShards, parameters.numBucketsPerShard)
+    val databaseByShard = database.apply("Shard Database", ShardDatabase(bucketing))
 
     val queriesByShard = queryBundles.keyBy("Key QueryBundles by Shard") { it.shardId }
 
-    return queryShards(shardedDatabase, queriesByShard)
-  }
-
-  /** Joins the inputs to execute the queries on the appropriate shards. */
-  private fun queryShards(
-    shardedDatabase: PCollection<KV<ShardId, DatabaseShard>>,
-    queriesByShard: PCollection<KV<ShardId, EncryptedQueryBundle>>
-  ): PCollection<EncryptedQueryResult> {
-    return shardedDatabase.join(queriesByShard, name = "Join Database and queryMetadata") {
-      key: ShardId,
-      shards: Iterable<DatabaseShard>,
-      queries: Iterable<EncryptedQueryBundle> ->
-      val queriesList = queries.toList()
-
-      val numQueries = queriesList.sumBy { it.queryIdsCount }
-      require(numQueries <= parameters.maxQueriesPerShard) {
-        "Shard $key has $numQueries queries (${parameters.maxQueriesPerShard} allowed) $queriesList"
-      }
-
-      if (numQueries > 0) {
-        val shardsList = shards.toList()
-        // TODO(@efoxepstein): consider throwing an error when the size is 0, too.
-        when (shardsList.size) {
-          0 -> return@join
-          1 -> yieldAll(queryEvaluator.executeQueries(shardsList, queriesList))
-          else -> throw IllegalArgumentException("Too many DatabaseShards for shard $key")
-        }
-      }
-    }
-  }
-
-  /** Splits the database into [DatabaseShard]s of appropriate size. */
-  private fun shardDatabase(
-    database: PCollection<KV<DatabaseKey, Plaintext>>
-  ): PCollection<KV<ShardId, DatabaseShard>> {
-    val bucketing = Bucketing(parameters.numShards, parameters.numBucketsPerShard)
-    return database
-      .keyBy {
-        val (shardId, bucketId) = bucketing.apply(it.key.id)
-        kvOf(shardId, bucketId)
-      }
-      .groupByKey("Group by Shard and Bucket")
-      .map { kv ->
-        val combinedValues = kv.value.map { it.value.payload }.flatten()
-        kvOf(kv.key.key, bucketOf(kv.key.value, combinedValues))
-      }
-      .groupByKey("Group by Shard")
-      .map { kvOf(it.key, databaseShardOf(it.key, it.value.toList())) }
-      .parDo(DatabaseShardSizeObserver())
+    @Suppress("NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
+    return KeyedPCollectionTuple.of(ExecuteQueries.databaseTag, databaseByShard)
+      .and(ExecuteQueries.queriesTag, queriesByShard)
+      .apply(
+        "Execute Queries",
+        ExecuteQueries(queryEvaluator, serializedPublicKey, parameters.maxQueriesPerShard)
+      )
   }
 }
 
-/**
- * This makes a Distribution metric of the number of bytes in each shard's buckets' payloads.
- *
- * Note that this is a different value than the size of the DatabaseShard as a serialized proto.
- */
-private class DatabaseShardSizeObserver :
-  DoFn<KV<ShardId, DatabaseShard>, KV<ShardId, DatabaseShard>>() {
-  private val sizeDistribution =
-    Metrics.distribution(EvaluateQueriesWorkflow::class.java, "database-shard-sizes")
+private class ShardDatabase(private val bucketing: Bucketing) :
+  PTransform<PCollection<KV<DatabaseKey, Plaintext>>, PCollection<KV<ShardId, DatabaseShard>>>() {
+
+  override fun expand(
+    input: PCollection<KV<DatabaseKey, Plaintext>>
+  ): PCollection<KV<ShardId, DatabaseShard>> {
+    return input
+      .map("Key by Shard") {
+        val (shardId, bucketId) = bucketing.apply(it.key.id)
+        kvOf(shardId, bucketOf(bucketId, listOf(it.value.payload)))
+      }
+      .groupByKey("Group by Shard")
+      .map("Map Buckets to DatabaseShard") { kv ->
+        val buckets =
+          kv.value.groupBy { it.bucketId }.map {
+            bucketOf(it.key, it.value.flatMap { bucket -> bucket.contents.itemsList })
+          }
+        kvOf(kv.key, databaseShardOf(kv.key, buckets))
+      }
+  }
+}
+
+private class ExecuteQueries(
+  private val queryEvaluator: QueryEvaluator,
+  private val serializedPublicKey: PCollectionView<ByteString>,
+  private val maxQueriesPerShard: Int
+) : PTransform<KeyedPCollectionTuple<ShardId>, PCollection<EncryptedQueryResult>>() {
+
+  override fun expand(input: KeyedPCollectionTuple<ShardId>): PCollection<EncryptedQueryResult> {
+    @Suppress("NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
+    return input
+      .apply("Join Database and Queries", CoGroupByKey.create())
+      .values("Drop ShardIds")
+      .apply(
+        "Execute Queries for Shard",
+        ParDo.of(ExecuteQueriesForShardFn(maxQueriesPerShard, queryEvaluator, serializedPublicKey))
+          .withSideInputs(serializedPublicKey)
+      )
+  }
+
+  companion object {
+    val queriesTag = TupleTag<EncryptedQueryBundle>()
+    val databaseTag = TupleTag<DatabaseShard>()
+  }
+}
+
+private class ExecuteQueriesForShardFn(
+  private val maxQueriesPerShard: Int,
+  private val queryEvaluator: QueryEvaluator,
+  private val serializedPublicKey: PCollectionView<ByteString>
+) : DoFn<CoGbkResult, EncryptedQueryResult>() {
+  private val metricsClass = EvaluateQueriesWorkflow::class.java
+
+  /** Distribution of the number of queries per shard. */
+  private val queryCountsDistribution = Metrics.distribution(metricsClass, "query-counts")
+
+  /** Distribution of the time it takes [queryEvaluator] to run. */
+  private val queryEvaluatorTimes = Metrics.distribution(metricsClass, "query-evaluator-times")
+
+  /** Count of the number of queries belonging to a shard with no buckets. */
+  private val missingShardsCounter = Metrics.counter(metricsClass, "missing-shards")
+
+  /** Count of the number of shards without any assigned queries. */
+  private val noQueriesCounter = Metrics.counter(metricsClass, "no-queries")
+
+  /**
+   * Distribution of the combined serialized sizes of the [DatabaseShard] and all
+   * [EncryptedQueryBundle]s.
+   */
+  private val totalSizeDistribution = Metrics.distribution(metricsClass, "total-sizes")
+
+  /** Distribution of the summed serialized sizes of all [EncryptedQueryBundle]s for a shard. */
+  private val combinedEncryptedQueryBundleSizeDistribution =
+    Metrics.distribution(metricsClass, "combined-encrypted-query-bundle-sizes")
+
+  /** Distribution of the serialized sizes of each [EncryptedQueryBundle]. */
+  private val queryBundleSizeDistribution =
+    Metrics.distribution(metricsClass, "encrypted-query-bundle-sizes")
+
+  /** Distribution of the serialized sizes of each [DatabaseShard]. */
+  private val databaseShardSizeDistribution =
+    Metrics.distribution(metricsClass, "database-shard-sizes")
+
+  /** Distribution of the number of buckets per [DatabaseShard]. */
+  private val bucketCountDistribution = Metrics.distribution(metricsClass, "bucket-counts")
+
+  /** Distribution of the serialized sizes of each [Bucket]. */
+  private val bucketSizeDistribution = Metrics.distribution(metricsClass, "bucket-sizes")
 
   @ProcessElement
   fun processElement(context: ProcessContext) {
-    val bucketsList = context.element().value.bucketsList
-    val totalSize = bucketsList.sumOf { it.payload.size().toLong() }
-    sizeDistribution.update(totalSize)
-    context.output(context.element())
+    val shards = context.element().getAll(ExecuteQueries.databaseTag).toList()
+    val queries = context.element().getAll(ExecuteQueries.queriesTag).toList()
+    validateAndCountInputs(shards, queries)
+    if (shards.isEmpty() || queries.isEmpty()) return
+
+    val publicKey = context.sideInput(serializedPublicKey)
+
+    val (results, time) = withTime { queryEvaluator.executeQueries(shards, queries, publicKey) }
+    queryEvaluatorTimes.update(time.toNanos())
+
+    results.forEach(context::output)
+  }
+
+  private fun validateAndCountInputs(
+    shards: List<DatabaseShard>,
+    queries: List<EncryptedQueryBundle>
+  ) {
+    for (query in queries) {
+      queryBundleSizeDistribution.update(query.serializedSize.toLong())
+    }
+
+    for (shard in shards) {
+      for (bucket in shard.bucketsList) {
+        bucketSizeDistribution.update(bucket.serializedSize.toLong())
+      }
+    }
+
+    val shardSize = shards.sumOf { it.serializedSize.toLong() }
+    val queriesSize = queries.sumOf { it.serializedSize.toLong() }
+    totalSizeDistribution.update(shardSize + queriesSize)
+    databaseShardSizeDistribution.update(shardSize)
+    combinedEncryptedQueryBundleSizeDistribution.update(queriesSize)
+    bucketCountDistribution.update(shards.sumOf { it.bucketsCount.toLong() })
+
+    val numQueries = queries.sumBy { it.queryIdsCount }
+    queryCountsDistribution.update(numQueries.toLong())
+    require(numQueries <= maxQueriesPerShard) {
+      "Shard has $numQueries queries ($maxQueriesPerShard allowed)"
+    }
+
+    when {
+      queries.isEmpty() -> noQueriesCounter.inc()
+      shards.isEmpty() -> missingShardsCounter.inc()
+      shards.size > 1 -> throw IllegalArgumentException("Too many DatabaseShards for shard")
+    }
   }
 }
