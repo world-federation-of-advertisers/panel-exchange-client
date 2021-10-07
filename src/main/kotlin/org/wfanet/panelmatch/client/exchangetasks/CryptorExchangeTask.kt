@@ -33,7 +33,7 @@ internal constructor(
 ) : ExchangeTask {
 
   override suspend fun execute(input: Map<String, VerifiedBlob>): Map<String, Flow<ByteString>> {
-    logger.addToTaskLog("Executing operation: $operation")
+    logger.addToTaskLog("Executing crypto operation")
 
     // TODO See if it is worth updating this to not collect the inputs entirely at this step.
     //  It should be possible to process batches of them to balance memory usage and execution

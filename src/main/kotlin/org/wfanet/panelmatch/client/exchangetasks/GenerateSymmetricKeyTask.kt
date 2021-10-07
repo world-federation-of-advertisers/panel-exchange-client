@@ -26,7 +26,7 @@ private const val OUTPUT_DATA_LABEL = "symmetric-key"
 class GenerateSymmetricKeyTask(private val generateKey: () -> ByteString) : ExchangeTask {
 
   override suspend fun execute(input: Map<String, VerifiedBlob>): Map<String, Flow<ByteString>> {
-    logger.addToTaskLog("Executing generate symmetric key: $generateKey")
+    logger.addToTaskLog("Executing generate symmetric key")
 
     val key = generateKey()
     return mapOf(OUTPUT_DATA_LABEL to flowOf(key))

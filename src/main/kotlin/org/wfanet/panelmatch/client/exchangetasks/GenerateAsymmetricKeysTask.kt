@@ -28,7 +28,7 @@ private const val PUBLIC_KEY_LABEL = "public-key"
 class GenerateAsymmetricKeysTask(private val generateKeys: () -> AsymmetricKeys) : ExchangeTask {
 
   override suspend fun execute(input: Map<String, VerifiedBlob>): Map<String, Flow<ByteString>> {
-    logger.addToTaskLog("Executing generate asymmetric keys: $generateKeys")
+    logger.addToTaskLog("Executing generate asymmetric keys")
 
     val key = generateKeys()
     return mapOf(
