@@ -28,7 +28,6 @@ import org.wfanet.panelmatch.common.testing.runBlockingTest
 @RunWith(JUnit4::class)
 class ExchangeTaskMapperForJoinKeyExchangeTest {
   private val privateStorage = makeTestVerifiedStorageClient()
-  private val sharedStorage = makeTestVerifiedStorageClient()
   private val deterministicCommutativeCryptor = FakeDeterministicCommutativeCipher()
 
   private val exchangeTaskMapper =

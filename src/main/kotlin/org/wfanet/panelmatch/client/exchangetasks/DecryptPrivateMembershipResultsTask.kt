@@ -22,12 +22,12 @@ import kotlinx.coroutines.flow.flowOf
 import org.apache.beam.sdk.Pipeline
 import org.apache.beam.sdk.values.PCollection
 import org.apache.beam.sdk.values.PCollectionView
-import org.wfanet.panelmatch.client.privatemembership.DecryptQueryResultsWorkflow
 import org.wfanet.panelmatch.client.privatemembership.DecryptedEventDataSet
 import org.wfanet.panelmatch.client.privatemembership.EncryptedQueryResult
 import org.wfanet.panelmatch.client.privatemembership.PrivateMembershipKeys
 import org.wfanet.panelmatch.client.privatemembership.QueryIdAndJoinKey
 import org.wfanet.panelmatch.client.privatemembership.QueryResultsDecryptor
+import org.wfanet.panelmatch.client.privatemembership.decryptQueryResults
 import org.wfanet.panelmatch.client.storage.VerifiedStorageClient.VerifiedBlob
 import org.wfanet.panelmatch.common.ShardedFileName
 import org.wfanet.panelmatch.common.beam.kvOf
@@ -45,7 +45,7 @@ class DecryptPrivateMembershipResultsTask(
   private val queryResultsDecryptor: QueryResultsDecryptor,
   private val compressorFactory: CompressorFactory,
   private val partnerCertificate: X509Certificate,
-  private val outputs: DecryptPrivateMembershipResultsTask.Outputs
+  private val outputs: Outputs
 ) : ApacheBeamTask() {
 
   data class Outputs(
@@ -70,10 +70,12 @@ class DecryptPrivateMembershipResultsTask(
 
     val dictionary =
       readFileAsSingletonPCollection(
-          input.getValue("compression-dictionary").toStringUtf8(),
-          partnerCertificate
-        )
-        .toSingletonView()
+        input.getValue("compression-dictionary").toStringUtf8(),
+        partnerCertificate
+      )
+    val factory = compressorFactory // Local reference to avoid serializing the class
+    val compressor =
+      dictionary.map("Create Compressor") { factory.build(it) }.toSingletonView("CompressorView")
 
     val hkdfPepper = input.getValue("hkdf-pepper").toByteString()
 
@@ -96,18 +98,15 @@ class DecryptPrivateMembershipResultsTask(
         .toSingletonView()
 
     val decryptedEventDataSet: PCollection<DecryptedEventDataSet> =
-      DecryptQueryResultsWorkflow(
-          serializedParameters,
-          queryResultsDecryptor,
-          hkdfPepper,
-          compressorFactory
-        )
-        .batchDecryptQueryResults(
-          encryptedQueryResults,
-          queryToJoinKey,
-          dictionary,
-          privateMembershipKeys
-        )
+      decryptQueryResults(
+        encryptedQueryResults,
+        queryToJoinKey,
+        compressor,
+        privateMembershipKeys,
+        serializedParameters,
+        queryResultsDecryptor,
+        hkdfPepper,
+      )
 
     val decryptedEventDataSetFileSpec =
       ShardedFileName(outputs.decryptedEventDataSetFileName, outputs.decryptedEventDataSetFileCount)

@@ -24,6 +24,11 @@ import org.apache.beam.sdk.transforms.DoFn
 import org.apache.beam.sdk.values.KV
 import org.apache.beam.sdk.values.PCollection
 import org.apache.beam.sdk.values.PCollectionView
+import org.wfanet.panelmatch.client.common.bucketIdOf
+import org.wfanet.panelmatch.client.common.joinKeyOf
+import org.wfanet.panelmatch.client.common.panelistKeyOf
+import org.wfanet.panelmatch.client.common.queryIdOf
+import org.wfanet.panelmatch.client.common.unencryptedQueryOf
 import org.wfanet.panelmatch.common.beam.filter
 import org.wfanet.panelmatch.common.beam.groupByKey
 import org.wfanet.panelmatch.common.beam.keyBy

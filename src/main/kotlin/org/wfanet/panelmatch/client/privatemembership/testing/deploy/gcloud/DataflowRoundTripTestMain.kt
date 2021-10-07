@@ -42,22 +42,23 @@ import org.apache.beam.sdk.options.ValueProvider
 import org.apache.beam.sdk.transforms.Create
 import org.apache.beam.sdk.values.KV
 import org.apache.beam.sdk.values.PCollection
+import org.wfanet.panelmatch.client.common.databaseKeyOf
+import org.wfanet.panelmatch.client.common.joinKeyOf
+import org.wfanet.panelmatch.client.common.panelistKeyOf
+import org.wfanet.panelmatch.client.common.plaintextOf
 import org.wfanet.panelmatch.client.privatemembership.CreateQueriesWorkflow
 import org.wfanet.panelmatch.client.privatemembership.DatabaseKey
 import org.wfanet.panelmatch.client.privatemembership.EncryptedQueryBundle
 import org.wfanet.panelmatch.client.privatemembership.EncryptedQueryResult
-import org.wfanet.panelmatch.client.privatemembership.EvaluateQueriesWorkflow
 import org.wfanet.panelmatch.client.privatemembership.JniPrivateMembership
 import org.wfanet.panelmatch.client.privatemembership.JniPrivateMembershipCryptor
 import org.wfanet.panelmatch.client.privatemembership.JniQueryEvaluator
 import org.wfanet.panelmatch.client.privatemembership.PanelistKeyAndJoinKey
 import org.wfanet.panelmatch.client.privatemembership.Plaintext
 import org.wfanet.panelmatch.client.privatemembership.PrivateMembershipKeys
-import org.wfanet.panelmatch.client.privatemembership.databaseKeyOf
-import org.wfanet.panelmatch.client.privatemembership.joinKeyOf
+import org.wfanet.panelmatch.client.privatemembership.WorkflowParameters
+import org.wfanet.panelmatch.client.privatemembership.evaluateQueries
 import org.wfanet.panelmatch.client.privatemembership.panelistKeyAndJoinKey
-import org.wfanet.panelmatch.client.privatemembership.panelistKeyOf
-import org.wfanet.panelmatch.client.privatemembership.plaintextOf
 import org.wfanet.panelmatch.common.beam.kvOf
 import org.wfanet.panelmatch.common.beam.map
 import org.wfanet.panelmatch.common.beam.mapWithSideInput
@@ -131,7 +132,12 @@ fun main(args: Array<String>) {
         yield(
           panelistKeyAndJoinKey {
             panelistKey = panelistKeyOf((i + j * SHARD_COUNT).toLong())
-            joinKey = joinKeyOf("JoinKey-${Random.nextInt(JOINKEY_UNIVERSE_SIZE)}".toByteString())
+            joinKey =
+              joinKeyOf(
+                "JoinKey-${
+                Random.nextInt(JOINKEY_UNIVERSE_SIZE)
+              }".toByteString()
+              )
           }
         )
       }
@@ -143,7 +149,7 @@ fun main(args: Array<String>) {
       .second
 
   val evaluateQueriesWorkflowParameters =
-    EvaluateQueriesWorkflow.Parameters(
+    WorkflowParameters(
       numShards = SHARD_COUNT,
       numBucketsPerShard = BUCKETS_PER_SHARD_COUNT,
       maxQueriesPerShard = QUERIES_PER_SHARD_COUNT
@@ -167,8 +173,13 @@ fun main(args: Array<String>) {
 
   val serializedPublicKey = privateMembershipKeys.map { it.serializedPublicKey }.toSingletonView()
   val results: PCollection<EncryptedQueryResult> =
-    EvaluateQueriesWorkflow(evaluateQueriesWorkflowParameters, queryEvaluator)
-      .batchEvaluateQueries(database, encryptedQueryBundles, serializedPublicKey)
+    evaluateQueries(
+      database,
+      encryptedQueryBundles,
+      serializedPublicKey,
+      evaluateQueriesWorkflowParameters,
+      queryEvaluator
+    )
 
   val outputSchema =
     TableSchema()

@@ -23,9 +23,9 @@ import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
 import org.wfanet.panelmatch.client.common.CompressedEvents
 import org.wfanet.panelmatch.client.common.EventCompressorTrainer
+import org.wfanet.panelmatch.client.common.queryIdOf
 import org.wfanet.panelmatch.client.eventpreprocessing.compressByKey
 import org.wfanet.panelmatch.client.privatemembership.DecryptEventDataRequest.EncryptedEventDataSet
-import org.wfanet.panelmatch.client.privatemembership.DecryptQueryResultsWorkflow
 import org.wfanet.panelmatch.client.privatemembership.DecryptedEventDataSet
 import org.wfanet.panelmatch.client.privatemembership.EncryptedQueryResult
 import org.wfanet.panelmatch.client.privatemembership.JoinKey
@@ -34,9 +34,9 @@ import org.wfanet.panelmatch.client.privatemembership.PrivateMembershipCryptor
 import org.wfanet.panelmatch.client.privatemembership.PrivateMembershipKeys
 import org.wfanet.panelmatch.client.privatemembership.QueryId
 import org.wfanet.panelmatch.client.privatemembership.QueryResultsDecryptor
+import org.wfanet.panelmatch.client.privatemembership.decryptQueryResults
 import org.wfanet.panelmatch.client.privatemembership.decryptedEventDataSet
 import org.wfanet.panelmatch.client.privatemembership.plaintext
-import org.wfanet.panelmatch.client.privatemembership.queryIdOf
 import org.wfanet.panelmatch.common.beam.groupByKey
 import org.wfanet.panelmatch.common.beam.keyBy
 import org.wfanet.panelmatch.common.beam.kvOf
@@ -45,7 +45,6 @@ import org.wfanet.panelmatch.common.beam.parDo
 import org.wfanet.panelmatch.common.beam.strictOneToOneJoin
 import org.wfanet.panelmatch.common.beam.testing.BeamTestBase
 import org.wfanet.panelmatch.common.beam.testing.assertThat
-import org.wfanet.panelmatch.common.beam.toSingletonView
 import org.wfanet.panelmatch.common.compression.CompressorFactory
 import org.wfanet.panelmatch.common.toByteString
 
@@ -64,7 +63,7 @@ private val JOINKEYS: List<Pair<Int, String>> =
 private val HKDF_PEPPER = "some-pepper".toByteString()
 
 @RunWith(JUnit4::class)
-abstract class AbstractDecryptQueryResultsWorkflowTest : BeamTestBase() {
+abstract class AbstractDecryptQueryResultsTest : BeamTestBase() {
   abstract val queryResultsDecryptor: QueryResultsDecryptor
   abstract val privateMembershipCryptor: PrivateMembershipCryptor
   abstract val privateMembershipCryptorHelper: PrivateMembershipCryptorHelper
@@ -100,18 +99,15 @@ abstract class AbstractDecryptQueryResultsWorkflowTest : BeamTestBase() {
         compressedEvents.events
       )
 
-    return DecryptQueryResultsWorkflow(
-        serializedParameters = privateMembershipSerializedParameters,
-        queryResultsDecryptor = queryResultsDecryptor,
-        hkdfPepper = HKDF_PEPPER,
-        compressorFactory = compressorFactory,
-      )
-      .batchDecryptQueryResults(
-        encryptedQueryResults = encryptedResults,
-        queryIdToJoinKey = joinkeyCollection,
-        dictionary = compressedEvents.dictionary.toSingletonView(),
-        privateMembershipKeys = pcollectionViewOf("Keys view", keys)
-      )
+    return decryptQueryResults(
+      encryptedQueryResults = encryptedResults,
+      queryIdToJoinKey = joinkeyCollection,
+      compressor = compressedEvents.makeCompressor(compressorFactory),
+      privateMembershipKeys = pcollectionViewOf("Keys View", keys),
+      serializedParameters = privateMembershipSerializedParameters,
+      queryResultsDecryptor = queryResultsDecryptor,
+      hkdfPepper = HKDF_PEPPER
+    )
   }
 
   @Test

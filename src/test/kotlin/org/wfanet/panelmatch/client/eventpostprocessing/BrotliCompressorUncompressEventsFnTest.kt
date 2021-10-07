@@ -17,9 +17,9 @@ package org.wfanet.panelmatch.client.eventpostprocessing
 import org.wfanet.panelmatch.client.common.BrotliCompressorFactory
 import org.wfanet.panelmatch.client.common.BrotliEventCompressorTrainer
 import org.wfanet.panelmatch.client.common.EventCompressorTrainer
-import org.wfanet.panelmatch.client.eventpostprocessing.testing.AbstractUncompressEventsTest
+import org.wfanet.panelmatch.client.eventpostprocessing.testing.AbstractUncompressEventsFnTest
 
-class BrotliCompressorUncompressEventsTest : AbstractUncompressEventsTest() {
+class BrotliCompressorUncompressEventsFnTest : AbstractUncompressEventsFnTest() {
   override val eventCompressorTrainer: EventCompressorTrainer = BrotliEventCompressorTrainer()
   override val compressorFactory = BrotliCompressorFactory()
 }

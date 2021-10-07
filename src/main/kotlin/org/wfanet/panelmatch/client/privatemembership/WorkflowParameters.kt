@@ -12,17 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package org.wfanet.panelmatch.client.privatemembership.testing
+package org.wfanet.panelmatch.client.privatemembership
 
-import org.wfanet.panelmatch.client.privatemembership.EvaluateQueriesWorkflow.Parameters
-import org.wfanet.panelmatch.client.privatemembership.QueryEvaluator
+import java.io.Serializable
 
-class PlaintextEvaluateQueriesWorkflowEndToEndTest : AbstractEvaluateQueriesWorkflowEndToEndTest() {
-  override fun makeQueryEvaluator(parameters: Parameters): QueryEvaluator {
-    return PlaintextQueryEvaluator
-  }
-
-  override fun makeHelper(parameters: Parameters): QueryEvaluatorTestHelper {
-    return PlaintextQueryEvaluatorTestHelper
+data class WorkflowParameters(
+  val numShards: Int,
+  val numBucketsPerShard: Int,
+  val maxQueriesPerShard: Int
+) : Serializable {
+  init {
+    require(numShards > 0)
+    require(numBucketsPerShard > 0)
+    require(maxQueriesPerShard > 0)
   }
 }

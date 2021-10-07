@@ -21,16 +21,16 @@ import org.apache.beam.sdk.values.PCollection
 import org.wfanet.panelmatch.client.combinedEvents
 import org.wfanet.panelmatch.client.common.CompressedEvents
 import org.wfanet.panelmatch.client.common.EventCompressorTrainer
-import org.wfanet.panelmatch.client.common.FactoryBasedCompressorCoder
 import org.wfanet.panelmatch.common.beam.groupByKey
 import org.wfanet.panelmatch.common.beam.kvOf
 import org.wfanet.panelmatch.common.beam.map
 import org.wfanet.panelmatch.common.beam.mapValues
 import org.wfanet.panelmatch.common.beam.mapWithSideInput
+import org.wfanet.panelmatch.common.beam.toKv
 import org.wfanet.panelmatch.common.beam.toSingletonView
 import org.wfanet.panelmatch.common.beam.values
 import org.wfanet.panelmatch.common.compression.Compressor
-import org.wfanet.panelmatch.common.compression.FactoryBasedCompressor
+import org.wfanet.panelmatch.common.compression.CompressorFactory
 
 /**
  * First use [Sample.any] -- which is not guaranteed to be uniform -- to significantly over-sample
@@ -45,23 +45,25 @@ fun EventCompressorTrainer.compressByKey(
   events: PCollection<KV<ByteString, ByteString>>
 ): CompressedEvents {
 
-  val compressor: PCollection<FactoryBasedCompressor> =
+  val compressorAndDictionary: PCollection<KV<CompressorFactory, ByteString>> =
     events
       .values()
       .apply("Rough Sample", Sample.any(OVERSAMPLING_FACTOR * preferredSampleSize))
       .apply("Uniform Sample", Sample.fixedSizeGlobally(preferredSampleSize))
-      .map("Train Compressor") { train(it) }
-      .setCoder(FactoryBasedCompressorCoder.of())
+      .map("Train Compressor") { train(it).toKv() }
+
+  val compressorView =
+    compressorAndDictionary.map { it.key.build(it.value) }.toSingletonView("Compressor View")
 
   val compressedEvents: PCollection<KV<ByteString, ByteString>> =
     events
       .groupByKey()
       .mapValues { combinedEvents { serializedEvents += it }.toByteString() }
-      .mapWithSideInput(compressor.toSingletonView(), name = "Compress") {
+      .mapWithSideInput(compressorView, name = "Compress") {
         keyAndEvents: KV<ByteString, ByteString>,
-        compressorSideInput: FactoryBasedCompressor ->
-        kvOf(keyAndEvents.key, compressorSideInput.compress(keyAndEvents.value))
+        compressor: Compressor ->
+        kvOf(keyAndEvents.key, compressor.compress(keyAndEvents.value))
       }
 
-  return CompressedEvents(compressedEvents, compressor.map { it.dictionary })
+  return CompressedEvents(compressedEvents, compressorAndDictionary.values())
 }
