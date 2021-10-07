@@ -12,18 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package org.wfanet.panelmatch.client.storage
+package org.wfanet.panelmatch.common
 
-import org.wfanet.measurement.api.v2alpha.ExchangeStepAttemptKey
-import org.wfanet.measurement.api.v2alpha.ExchangeWorkflow
-
-interface StorageSelector {
-
-  suspend fun getPrivateStorage(attemptKey: ExchangeStepAttemptKey): VerifiedStorageClient
-
-  suspend fun getSharedStorage(
-    storageType: ExchangeWorkflow.StorageType,
-    attemptKey: ExchangeStepAttemptKey,
-    partnerName: String
-  ): VerifiedStorageClient
+interface SecretMap<K, V> {
+  operator fun get(key: K): V
 }
