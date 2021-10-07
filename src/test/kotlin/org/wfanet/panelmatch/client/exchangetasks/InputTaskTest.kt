@@ -73,30 +73,34 @@ class InputTaskTest {
     val step = inputStep("input" to "mp-crypto-key")
     val task = InputTask(step, throttler, storage)
 
-    whenever(underlyingStorage.getBlob("mp-crypto-key"))
+    whenever(underlyingStorage.getBlob("test-prefix/mp-crypto-key"))
       .thenReturn(null)
       .thenReturn(null)
       .thenReturn(null)
       .thenReturn(null)
       .thenReturn(secretKeySourceBlob)
 
-    whenever(underlyingStorage.getBlob("mp-crypto-key_signature"))
+    whenever(underlyingStorage.getBlob("test-prefix/mp-crypto-key_signature"))
       .thenReturn(secretKeySourceBlobSignature)
 
     val result: Map<String, Flow<ByteString>> = task.execute(emptyMap())
 
     assertThat(result).isEmpty()
 
-    verify(underlyingStorage, times(5)).getBlob("mp-crypto-key")
-    verify(underlyingStorage, times(1)).getBlob("mp-crypto-key_signature")
+    verify(underlyingStorage, times(5)).getBlob("test-prefix/mp-crypto-key")
+    verify(underlyingStorage, times(1)).getBlob("test-prefix/mp-crypto-key_signature")
     verify(underlyingStorage, times(1)).defaultBufferSizeBytes
   }
 
   @Test
   fun `invalid inputs`() = runBlockingTest {
-    fun runTest(step: ExchangeWorkflow.Step) {
+    whenever(underlyingStorage.getBlob("test-prefix/b")).thenReturn(secretKeySourceBlob)
+    whenever(underlyingStorage.getBlob("test-prefix/b_signature"))
+      .thenReturn(secretKeySourceBlobSignature)
+
+    suspend fun runTest(step: ExchangeWorkflow.Step) {
       if (step.inputLabelsCount == 0 && step.outputLabelsCount == 1) {
-        // Expect no failure.
+        // Expect no failuress
         InputTask(step, throttler, storage)
       } else {
         assertFailsWith<IllegalArgumentException>(step.toString()) {
