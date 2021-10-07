@@ -12,19 +12,23 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package org.wfanet.panelmatch.client.storage
+package org.wfanet.panelmatch.client.storage.testing
 
-import java.io.File
 import org.wfanet.measurement.api.v2alpha.ExchangeKey
 import org.wfanet.measurement.storage.StorageClient
-import org.wfanet.measurement.storage.filesystem.FileSystemStorageClient
+import org.wfanet.measurement.storage.testing.InMemoryStorageClient
+import org.wfanet.panelmatch.client.storage.StorageDetails
+import org.wfanet.panelmatch.client.storage.StorageFactory
+import org.wfanet.panelmatch.client.storage.storageDetails
 
-class FileSystemStorageFactory(
+class InMemoryStorageFactory(
   private val storageDetails: StorageDetails,
   private val exchangeKey: ExchangeKey
 ) : StorageFactory {
 
+  constructor() : this(storageDetails {}, ExchangeKey("recurringId", "exchangeId"))
+
   override fun build(): StorageClient {
-    return FileSystemStorageClient(File("${storageDetails.file.path}/${exchangeKey.toName()}"))
+    return InMemoryStorageClient()
   }
 }
