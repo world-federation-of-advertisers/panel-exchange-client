@@ -33,7 +33,6 @@ class StorageNotFoundException(inputKey: String) : Exception("$inputKey not foun
 
 class VerifiedStorageClient(
   private val storageClient: StorageClient,
-  private val exchangePrefix: String,
   private val readCert: X509Certificate,
   private val writeCert: X509Certificate,
   private val privateKey: PrivateKey
@@ -43,9 +42,6 @@ class VerifiedStorageClient(
 
   /** A helper function to get the implicit path for a input's signature. */
   private fun getSigPath(blobKey: String): String = "${blobKey}_signature"
-
-  /** Provides a unique per-exchange prefix to prevent collision between multiple workflows */
-  private fun prefixBlobKey(blobKey: String): String = "$exchangePrefix/$blobKey"
 
   /**
    * Transforms values of [inputLabels] into the underlying blobs.
@@ -93,12 +89,10 @@ class VerifiedStorageClient(
    */
   @Throws(StorageNotFoundException::class)
   suspend fun getBlob(blobKey: String): VerifiedBlob {
-    val prefixedBlobKey = prefixBlobKey(blobKey)
-    val sourceBlob: Blob =
-      storageClient.getBlob(prefixedBlobKey) ?: throw StorageNotFoundException(blobKey)
+    val sourceBlob: Blob = storageClient.getBlob(blobKey) ?: throw StorageNotFoundException(blobKey)
     val signatureBlob: Blob =
-      storageClient.getBlob(getSigPath(prefixedBlobKey))
-        ?: throw StorageNotFoundException(getSigPath(prefixedBlobKey))
+      storageClient.getBlob(getSigPath(blobKey))
+        ?: throw StorageNotFoundException(getSigPath(blobKey))
 
     return VerifiedBlob(
       sourceBlob,
@@ -115,12 +109,11 @@ class VerifiedStorageClient(
    */
   @Suppress("EXPERIMENTAL_API_USAGE")
   suspend fun createBlob(blobKey: String, content: Flow<ByteString>): VerifiedBlob {
-    val prefixedBlobKey = prefixBlobKey(blobKey)
     val (signedContent, deferredSig) = privateKey.signFlow(writeCert, content)
-    val sourceBlob = storageClient.createBlob(blobKey = prefixedBlobKey, content = signedContent)
+    val sourceBlob = storageClient.createBlob(blobKey = blobKey, content = signedContent)
 
     val signature = deferredSig.getCompleted()
-    storageClient.createBlob(blobKey = getSigPath(prefixedBlobKey), content = signature)
+    storageClient.createBlob(blobKey = getSigPath(blobKey), content = signature)
     return VerifiedBlob(sourceBlob, signature, blobKey, writeCert)
   }
 
