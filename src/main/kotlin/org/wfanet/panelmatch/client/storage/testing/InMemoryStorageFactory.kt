@@ -12,15 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package org.wfanet.panelmatch.client.storage
+package org.wfanet.panelmatch.client.storage.testing
 
-import java.io.File
 import org.wfanet.measurement.storage.StorageClient
-import org.wfanet.measurement.storage.filesystem.FileSystemStorageClient
+import org.wfanet.measurement.storage.testing.InMemoryStorageClient
+import org.wfanet.panelmatch.client.storage.StorageDetails
+import org.wfanet.panelmatch.client.storage.StorageFactory
+import org.wfanet.panelmatch.client.storage.storageDetails
 
-class FileSystemStorageFactory(private val storageDetails: StorageDetails) : StorageFactory {
+class InMemoryStorageFactory(private val storageDetails: StorageDetails) : StorageFactory {
+
+  constructor() : this(storageDetails {})
 
   override fun build(): StorageClient {
-    return FileSystemStorageClient(File(storageDetails.file.path))
+    return InMemoryStorageClient()
   }
 }
