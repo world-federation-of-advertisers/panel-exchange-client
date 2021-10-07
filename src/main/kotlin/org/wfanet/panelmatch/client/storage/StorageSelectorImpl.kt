@@ -32,15 +32,17 @@ class StorageSelectorImpl(
   private val sharedStorageInfo: Map<String, ByteString>,
   private val privateStorageInfo: Map<String, ByteString>,
   private val defaultPrivateStorageInfo: ByteString,
-  // TODO: Maybe a factory? Something thread-safe.
   private val certificateManager: CertificateManager,
-  private val privateKey: PrivateKey
+  private val ownerName: String,
+  private val ownerCertificateResourceName: String
 ) : StorageSelector {
 
   private fun getExchangeName(attemptKey: ExchangeStepAttemptKey): String {
     return ExchangeKey(attemptKey.recurringExchangeId, attemptKey.exchangeId).toName()
   }
 
+  // TODO: refactor this to return either a regular StorageClient or non-verified wrapper (as we
+  //  still want support for automatic prefixes and batch I/O).
   override suspend fun getPrivateStorage(
     attemptKey: ExchangeStepAttemptKey
   ): VerifiedStorageClient {
@@ -50,9 +52,11 @@ class StorageSelectorImpl(
         privateStorageInfo[attemptKey.recurringExchangeId] ?: defaultPrivateStorageInfo
       )
 
-    val ownedCertificate: X509Certificate =
-      certificateManager.getOwnedExchangeCertificate(
-        ExchangeKey(attemptKey.recurringExchangeId, attemptKey.exchangeId)
+    val (ownedCertificate, ownedCertificateResourceName) =
+      certificateManager.getCertificate(
+        ExchangeKey(attemptKey.recurringExchangeId, attemptKey.exchangeId),
+        ownerName,
+        ownerCertificateResourceName
       )
 
     return getVerifiedStorageClient(
@@ -60,7 +64,9 @@ class StorageSelectorImpl(
       getExchangeName(attemptKey),
       ownedCertificate,
       ownedCertificate,
-      privateKey
+      certificateManager.getExchangePrivateKey(
+        ExchangeKey(attemptKey.recurringExchangeId, attemptKey.exchangeId)
+      )
     )
   }
 
@@ -77,14 +83,18 @@ class StorageSelectorImpl(
       else -> throw IllegalArgumentException("No supported shared storage type specified.")
     }
 
-    val ownedCertificate: X509Certificate =
-      certificateManager.getOwnedExchangeCertificate(
-        ExchangeKey(attemptKey.recurringExchangeId, attemptKey.exchangeId)
-      )
-    val partnerCertificate: X509Certificate =
-      certificateManager.getPartnerExchangeCertificate(
+    val (ownedCertificate, ownedCertificateResourceName) =
+      certificateManager.getCertificate(
         ExchangeKey(attemptKey.recurringExchangeId, attemptKey.exchangeId),
-        partnerName
+        ownerName,
+        ownerCertificateResourceName
+      )
+    // TODO: Refactor storage client to not require a partner cert and to pass other information
+    val (partnerCertificate, partnerCertificateResourceName) =
+      certificateManager.getCertificate(
+        ExchangeKey(attemptKey.recurringExchangeId, attemptKey.exchangeId),
+        ownerName,
+        ownerCertificateResourceName
       )
 
     return getVerifiedStorageClient(
@@ -92,7 +102,9 @@ class StorageSelectorImpl(
       getExchangeName(attemptKey),
       partnerCertificate,
       ownedCertificate,
-      privateKey
+      certificateManager.getExchangePrivateKey(
+        ExchangeKey(attemptKey.recurringExchangeId, attemptKey.exchangeId)
+      )
     )
   }
 
