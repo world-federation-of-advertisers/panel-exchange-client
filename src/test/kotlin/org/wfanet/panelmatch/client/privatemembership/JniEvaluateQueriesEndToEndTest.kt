@@ -14,26 +14,25 @@
 
 package org.wfanet.panelmatch.client.privatemembership
 
-import org.wfanet.panelmatch.client.privatemembership.EvaluateQueriesWorkflow.Parameters
-import org.wfanet.panelmatch.client.privatemembership.testing.AbstractEvaluateQueriesWorkflowEndToEndTest
+import org.wfanet.panelmatch.client.privatemembership.testing.AbstractEvaluateQueriesEndToEndTest
 import org.wfanet.panelmatch.client.privatemembership.testing.JniQueryEvaluatorContext
 import org.wfanet.panelmatch.client.privatemembership.testing.JniQueryEvaluatorTestHelper
 import org.wfanet.panelmatch.client.privatemembership.testing.QueryEvaluatorTestHelper
 
-class JniEvaluateQueriesWorkflowEndToEndTest : AbstractEvaluateQueriesWorkflowEndToEndTest() {
-  private val contexts = mutableMapOf<Parameters, JniQueryEvaluatorContext>()
+class JniEvaluateQueriesEndToEndTest : AbstractEvaluateQueriesEndToEndTest() {
+  private val contexts = mutableMapOf<WorkflowParameters, JniQueryEvaluatorContext>()
 
-  private fun getContext(parameters: Parameters): JniQueryEvaluatorContext {
+  private fun getContext(parameters: WorkflowParameters): JniQueryEvaluatorContext {
     return contexts.getOrPut(parameters) {
       JniQueryEvaluatorContext(parameters.numShards, parameters.numBucketsPerShard)
     }
   }
 
-  override fun makeQueryEvaluator(parameters: Parameters): QueryEvaluator {
+  override fun makeQueryEvaluator(parameters: WorkflowParameters): QueryEvaluator {
     return JniQueryEvaluator(getContext(parameters).privateMembershipParameters.toByteString())
   }
 
-  override fun makeHelper(parameters: Parameters): QueryEvaluatorTestHelper {
+  override fun makeHelper(parameters: WorkflowParameters): QueryEvaluatorTestHelper {
     return JniQueryEvaluatorTestHelper(getContext(parameters))
   }
 }

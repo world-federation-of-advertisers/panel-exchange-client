@@ -14,14 +14,15 @@
 
 package org.wfanet.panelmatch.client.privatemembership.testing
 
-import org.junit.runner.RunWith
-import org.junit.runners.JUnit4
-import org.wfanet.panelmatch.common.toByteString
+import org.wfanet.panelmatch.client.privatemembership.QueryEvaluator
+import org.wfanet.panelmatch.client.privatemembership.WorkflowParameters
 
-@RunWith(JUnit4::class)
-class PlaintextCreateQueriesWorkflowTest : AbstractCreateQueriesWorkflowTest() {
-  override val privateMembershipSerializedParameters = "some serialized parameters".toByteString()
-  override val privateMembershipCryptor =
-    PlaintextPrivateMembershipCryptor(privateMembershipSerializedParameters)
-  override val privateMembershipCryptorHelper = PlaintextPrivateMembershipCryptorHelper()
+class PlaintextEvaluateQueriesEndToEndTest : AbstractEvaluateQueriesEndToEndTest() {
+  override fun makeQueryEvaluator(parameters: WorkflowParameters): QueryEvaluator {
+    return PlaintextQueryEvaluator
+  }
+
+  override fun makeHelper(parameters: WorkflowParameters): QueryEvaluatorTestHelper {
+    return PlaintextQueryEvaluatorTestHelper
+  }
 }

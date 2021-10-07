@@ -17,6 +17,11 @@ package org.wfanet.panelmatch.client.common
 import com.google.protobuf.ByteString
 import org.apache.beam.sdk.values.KV
 import org.apache.beam.sdk.values.PCollection
+import org.apache.beam.sdk.values.PCollectionView
+import org.wfanet.panelmatch.common.beam.map
+import org.wfanet.panelmatch.common.beam.toSingletonView
+import org.wfanet.panelmatch.common.compression.Compressor
+import org.wfanet.panelmatch.common.compression.CompressorFactory
 
 /**
  * The results of training a [Compressor][org.wfanet.panelmatch.common.compression.Compressor] and
@@ -25,4 +30,10 @@ import org.apache.beam.sdk.values.PCollection
 data class CompressedEvents(
   val events: PCollection<KV<ByteString, ByteString>>,
   val dictionary: PCollection<ByteString>
-)
+) {
+  fun makeCompressor(compressorFactory: CompressorFactory): PCollectionView<Compressor> {
+    return dictionary
+      .map("Make Compressor") { compressorFactory.build(it) }
+      .toSingletonView("Make Compressor View")
+  }
+}

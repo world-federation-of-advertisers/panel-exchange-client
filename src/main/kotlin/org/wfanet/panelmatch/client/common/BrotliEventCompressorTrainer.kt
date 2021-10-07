@@ -16,15 +16,15 @@ package org.wfanet.panelmatch.client.common
 
 import com.google.protobuf.ByteString
 import org.wfanet.measurement.common.flatten
-import org.wfanet.panelmatch.common.compression.FactoryBasedCompressor
+import org.wfanet.panelmatch.common.compression.CompressorFactory
 
 /** [EventCompressorTrainer] that uses Brotli compression (via JNI). */
 class BrotliEventCompressorTrainer : EventCompressorTrainer {
   // TODO(@efoxepstein): experimentally adjust this value
   override val preferredSampleSize: Int = 1000
 
-  override fun train(eventsSample: Iterable<ByteString>): FactoryBasedCompressor {
+  override fun train(eventsSample: Iterable<ByteString>): Pair<CompressorFactory, ByteString> {
     val dictionary: ByteString = eventsSample.flatten()
-    return FactoryBasedCompressor(dictionary, BrotliCompressorFactory())
+    return BrotliCompressorFactory() to dictionary
   }
 }

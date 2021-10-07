@@ -16,15 +16,15 @@ package org.wfanet.panelmatch.client.common.testing
 
 import com.google.protobuf.ByteString
 import org.wfanet.panelmatch.client.common.EventCompressorTrainer
-import org.wfanet.panelmatch.common.compression.FactoryBasedCompressor
+import org.wfanet.panelmatch.common.compression.CompressorFactory
 import org.wfanet.panelmatch.common.toByteString
 
 class FakeEventCompressorTrainer : EventCompressorTrainer {
   override val preferredSampleSize: Int = 3
 
-  override fun train(eventsSample: Iterable<ByteString>): FactoryBasedCompressor {
+  override fun train(eventsSample: Iterable<ByteString>): Pair<CompressorFactory, ByteString> {
     val sortedJoinedSample = eventsSample.map { it.toStringUtf8() }.sorted().joinToString(", ")
     val dictionary = "Dictionary: $sortedJoinedSample".toByteString()
-    return FactoryBasedCompressor(dictionary, FakeCompressorFactory())
+    return FakeCompressorFactory() to dictionary
   }
 }
