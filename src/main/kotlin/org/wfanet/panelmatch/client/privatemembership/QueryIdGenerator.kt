@@ -12,15 +12,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package org.wfanet.panelmatch.client.eventpostprocessing.testing
+package org.wfanet.panelmatch.client.privatemembership
 
-import org.junit.runner.RunWith
-import org.junit.runners.JUnit4
-import org.wfanet.panelmatch.client.common.testing.FakeCompressorFactory
-import org.wfanet.panelmatch.client.common.testing.FakeEventCompressorTrainer
+import kotlin.random.Random
 
-@RunWith(JUnit4::class)
-class FakeCompressorUncompressEventsTest : AbstractUncompressEventsTest() {
-  override val eventCompressorTrainer = FakeEventCompressorTrainer()
-  override val compressorFactory = FakeCompressorFactory()
+/** Generates [0, upperBound) in random order. */
+@Suppress("UnstableApiUsage") // Guava "beta" is stable.
+fun iterateUniqueQueryIds(upperBound: Int): Iterator<Int> = iterator {
+  val seen = mutableSetOf<Int>()
+
+  repeat(upperBound) {
+    val id = Random.nextInt(upperBound)
+    if (id !in seen) {
+      seen.add(id)
+      yield(id)
+    }
+  }
 }
