@@ -17,7 +17,7 @@ package org.wfanet.panelmatch.client.common
 import com.google.protobuf.ByteString
 import java.io.Serializable
 import org.wfanet.panelmatch.common.compression.Compressor
-import org.wfanet.panelmatch.common.compression.FactoryBasedCompressor
+import org.wfanet.panelmatch.common.compression.CompressorFactory
 
 /**
  * [Compressor] factory that supports training.
@@ -26,10 +26,9 @@ import org.wfanet.panelmatch.common.compression.FactoryBasedCompressor
  * whichever library needs to decompress.
  */
 interface EventCompressorTrainer : Serializable {
-
   /** Hint suggesting how many elements should be in the sample. */
   val preferredSampleSize: Int
 
-  /** Builds a dictionary and an [Compressor] that uses it. */
-  fun train(eventsSample: Iterable<ByteString>): FactoryBasedCompressor
+  /** Builds a dictionary and a [CompressorFactory] that uses it. */
+  fun train(eventsSample: Iterable<ByteString>): Pair<CompressorFactory, ByteString>
 }

@@ -21,7 +21,7 @@ import org.wfanet.panelmatch.client.common.testing.FakeEventCompressorTrainer
 import org.wfanet.panelmatch.common.toByteString
 
 @RunWith(JUnit4::class)
-class PlaintextDecryptQueryResultsWorkflowTest : AbstractDecryptQueryResultsWorkflowTest() {
+class PlaintextDecryptQueryResultsTest : AbstractDecryptQueryResultsTest() {
   override val privateMembershipSerializedParameters = "some serialized parameters".toByteString()
   override val queryResultsDecryptor = PlaintextQueryResultsDecryptor()
   override val privateMembershipCryptor =

@@ -12,16 +12,22 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package org.wfanet.panelmatch.client.privatemembership.testing
+package org.wfanet.panelmatch.client.privatemembership
 
-import org.junit.runner.RunWith
-import org.junit.runners.JUnit4
-import org.wfanet.panelmatch.common.toByteString
+import com.google.common.hash.BloomFilter
+import com.google.common.hash.Funnels
+import kotlin.random.Random
 
-@RunWith(JUnit4::class)
-class PlaintextCreateQueriesWorkflowTest : AbstractCreateQueriesWorkflowTest() {
-  override val privateMembershipSerializedParameters = "some serialized parameters".toByteString()
-  override val privateMembershipCryptor =
-    PlaintextPrivateMembershipCryptor(privateMembershipSerializedParameters)
-  override val privateMembershipCryptorHelper = PlaintextPrivateMembershipCryptorHelper()
+/** Generates [0, upperBound) in random order. */
+@Suppress("UnstableApiUsage") // Guava "beta" is stable.
+fun iterateUniqueQueryIds(upperBound: Int): Iterator<Int> = iterator {
+  val seen = BloomFilter.create(Funnels.integerFunnel(), upperBound)
+
+  repeat(upperBound) {
+    val id = Random.nextInt(upperBound)
+    if (!seen.mightContain(id)) {
+      seen.put(id)
+      yield(id)
+    }
+  }
 }
