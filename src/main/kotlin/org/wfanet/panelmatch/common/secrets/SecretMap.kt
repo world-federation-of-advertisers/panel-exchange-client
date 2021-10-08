@@ -12,8 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package org.wfanet.panelmatch.common
+package org.wfanet.panelmatch.common.secrets
 
-interface SecretSet<T> {
-  operator fun contains(item: T): Boolean
+import com.google.protobuf.ByteString
+
+/**
+ * Key-value store abstraction from [String]s to sensitive [ByteString]s.
+ *
+ * Implementations should treat values as sensitive: they should not be logged and should be stored
+ * securely.
+ */
+interface SecretMap {
+  /** Returns the value associated with [key] -- or null if no value is associated. */
+  suspend fun get(key: String): ByteString?
 }

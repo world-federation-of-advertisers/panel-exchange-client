@@ -12,17 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package org.wfanet.panelmatch.common
+package org.wfanet.panelmatch.common.secrets
 
 import com.google.protobuf.ByteString
-import java.util.Base64
 
-/** Assuming the receiver is UTF8, converts it into a [ByteString]. */
-fun String.toByteString(): ByteString {
-  return ByteString.copyFromUtf8(this)
-}
-
-/** Converts the receiver to Base64. */
-fun ByteString.toBase64(): String {
-  return Base64.getEncoder().encodeToString(toByteArray())
+/** [SecretMap] that supports insertion. */
+interface MutableSecretMap : SecretMap {
+  /**
+   * Adds a mapping from [key] to [value].
+   *
+   * This must overwrite any previous value associated with [key].
+   */
+  suspend fun put(key: String, value: ByteString)
 }
