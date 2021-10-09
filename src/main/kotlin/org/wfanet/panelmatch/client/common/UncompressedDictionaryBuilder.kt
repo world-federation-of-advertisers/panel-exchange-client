@@ -36,7 +36,7 @@ class UncompressedDictionaryBuilder : DictionaryBuilder {
   }
 }
 
-private class NoOpCompressorFactory : CompressorFactory() {
+class NoOpCompressorFactory : CompressorFactory() {
   override fun build(dictionary: Dictionary): Compressor {
     return NoOpCompressor()
   }
