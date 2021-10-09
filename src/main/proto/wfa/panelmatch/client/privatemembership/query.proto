@@ -87,6 +87,10 @@ message EncryptedQueryResult {
   bytes serialized_encrypted_query_result = 2;
 }
 
+message EncryptedQueryResults {
+  repeated EncryptedQueryResult results = 1;
+}
+
 message EncryptedEventData {
   repeated bytes ciphertexts = 1;
 }

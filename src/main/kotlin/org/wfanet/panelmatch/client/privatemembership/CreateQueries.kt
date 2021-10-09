@@ -70,7 +70,7 @@ fun createQueries(
 
 data class CreateQueriesOutputs(
   val queryIdMap: PCollection<QueryIdAndPanelistKey>,
-  val encryptedQueryBundles: PCollection<EncryptedQueryBundle>
+  val encryptedQueryBundles: PCollection<KV<ShardId, EncryptedQueryBundle>>
 )
 
 private class CreateQueries(
@@ -91,7 +91,7 @@ private class CreateQueries(
 
   companion object {
     val queryIdAndJoinKeysTag = TupleTag<QueryIdAndPanelistKey>()
-    val encryptedQueryBundlesTag = TupleTag<EncryptedQueryBundle>()
+    val encryptedQueryBundlesTag = TupleTag<KV<ShardId, EncryptedQueryBundle>>()
   }
 
   /** Determines shard and bucket for a [JoinKey]. */
@@ -183,13 +183,11 @@ private class CreateQueries(
   private fun encryptQueries(
     unencryptedQueries: PCollection<KV<ShardId, List<FullUnencryptedQuery>>>,
     keys: PCollectionView<AsymmetricKeys>
-  ): PCollection<EncryptedQueryBundle> {
-    return unencryptedQueries
-      .values()
-      .apply(
-        "Encrypt Queries per Shard",
-        ParDo.of(EncryptQueriesFn(privateMembershipCryptor, keys)).withSideInputs(keys)
-      )
+  ): PCollection<KV<ShardId, EncryptedQueryBundle>> {
+    return unencryptedQueries.apply(
+      "Encrypt Queries per Shard",
+      ParDo.of(EncryptQueriesFn(privateMembershipCryptor, keys)).withSideInputs(keys)
+    )
   }
 }
 
@@ -210,7 +208,8 @@ private const val METRIC_NAMESPACE: String = "CreateQueries"
 private class EncryptQueriesFn(
   private val cryptor: PrivateMembershipCryptor,
   private val keys: PCollectionView<AsymmetricKeys>
-) : DoFn<List<@JvmWildcard FullUnencryptedQuery>, EncryptedQueryBundle>() {
+) :
+  DoFn<KV<ShardId, List<@JvmWildcard FullUnencryptedQuery>>, KV<ShardId, EncryptedQueryBundle>>() {
   /** Time (in nanos) to encrypt each query. */
   private val encryptionTimesDistribution =
     Metrics.distribution(METRIC_NAMESPACE, "encryption-times")
@@ -221,7 +220,7 @@ private class EncryptQueriesFn(
 
   @ProcessElement
   fun processElement(context: ProcessContext) {
-    val unencryptedQueries = context.element().map { it.unencryptedQuery }
+    val unencryptedQueries = context.element().value.map { it.unencryptedQuery }
 
     val (encryptedQueries, time) =
       withTime { cryptor.encryptQueries(unencryptedQueries, context.sideInput(keys)) }
@@ -237,7 +236,7 @@ private class EncryptQueriesFn(
       serializedEncryptedQueries = encryptedQueries
     }
 
-    context.output(bundle)
+    context.output(kvOf(context.element().key, bundle))
   }
 }
 

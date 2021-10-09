@@ -42,28 +42,31 @@ import org.apache.beam.sdk.options.ValueProvider
 import org.apache.beam.sdk.transforms.Create
 import org.apache.beam.sdk.values.KV
 import org.apache.beam.sdk.values.PCollection
+import org.wfanet.panelmatch.client.common.databaseEntryOf
 import org.wfanet.panelmatch.client.common.databaseKeyOf
 import org.wfanet.panelmatch.client.common.joinKeyOf
 import org.wfanet.panelmatch.client.common.panelistKeyOf
 import org.wfanet.panelmatch.client.common.plaintextOf
 import org.wfanet.panelmatch.client.privatemembership.CreateQueriesParameters
-import org.wfanet.panelmatch.client.privatemembership.DatabaseKey
+import org.wfanet.panelmatch.client.privatemembership.DatabaseEntry
 import org.wfanet.panelmatch.client.privatemembership.EncryptedQueryBundle
 import org.wfanet.panelmatch.client.privatemembership.EncryptedQueryResult
+import org.wfanet.panelmatch.client.privatemembership.EncryptedQueryResults
 import org.wfanet.panelmatch.client.privatemembership.EvaluateQueriesParameters
 import org.wfanet.panelmatch.client.privatemembership.JniPrivateMembership
 import org.wfanet.panelmatch.client.privatemembership.JniPrivateMembershipCryptor
 import org.wfanet.panelmatch.client.privatemembership.JniQueryEvaluator
 import org.wfanet.panelmatch.client.privatemembership.PanelistKeyAndJoinKey
-import org.wfanet.panelmatch.client.privatemembership.Plaintext
+import org.wfanet.panelmatch.client.privatemembership.ShardId
 import org.wfanet.panelmatch.client.privatemembership.createQueries
 import org.wfanet.panelmatch.client.privatemembership.evaluateQueries
 import org.wfanet.panelmatch.client.privatemembership.panelistKeyAndJoinKey
-import org.wfanet.panelmatch.common.beam.kvOf
+import org.wfanet.panelmatch.common.beam.flatMap
 import org.wfanet.panelmatch.common.beam.map
 import org.wfanet.panelmatch.common.beam.mapWithSideInput
 import org.wfanet.panelmatch.common.beam.parDo
 import org.wfanet.panelmatch.common.beam.toSingletonView
+import org.wfanet.panelmatch.common.beam.values
 import org.wfanet.panelmatch.common.crypto.AsymmetricKeys
 import org.wfanet.panelmatch.common.toByteString
 
@@ -150,20 +153,19 @@ fun main(args: Array<String>) {
         privateMembershipCryptor
       )
       .encryptedQueryBundles
+      .values()
 
   val queryEvaluator = JniQueryEvaluator(PRIVATE_MEMBERSHIP_PARAMETERS.toByteString())
 
-  val database: PCollection<KV<DatabaseKey, Plaintext>> =
-    pipeline.apply("Create Database Shards", Create.of(0 until SHARD_COUNT)).parDo(
+  val database: PCollection<DatabaseEntry> =
+    pipeline.apply("Create Database Shards", Create.of(0 until SHARD_COUNT)).flatMap(
         "Populate Database"
       ) { i ->
-      for (j in 0 until BUCKETS_PER_SHARD_COUNT / 2) {
+      (0 until BUCKETS_PER_SHARD_COUNT / 2).map { j ->
         val uniqueQueryId = i + j * SHARD_COUNT
-        yield(
-          kvOf(
-            databaseKeyOf(Random.nextLong()),
-            plaintextOf(makeFakeUserDataPayload(uniqueQueryId.toString()))
-          )
+        databaseEntryOf(
+          databaseKeyOf(Random.nextLong()),
+          plaintextOf(makeFakeUserDataPayload(uniqueQueryId.toString()))
         )
       }
     }
@@ -176,7 +178,7 @@ fun main(args: Array<String>) {
     )
 
   val serializedPublicKey = privateMembershipKeys.map { it.serializedPublicKey }.toSingletonView()
-  val results: PCollection<EncryptedQueryResult> =
+  val results: PCollection<KV<ShardId, EncryptedQueryResults>> =
     evaluateQueries(
       database,
       encryptedQueryBundles,
@@ -195,6 +197,7 @@ fun main(args: Array<String>) {
       )
 
   results
+    .flatMap("Extract Results") { it.value.resultsList }
     .mapWithSideInput(privateMembershipKeys.toSingletonView(), name = "Decrypt to TableRows") {
       encryptedQueryResult: EncryptedQueryResult,
       keys: AsymmetricKeys ->
