@@ -15,45 +15,39 @@
 package org.wfanet.panelmatch.client.exchangetasks
 
 import com.google.protobuf.ByteString
-import java.security.PrivateKey
-import java.security.cert.X509Certificate
+import com.google.protobuf.MessageLite
 import org.apache.beam.sdk.Pipeline
 import org.apache.beam.sdk.values.PCollection
+import org.wfanet.panelmatch.client.privatemembership.ReadAsSingletonPCollection
+import org.wfanet.panelmatch.client.privatemembership.ReadShardedData
+import org.wfanet.panelmatch.client.privatemembership.WriteShardedData
+import org.wfanet.panelmatch.client.storage.StorageFactory
 import org.wfanet.panelmatch.client.storage.VerifiedStorageClient.VerifiedBlob
 import org.wfanet.panelmatch.common.ShardedFileName
-import org.wfanet.panelmatch.common.beam.SignedFiles
 
 /** Base class for Apache Beam-running ExchangeTasks. */
 abstract class ApacheBeamTask : ExchangeTask {
-  protected abstract val uriPrefix: String
-  protected abstract val privateKey: PrivateKey
-  protected abstract val localCertificate: X509Certificate
+  protected abstract val storageFactory: StorageFactory
 
   protected val pipeline: Pipeline = Pipeline.create()
 
-  protected suspend fun readFromManifest(
+  protected suspend fun <T : MessageLite> readFromManifest(
     manifest: VerifiedBlob,
-    certificate: X509Certificate
-  ): PCollection<ByteString> {
+    prototype: T
+  ): PCollection<T> {
     val shardedFileName = manifest.toStringUtf8()
     return pipeline.apply(
       "Read $shardedFileName",
-      SignedFiles.read("$uriPrefix/$shardedFileName", certificate)
+      ReadShardedData(prototype, shardedFileName, storageFactory)
     )
   }
 
-  protected fun readFileAsSingletonPCollection(
-    fileName: String,
-    certificate: X509Certificate
-  ): PCollection<ByteString> {
-    return pipeline.apply("Read $fileName", SignedFiles.read("$uriPrefix/$fileName", certificate))
+  protected fun readSingleBlobAsPCollection(blobKey: String): PCollection<ByteString> {
+    return pipeline.apply("Read $blobKey", ReadAsSingletonPCollection(blobKey, storageFactory))
   }
 
   // TODO: consider also adding a helper to write non-sharded files.
-  protected fun PCollection<ByteString>.write(shardedFileName: ShardedFileName) {
-    apply(
-      "Write ${shardedFileName.spec}",
-      SignedFiles.write("$uriPrefix/${shardedFileName.spec}", privateKey, localCertificate)
-    )
+  protected fun <T : MessageLite> PCollection<T>.write(shardedFileName: ShardedFileName) {
+    apply("Write ${shardedFileName.spec}", WriteShardedData(shardedFileName.spec, storageFactory))
   }
 }
