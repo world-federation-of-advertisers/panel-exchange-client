@@ -18,6 +18,7 @@ import java.security.cert.X509Certificate
 import kotlinx.coroutines.runBlocking
 import org.wfanet.measurement.common.logAndSuppressExceptionSuspend
 import org.wfanet.measurement.common.throttler.Throttler
+import org.wfanet.panelmatch.client.common.BrotliCompressorFactory
 import org.wfanet.panelmatch.client.exchangetasks.ExchangeTaskMapperForJoinKeyExchange
 import org.wfanet.panelmatch.client.launcher.ApiClient
 import org.wfanet.panelmatch.client.launcher.CoroutineLauncher
@@ -26,6 +27,7 @@ import org.wfanet.panelmatch.client.launcher.ExchangeStepValidator
 import org.wfanet.panelmatch.client.launcher.ExchangeTaskExecutor
 import org.wfanet.panelmatch.client.launcher.Identity
 import org.wfanet.panelmatch.client.privatemembership.JniPrivateMembershipCryptor
+import org.wfanet.panelmatch.client.privatemembership.JniQueryResultsDecryptor
 import org.wfanet.panelmatch.client.storage.VerifiedStorageClient
 import org.wfanet.panelmatch.common.Timeout
 import org.wfanet.panelmatch.common.crypto.JniDeterministicCommutativeCipher
@@ -42,6 +44,9 @@ abstract class ExchangeWorkflowDaemon : Runnable {
 
   // TODO derive `localCertificate`
   abstract val localCertificate: X509Certificate
+
+  // TODO derive `partnerCertificate`
+  abstract val partnerCertificate: X509Certificate
 
   // TODO derive `uriPrefix`
   abstract val uriPrefix: String
@@ -61,9 +66,12 @@ abstract class ExchangeWorkflowDaemon : Runnable {
   override fun run() {
     val exchangeTaskMapper =
       ExchangeTaskMapperForJoinKeyExchange(
+        compressorFactory = BrotliCompressorFactory(),
         getDeterministicCommutativeCryptor = ::JniDeterministicCommutativeCipher,
         getPrivateMembershipCryptor = ::JniPrivateMembershipCryptor,
+        getQueryResultsDecryptor = ::JniQueryResultsDecryptor,
         localCertificate = localCertificate,
+        partnerCertificate = partnerCertificate,
         privateStorage = privateStorage,
         uriPrefix = uriPrefix
       )
