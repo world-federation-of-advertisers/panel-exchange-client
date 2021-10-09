@@ -34,10 +34,10 @@ import org.wfanet.measurement.storage.testing.InMemoryStorageClient
 import org.wfanet.panelmatch.client.exchangetasks.ExchangeTask
 import org.wfanet.panelmatch.client.launcher.testing.FakeTimeout
 import org.wfanet.panelmatch.client.launcher.testing.buildExchangeStep
-import org.wfanet.panelmatch.common.createBlob
+import org.wfanet.panelmatch.common.storage.createBlob
+import org.wfanet.panelmatch.common.storage.toStringUtf8
 import org.wfanet.panelmatch.common.testing.runBlockingTest
 import org.wfanet.panelmatch.common.toByteString
-import org.wfanet.panelmatch.common.toStringUtf8
 
 @RunWith(JUnit4::class)
 class ExchangeTaskExecutorTest {

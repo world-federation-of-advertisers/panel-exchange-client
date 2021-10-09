@@ -12,24 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-syntax = "proto3";
+package org.wfanet.panelmatch.client.storage
 
-package wfa.panelmatch.client.privatemembership;
+import java.io.File
+import org.wfanet.measurement.storage.StorageClient
+import org.wfanet.measurement.storage.filesystem.FileSystemStorageClient
 
-import "wfa/panelmatch/client/privatemembership/query.proto";
-
-option java_package = "org.wfanet.panelmatch.client.privatemembership";
-option java_multiple_files = true;
-
-message DatabaseKey {
-  fixed64 id = 1;
-}
-
-message DatabaseEntry {
-  DatabaseKey database_key = 1;
-  Plaintext plaintext = 2;
-}
-
-message DatabaseEntries {
-  repeated DatabaseEntry entries = 1;
+class FileSystemStorageFactory(private val baseDir: String) : StorageFactory {
+  override fun build(): StorageClient {
+    return FileSystemStorageClient(File(baseDir))
+  }
 }

@@ -19,7 +19,6 @@ import java.security.cert.X509Certificate
 import kotlinx.coroutines.runBlocking
 import org.wfanet.measurement.common.logAndSuppressExceptionSuspend
 import org.wfanet.measurement.common.throttler.Throttler
-import org.wfanet.measurement.storage.StorageClient
 import org.wfanet.panelmatch.client.exchangetasks.ExchangeTaskMapperForJoinKeyExchange
 import org.wfanet.panelmatch.client.launcher.ApiClient
 import org.wfanet.panelmatch.client.launcher.CoroutineLauncher
@@ -28,7 +27,7 @@ import org.wfanet.panelmatch.client.launcher.ExchangeStepValidator
 import org.wfanet.panelmatch.client.launcher.ExchangeTaskExecutor
 import org.wfanet.panelmatch.client.launcher.Identity
 import org.wfanet.panelmatch.client.privatemembership.JniPrivateMembershipCryptor
-import org.wfanet.panelmatch.client.storage.VerifiedStorageClient
+import org.wfanet.panelmatch.client.storage.StorageFactory
 import org.wfanet.panelmatch.common.Timeout
 import org.wfanet.panelmatch.common.crypto.JniDeterministicCommutativeCipher
 import org.wfanet.panelmatch.common.secrets.SecretMap
@@ -48,8 +47,8 @@ abstract class ExchangeWorkflowDaemon : Runnable {
   // TODO derive `uriPrefix`
   abstract val uriPrefix: String
 
-  /** [VerifiedStorageClient] for writing to local (non-shared) storage. */
-  abstract val privateStorage: StorageClient
+  /** [StorageFactory] for writing to local (non-shared) storage. */
+  abstract val privateStorageFactory: StorageFactory
 
   /** [SecretMap] from RecurringExchange ID to serialized ExchangeWorkflow. */
   abstract val validExchangeWorkflows: SecretMap
@@ -64,14 +63,14 @@ abstract class ExchangeWorkflowDaemon : Runnable {
   abstract val privateKey: PrivateKey
 
   override fun run() {
+    val privateStorage = privateStorageFactory.build()
+
     val exchangeTaskMapper =
       ExchangeTaskMapperForJoinKeyExchange(
         getDeterministicCommutativeCryptor = ::JniDeterministicCommutativeCipher,
         getPrivateMembershipCryptor = ::JniPrivateMembershipCryptor,
-        localCertificate = localCertificate,
-        privateStorage = privateStorage,
-        uriPrefix = uriPrefix,
-        privateKey = privateKey
+        privateStorage = privateStorageFactory,
+        inputTaskThrottler = throttler
       )
 
     val stepExecutor =
