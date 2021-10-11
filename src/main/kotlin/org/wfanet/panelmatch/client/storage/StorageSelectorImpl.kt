@@ -16,8 +16,6 @@ package org.wfanet.panelmatch.client.storage
 
 import com.google.cloud.storage.StorageOptions
 import com.google.protobuf.ByteString
-import java.security.PrivateKey
-import java.security.cert.X509Certificate
 import org.wfanet.measurement.api.v2alpha.ExchangeKey
 import org.wfanet.measurement.api.v2alpha.ExchangeStepAttemptKey
 import org.wfanet.measurement.api.v2alpha.ExchangeWorkflow
@@ -34,46 +32,25 @@ class StorageSelectorImpl(
   private val defaultPrivateStorageInfo: ByteString,
   private val certificateManager: CertificateManager,
   private val ownerName: String,
-  private val ownerCertificateResourceName: String
 ) : StorageSelector {
-
-  private fun getExchangeName(attemptKey: ExchangeStepAttemptKey): String {
-    return ExchangeKey(attemptKey.recurringExchangeId, attemptKey.exchangeId).toName()
-  }
 
   // TODO: refactor this to return either a regular StorageClient or non-verified wrapper (as we
   //  still want support for automatic prefixes and batch I/O).
-  override suspend fun getPrivateStorage(
-    attemptKey: ExchangeStepAttemptKey
-  ): VerifiedStorageClient {
+  override suspend fun getPrivateStorage(attemptKey: ExchangeStepAttemptKey): StorageClient {
 
     val storageDetails: StorageDetails =
       StorageDetails.parseFrom(
         privateStorageInfo[attemptKey.recurringExchangeId] ?: defaultPrivateStorageInfo
       )
 
-    val (ownedCertificate, ownedCertificateResourceName) =
-      certificateManager.getCertificate(
-        ExchangeKey(attemptKey.recurringExchangeId, attemptKey.exchangeId),
-        ownerName,
-        ownerCertificateResourceName
-      )
-
-    return getVerifiedStorageClient(
-      storageDetails,
-      getExchangeName(attemptKey),
-      ownedCertificate,
-      ownedCertificate,
-      certificateManager.getExchangePrivateKey(
-        ExchangeKey(attemptKey.recurringExchangeId, attemptKey.exchangeId)
-      )
-    )
+    return getStorageClient(storageDetails)
   }
 
   override suspend fun getSharedStorage(
     storageType: ExchangeWorkflow.StorageType,
     attemptKey: ExchangeStepAttemptKey,
-    partnerName: String
+    partnerName: String,
+    ownerCertificateResourceName: String?
   ): VerifiedStorageClient {
     val storageDetails: StorageDetails =
       requireNotNull(StorageDetails.parseFrom(sharedStorageInfo[attemptKey.recurringExchangeId]))
@@ -83,28 +60,11 @@ class StorageSelectorImpl(
       else -> throw IllegalArgumentException("No supported shared storage type specified.")
     }
 
-    val (ownedCertificate, ownedCertificateResourceName) =
-      certificateManager.getCertificate(
-        ExchangeKey(attemptKey.recurringExchangeId, attemptKey.exchangeId),
-        ownerName,
-        ownerCertificateResourceName
-      )
-    // TODO: Refactor storage client to not require a partner cert and to pass other information
-    val (partnerCertificate, partnerCertificateResourceName) =
-      certificateManager.getCertificate(
-        ExchangeKey(attemptKey.recurringExchangeId, attemptKey.exchangeId),
-        ownerName,
-        ownerCertificateResourceName
-      )
-
     return getVerifiedStorageClient(
       storageDetails,
-      getExchangeName(attemptKey),
-      partnerCertificate,
-      ownedCertificate,
-      certificateManager.getExchangePrivateKey(
-        ExchangeKey(attemptKey.recurringExchangeId, attemptKey.exchangeId)
-      )
+      ExchangeKey(attemptKey.recurringExchangeId, attemptKey.exchangeId),
+      partnerName,
+      ownerCertificateResourceName
     )
   }
 
@@ -120,19 +80,20 @@ class StorageSelectorImpl(
     )
   }
 
-  private fun getVerifiedStorageClient(
+  private suspend fun getVerifiedStorageClient(
     storageDetails: StorageDetails,
-    prefix: String,
-    readCertificate: X509Certificate,
-    writeCertificate: X509Certificate,
-    privateKey: PrivateKey
+    exchangeKey: ExchangeKey,
+    partnerName: String,
+    ownerCertificateResourceName: String?
   ): VerifiedStorageClient {
+
     return VerifiedStorageClient(
       storageClient = getStorageClient(storageDetails),
-      exchangePrefix = prefix,
-      readCertificate,
-      writeCertificate,
-      privateKey
+      exchangeKey = exchangeKey,
+      ownerName,
+      partnerName,
+      ownerCertificateResourceName,
+      certificateManager
     )
   }
 

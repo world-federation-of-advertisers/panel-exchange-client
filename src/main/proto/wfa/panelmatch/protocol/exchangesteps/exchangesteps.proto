@@ -24,3 +24,8 @@ option java_multiple_files = true;
 message SharedInputs {
   repeated bytes data = 1;
 }
+
+message NamedSignature {
+  bytes signature = 1;
+  string name = 2;
+}
