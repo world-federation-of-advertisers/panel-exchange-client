@@ -20,23 +20,27 @@ import java.lang.Exception
 import java.security.PrivateKey
 import java.security.cert.X509Certificate
 import kotlinx.coroutines.flow.Flow
+import org.wfanet.measurement.api.v2alpha.ExchangeKey
 import org.wfanet.measurement.common.asBufferedFlow
 import org.wfanet.measurement.common.crypto.signFlow
 import org.wfanet.measurement.common.crypto.verifySignedFlow
 import org.wfanet.measurement.common.flatten
 import org.wfanet.measurement.storage.StorageClient
 import org.wfanet.measurement.storage.StorageClient.Blob
-import org.wfanet.measurement.storage.createBlob
 import org.wfanet.measurement.storage.read
+import org.wfanet.panelmatch.common.CertificateManager
+import org.wfanet.panelmatch.protocol.NamedSignature
+import org.wfanet.panelmatch.protocol.namedSignature
 
 class StorageNotFoundException(inputKey: String) : Exception("$inputKey not found")
 
 class VerifiedStorageClient(
   private val storageClient: StorageClient,
-  private val exchangePrefix: String,
-  private val readCert: X509Certificate,
-  private val writeCert: X509Certificate,
-  val privateKey: PrivateKey
+  private val exchangeKey: ExchangeKey,
+  private val ownerName: String,
+  private val partnerName: String,
+  private val ownerCertificateName: String?,
+  private val certificateManager: CertificateManager,
 ) {
 
   val defaultBufferSizeBytes: Int = storageClient.defaultBufferSizeBytes
@@ -45,7 +49,7 @@ class VerifiedStorageClient(
   private fun getSigPath(blobKey: String): String = "${blobKey}_signature"
 
   /** Provides a unique per-exchange prefix to prevent collision between multiple workflows */
-  private fun prefixBlobKey(blobKey: String): String = "$exchangePrefix/$blobKey"
+  private fun prefixBlobKey(blobKey: String): String = "${exchangeKey.toName()}/$blobKey"
 
   /**
    * Transforms values of [inputLabels] into the underlying blobs.
@@ -100,11 +104,14 @@ class VerifiedStorageClient(
       storageClient.getBlob(getSigPath(prefixedBlobKey))
         ?: throw StorageNotFoundException(getSigPath(prefixedBlobKey))
 
+    val namedSignature =
+      NamedSignature.parseFrom(signatureBlob.read(defaultBufferSizeBytes).flatten())
+
     return VerifiedBlob(
       sourceBlob,
-      signatureBlob.read(defaultBufferSizeBytes).flatten(),
+      namedSignature.signature,
       blobKey,
-      readCert
+      certificateManager.getCertificate(exchangeKey, partnerName, namedSignature.name).first
     )
   }
 
@@ -116,12 +123,26 @@ class VerifiedStorageClient(
   @Suppress("EXPERIMENTAL_API_USAGE")
   suspend fun createBlob(blobKey: String, content: Flow<ByteString>): VerifiedBlob {
     val prefixedBlobKey = prefixBlobKey(blobKey)
-    val (signedContent, deferredSig) = privateKey.signFlow(writeCert, content)
+    val privateKey = certificateManager.getExchangePrivateKey(exchangeKey)
+    val ownerCertificate =
+      certificateManager.getCertificate(
+        exchangeKey,
+        ownerName,
+        requireNotNull(ownerCertificateName)
+      )
+    val (signedContent, deferredSig) = privateKey.signFlow(ownerCertificate.first, content)
     val sourceBlob = storageClient.createBlob(blobKey = prefixedBlobKey, content = signedContent)
 
-    val signature = deferredSig.getCompleted()
-    storageClient.createBlob(blobKey = getSigPath(prefixedBlobKey), content = signature)
-    return VerifiedBlob(sourceBlob, signature, blobKey, writeCert)
+    val signatureVal = deferredSig.getCompleted()
+    val namedSignature = namedSignature {
+      name = ownerCertificateName
+      signature = signatureVal
+    }
+    storageClient.createBlob(
+      blobKey = getSigPath(prefixedBlobKey),
+      content = namedSignature.toByteString().asBufferedFlow(defaultBufferSizeBytes)
+    )
+    return VerifiedBlob(sourceBlob, signatureVal, blobKey, ownerCertificate.first)
   }
 
   suspend fun createBlob(blobKey: String, content: ByteString): VerifiedBlob =
@@ -168,3 +189,43 @@ class VerifiedStorageClient(
  * [ByteString].
  */
 suspend fun Blob.toByteString(): ByteString = this.read().flatten()
+
+/** Writes output [data] based on [outputLabels]. */
+suspend fun StorageClient.batchWrite(
+  outputLabels: Map<String, String>,
+  data: Map<String, Flow<ByteString>>,
+  exchangeKey: ExchangeKey
+) {
+  // create an immutable copy of outputLabels to avoid race conditions if the underlying label map
+  // is changed during execution.
+  val immutableOutputs: ImmutableMap<String, String> = ImmutableMap.copyOf(outputLabels)
+  require(immutableOutputs.values.toSet().size == immutableOutputs.size) {
+    "Cannot write to the same output location twice"
+  }
+  for ((key, value) in immutableOutputs) {
+    val payload = requireNotNull(data[key]) { "Key $key not found in ${data.keys}" }
+    createBlob(blobKey = prefixBlobKey(value, exchangeKey), content = payload)
+  }
+}
+
+/**
+ * Transforms values of [inputLabels] into the underlying blobs.
+ *
+ * If any blob can't be found, it throws [StorageNotFoundException].
+ *
+ * All files read are verified against the appropriate [X509Certificate] to validate that the files
+ * came from the expected source.
+ */
+@Throws(StorageNotFoundException::class)
+suspend fun StorageClient.batchRead(
+  inputLabels: Map<String, String>,
+  exchangeKey: ExchangeKey
+): Map<String, StorageClient.Blob> {
+  return inputLabels.mapValues { entry ->
+    requireNotNull(getBlob(blobKey = prefixBlobKey(entry.value, exchangeKey)))
+  }
+}
+
+/** Provides a unique per-exchange prefix to prevent collision between multiple workflows */
+private fun prefixBlobKey(blobKey: String, exchangeKey: ExchangeKey): String =
+  "${exchangeKey.toName()}/$blobKey"
