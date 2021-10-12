@@ -27,5 +27,6 @@ message SharedInputs {
 
 message NamedSignature {
   bytes signature = 1;
-  string name = 2;
+  // The API resource name of the certificate that provided this signature
+  string certificate_name = 2;
 }
