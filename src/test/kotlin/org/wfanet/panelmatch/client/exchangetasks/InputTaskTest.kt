@@ -43,6 +43,7 @@ import org.wfanet.panelmatch.client.launcher.testing.MP_0_SECRET_KEY
 import org.wfanet.panelmatch.client.launcher.testing.inputStep
 import org.wfanet.panelmatch.client.storage.testing.makeTestVerifiedStorageClient
 import org.wfanet.panelmatch.common.testing.runBlockingTest
+import org.wfanet.panelmatch.protocol.namedSignature
 
 @RunWith(JUnit4::class)
 class InputTaskTest {
@@ -56,8 +57,13 @@ class InputTaskTest {
   private val secretKeySourceBlobSignature =
     mock<StorageClient.Blob> {
       on { read(any()) } doReturn
-        readPrivateKey(FIXED_SERVER_KEY_FILE, KEY_ALGORITHM)
-          .sign(readCertificate(FIXED_SERVER_CERT_PEM_FILE), MP_0_SECRET_KEY)
+        namedSignature {
+            signature =
+              readPrivateKey(FIXED_SERVER_KEY_FILE, KEY_ALGORITHM)
+                .sign(readCertificate(FIXED_SERVER_CERT_PEM_FILE), MP_0_SECRET_KEY)
+            certificateName = "FIXED_SERVER_CERT"
+          }
+          .toByteString()
           .asBufferedFlow(1024)
     } // MP_0_SECRET_KEY
 
@@ -73,37 +79,27 @@ class InputTaskTest {
     val step = inputStep("input" to "mp-crypto-key")
     val task = InputTask(step, throttler, storage)
 
-    whenever(underlyingStorage.getBlob("recurringExchanges/test/exchanges/prefix/mp-crypto-key"))
+    whenever(underlyingStorage.getBlob("mp-crypto-key"))
       .thenReturn(null)
       .thenReturn(null)
       .thenReturn(null)
       .thenReturn(null)
       .thenReturn(secretKeySourceBlob)
 
-    whenever(
-        underlyingStorage.getBlob(
-          "recurringExchanges/test/exchanges/prefix/mp-crypto-key_signature"
-        )
-      )
+    whenever(underlyingStorage.getBlob("mp-crypto-key_signature"))
       .thenReturn(secretKeySourceBlobSignature)
 
     val result: Map<String, Flow<ByteString>> = task.execute(emptyMap())
 
     assertThat(result).isEmpty()
 
-    verify(underlyingStorage, times(5))
-      .getBlob("recurringExchanges/test/exchanges/prefix/mp-crypto-key")
-    verify(underlyingStorage, times(1))
-      .getBlob("recurringExchanges/test/exchanges/prefix/mp-crypto-key_signature")
+    verify(underlyingStorage, times(5)).getBlob("mp-crypto-key")
+    verify(underlyingStorage, times(1)).getBlob("mp-crypto-key_signature")
     verify(underlyingStorage, times(1)).defaultBufferSizeBytes
   }
 
   @Test
   fun `invalid inputs`() = runBlockingTest {
-    whenever(underlyingStorage.getBlob("test/prefix/b")).thenReturn(secretKeySourceBlob)
-    whenever(underlyingStorage.getBlob("test/prefix/b_signature"))
-      .thenReturn(secretKeySourceBlobSignature)
-
     suspend fun runTest(step: ExchangeWorkflow.Step) {
       if (step.inputLabelsCount == 0 && step.outputLabelsCount == 1) {
         // Expect no failuress
