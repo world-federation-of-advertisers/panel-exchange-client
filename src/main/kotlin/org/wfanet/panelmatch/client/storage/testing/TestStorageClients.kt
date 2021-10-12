@@ -15,32 +15,10 @@
 package org.wfanet.panelmatch.client.storage.testing
 
 import org.wfanet.measurement.api.v2alpha.ExchangeKey
-import org.wfanet.measurement.api.v2alpha.ExchangeStepAttemptKey
-import org.wfanet.measurement.api.v2alpha.ExchangeWorkflow
 import org.wfanet.measurement.storage.StorageClient
 import org.wfanet.measurement.storage.testing.InMemoryStorageClient
-import org.wfanet.panelmatch.client.storage.StorageSelector
 import org.wfanet.panelmatch.client.storage.VerifiedStorageClient
 import org.wfanet.panelmatch.common.testing.TestCertificateManager
-
-class TestStorageSelector(private val underlyingClient: StorageClient = InMemoryStorageClient()) :
-  StorageSelector {
-
-  override suspend fun getPrivateStorage(
-    attemptKey: ExchangeStepAttemptKey,
-  ): StorageClient {
-    return underlyingClient
-  }
-
-  override suspend fun getSharedStorage(
-    storageType: ExchangeWorkflow.StorageType,
-    attemptKey: ExchangeStepAttemptKey,
-    partnerName: String,
-    ownerCertificateResourceName: String?
-  ): VerifiedStorageClient {
-    return makeTestVerifiedStorageClient(underlyingClient)
-  }
-}
 
 fun makeTestVerifiedStorageClient(
   underlyingClient: StorageClient = InMemoryStorageClient()

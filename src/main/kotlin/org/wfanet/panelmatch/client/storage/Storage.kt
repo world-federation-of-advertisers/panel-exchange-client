@@ -27,6 +27,7 @@ import org.wfanet.measurement.common.crypto.verifySignedFlow
 import org.wfanet.measurement.common.flatten
 import org.wfanet.measurement.storage.StorageClient
 import org.wfanet.measurement.storage.StorageClient.Blob
+import org.wfanet.measurement.storage.createBlob
 import org.wfanet.measurement.storage.read
 import org.wfanet.panelmatch.common.CertificateManager
 import org.wfanet.panelmatch.protocol.NamedSignature
@@ -44,6 +45,11 @@ class VerifiedStorageClient(
 ) {
 
   val defaultBufferSizeBytes: Int = storageClient.defaultBufferSizeBytes
+
+  // TODO: This is just wildly a bad idea and I'm only keeping it here to reduce the number of files
+  //   I'm changing. I will immediately rework this in a following PR once StorageSelector is
+  //   implemented. - jmolle
+  val privateKey: PrivateKey = certificateManager.getExchangePrivateKey(exchangeKey)
 
   /** A helper function to get the implicit path for a input's signature. */
   private fun getSigPath(blobKey: String): String = "${blobKey}_signature"
@@ -100,19 +106,22 @@ class VerifiedStorageClient(
     val prefixedBlobKey = prefixBlobKey(blobKey)
     val sourceBlob: Blob =
       storageClient.getBlob(prefixedBlobKey) ?: throw StorageNotFoundException(blobKey)
-    val signatureBlob: Blob =
-      storageClient.getBlob(getSigPath(prefixedBlobKey))
-        ?: throw StorageNotFoundException(getSigPath(prefixedBlobKey))
-
-    val namedSignature =
-      NamedSignature.parseFrom(signatureBlob.read(defaultBufferSizeBytes).flatten())
+    val namedSignature = parseSignature(prefixedBlobKey)
 
     return VerifiedBlob(
       sourceBlob,
       namedSignature.signature,
       blobKey,
-      certificateManager.getCertificate(exchangeKey, partnerName, namedSignature.name).first
+      certificateManager.getCertificate(exchangeKey, partnerName, namedSignature.certificateName)
     )
+  }
+
+  private suspend fun parseSignature(blobKey: String): NamedSignature {
+    val signatureBlob: Blob =
+      storageClient.getBlob(getSigPath(blobKey))
+        ?: throw StorageNotFoundException(getSigPath(blobKey))
+
+    return NamedSignature.parseFrom(signatureBlob.read(defaultBufferSizeBytes).flatten())
   }
 
   /**
@@ -130,19 +139,19 @@ class VerifiedStorageClient(
         ownerName,
         requireNotNull(ownerCertificateName)
       )
-    val (signedContent, deferredSig) = privateKey.signFlow(ownerCertificate.first, content)
+    val (signedContent, deferredSig) = privateKey.signFlow(ownerCertificate, content)
     val sourceBlob = storageClient.createBlob(blobKey = prefixedBlobKey, content = signedContent)
 
     val signatureVal = deferredSig.getCompleted()
     val namedSignature = namedSignature {
-      name = ownerCertificateName
+      certificateName = ownerCertificateName
       signature = signatureVal
     }
     storageClient.createBlob(
       blobKey = getSigPath(prefixedBlobKey),
-      content = namedSignature.toByteString().asBufferedFlow(defaultBufferSizeBytes)
+      content = namedSignature.toByteString()
     )
-    return VerifiedBlob(sourceBlob, signatureVal, blobKey, ownerCertificate.first)
+    return VerifiedBlob(sourceBlob, signatureVal, blobKey, ownerCertificate)
   }
 
   suspend fun createBlob(blobKey: String, content: ByteString): VerifiedBlob =
