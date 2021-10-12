@@ -19,6 +19,7 @@ import com.google.protobuf.ByteString
 import java.lang.Exception
 import java.security.PrivateKey
 import java.security.cert.X509Certificate
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import org.wfanet.measurement.api.v2alpha.ExchangeKey
 import org.wfanet.measurement.common.asBufferedFlow
@@ -27,8 +28,8 @@ import org.wfanet.measurement.common.crypto.verifySignedFlow
 import org.wfanet.measurement.common.flatten
 import org.wfanet.measurement.storage.StorageClient
 import org.wfanet.measurement.storage.StorageClient.Blob
-import org.wfanet.measurement.storage.read
-import org.wfanet.panelmatch.common.CertificateManager
+import org.wfanet.measurement.storage.createBlob
+import org.wfanet.panelmatch.common.certificates.CertificateManager
 import org.wfanet.panelmatch.protocol.NamedSignature
 import org.wfanet.panelmatch.protocol.namedSignature
 
@@ -43,13 +44,16 @@ class VerifiedStorageClient(
   private val certificateManager: CertificateManager,
 ) {
 
+  // TODO: This is just wildly a bad idea and I'm only keeping it here to reduce the number of files
+  //   I'm changing. I will immediately rework this in a following PR once StorageSelector is
+  //   implemented. - jmolle
+  suspend fun getPrivateKey(): PrivateKey = certificateManager.getExchangePrivateKey(exchangeKey)
+
   val defaultBufferSizeBytes: Int = storageClient.defaultBufferSizeBytes
+
 
   /** A helper function to get the implicit path for a input's signature. */
   private fun getSigPath(blobKey: String): String = "${blobKey}_signature"
-
-  /** Provides a unique per-exchange prefix to prevent collision between multiple workflows */
-  private fun prefixBlobKey(blobKey: String): String = "${exchangeKey.toName()}/$blobKey"
 
   /**
    * Transforms values of [inputLabels] into the underlying blobs.
@@ -97,22 +101,23 @@ class VerifiedStorageClient(
    */
   @Throws(StorageNotFoundException::class)
   suspend fun getBlob(blobKey: String): VerifiedBlob {
-    val prefixedBlobKey = prefixBlobKey(blobKey)
-    val sourceBlob: Blob =
-      storageClient.getBlob(prefixedBlobKey) ?: throw StorageNotFoundException(blobKey)
-    val signatureBlob: Blob =
-      storageClient.getBlob(getSigPath(prefixedBlobKey))
-        ?: throw StorageNotFoundException(getSigPath(prefixedBlobKey))
-
-    val namedSignature =
-      NamedSignature.parseFrom(signatureBlob.read(defaultBufferSizeBytes).flatten())
+    val sourceBlob: Blob = storageClient.getBlob(blobKey) ?: throw StorageNotFoundException(blobKey)
+    val namedSignature = parseSignature(blobKey)
 
     return VerifiedBlob(
       sourceBlob,
       namedSignature.signature,
       blobKey,
-      certificateManager.getCertificate(exchangeKey, partnerName, namedSignature.name).first
+      certificateManager.getCertificate(exchangeKey, partnerName, namedSignature.certificateName)
     )
+  }
+
+  private suspend fun parseSignature(blobKey: String): NamedSignature {
+    val signatureBlob: Blob =
+      storageClient.getBlob(getSigPath(blobKey))
+        ?: throw StorageNotFoundException(getSigPath(blobKey))
+
+    return NamedSignature.parseFrom(signatureBlob.read(defaultBufferSizeBytes).flatten())
   }
 
   /**
@@ -122,7 +127,6 @@ class VerifiedStorageClient(
    */
   @Suppress("EXPERIMENTAL_API_USAGE")
   suspend fun createBlob(blobKey: String, content: Flow<ByteString>): VerifiedBlob {
-    val prefixedBlobKey = prefixBlobKey(blobKey)
     val privateKey = certificateManager.getExchangePrivateKey(exchangeKey)
     val ownerCertificate =
       certificateManager.getCertificate(
@@ -130,19 +134,16 @@ class VerifiedStorageClient(
         ownerName,
         requireNotNull(ownerCertificateName)
       )
-    val (signedContent, deferredSig) = privateKey.signFlow(ownerCertificate.first, content)
-    val sourceBlob = storageClient.createBlob(blobKey = prefixedBlobKey, content = signedContent)
+    val (signedContent, deferredSig) = privateKey.signFlow(ownerCertificate, content)
+    val sourceBlob = storageClient.createBlob(blobKey = blobKey, content = signedContent)
 
     val signatureVal = deferredSig.getCompleted()
     val namedSignature = namedSignature {
-      name = ownerCertificateName
+      certificateName = ownerCertificateName
       signature = signatureVal
     }
-    storageClient.createBlob(
-      blobKey = getSigPath(prefixedBlobKey),
-      content = namedSignature.toByteString().asBufferedFlow(defaultBufferSizeBytes)
-    )
-    return VerifiedBlob(sourceBlob, signatureVal, blobKey, ownerCertificate.first)
+    storageClient.createBlob(blobKey = getSigPath(blobKey), content = namedSignature.toByteString())
+    return VerifiedBlob(sourceBlob, signatureVal, blobKey, ownerCertificate)
   }
 
   suspend fun createBlob(blobKey: String, content: ByteString): VerifiedBlob =
