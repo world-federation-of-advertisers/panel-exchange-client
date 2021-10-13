@@ -43,8 +43,6 @@ class ExchangeTaskMapperForJoinKeyExchange(
   private val privateKey: PrivateKey,
   // TODO remove `partnerCertificate` from constructor
   private val partnerCertificate: X509Certificate,
-  // TODO remove `partnerCertificate` from constructor
-  private val partnerCertificate: X509Certificate,
   private val throttler: Throttler =
     MinimumIntervalThrottler(Clock.systemUTC(), Duration.ofMillis(100)),
   // TODO remove `uriPrefix` from constructor
