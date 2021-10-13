@@ -9,6 +9,7 @@ spanner_emulator_test(
     ],
     test_class = "org.wfanet.panelmatch.integration.InProcessPanelMatchIntegrationTest",
     deps = [
+        "//src/main/kotlin/org/wfanet/panelmatch/client/deploy",
         "//src/main/kotlin/org/wfanet/panelmatch/client/launcher",
         "//src/main/proto/wfa/measurement/api/v2alpha:exchange_step_attempt_kt_jvm_proto",
         "//src/main/proto/wfa/measurement/api/v2alpha:exchange_workflow_kt_jvm_proto",
