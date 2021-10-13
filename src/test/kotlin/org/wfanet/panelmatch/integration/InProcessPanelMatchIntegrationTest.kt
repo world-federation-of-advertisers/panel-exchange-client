@@ -42,6 +42,7 @@ import org.wfanet.measurement.common.testing.chainRulesSequentially
 import org.wfanet.measurement.common.toProtoDate
 import org.wfanet.measurement.integration.deploy.gcloud.buildKingdomSpannerEmulatorDatabaseRule
 import org.wfanet.measurement.integration.deploy.gcloud.buildSpannerInProcessKingdom
+import org.wfanet.panelmatch.client.deploy.ExchangeWorkflowDaemonFromTest
 import org.wfanet.panelmatch.client.launcher.ApiClient.ClaimedExchangeStep
 import org.wfanet.panelmatch.client.launcher.GrpcApiClient
 import org.wfanet.panelmatch.client.launcher.Identity
@@ -114,6 +115,13 @@ class InProcessPanelMatchIntegrationTest {
     val modelProviderIdentity =
       Identity(ModelProviderKey.fromName(modelProviderKey)!!.modelProviderId, ExchangeWorkflow.Party.MODEL_PROVIDER)
     val apiClient = makeClient(modelProviderIdentity, modelProviderKey)
+
+    val daemon = ExchangeWorkflowDaemonFromTest(
+      channel = inProcessKingdom.publicApiChannel,
+
+    )
+
+
     val job = apiClient.claimJob()
     println(job)
 
