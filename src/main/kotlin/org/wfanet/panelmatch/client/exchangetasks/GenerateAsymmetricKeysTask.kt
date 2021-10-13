@@ -17,6 +17,7 @@ package org.wfanet.panelmatch.client.exchangetasks
 import com.google.protobuf.ByteString
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
+import org.wfanet.measurement.storage.StorageClient
 import org.wfanet.panelmatch.client.logger.addToTaskLog
 import org.wfanet.panelmatch.client.logger.loggerFor
 import org.wfanet.panelmatch.client.storage.VerifiedStorageClient.VerifiedBlob
@@ -27,7 +28,7 @@ private const val PUBLIC_KEY_LABEL = "public-key"
 
 class GenerateAsymmetricKeysTask(private val generateKeys: () -> AsymmetricKeys) : ExchangeTask {
 
-  override suspend fun execute(input: Map<String, VerifiedBlob>): Map<String, Flow<ByteString>> {
+  override suspend fun execute(input: Map<String, StorageClient.Blob>): Map<String, Flow<ByteString>> {
     logger.addToTaskLog("Executing generate asymmetric keys")
 
     val key = generateKeys()

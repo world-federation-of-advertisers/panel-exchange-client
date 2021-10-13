@@ -36,11 +36,11 @@ class GenerateSymmetricKeyTaskTest {
   fun `generate key 2x yields different keys`() = withTestContext {
     val result1 =
       GenerateSymmetricKeyTask(generateKey = deterministicCommutativeCryptor::generateKey)
-        .execute(emptyMap<String, VerifiedBlob>())
+        .execute(emptyMap())
         .mapValues { it.value.flatten() }
     val result2 =
       GenerateSymmetricKeyTask(generateKey = deterministicCommutativeCryptor::generateKey)
-        .execute(emptyMap<String, VerifiedBlob>())
+        .execute(emptyMap())
         .mapValues { it.value.flatten() }
 
     assertThat(result1.getValue("symmetric-key")).isNotEqualTo(result2.getValue("symmetric-key"))

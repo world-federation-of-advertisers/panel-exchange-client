@@ -40,7 +40,7 @@ class GenerateAsymmetricKeysTaskTest {
   fun `public key is not equal to private key`() = withTestContext {
     val result =
       GenerateAsymmetricKeysTask(generateKeys = keyGenerator)
-        .execute(emptyMap<String, VerifiedBlob>())
+        .execute(emptyMap())
         .mapValues { it.value.flatten() }
 
     assertThat(result.getValue("public-key")).isEqualTo("some public key".toByteString())

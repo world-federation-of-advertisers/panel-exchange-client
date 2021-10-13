@@ -21,6 +21,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
 import org.apache.beam.sdk.Pipeline
 import org.apache.beam.sdk.values.PCollection
+import org.wfanet.measurement.storage.StorageClient
 import org.wfanet.panelmatch.client.privatemembership.DatabaseEntry
 import org.wfanet.panelmatch.client.privatemembership.EncryptedQueryBundle
 import org.wfanet.panelmatch.client.privatemembership.EncryptedQueryResult
@@ -50,7 +51,7 @@ class ExecutePrivateMembershipQueriesTask(
     val encryptedQueryResultFileCount: Int
   )
 
-  override suspend fun execute(input: Map<String, VerifiedBlob>): Map<String, Flow<ByteString>> {
+  override suspend fun execute(input: Map<String, StorageClient.Blob>): Map<String, Flow<ByteString>> {
     val pipeline = Pipeline.create()
 
     val databaseManifest = input.getValue("event-data")

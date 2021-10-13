@@ -25,21 +25,20 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
 import org.wfanet.measurement.common.flatten
+import org.wfanet.measurement.storage.StorageClient
+import org.wfanet.measurement.storage.testing.InMemoryStorageClient
 import org.wfanet.panelmatch.client.launcher.testing.JOIN_KEYS
-import org.wfanet.panelmatch.client.storage.testing.makeTestVerifiedStorageClient
 import org.wfanet.panelmatch.common.crypto.testing.FakeDeterministicCommutativeCipher
+import org.wfanet.panelmatch.common.createBlob
 import org.wfanet.panelmatch.protocol.common.makeSerializedSharedInputFlow
 import org.wfanet.panelmatch.protocol.common.makeSerializedSharedInputs
 
 private const val ATTEMPT_KEY = "some-arbitrary-attempt-key"
 
-// TODO(@stevenwarejones): clean up these tests:
-//   1. Move `createBlob` calls out of the map so it's easier to see what's going on
-//   2. Only use `withContext` when we actually care about testing the specific behavior of that
-
+// TODO(@stevenwarejones): only use `withContext` when testing the specific behavior of it
 @RunWith(JUnit4::class)
 class DeterministicCommutativeCryptorExchangeTaskTest {
-  private val storage = makeTestVerifiedStorageClient()
+  private val storage = InMemoryStorageClient()
   private val deterministicCommutativeCryptor = FakeDeterministicCommutativeCipher()
   private val mpSecretKey = FakeDeterministicCommutativeCipher().generateKey()
   private val dpSecretKey = FakeDeterministicCommutativeCipher().generateKey()
@@ -51,6 +50,10 @@ class DeterministicCommutativeCryptorExchangeTaskTest {
     FakeDeterministicCommutativeCipher().decrypt(mpSecretKey, doubleBlindedKeys)
   private val invalidKey = FakeDeterministicCommutativeCipher.INVALID_KEY
 
+  private suspend fun createSharedInputBlob(blobKey: String, payload: List<ByteString>): StorageClient.Blob {
+    return storage.createBlob(blobKey, makeSerializedSharedInputFlow(payload, storage.defaultBufferSizeBytes))
+  }
+
   @Test
   fun `decrypt with valid inputs`() = withTestContext {
     val result =
@@ -58,11 +61,7 @@ class DeterministicCommutativeCryptorExchangeTaskTest {
         .execute(
           mapOf(
             "encryption-key" to storage.createBlob("encryption-key", mpSecretKey),
-            "encrypted-data" to
-              storage.createBlob(
-                "encrypted-data",
-                makeSerializedSharedInputFlow(doubleBlindedKeys, storage.defaultBufferSizeBytes)
-              )
+            "encrypted-data" to createSharedInputBlob("encrypted-data", doubleBlindedKeys)
           )
         )
         .mapValues { it.value.flatten() }
@@ -77,11 +76,7 @@ class DeterministicCommutativeCryptorExchangeTaskTest {
           .execute(
             mapOf(
               "encryption-key" to storage.createBlob("encryption-key", invalidKey),
-              "encrypted-data" to
-                storage.createBlob(
-                  "encrypted-data",
-                  makeSerializedSharedInputFlow(singleBlindedKeys, storage.defaultBufferSizeBytes)
-                )
+              "encrypted-data" to createSharedInputBlob("encrypted-data", singleBlindedKeys)
             )
           )
       }
@@ -92,15 +87,7 @@ class DeterministicCommutativeCryptorExchangeTaskTest {
   fun `decrypt with missing inputs`() = withTestContext {
     assertFailsWith(NoSuchElementException::class) {
       CryptorExchangeTask.forDecryption(deterministicCommutativeCryptor)
-        .execute(
-          mapOf(
-            "encrypted-data" to
-              storage.createBlob(
-                "encrypted-data",
-                makeSerializedSharedInputFlow(singleBlindedKeys, storage.defaultBufferSizeBytes)
-              )
-          )
-        )
+        .execute(mapOf("encrypted-data" to createSharedInputBlob("encrypted-data", singleBlindedKeys)))
     }
     assertFailsWith(NoSuchElementException::class) {
       CryptorExchangeTask.forDecryption(deterministicCommutativeCryptor)
@@ -115,11 +102,7 @@ class DeterministicCommutativeCryptorExchangeTaskTest {
         .execute(
           mapOf(
             "encryption-key" to storage.createBlob("encryption-key", mpSecretKey),
-            "unencrypted-data" to
-              storage.createBlob(
-                "unencrypted-data",
-                makeSerializedSharedInputFlow(JOIN_KEYS, storage.defaultBufferSizeBytes)
-              )
+            "unencrypted-data" to createSharedInputBlob("unencrypted-data", JOIN_KEYS)
           )
         )
         .mapValues { it.value.flatten() }
@@ -135,11 +118,7 @@ class DeterministicCommutativeCryptorExchangeTaskTest {
           .execute(
             mapOf(
               "encryption-key" to storage.createBlob("encryption-key", invalidKey),
-              "unencrypted-data" to
-                storage.createBlob(
-                  "unencrypted-data",
-                  makeSerializedSharedInputFlow(JOIN_KEYS, storage.defaultBufferSizeBytes)
-                )
+              "unencrypted-data" to createSharedInputBlob("unencrypted-data", JOIN_KEYS)
             )
           )
       }
@@ -150,15 +129,7 @@ class DeterministicCommutativeCryptorExchangeTaskTest {
   fun `encrypt with missing inputs`() = withTestContext {
     assertFailsWith(NoSuchElementException::class) {
       CryptorExchangeTask.forEncryption(deterministicCommutativeCryptor)
-        .execute(
-          mapOf(
-            "unencrypted-data" to
-              storage.createBlob(
-                "unencrypted-data",
-                makeSerializedSharedInputFlow(JOIN_KEYS, storage.defaultBufferSizeBytes)
-              )
-          )
-        )
+        .execute(mapOf("unencrypted-data" to createSharedInputBlob("unencrypted-data", JOIN_KEYS)))
     }
     assertFailsWith(NoSuchElementException::class) {
       CryptorExchangeTask.forEncryption(deterministicCommutativeCryptor)
@@ -173,11 +144,7 @@ class DeterministicCommutativeCryptorExchangeTaskTest {
         .execute(
           mapOf(
             "encryption-key" to storage.createBlob("encryption-key", dpSecretKey),
-            "encrypted-data" to
-              storage.createBlob(
-                "encrypted-data",
-                makeSerializedSharedInputFlow(singleBlindedKeys, storage.defaultBufferSizeBytes)
-              )
+            "encrypted-data" to createSharedInputBlob("encrypted-data", singleBlindedKeys)
           )
         )
         .mapValues { it.value.flatten() }
@@ -193,11 +160,7 @@ class DeterministicCommutativeCryptorExchangeTaskTest {
           .execute(
             mapOf(
               "encryption-key" to storage.createBlob("encryption-key", invalidKey),
-              "encrypted-data" to
-                storage.createBlob(
-                  "encrypted-data",
-                  makeSerializedSharedInputFlow(singleBlindedKeys, storage.defaultBufferSizeBytes)
-                )
+              "encrypted-data" to createSharedInputBlob("encrypted-data", singleBlindedKeys)
             )
           )
       }
@@ -208,15 +171,7 @@ class DeterministicCommutativeCryptorExchangeTaskTest {
   fun `reEncryptTask with missing inputs`() = withTestContext {
     assertFailsWith(NoSuchElementException::class) {
       CryptorExchangeTask.forReEncryption(deterministicCommutativeCryptor)
-        .execute(
-          mapOf(
-            "encrypted-data" to
-              storage.createBlob(
-                "encrypted-data",
-                makeSerializedSharedInputFlow(singleBlindedKeys, storage.defaultBufferSizeBytes)
-              )
-          )
-        )
+        .execute(mapOf("encrypted-data" to createSharedInputBlob("encrypted-data", singleBlindedKeys)))
     }
     assertFailsWith(NoSuchElementException::class) {
       CryptorExchangeTask.forReEncryption(deterministicCommutativeCryptor)
