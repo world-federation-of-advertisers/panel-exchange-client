@@ -17,15 +17,17 @@ package org.wfanet.panelmatch.client.privatemembership.testing
 import com.google.protobuf.ByteString
 import org.wfanet.panelmatch.client.common.bucketIdOf
 import org.wfanet.panelmatch.client.common.decryptedQueryOf
+import org.wfanet.panelmatch.client.common.joinKeyIdentifierOf
 import org.wfanet.panelmatch.client.common.joinKeyOf
 import org.wfanet.panelmatch.client.common.plaintextOf
 import org.wfanet.panelmatch.client.common.queryIdOf
 import org.wfanet.panelmatch.client.common.shardIdOf
 import org.wfanet.panelmatch.client.common.unencryptedQueryOf
+import org.wfanet.panelmatch.client.exchangetasks.JoinKey
+import org.wfanet.panelmatch.client.exchangetasks.JoinKeyIdentifier
 import org.wfanet.panelmatch.client.privatemembership.DecryptEventDataRequest.EncryptedEventDataSet
 import org.wfanet.panelmatch.client.privatemembership.DecryptEventDataRequestKt.encryptedEventDataSet
 import org.wfanet.panelmatch.client.privatemembership.DecryptedQueryResult
-import org.wfanet.panelmatch.client.privatemembership.JoinKey
 import org.wfanet.panelmatch.client.privatemembership.Plaintext
 import org.wfanet.panelmatch.client.privatemembership.QueryId
 import org.wfanet.panelmatch.client.privatemembership.ShardId
@@ -58,3 +60,8 @@ fun decryptedQueryOf(query: Int, queryResult: ByteString): DecryptedQueryResult 
 fun plaintextOf(payload: String): Plaintext = plaintextOf(payload.toByteString())
 
 fun joinKeyOf(key: String): JoinKey = joinKeyOf(key.toByteString())
+
+fun joinKeyOf(key: Long): JoinKey = joinKeyOf("joinKey of ${key}")
+
+fun joinKeyIdentifierOf(key: Long): JoinKeyIdentifier =
+  joinKeyIdentifierOf("joinKeyIdentifier of ${key}".toByteString())

@@ -24,9 +24,8 @@ import org.apache.beam.sdk.values.PCollection
 import org.apache.beam.sdk.values.PCollectionView
 import org.wfanet.panelmatch.client.privatemembership.CreateQueriesParameters
 import org.wfanet.panelmatch.client.privatemembership.EncryptedQueryBundle
-import org.wfanet.panelmatch.client.privatemembership.PanelistKeyAndJoinKey
 import org.wfanet.panelmatch.client.privatemembership.PrivateMembershipCryptor
-import org.wfanet.panelmatch.client.privatemembership.QueryIdAndPanelistKey
+import org.wfanet.panelmatch.client.privatemembership.QueryIdAndKeys
 import org.wfanet.panelmatch.client.privatemembership.createQueries
 import org.wfanet.panelmatch.client.storage.VerifiedStorageClient.VerifiedBlob
 import org.wfanet.panelmatch.common.ShardedFileName
@@ -48,19 +47,21 @@ class BuildPrivateMembershipQueriesTask(
   data class Outputs(
     val encryptedQueriesFileName: String,
     val encryptedQueriesFileCount: Int,
-    val queryIdAndPanelistKeyFileName: String,
-    val queryIdAndPanelistKeyFileCount: Int
+    val queryIdAndKeysFileName: String,
+    val queryIdAndKeysFileCount: Int
   )
 
   override suspend fun execute(input: Map<String, VerifiedBlob>): Map<String, Flow<ByteString>> {
     val pipeline = Pipeline.create()
 
-    // TODO: previous steps need to output in this format.
-    // TODO: need to update all file names to translate labels via step.inputsMap/outputsMap
-    val panelistKeyAndJoinKeysManifest = input.getValue("panelists-and-joinkeys")
-    val panelistKeyAndJoinKeys =
-      readFromManifest(panelistKeyAndJoinKeysManifest, localCertificate).map {
-        PanelistKeyAndJoinKey.parseFrom(it)
+    val lookupKeyAndIdsManifest = input.getValue("lookup-keys")
+    val lookupKeyAndIds =
+      readFromManifest(lookupKeyAndIdsManifest, localCertificate).map { JoinKeyAndId.parseFrom(it) }
+
+    val hashedJoinKeyAndIdsManifest = input.getValue("hashed-join-keys")
+    val hashedJoinKeyAndIds =
+      readFromManifest(hashedJoinKeyAndIdsManifest, localCertificate).map {
+        JoinKeyAndId.parseFrom(it)
       }
 
     val privateKeys =
@@ -82,19 +83,20 @@ class BuildPrivateMembershipQueriesTask(
         .toSingletonView()
 
     val (
-      queryIdAndPanelistKeys: PCollection<QueryIdAndPanelistKey>,
+      queryIdAndKeys: PCollection<QueryIdAndKeys>,
       encryptedResponses: PCollection<EncryptedQueryBundle>) =
       createQueries(
-        panelistKeyAndJoinKeys,
+        lookupKeyAndIds,
+        hashedJoinKeyAndIds,
         privateMembershipKeys,
         parameters,
         privateMembershipCryptor
       )
 
     val queryDecryptionKeysFileSpec =
-      ShardedFileName(outputs.queryIdAndPanelistKeyFileName, outputs.queryIdAndPanelistKeyFileCount)
-    require(queryDecryptionKeysFileSpec.shardCount == outputs.queryIdAndPanelistKeyFileCount)
-    queryIdAndPanelistKeys.map { it.toByteString() }.write(queryDecryptionKeysFileSpec)
+      ShardedFileName(outputs.queryIdAndKeysFileName, outputs.queryIdAndKeysFileCount)
+    require(queryDecryptionKeysFileSpec.shardCount == outputs.queryIdAndKeysFileCount)
+    queryIdAndKeys.map { it.toByteString() }.write(queryDecryptionKeysFileSpec)
 
     val encryptedQueriesFileSpec =
       ShardedFileName(outputs.encryptedQueriesFileName, outputs.encryptedQueriesFileCount)
