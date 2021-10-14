@@ -52,8 +52,8 @@ message DecryptQueryResultsRequest {
   bytes serialized_public_key = 2;
   bytes serialized_private_key = 3;
   repeated EncryptedQueryResult encrypted_query_results = 4;
-  wfa.panelmatch.client.exchangetasks.JoinKey lookup_key = 6;
-  bytes hkdf_pepper = 7;
+  wfa.panelmatch.client.exchangetasks.JoinKey lookup_key = 5;
+  bytes hkdf_pepper = 6;
 }
 
 // Response of DecryptQueryResultsRequest

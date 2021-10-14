@@ -25,14 +25,17 @@ import org.wfanet.panelmatch.client.common.shardIdOf
 import org.wfanet.panelmatch.client.common.unencryptedQueryOf
 import org.wfanet.panelmatch.client.exchangetasks.JoinKey
 import org.wfanet.panelmatch.client.exchangetasks.JoinKeyIdentifier
+import org.wfanet.panelmatch.client.exchangetasks.joinKey
 import org.wfanet.panelmatch.client.privatemembership.DecryptEventDataRequest.EncryptedEventDataSet
 import org.wfanet.panelmatch.client.privatemembership.DecryptEventDataRequestKt.encryptedEventDataSet
 import org.wfanet.panelmatch.client.privatemembership.DecryptedQueryResult
 import org.wfanet.panelmatch.client.privatemembership.Plaintext
 import org.wfanet.panelmatch.client.privatemembership.QueryId
+import org.wfanet.panelmatch.client.privatemembership.QueryIdAndJoinKeys
 import org.wfanet.panelmatch.client.privatemembership.ShardId
 import org.wfanet.panelmatch.client.privatemembership.UnencryptedQuery
 import org.wfanet.panelmatch.client.privatemembership.encryptedEventData
+import org.wfanet.panelmatch.client.privatemembership.queryIdAndJoinKeys
 import org.wfanet.panelmatch.common.toByteString
 
 /** Constructs a [UnencryptedQuery]. */
@@ -65,3 +68,10 @@ fun joinKeyOf(key: Long): JoinKey = joinKeyOf("joinKey of $key")
 
 fun joinKeyIdentifierOf(key: Long): JoinKeyIdentifier =
   joinKeyIdentifierOf("joinKeyIdentifier of $key".toByteString())
+
+fun queryIdAndJoinKeysOf(query: Int, lookup: String, join: String): QueryIdAndJoinKeys =
+    queryIdAndJoinKeys {
+  queryId = queryIdOf(query)
+  lookupKey = joinKey { key = lookup.toByteString() }
+  hashedJoinKey = joinKey { key = join.toByteString() }
+}

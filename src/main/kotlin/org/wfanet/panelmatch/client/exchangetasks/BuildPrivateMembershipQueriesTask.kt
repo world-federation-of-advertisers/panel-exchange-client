@@ -87,12 +87,10 @@ class BuildPrivateMembershipQueriesTask(
 
     val queryIdAndJoinKeysFileSpec =
       ShardedFileName(outputs.queryIdAndJoinKeysFileName, outputs.queryIdAndJoinKeysFileCount)
-    require(queryIdAndJoinKeysFileSpec.shardCount == outputs.queryIdAndJoinKeysFileCount)
     queryIdAndJoinKeys.write(queryIdAndJoinKeysFileSpec)
 
     val encryptedQueryBundlesFileSpec =
       ShardedFileName(outputs.encryptedQueryBundlesFileName, outputs.encryptedQueryBundlesFileCount)
-    require(encryptedQueryBundlesFileSpec.shardCount == parameters.numShards)
     encryptedQueryBundles.write(encryptedQueryBundlesFileSpec)
 
     pipeline.run()

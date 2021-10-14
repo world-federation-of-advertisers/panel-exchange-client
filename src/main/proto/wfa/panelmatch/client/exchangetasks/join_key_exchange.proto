@@ -23,6 +23,7 @@ option java_outer_classname = "JoinkeyExchangeProto";
 // Keys represent the data that is exchange during a join key exchange
 // including hashed join keys, single blinded keys, double blinded keys, and
 // lookup join keys.
+// TODO: Consider splitting these into separate messages
 message JoinKey {
   bytes key = 1;
 }

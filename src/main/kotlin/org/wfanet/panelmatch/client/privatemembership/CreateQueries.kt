@@ -191,11 +191,14 @@ private class CreateQueries(
       }
       .keyBy { it.lookupKeyAndId.joinKeyIdentifier }
       /** We can't strict join here in case one of the queries was dropped. */
+      // TODO Turn this into a DoFn so we can export some metrics about it
       .join(keyedHashedJoinKeyAndIds, name = "Join FullUnencryptedQuery+HashedJoinKeys") {
         key: JoinKeyIdentifier,
-        fullUnencryptedQueriesList: Iterable<FullUnencryptedQuery>,
-        hashedJoinKeyAndIdsList: Iterable<JoinKeyAndId> ->
-        if ((fullUnencryptedQueriesList.count() > 0) and (hashedJoinKeyAndIdsList.count() > 0)) {
+        fullUnencryptedQueriesIterable: Iterable<FullUnencryptedQuery>,
+        hashedJoinKeyAndIdsIterable: Iterable<JoinKeyAndId> ->
+        val fullUnencryptedQueriesList = fullUnencryptedQueriesIterable.toList()
+        val hashedJoinKeyAndIdsList = hashedJoinKeyAndIdsIterable.toList()
+        if ((fullUnencryptedQueriesList.isNotEmpty()) and (hashedJoinKeyAndIdsList.isNotEmpty())) {
 
           val fullUnencryptedQuery =
             requireNotNull(fullUnencryptedQueriesList.toList().singleOrNull()) {

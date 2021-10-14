@@ -16,7 +16,6 @@ package org.wfanet.panelmatch.client.exchangetasks
 
 import com.google.common.truth.Truth.assertThat
 import kotlin.test.assertFailsWith
-import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.runBlocking
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -24,6 +23,7 @@ import org.junit.runners.JUnit4
 import org.wfanet.measurement.common.flatten
 import org.wfanet.measurement.storage.testing.InMemoryStorageClient
 import org.wfanet.panelmatch.client.launcher.testing.SINGLE_BLINDED_KEYS
+import org.wfanet.panelmatch.common.storage.createBlob
 import org.wfanet.panelmatch.common.toByteString
 
 @RunWith(JUnit4::class)
@@ -47,23 +47,19 @@ class IntersectValidateTaskTest {
   private val blobOfSingleBlindedKeys = runBlocking {
     mockStorage.createBlob(
       "single-blinded-keys-1",
-      flowOf(joinKeyAndIdCollection { joinKeysAndIds += singleBlindedKeysAndIds }.toByteString())
+      joinKeyAndIdCollection { joinKeysAndIds += singleBlindedKeysAndIds }.toByteString()
     )
   }
   private val blobOfSingleBlindedKeysWithOneMissing = runBlocking {
     mockStorage.createBlob(
       "single-blinded-keys-2",
-      flowOf(
-        joinKeyAndIdCollection { joinKeysAndIds += singleBlindedKeysAndIds.drop(1) }.toByteString()
-      )
+      joinKeyAndIdCollection { joinKeysAndIds += singleBlindedKeysAndIds.drop(1) }.toByteString()
     )
   }
   private val blobOfSingleBlindedKeysAndWrongIds = runBlocking {
     mockStorage.createBlob(
       "single-blinded-keys-3",
-      flowOf(
-        joinKeyAndIdCollection { joinKeysAndIds += singleBlindedKeysAndWrongIds }.toByteString()
-      )
+      joinKeyAndIdCollection { joinKeysAndIds += singleBlindedKeysAndWrongIds }.toByteString()
     )
   }
 

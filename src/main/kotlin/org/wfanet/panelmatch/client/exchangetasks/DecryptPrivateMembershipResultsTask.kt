@@ -102,9 +102,6 @@ class DecryptPrivateMembershipResultsTask(
         outputs.keyedDecryptedEventDataSetFileName,
         outputs.keyedDecryptedEventDataSetFileCount
       )
-    require(
-      keyedDecryptedEventDataSetFileSpec.shardCount == outputs.keyedDecryptedEventDataSetFileCount
-    )
     keyedDecryptedEventDataSet.write(keyedDecryptedEventDataSetFileSpec)
 
     pipeline.run()

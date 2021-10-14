@@ -57,17 +57,11 @@ private val PLAINTEXTS: List<Pair<Int, List<Plaintext>>> =
     2 to listOf(plaintextOf("<some long data c>"), plaintextOf("<some long data d>")),
     3 to listOf(plaintextOf("<some long data e>"))
   )
-private val LOOKUP_KEYS: List<Triple<Int, String, String>> =
+private val QUERY_ID_AND_JOIN_KEYS =
   listOf(
-    Triple(1, "some lookup key 1", "some hashed joinkey 1"),
-    Triple(2, "some lookup key 2", "some hashed joinkey 2"),
-    Triple(3, "some lookup key 3", "some hashed joinkey 3")
-  )
-private val HASHED_JOIN_KEYS: List<Pair<Int, String>> =
-  listOf(
-    1 to "some hashed joinkey 1",
-    2 to "some hashed joinkey 2",
-    3 to "some hashed joinkey 3",
+    queryIdAndJoinKeysOf(1, "some lookup key 1", "some hashed joinkey 1"),
+    queryIdAndJoinKeysOf(2, "some lookup key 2", "some hashed joinkey 2"),
+    queryIdAndJoinKeysOf(3, "some lookup key 3", "some hashed joinkey 3")
   )
 private val HKDF_PEPPER = "some-pepper".toByteString()
 
@@ -96,16 +90,7 @@ abstract class AbstractDecryptQueryResultsTest : BeamTestBase() {
       )
     val compressedEvents = makeCompressedEvents(plaintextCollection)
     val queryIdAndJoinKeys: PCollection<QueryIdAndJoinKeys> =
-      pcollectionOf(
-        "Create joinkey data",
-        LOOKUP_KEYS.map {
-          queryIdAndJoinKeys {
-            queryId = queryIdOf(it.first)
-            lookupKey = joinKeyOf(it.second)
-            hashedJoinKey = joinKeyOf(it.third)
-          }
-        }
-      )
+      pcollectionOf("Create joinkey data", QUERY_ID_AND_JOIN_KEYS)
     val encryptedResults =
       makeEncryptedResults(
         privateMembershipCryptorHelper,

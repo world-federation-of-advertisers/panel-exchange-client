@@ -16,8 +16,10 @@ package org.wfanet.panelmatch.client.common
 
 import com.google.protobuf.ByteString
 import org.wfanet.panelmatch.client.exchangetasks.JoinKey
+import org.wfanet.panelmatch.client.exchangetasks.JoinKeyAndId
 import org.wfanet.panelmatch.client.exchangetasks.JoinKeyIdentifier
 import org.wfanet.panelmatch.client.exchangetasks.joinKey
+import org.wfanet.panelmatch.client.exchangetasks.joinKeyAndId
 import org.wfanet.panelmatch.client.exchangetasks.joinKeyIdentifier
 import org.wfanet.panelmatch.client.privatemembership.Bucket
 import org.wfanet.panelmatch.client.privatemembership.BucketId
@@ -116,7 +118,13 @@ fun plaintextOf(payload: ByteString): Plaintext = plaintext { this.payload = pay
 fun joinKeyOf(key: ByteString): JoinKey = joinKey { this.key = key }
 
 /** Constructs a [JoinKeyIdentifier]. */
-fun joinKeyIdentifierOf(key: ByteString): JoinKeyIdentifier = joinKeyIdentifier { id = key }
+fun joinKeyIdentifierOf(id: ByteString): JoinKeyIdentifier = joinKeyIdentifier { this.id = id }
+
+/** Constructs a [JoinKeyAndId]. */
+fun joinKeyAndIdOf(key: ByteString, id: ByteString): JoinKeyAndId = joinKeyAndId {
+  joinKey = joinKeyOf(key)
+  joinKeyIdentifier = joinKeyIdentifierOf(id)
+}
 
 /** Constructs a [DatabaseEntry]. */
 fun databaseEntryOf(databaseKey: DatabaseKey, plaintext: Plaintext): DatabaseEntry = databaseEntry {

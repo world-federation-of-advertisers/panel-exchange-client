@@ -43,11 +43,9 @@ import org.apache.beam.sdk.transforms.Create
 import org.apache.beam.sdk.values.PCollection
 import org.wfanet.panelmatch.client.common.databaseEntryOf
 import org.wfanet.panelmatch.client.common.databaseKeyOf
-import org.wfanet.panelmatch.client.common.joinKeyIdentifierOf
-import org.wfanet.panelmatch.client.common.joinKeyOf
+import org.wfanet.panelmatch.client.common.joinKeyAndIdOf
 import org.wfanet.panelmatch.client.common.plaintextOf
 import org.wfanet.panelmatch.client.exchangetasks.JoinKeyAndId
-import org.wfanet.panelmatch.client.exchangetasks.joinKeyAndId
 import org.wfanet.panelmatch.client.privatemembership.CreateQueriesParameters
 import org.wfanet.panelmatch.client.privatemembership.DatabaseEntry
 import org.wfanet.panelmatch.client.privatemembership.EncryptedQueryBundle
@@ -133,25 +131,24 @@ fun main(args: Array<String>) {
       for (j in 0 until QUERIES_PER_SHARD_COUNT / 4) {
         val joinkeyIndex = Random.nextInt(JOINKEY_UNIVERSE_SIZE)
         yield(
-          joinKeyAndId {
-            joinKeyIdentifier =
-              joinKeyIdentifierOf("joinKeyId of ${i + j * SHARD_COUNT}".toByteString())
-            joinKey = joinKeyOf("LookupKey-$joinkeyIndex".toByteString())
-          }
+          joinKeyAndIdOf(
+            "joinKeyId of ${i + j * SHARD_COUNT}".toByteString(),
+            "LookupKey-$joinkeyIndex".toByteString()
+          )
         )
       }
     }
+  // TODO think about making this a separate type
   val hashedJoinKeys: PCollection<JoinKeyAndId> =
     pipeline.apply("Create Queries", Create.of(0 until SHARD_COUNT)).parDo("Populate Queries") { i
       ->
       for (j in 0 until QUERIES_PER_SHARD_COUNT / 4) {
         val joinkeyIndex = Random.nextInt(JOINKEY_UNIVERSE_SIZE)
         yield(
-          joinKeyAndId {
-            joinKeyIdentifier =
-              joinKeyIdentifierOf("joinKeyId of ${i + j * SHARD_COUNT}".toByteString())
-            joinKey = joinKeyOf("HashedJoinKey-$joinkeyIndex".toByteString())
-          }
+          joinKeyAndIdOf(
+            "joinKeyId of ${i + j * SHARD_COUNT}".toByteString(),
+            "HashedJoinKey-$joinkeyIndex".toByteString()
+          )
         )
       }
     }
