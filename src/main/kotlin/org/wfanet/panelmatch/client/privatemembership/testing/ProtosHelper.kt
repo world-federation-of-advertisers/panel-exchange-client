@@ -61,7 +61,7 @@ fun plaintextOf(payload: String): Plaintext = plaintextOf(payload.toByteString()
 
 fun joinKeyOf(key: String): JoinKey = joinKeyOf(key.toByteString())
 
-fun joinKeyOf(key: Long): JoinKey = joinKeyOf("joinKey of ${key}")
+fun joinKeyOf(key: Long): JoinKey = joinKeyOf("joinKey of $key")
 
 fun joinKeyIdentifierOf(key: Long): JoinKeyIdentifier =
-  joinKeyIdentifierOf("joinKeyIdentifier of ${key}".toByteString())
+  joinKeyIdentifierOf("joinKeyIdentifier of $key".toByteString())
