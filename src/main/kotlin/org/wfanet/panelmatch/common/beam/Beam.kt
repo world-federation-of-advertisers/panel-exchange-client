@@ -160,7 +160,22 @@ inline fun <reified KeyT, reified LeftT, reified RightT> PCollection<
   right: PCollection<KV<KeyT, RightT>>,
   name: String = "Strict Join",
 ): PCollection<KV<LeftT, RightT>> {
-  return join(right, name) { _, lefts, rights -> yield(kvOf(lefts.single(), rights.single())) }
+  return oneToOneJoin(right, name = "$name/Join").map("$name/RequireNotNull") {
+    kvOf(requireNotNull(it.key), requireNotNull(it.value))
+  }
+}
+
+/**
+ * Kotlin convenience helper for a join between two [PCollection]s where for each key, each
+ * PCollection contains at most one item.
+ */
+inline fun <reified KeyT, reified LeftT, reified RightT> PCollection<KV<KeyT, LeftT>>.oneToOneJoin(
+  right: PCollection<KV<KeyT, RightT>>,
+  name: String = "One-to-One Join",
+): PCollection<KV<LeftT?, RightT?>> {
+  return join(right, name) { _, lefts, rights ->
+    yield(kvOf(lefts.singleOrNull(), rights.singleOrNull()))
+  }
 }
 
 /** Kotlin convenience helper for getting the size of a [PCollection]. */
