@@ -201,13 +201,13 @@ private class CreateQueries(
         if ((fullUnencryptedQueriesList.isNotEmpty()) and (hashedJoinKeyAndIdsList.isNotEmpty())) {
 
           val fullUnencryptedQuery =
-            requireNotNull(fullUnencryptedQueriesList.toList().singleOrNull()) {
-              "${fullUnencryptedQueriesList.toList().size} queries for $key"
+            requireNotNull(fullUnencryptedQueriesList.singleOrNull()) {
+              "${fullUnencryptedQueriesList.size} queries for $key"
             }
 
           val hashedJoinKeyAndId =
-            requireNotNull(hashedJoinKeyAndIdsList.toList().singleOrNull()) {
-              "${hashedJoinKeyAndIdsList.toList().size} of panelistKeys for $key"
+            requireNotNull(hashedJoinKeyAndIdsList.singleOrNull()) {
+              "${hashedJoinKeyAndIdsList.size} of panelistKeys for $key"
             }
           yield(
             queryIdAndJoinKeys {

@@ -10,11 +10,11 @@ There are a few kinds of join keys:
 
 1. Hashed Join Keys
 
-    Keys that have been hashed previous to input to the system.
+   Keys that have been hashed previous to input to the system.
 
 2. Single Blinded Join Keys
 
-    Keys that have a single layer of added commutative encryption.
+   Keys that have a single layer of added commutative encryption.
 
 3. Double Blinded Join Keys
 
