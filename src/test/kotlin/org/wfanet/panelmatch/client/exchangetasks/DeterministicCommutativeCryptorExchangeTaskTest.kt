@@ -19,14 +19,15 @@ import com.google.protobuf.ByteString
 import kotlin.test.assertFailsWith
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
 import org.wfanet.measurement.common.flatten
+import org.wfanet.measurement.storage.testing.InMemoryStorageClient
 import org.wfanet.panelmatch.client.launcher.testing.JOIN_KEYS
-import org.wfanet.panelmatch.client.storage.testing.makeTestVerifiedStorageClient
 import org.wfanet.panelmatch.common.crypto.testing.FakeDeterministicCommutativeCipher
 import org.wfanet.panelmatch.common.toByteString
 
@@ -37,7 +38,7 @@ private const val ATTEMPT_KEY = "some-arbitrary-attempt-key"
 
 @RunWith(JUnit4::class)
 class DeterministicCommutativeCryptorExchangeTaskTest {
-  private val mockStorage = makeTestVerifiedStorageClient()
+  private val mockStorage = InMemoryStorageClient()
   private val deterministicCommutativeCryptor = FakeDeterministicCommutativeCipher()
   private val mpSecretKey = FakeDeterministicCommutativeCipher().generateKey()
   private val dpSecretKey = FakeDeterministicCommutativeCipher().generateKey()
@@ -53,30 +54,30 @@ class DeterministicCommutativeCryptorExchangeTaskTest {
   val doubleBlindedKeysAndIds = buildJoinKeysAndIds(doubleBlindedKeys)
   val lookupKeysAndIds = buildJoinKeysAndIds(lookupKeys)
   private val blobOfMpSecretKey = runBlocking {
-    mockStorage.createBlob("mp-secret-key", mpSecretKey)
+    mockStorage.createBlob("mp-secret-key", flowOf(mpSecretKey))
   }
   private val blobOfDpSecretKey = runBlocking {
-    mockStorage.createBlob("dp-secret-key", dpSecretKey)
+    mockStorage.createBlob("dp-secret-key", flowOf(dpSecretKey))
   }
   private val blobOfInvalidKey = runBlocking {
-    mockStorage.createBlob("mp-invalid-key", invalidKey)
+    mockStorage.createBlob("mp-invalid-key", flowOf(invalidKey))
   }
   private val blobOfJoinKeys = runBlocking {
     mockStorage.createBlob(
       "hashed-join-keys",
-      joinKeyAndIdCollection { joinKeysAndIds += hashedJoinKeysAndIds }.toByteString()
+      flowOf(joinKeyAndIdCollection { joinKeysAndIds += hashedJoinKeysAndIds }.toByteString())
     )
   }
   private val blobOfSingleBlindedKeys = runBlocking {
     mockStorage.createBlob(
       "single-blinded-keys",
-      joinKeyAndIdCollection { joinKeysAndIds += singleBlindedKeysAndIds }.toByteString()
+      flowOf(joinKeyAndIdCollection { joinKeysAndIds += singleBlindedKeysAndIds }.toByteString())
     )
   }
   private val blobOfDoubleBlindedKeys = runBlocking {
     mockStorage.createBlob(
       "double-blinded-keys",
-      joinKeyAndIdCollection { joinKeysAndIds += doubleBlindedKeysAndIds }.toByteString()
+      flowOf(joinKeyAndIdCollection { joinKeysAndIds += doubleBlindedKeysAndIds }.toByteString())
     )
   }
   @Test

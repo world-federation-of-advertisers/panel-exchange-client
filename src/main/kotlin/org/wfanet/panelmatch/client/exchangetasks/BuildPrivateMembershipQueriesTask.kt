@@ -15,65 +15,57 @@
 package org.wfanet.panelmatch.client.exchangetasks
 
 import com.google.protobuf.ByteString
-import java.security.PrivateKey
-import java.security.cert.X509Certificate
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
 import org.apache.beam.sdk.Pipeline
 import org.apache.beam.sdk.values.PCollection
 import org.apache.beam.sdk.values.PCollectionView
+import org.wfanet.measurement.storage.StorageClient
+import org.wfanet.panelmatch.client.logger.addToTaskLog
+import org.wfanet.panelmatch.client.logger.loggerFor
 import org.wfanet.panelmatch.client.privatemembership.CreateQueriesParameters
 import org.wfanet.panelmatch.client.privatemembership.EncryptedQueryBundle
 import org.wfanet.panelmatch.client.privatemembership.PrivateMembershipCryptor
-import org.wfanet.panelmatch.client.privatemembership.QueryIdAndKeys
+import org.wfanet.panelmatch.client.privatemembership.QueryIdAndJoinKeys
 import org.wfanet.panelmatch.client.privatemembership.createQueries
-import org.wfanet.panelmatch.client.storage.VerifiedStorageClient.VerifiedBlob
+import org.wfanet.panelmatch.client.storage.StorageFactory
 import org.wfanet.panelmatch.common.ShardedFileName
-import org.wfanet.panelmatch.common.beam.map
 import org.wfanet.panelmatch.common.beam.mapWithSideInput
 import org.wfanet.panelmatch.common.beam.toSingletonView
 import org.wfanet.panelmatch.common.crypto.AsymmetricKeys
+import org.wfanet.panelmatch.common.storage.toStringUtf8
 import org.wfanet.panelmatch.common.toByteString
 
 class BuildPrivateMembershipQueriesTask(
-  override val localCertificate: X509Certificate,
-  override val uriPrefix: String,
-  override val privateKey: PrivateKey,
+  override val storageFactory: StorageFactory,
   private val parameters: CreateQueriesParameters,
   private val privateMembershipCryptor: PrivateMembershipCryptor,
   private val outputs: Outputs
 ) : ApacheBeamTask() {
 
   data class Outputs(
-    val encryptedQueriesFileName: String,
-    val encryptedQueriesFileCount: Int,
-    val queryIdAndKeysFileName: String,
-    val queryIdAndKeysFileCount: Int
+    val encryptedQueryBundlesFileName: String,
+    val encryptedQueryBundlesFileCount: Int,
+    val queryIdAndJoinKeysFileName: String,
+    val queryIdAndJoinKeysFileCount: Int
   )
 
-  override suspend fun execute(input: Map<String, VerifiedBlob>): Map<String, Flow<ByteString>> {
+  override suspend fun execute(
+    input: Map<String, StorageClient.Blob>
+  ): Map<String, Flow<ByteString>> {
+    logger.addToTaskLog("Executing build private membership queries")
     val pipeline = Pipeline.create()
 
     val lookupKeyAndIdsManifest = input.getValue("lookup-keys")
-    val lookupKeyAndIds =
-      readFromManifest(lookupKeyAndIdsManifest, localCertificate).map { JoinKeyAndId.parseFrom(it) }
+    val lookupKeyAndIds = readFromManifest(lookupKeyAndIdsManifest, joinKeyAndId {})
 
     val hashedJoinKeyAndIdsManifest = input.getValue("hashed-join-keys")
-    val hashedJoinKeyAndIds =
-      readFromManifest(hashedJoinKeyAndIdsManifest, localCertificate).map {
-        JoinKeyAndId.parseFrom(it)
-      }
+    val hashedJoinKeyAndIds = readFromManifest(hashedJoinKeyAndIdsManifest, joinKeyAndId {})
 
     val privateKeys =
-      readFileAsSingletonPCollection(
-        input.getValue("rlwe-serialized-private-key").toStringUtf8(),
-        localCertificate
-      )
+      readSingleBlobAsPCollection(input.getValue("rlwe-serialized-private-key").toStringUtf8())
     val publicKeyView =
-      readFileAsSingletonPCollection(
-          input.getValue("rlwe-serialized-public-key").toStringUtf8(),
-          localCertificate
-        )
+      readSingleBlobAsPCollection(input.getValue("rlwe-serialized-public-key").toStringUtf8())
         .toSingletonView()
     val privateMembershipKeys: PCollectionView<AsymmetricKeys> =
       privateKeys
@@ -83,8 +75,8 @@ class BuildPrivateMembershipQueriesTask(
         .toSingletonView()
 
     val (
-      queryIdAndKeys: PCollection<QueryIdAndKeys>,
-      encryptedResponses: PCollection<EncryptedQueryBundle>) =
+      queryIdAndJoinKeys: PCollection<QueryIdAndJoinKeys>,
+      encryptedQueryBundles: PCollection<EncryptedQueryBundle>) =
       createQueries(
         lookupKeyAndIds,
         hashedJoinKeyAndIds,
@@ -93,21 +85,25 @@ class BuildPrivateMembershipQueriesTask(
         privateMembershipCryptor
       )
 
-    val queryDecryptionKeysFileSpec =
-      ShardedFileName(outputs.queryIdAndKeysFileName, outputs.queryIdAndKeysFileCount)
-    require(queryDecryptionKeysFileSpec.shardCount == outputs.queryIdAndKeysFileCount)
-    queryIdAndKeys.map { it.toByteString() }.write(queryDecryptionKeysFileSpec)
+    val queryIdAndJoinKeysFileSpec =
+      ShardedFileName(outputs.queryIdAndJoinKeysFileName, outputs.queryIdAndJoinKeysFileCount)
+    require(queryIdAndJoinKeysFileSpec.shardCount == outputs.queryIdAndJoinKeysFileCount)
+    queryIdAndJoinKeys.write(queryIdAndJoinKeysFileSpec)
 
-    val encryptedQueriesFileSpec =
-      ShardedFileName(outputs.encryptedQueriesFileName, outputs.encryptedQueriesFileCount)
-    require(encryptedQueriesFileSpec.shardCount == outputs.encryptedQueriesFileCount)
-    encryptedResponses.map { it.toByteString() }.write(encryptedQueriesFileSpec)
+    val encryptedQueryBundlesFileSpec =
+      ShardedFileName(outputs.encryptedQueryBundlesFileName, outputs.encryptedQueryBundlesFileCount)
+    require(encryptedQueryBundlesFileSpec.shardCount == parameters.numShards)
+    encryptedQueryBundles.write(encryptedQueryBundlesFileSpec)
 
     pipeline.run()
 
     return mapOf(
-      "query-decryption-keys" to flowOf(queryDecryptionKeysFileSpec.spec.toByteString()),
-      "encrypted-queries" to flowOf(encryptedQueriesFileSpec.spec.toByteString())
+      "query-to-join-keys-map" to flowOf(queryIdAndJoinKeysFileSpec.spec.toByteString()),
+      "encrypted-queries" to flowOf(encryptedQueryBundlesFileSpec.spec.toByteString())
     )
+  }
+
+  companion object {
+    private val logger by loggerFor()
   }
 }

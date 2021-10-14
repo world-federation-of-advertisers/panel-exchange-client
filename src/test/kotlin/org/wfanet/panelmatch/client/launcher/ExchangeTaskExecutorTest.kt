@@ -16,7 +16,6 @@ package org.wfanet.panelmatch.client.launcher
 
 import com.google.common.truth.Truth.assertThat
 import com.google.protobuf.ByteString
-import kotlin.test.assertFails
 import kotlin.test.assertFailsWith
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
@@ -29,29 +28,29 @@ import org.wfanet.measurement.api.v2alpha.ExchangeStepAttemptKey
 import org.wfanet.measurement.api.v2alpha.ExchangeWorkflowKt.StepKt.encryptStep
 import org.wfanet.measurement.api.v2alpha.ExchangeWorkflowKt.step
 import org.wfanet.measurement.common.asBufferedFlow
-import org.wfanet.measurement.common.flatten
+import org.wfanet.measurement.storage.StorageClient
+import org.wfanet.measurement.storage.testing.InMemoryStorageClient
 import org.wfanet.panelmatch.client.exchangetasks.ExchangeTask
 import org.wfanet.panelmatch.client.launcher.testing.FakeTimeout
 import org.wfanet.panelmatch.client.launcher.testing.buildExchangeStep
-import org.wfanet.panelmatch.client.storage.VerifiedStorageClient
-import org.wfanet.panelmatch.client.storage.testing.makeTestVerifiedStorageClient
+import org.wfanet.panelmatch.common.storage.createBlob
+import org.wfanet.panelmatch.common.storage.toStringUtf8
 import org.wfanet.panelmatch.common.testing.runBlockingTest
 import org.wfanet.panelmatch.common.toByteString
 
 @RunWith(JUnit4::class)
 class ExchangeTaskExecutorTest {
   private val apiClient: ApiClient = mock()
-  private val storage = makeTestVerifiedStorageClient()
-
+  private val storage = InMemoryStorageClient()
   private val timeout = FakeTimeout()
 
   private val exchangeTask =
     object : ExchangeTask {
       override suspend fun execute(
-        input: Map<String, VerifiedStorageClient.VerifiedBlob>
+        input: Map<String, StorageClient.Blob>
       ): Map<String, Flow<ByteString>> {
         return input.mapKeys { "Out:${it.key}" }.mapValues {
-          val valString: String = it.value.read(1024).flatten().toStringUtf8()
+          val valString: String = it.value.toStringUtf8()
           "Out:$valString".toByteString().asBufferedFlow(1024)
         }
       }
@@ -64,10 +63,7 @@ class ExchangeTaskExecutorTest {
   fun `reads inputs and writes outputs`() = runBlockingTest {
     val blob = "some-blob".toByteString()
 
-    storage.verifiedBatchWrite(
-      outputLabels = mapOf("a" to "b"),
-      data = mapOf("a" to blob.asBufferedFlow(1024))
-    )
+    storage.createBlob("b", blob)
 
     exchangeTaskExecutor.execute(
       ExchangeStepAttemptKey("w", "x", "y", "z"),
@@ -84,16 +80,14 @@ class ExchangeTaskExecutorTest {
       )
     )
 
-    val readResults = storage.verifiedBatchRead(mapOf("result" to "c"))
-    assertThat(readResults.mapValues { it.value.toByteString() })
-      .containsExactly("result", "Out:some-blob".toByteString())
+    assertThat(storage.getBlob("c")?.toStringUtf8()).isEqualTo("Out:some-blob")
   }
 
   @Test
   fun timeout() = runBlockingTest {
     timeout.expired = true
 
-    storage.verifiedBatchWrite(outputLabels = mapOf("a" to "b"), data = mapOf("a" to emptyFlow()))
+    storage.createBlob("b", emptyFlow())
 
     assertFailsWith<CancellationException> {
       exchangeTaskExecutor.execute(
@@ -112,6 +106,6 @@ class ExchangeTaskExecutorTest {
       )
     }
 
-    assertFails { storage.verifiedBatchRead(mapOf("Out:a" to "c")) }
+    assertThat(storage.getBlob("c")).isNull()
   }
 }

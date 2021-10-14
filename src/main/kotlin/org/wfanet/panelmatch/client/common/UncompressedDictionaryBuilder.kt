@@ -15,7 +15,6 @@
 package org.wfanet.panelmatch.client.common
 
 import com.google.protobuf.ByteString
-import org.wfanet.panelmatch.common.compression.Compressor
 import org.wfanet.panelmatch.common.compression.CompressorFactory
 import org.wfanet.panelmatch.common.compression.Dictionary
 import org.wfanet.panelmatch.common.compression.NoOpCompressor
@@ -33,11 +32,5 @@ class UncompressedDictionaryBuilder : DictionaryBuilder {
 
   override fun buildDictionary(eventsSample: Iterable<ByteString>): Dictionary {
     return dictionary {}
-  }
-}
-
-private class NoOpCompressorFactory : CompressorFactory() {
-  override fun build(dictionary: Dictionary): Compressor {
-    return NoOpCompressor()
   }
 }

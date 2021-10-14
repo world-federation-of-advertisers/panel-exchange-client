@@ -17,10 +17,11 @@ package org.wfanet.panelmatch.client.exchangetasks
 import com.google.protobuf.ByteString
 import kotlinx.coroutines.flow.Flow
 import org.wfanet.measurement.common.asBufferedFlow
+import org.wfanet.measurement.storage.StorageClient
 import org.wfanet.panelmatch.client.logger.addToTaskLog
 import org.wfanet.panelmatch.client.logger.loggerFor
-import org.wfanet.panelmatch.client.storage.VerifiedStorageClient.VerifiedBlob
 import org.wfanet.panelmatch.common.crypto.DeterministicCommutativeCipher
+import org.wfanet.panelmatch.common.storage.toByteString
 
 private const val INPUT_CRYPTO_KEY_LABEL = "encryption-key"
 
@@ -31,7 +32,9 @@ internal constructor(
   private val outputDataLabel: String
 ) : ExchangeTask {
 
-  override suspend fun execute(input: Map<String, VerifiedBlob>): Map<String, Flow<ByteString>> {
+  override suspend fun execute(
+    input: Map<String, StorageClient.Blob>
+  ): Map<String, Flow<ByteString>> {
     logger.addToTaskLog("Executing crypto operation")
 
     // TODO See if it is worth updating this to not collect the inputs entirely at this step.
@@ -40,7 +43,6 @@ internal constructor(
     //  Another reason to process them in one entire batch is to minimize the cost of
     //  serialization.
     val cryptoKey = input.getValue(INPUT_CRYPTO_KEY_LABEL).toByteString()
-    val outBufferSize = input.getValue(inputDataLabel).defaultBufferSizeBytes
     val serializedInputs = input.getValue(inputDataLabel).toByteString()
     val inputList = JoinKeyAndIdCollection.parseFrom(serializedInputs).joinKeysAndIdsList
     val joinKeys = inputList.map { it.joinKey.key }
@@ -58,7 +60,7 @@ internal constructor(
             }
         }
         .toByteString()
-    return mapOf(outputDataLabel to serializedOutput.asBufferedFlow(outBufferSize))
+    return mapOf(outputDataLabel to serializedOutput.asBufferedFlow(1024))
   }
 
   companion object {

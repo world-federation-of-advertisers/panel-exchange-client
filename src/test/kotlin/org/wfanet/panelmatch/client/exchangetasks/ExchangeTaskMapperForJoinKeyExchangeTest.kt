@@ -20,21 +20,27 @@ import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
 import org.wfanet.measurement.api.v2alpha.ExchangeWorkflowKt.StepKt.encryptStep
 import org.wfanet.measurement.api.v2alpha.ExchangeWorkflowKt.step
+import org.wfanet.measurement.storage.testing.InMemoryStorageClient
+import org.wfanet.panelmatch.client.common.NoOpCompressorFactory
 import org.wfanet.panelmatch.client.launcher.testing.inputStep
 import org.wfanet.panelmatch.client.privatemembership.testing.PlaintextPrivateMembershipCryptor
-import org.wfanet.panelmatch.client.storage.testing.makeTestVerifiedStorageClient
+import org.wfanet.panelmatch.client.privatemembership.testing.PlaintextQueryResultsDecryptor
 import org.wfanet.panelmatch.common.crypto.testing.FakeDeterministicCommutativeCipher
+import org.wfanet.panelmatch.common.testing.AlwaysReadyThrottler
 import org.wfanet.panelmatch.common.testing.runBlockingTest
 
 @RunWith(JUnit4::class)
 class ExchangeTaskMapperForJoinKeyExchangeTest {
-  private val privateStorage = makeTestVerifiedStorageClient()
+  private val privateStorage = InMemoryStorageClient()
 
   private val exchangeTaskMapper =
     ExchangeTaskMapperForJoinKeyExchange(
+      compressorFactory = NoOpCompressorFactory(),
       getDeterministicCommutativeCryptor = ::FakeDeterministicCommutativeCipher,
       getPrivateMembershipCryptor = ::PlaintextPrivateMembershipCryptor,
-      privateStorage = privateStorage
+      getQueryResultsDecryptor = ::PlaintextQueryResultsDecryptor,
+      privateStorage = ::privateStorage,
+      inputTaskThrottler = AlwaysReadyThrottler
     )
 
   @Test

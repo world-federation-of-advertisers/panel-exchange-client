@@ -29,3 +29,7 @@ message DatabaseEntry {
   DatabaseKey database_key = 1;
   Plaintext plaintext = 2;
 }
+
+message DatabaseEntries {
+  repeated DatabaseEntry entries = 1;
+}

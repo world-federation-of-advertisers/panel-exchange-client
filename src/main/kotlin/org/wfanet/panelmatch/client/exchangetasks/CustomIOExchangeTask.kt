@@ -16,12 +16,12 @@ package org.wfanet.panelmatch.client.exchangetasks
 
 import com.google.protobuf.ByteString
 import kotlinx.coroutines.flow.Flow
-import org.wfanet.panelmatch.client.storage.VerifiedStorageClient.VerifiedBlob
+import org.wfanet.measurement.storage.StorageClient
 
 /** [ExchangeTask] that reads its own inputs and writes its own outputs. */
 abstract class CustomIOExchangeTask : ExchangeTask {
   final override suspend fun execute(
-    input: Map<String, VerifiedBlob>
+    input: Map<String, StorageClient.Blob>
   ): Map<String, Flow<ByteString>> {
     require(input.isEmpty())
     execute()

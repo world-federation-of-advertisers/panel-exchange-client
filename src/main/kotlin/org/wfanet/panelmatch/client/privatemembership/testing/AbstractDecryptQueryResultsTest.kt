@@ -33,12 +33,12 @@ import org.wfanet.panelmatch.client.privatemembership.KeyedDecryptedEventDataSet
 import org.wfanet.panelmatch.client.privatemembership.Plaintext
 import org.wfanet.panelmatch.client.privatemembership.PrivateMembershipCryptor
 import org.wfanet.panelmatch.client.privatemembership.QueryId
-import org.wfanet.panelmatch.client.privatemembership.QueryIdAndKeys
+import org.wfanet.panelmatch.client.privatemembership.QueryIdAndJoinKeys
 import org.wfanet.panelmatch.client.privatemembership.QueryResultsDecryptor
 import org.wfanet.panelmatch.client.privatemembership.decryptQueryResults
 import org.wfanet.panelmatch.client.privatemembership.decryptedEventDataSet
 import org.wfanet.panelmatch.client.privatemembership.plaintext
-import org.wfanet.panelmatch.client.privatemembership.queryIdAndKeys
+import org.wfanet.panelmatch.client.privatemembership.queryIdAndJoinKeys
 import org.wfanet.panelmatch.common.beam.groupByKey
 import org.wfanet.panelmatch.common.beam.keyBy
 import org.wfanet.panelmatch.common.beam.kvOf
@@ -95,11 +95,11 @@ abstract class AbstractDecryptQueryResultsTest : BeamTestBase() {
         }
       )
     val compressedEvents = makeCompressedEvents(plaintextCollection)
-    val queryIdAndKeys: PCollection<QueryIdAndKeys> =
+    val queryIdAndJoinKeys: PCollection<QueryIdAndJoinKeys> =
       pcollectionOf(
         "Create joinkey data",
         LOOKUP_KEYS.map {
-          queryIdAndKeys {
+          queryIdAndJoinKeys {
             queryId = queryIdOf(it.first)
             lookupKey = joinKeyOf(it.second)
             hashedJoinKey = joinKeyOf(it.third)
@@ -110,13 +110,13 @@ abstract class AbstractDecryptQueryResultsTest : BeamTestBase() {
       makeEncryptedResults(
         privateMembershipCryptorHelper,
         keys,
-        queryIdAndKeys,
+        queryIdAndJoinKeys,
         compressedEvents.events
       )
 
     return decryptQueryResults(
       encryptedQueryResults = encryptedResults,
-      queryIdAndKeys = queryIdAndKeys,
+      queryIdAndJoinKeys = queryIdAndJoinKeys,
       compressor = compressorFactory.buildAsPCollectionView(compressedEvents.dictionary),
       privateMembershipKeys = pcollectionViewOf("Keys View", keys),
       serializedParameters = privateMembershipSerializedParameters,
@@ -164,7 +164,7 @@ abstract class AbstractDecryptQueryResultsTest : BeamTestBase() {
   private fun makeEncryptedResults(
     privateMembershipCryptorHelper: PrivateMembershipCryptorHelper,
     keys: AsymmetricKeys,
-    queryIdAndKeys: PCollection<QueryIdAndKeys>,
+    queryIdAndJoinKeys: PCollection<QueryIdAndJoinKeys>,
     events: PCollection<KV<ByteString, ByteString>>
   ): PCollection<EncryptedQueryResult> {
 
@@ -179,9 +179,9 @@ abstract class AbstractDecryptQueryResultsTest : BeamTestBase() {
           }
         }
         .keyBy { it.queryId }
-    val keyedQueryIdAndKeys = queryIdAndKeys.keyBy { it.queryId }
+    val keyedQueryIdAndJoinKeys = queryIdAndJoinKeys.keyBy { it.queryId }
     val encryptedEventDataSet: PCollection<EncryptedEventDataSet> =
-      compressedPlaintexts.strictOneToOneJoin(keyedQueryIdAndKeys).map {
+      compressedPlaintexts.strictOneToOneJoin(keyedQueryIdAndJoinKeys).map {
         privateMembershipCryptorHelper.makeEncryptedEventDataSet(
           it.key,
           it.key.queryId to it.value.lookupKey

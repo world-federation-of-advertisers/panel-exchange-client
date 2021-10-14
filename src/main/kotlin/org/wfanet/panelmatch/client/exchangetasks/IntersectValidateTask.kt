@@ -16,9 +16,9 @@ package org.wfanet.panelmatch.client.exchangetasks
 
 import com.google.protobuf.ByteString
 import kotlinx.coroutines.flow.Flow
-import org.wfanet.measurement.common.asBufferedFlow
-import org.wfanet.measurement.common.flatten
-import org.wfanet.panelmatch.client.storage.VerifiedStorageClient.VerifiedBlob
+import kotlinx.coroutines.flow.flowOf
+import org.wfanet.measurement.storage.StorageClient
+import org.wfanet.panelmatch.common.storage.toByteString
 
 /**
  * Validates input data. In current iteration, it makes sure it is not empty, has less than a
@@ -27,11 +27,12 @@ import org.wfanet.panelmatch.client.storage.VerifiedStorageClient.VerifiedBlob
  */
 class IntersectValidateTask(val maxSize: Int, val minimumOverlap: Float) : ExchangeTask {
 
-  override suspend fun execute(input: Map<String, VerifiedBlob>): Map<String, Flow<ByteString>> {
+  override suspend fun execute(
+    input: Map<String, StorageClient.Blob>
+  ): Map<String, Flow<ByteString>> {
 
     // Flatten the Blob's underlying Flow and record the buffer size for output creation.
-    val currentData: ByteString = input.getValue("current-data").read().flatten()
-    val bufferSize: Int = input.getValue("current-data").defaultBufferSizeBytes
+    val currentData: ByteString = input.getValue("current-data").toByteString()
     val currentSetData: Set<JoinKeyAndId> =
       JoinKeyAndIdCollection.parseFrom(currentData).joinKeysAndIdsList.toSet()
     val currentDataSize: Int = currentSetData.size
@@ -39,7 +40,7 @@ class IntersectValidateTask(val maxSize: Int, val minimumOverlap: Float) : Excha
     require(currentDataSize < maxSize) {
       "Current data size of $currentDataSize is greater than $maxSize"
     }
-    require(currentDataSize > 0)
+    require(currentDataSize > 0) { "Current data size must be greater than zero" }
 
     val oldData: Set<JoinKeyAndId> =
       JoinKeyAndIdCollection.parseFrom(input.getValue("previous-data").toByteString())
@@ -51,6 +52,6 @@ class IntersectValidateTask(val maxSize: Int, val minimumOverlap: Float) : Excha
     require(currentOverlap > minimumOverlap) {
       "Overlap of $currentOverlap is less than $minimumOverlap"
     }
-    return mapOf("current-data" to currentData.asBufferedFlow(bufferSize)).toMap()
+    return mapOf("current-data" to flowOf(currentData)).toMap()
   }
 }

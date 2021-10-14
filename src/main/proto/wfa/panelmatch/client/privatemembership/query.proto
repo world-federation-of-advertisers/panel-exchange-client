@@ -55,7 +55,7 @@ message EncryptedQueryBundle {
 
 // QueryId and Hashed Join Key and Lookup Key. Used to decrypt a query by lookup
 // key and then tie it back to its original hashed join key.
-message QueryIdAndKeys {
+message QueryIdAndJoinKeys {
   QueryId query_id = 1;
   wfa.panelmatch.client.exchangetasks.JoinKey hashed_join_key = 2;
   wfa.panelmatch.client.exchangetasks.JoinKey lookup_key = 3;

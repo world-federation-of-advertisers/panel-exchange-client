@@ -15,19 +15,18 @@
 package org.wfanet.panelmatch.common.secrets
 
 import com.google.protobuf.ByteString
-import kotlinx.coroutines.flow.flowOf
-import org.wfanet.measurement.common.flatten
 import org.wfanet.measurement.storage.StorageClient
-import org.wfanet.measurement.storage.read
+import org.wfanet.panelmatch.common.storage.createBlob
+import org.wfanet.panelmatch.common.storage.toByteString
 
 /** [MutableSecretMap] implementation that stores each item in a separate blob. */
 class StorageClientSecretMap(private val storageClient: StorageClient) : MutableSecretMap {
   override suspend fun put(key: String, value: ByteString) {
     storageClient.getBlob(key)?.delete()
-    storageClient.createBlob(key, flowOf(value))
+    storageClient.createBlob(key, value)
   }
 
   override suspend fun get(key: String): ByteString? {
-    return storageClient.getBlob(key)?.read()?.flatten()
+    return storageClient.getBlob(key)?.toByteString()
   }
 }

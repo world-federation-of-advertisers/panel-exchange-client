@@ -12,17 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package org.wfanet.panelmatch.common.beam
+package org.wfanet.panelmatch.common.secrets.testing
 
-import org.wfanet.panelmatch.common.ShardedFileName
+import com.google.protobuf.ByteString
+import org.wfanet.panelmatch.common.secrets.SecretMap
 
-internal class FileSpecBreakdown(fileSpecUri: String) {
-  val directoryUri: String
-  val shardedFileName: ShardedFileName
-
-  init {
-    val index = fileSpecUri.lastIndexOf('/')
-    directoryUri = fileSpecUri.substring(0, index + 1)
-    shardedFileName = ShardedFileName(fileSpecUri.substring(index + 1))
+/** [SecretMap] backed by a [Map]. */
+class TestSecretMap(private val underlyingMap: Map<String, ByteString>) : SecretMap {
+  override suspend fun get(key: String): ByteString? {
+    return underlyingMap[key]
   }
 }

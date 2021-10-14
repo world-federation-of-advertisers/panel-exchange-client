@@ -16,18 +16,19 @@ package org.wfanet.panelmatch.client.exchangetasks
 
 import com.google.common.truth.Truth.assertThat
 import kotlin.test.assertFailsWith
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.runBlocking
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
 import org.wfanet.measurement.common.flatten
+import org.wfanet.measurement.storage.testing.InMemoryStorageClient
 import org.wfanet.panelmatch.client.launcher.testing.SINGLE_BLINDED_KEYS
-import org.wfanet.panelmatch.client.storage.testing.makeTestVerifiedStorageClient
 import org.wfanet.panelmatch.common.toByteString
 
 @RunWith(JUnit4::class)
 class IntersectValidateTaskTest {
-  private val mockStorage = makeTestVerifiedStorageClient()
+  private val mockStorage = InMemoryStorageClient()
   private val numSingleBlindedKeys = SINGLE_BLINDED_KEYS.size
   private val singleBlindedKeysAndIds =
     SINGLE_BLINDED_KEYS.zip(1..SINGLE_BLINDED_KEYS.size) { singleBlindedKey, keyId ->
@@ -46,19 +47,23 @@ class IntersectValidateTaskTest {
   private val blobOfSingleBlindedKeys = runBlocking {
     mockStorage.createBlob(
       "single-blinded-keys-1",
-      joinKeyAndIdCollection { joinKeysAndIds += singleBlindedKeysAndIds }.toByteString()
+      flowOf(joinKeyAndIdCollection { joinKeysAndIds += singleBlindedKeysAndIds }.toByteString())
     )
   }
   private val blobOfSingleBlindedKeysWithOneMissing = runBlocking {
     mockStorage.createBlob(
       "single-blinded-keys-2",
-      joinKeyAndIdCollection { joinKeysAndIds += singleBlindedKeysAndIds.drop(1) }.toByteString()
+      flowOf(
+        joinKeyAndIdCollection { joinKeysAndIds += singleBlindedKeysAndIds.drop(1) }.toByteString()
+      )
     )
   }
   private val blobOfSingleBlindedKeysAndWrongIds = runBlocking {
     mockStorage.createBlob(
       "single-blinded-keys-3",
-      joinKeyAndIdCollection { joinKeysAndIds += singleBlindedKeysAndWrongIds }.toByteString()
+      flowOf(
+        joinKeyAndIdCollection { joinKeysAndIds += singleBlindedKeysAndWrongIds }.toByteString()
+      )
     )
   }
 

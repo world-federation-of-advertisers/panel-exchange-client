@@ -34,13 +34,13 @@ import org.wfanet.panelmatch.client.privatemembership.CreateQueriesParameters
 import org.wfanet.panelmatch.client.privatemembership.EncryptedQueryBundle
 import org.wfanet.panelmatch.client.privatemembership.PrivateMembershipCryptor
 import org.wfanet.panelmatch.client.privatemembership.QueryId
-import org.wfanet.panelmatch.client.privatemembership.QueryIdAndKeys
+import org.wfanet.panelmatch.client.privatemembership.QueryIdAndJoinKeys
 import org.wfanet.panelmatch.client.privatemembership.createQueries
+import org.wfanet.panelmatch.common.beam.flatMap
 import org.wfanet.panelmatch.common.beam.join
 import org.wfanet.panelmatch.common.beam.keyBy
 import org.wfanet.panelmatch.common.beam.kvOf
 import org.wfanet.panelmatch.common.beam.map
-import org.wfanet.panelmatch.common.beam.parDo
 import org.wfanet.panelmatch.common.beam.testing.BeamTestBase
 import org.wfanet.panelmatch.common.beam.testing.assertThat
 import org.wfanet.panelmatch.common.beam.values
@@ -96,10 +96,10 @@ abstract class AbstractCreateQueriesTest : BeamTestBase() {
         maxQueriesPerShard = 12345,
         padQueries = false
       )
-    val (queryIdAndKeys, encryptedResults) = runWorkflow(privateMembershipCryptor, parameters)
+    val (queryIdAndJoinKeys, encryptedResults) = runWorkflow(privateMembershipCryptor, parameters)
     val decodedQueries =
       decodeEncryptedQueryBundle(privateMembershipCryptorHelper, encryptedResults)
-    val panelistQueries = getPanelistQueries(decodedQueries, queryIdAndKeys)
+    val panelistQueries = getPanelistQueries(decodedQueries, queryIdAndJoinKeys)
     assertThat(panelistQueries.values())
       .containsInAnyOrder(
         PanelistQuery(0, "hashed join key of abc", "abc", 0),
@@ -124,10 +124,10 @@ abstract class AbstractCreateQueriesTest : BeamTestBase() {
         maxQueriesPerShard = totalQueriesPerShard,
         padQueries = true
       )
-    val (queryIdAndKeys, encryptedQueries) = runWorkflow(privateMembershipCryptor, parameters)
+    val (queryIdAndJoinKeys, encryptedQueries) = runWorkflow(privateMembershipCryptor, parameters)
     val decodedQueries =
       decodeEncryptedQueryBundle(privateMembershipCryptorHelper, encryptedQueries)
-    val panelistQueries = getPanelistQueries(decodedQueries, queryIdAndKeys)
+    val panelistQueries = getPanelistQueries(decodedQueries, queryIdAndJoinKeys)
     assertThat(panelistQueries.values())
       .containsInAnyOrder(
         PanelistQuery(0, "hashed join key of abc", "abc", 0),
@@ -200,35 +200,33 @@ abstract class AbstractCreateQueriesTest : BeamTestBase() {
 
   private fun decodeEncryptedQueryBundle(
     privateMembershipCryptorHelper: PrivateMembershipCryptorHelper,
-    data: PCollection<EncryptedQueryBundle>
+    encryptedQueryBundles: PCollection<EncryptedQueryBundle>
   ): PCollection<KV<QueryId, ShardedQuery>> {
-    return data.parDo("Map to ShardedQuery") { encryptedQueriesData ->
-      val shardedQueries =
-        privateMembershipCryptorHelper.decodeEncryptedQueryBundle(
-          EncryptedQueryBundle.parseFrom(encryptedQueriesData.serializedEncryptedQueries)
-        )
-      yieldAll(shardedQueries.map { kvOf(it.queryId, it) })
-    }
+    return encryptedQueryBundles
+      .flatMap("Map to ShardedQuery") { encryptedQueryBundle ->
+        privateMembershipCryptorHelper.decodeEncryptedQueryBundle(encryptedQueryBundle)
+      }
+      .keyBy { it.queryId }
   }
 
   private fun getPanelistQueries(
     decryptedQueries: PCollection<KV<QueryId, ShardedQuery>>,
-    queryIdAndKeys: PCollection<QueryIdAndKeys>
+    queryIdAndJoinKeys: PCollection<QueryIdAndJoinKeys>
   ): PCollection<KV<QueryId, PanelistQuery>> {
-    return queryIdAndKeys.keyBy { it.queryId }.join(decryptedQueries) {
+    return queryIdAndJoinKeys.keyBy { it.queryId }.join(decryptedQueries) {
       key: QueryId,
-      panelistKeys: Iterable<QueryIdAndKeys>,
+      panelistKeys: Iterable<QueryIdAndJoinKeys>,
       shardedQueries: Iterable<ShardedQuery> ->
       if (panelistKeys.count() > 0) {
         val queriesList = shardedQueries.toList()
-        val queryIdAndKeysList = panelistKeys.toList()
+        val queryIdAndJoinKeysList = panelistKeys.toList()
 
         val query =
           requireNotNull(queriesList.singleOrNull()) { "${queriesList.size} queries for $key" }
 
         val queryIdAndKey =
-          requireNotNull(queryIdAndKeysList.singleOrNull()) {
-            "${queryIdAndKeysList.size} of panelistKeys for $key"
+          requireNotNull(queryIdAndJoinKeysList.singleOrNull()) {
+            "${queryIdAndJoinKeysList.size} of panelistKeys for $key"
           }
 
         val panelistQuery =
