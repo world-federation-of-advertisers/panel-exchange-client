@@ -22,12 +22,18 @@ import org.wfanet.measurement.common.grpc.buildMutualTlsChannel
 import org.wfanet.measurement.common.grpc.withShutdownTimeout
 import org.wfanet.measurement.common.throttler.MinimumIntervalThrottler
 import org.wfanet.measurement.common.throttler.Throttler
+import org.wfanet.panelmatch.client.exchangetasks.ExchangeTaskMapper
+import org.wfanet.panelmatch.client.exchangetasks.ExchangeTaskMapperForJoinKeyExchange
 import org.wfanet.panelmatch.client.launcher.ApiClient
 import org.wfanet.panelmatch.client.launcher.GrpcApiClient
 import org.wfanet.panelmatch.client.launcher.Identity
+import org.wfanet.panelmatch.client.privatemembership.JniPrivateMembershipCryptor
+import org.wfanet.panelmatch.client.privatemembership.JniQueryResultsDecryptor
 import org.wfanet.panelmatch.client.storage.VerifiedStorageClient
 import org.wfanet.panelmatch.common.Timeout
 import org.wfanet.panelmatch.common.asTimeout
+import org.wfanet.panelmatch.common.compression.BrotliCompressorFactory
+import org.wfanet.panelmatch.common.crypto.JniDeterministicCommutativeCipher
 import picocli.CommandLine
 
 /** Executes ExchangeWorkflows. */
@@ -38,6 +44,16 @@ abstract class ExchangeWorkflowDaemonFromFlags : ExchangeWorkflowDaemon() {
 
   /** [VerifiedStorageClient] for payloads to be shared with the other party. */
   abstract val sharedStorage: VerifiedStorageClient
+
+  override val exchangeTaskMapper: ExchangeTaskMapper =
+    object : ExchangeTaskMapperForJoinKeyExchange() {
+      override val compressorFactory by lazy { BrotliCompressorFactory() }
+      override val deterministicCommutativeCryptor by lazy { JniDeterministicCommutativeCipher() }
+      override val getPrivateMembershipCryptor = ::JniPrivateMembershipCryptor
+      override val queryResultsDecryptor by lazy { JniQueryResultsDecryptor() }
+      override val privateStorage by lazy { privateStorageFactory }
+      override val inputTaskThrottler by lazy { throttler }
+    }
 
   override val apiClient: ApiClient by lazy {
     val clientCerts =
