@@ -31,7 +31,9 @@ private object UnimplementedExchangeWorkflowDaemon : ExchangeWorkflowDaemonFromF
   lateinit var approvedWorkflowFlags: PlaintextApprovedWorkflowFileFlags
     private set
 
-  override val sharedStorage: VerifiedStorageClient
+  override val sharedVerifiedStorageClient: VerifiedStorageClient
+    get() = TODO("Not yet implemented")
+  override val privateVerifiedStorageClient: VerifiedStorageClient
     get() = TODO("Not yet implemented")
   override val privateStorageFactory: StorageFactory
     get() = TODO("Not yet implemented")

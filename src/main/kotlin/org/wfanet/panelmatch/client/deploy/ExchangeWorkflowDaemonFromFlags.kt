@@ -38,11 +38,16 @@ abstract class ExchangeWorkflowDaemonFromFlags : ExchangeWorkflowDaemon() {
     private set
 
   /** [VerifiedStorageClient] for payloads to be shared with the other party. */
-  abstract val sharedStorage: VerifiedStorageClient
+  abstract val sharedVerifiedStorageClient: VerifiedStorageClient
+
+  /** [VerifiedStorageClient] for payloads private to the current party. */
+  abstract val privateVerifiedStorageClient: VerifiedStorageClient
 
   override val exchangeTaskMapper: ExchangeTaskMapper by lazy {
     ProductionExchangeTaskMapper(
-      privateStorage = privateStorageFactory,
+      privateStorageFactory = privateStorageFactory,
+      sharedVerifiedStorageClient = sharedVerifiedStorageClient,
+      privateVerifiedStorageClient = privateVerifiedStorageClient,
       inputTaskThrottler = throttler,
     )
   }

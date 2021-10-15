@@ -27,6 +27,7 @@ import org.wfanet.panelmatch.client.privatemembership.testing.PlaintextPrivateMe
 import org.wfanet.panelmatch.client.privatemembership.testing.PlaintextQueryEvaluator
 import org.wfanet.panelmatch.client.privatemembership.testing.PlaintextQueryResultsDecryptor
 import org.wfanet.panelmatch.client.storage.StorageFactory
+import org.wfanet.panelmatch.client.storage.testing.makeTestVerifiedStorageClient
 import org.wfanet.panelmatch.common.compression.NoOpCompressorFactory
 import org.wfanet.panelmatch.common.crypto.testing.FakeDeterministicCommutativeCipher
 import org.wfanet.panelmatch.common.testing.AlwaysReadyThrottler
@@ -40,8 +41,12 @@ class ExchangeTaskMapperForJoinKeyExchangeTest {
       override val deterministicCommutativeCryptor = FakeDeterministicCommutativeCipher
       override val getPrivateMembershipCryptor = ::PlaintextPrivateMembershipCryptor
       override val queryResultsDecryptor = PlaintextQueryResultsDecryptor()
-      override val privateStorage = StorageFactory { InMemoryStorageClient() }
+      override val privateStorageFactory = StorageFactory { InMemoryStorageClient() }
       override val inputTaskThrottler = AlwaysReadyThrottler
+      override val sharedVerifiedStorageClient =
+        makeTestVerifiedStorageClient(InMemoryStorageClient())
+      override val privateVerifiedStorageClient =
+        makeTestVerifiedStorageClient(InMemoryStorageClient())
       override val getQueryResultsEvaluator = { _: ByteString -> PlaintextQueryEvaluator }
     }
 

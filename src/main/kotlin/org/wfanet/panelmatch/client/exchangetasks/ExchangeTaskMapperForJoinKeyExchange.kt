@@ -24,6 +24,7 @@ import org.wfanet.panelmatch.client.privatemembership.PrivateMembershipCryptor
 import org.wfanet.panelmatch.client.privatemembership.QueryEvaluator
 import org.wfanet.panelmatch.client.privatemembership.QueryResultsDecryptor
 import org.wfanet.panelmatch.client.storage.StorageFactory
+import org.wfanet.panelmatch.client.storage.VerifiedStorageClient
 import org.wfanet.panelmatch.common.compression.CompressorFactory
 import org.wfanet.panelmatch.common.crypto.DeterministicCommutativeCipher
 
@@ -34,8 +35,10 @@ abstract class ExchangeTaskMapperForJoinKeyExchange : ExchangeTaskMapper {
   abstract val getPrivateMembershipCryptor: (ByteString) -> PrivateMembershipCryptor
   abstract val queryResultsDecryptor: QueryResultsDecryptor
   abstract val getQueryResultsEvaluator: (ByteString) -> QueryEvaluator
-  abstract val privateStorage: StorageFactory
+  abstract val privateStorageFactory: StorageFactory
   abstract val inputTaskThrottler: Throttler
+  abstract val sharedVerifiedStorageClient: VerifiedStorageClient
+  abstract val privateVerifiedStorageClient: VerifiedStorageClient
 
   override suspend fun getExchangeTaskForStep(step: ExchangeWorkflow.Step): ExchangeTask {
     @Suppress("WHEN_ENUM_CAN_BE_NULL_IN_JAVA")
@@ -55,8 +58,8 @@ abstract class ExchangeTaskMapperForJoinKeyExchange : ExchangeTaskMapper {
       StepCase.BUILD_PRIVATE_MEMBERSHIP_QUERIES_STEP -> getBuildPrivateMembershipQueriesTask(step)
       StepCase.DECRYPT_PRIVATE_MEMBERSHIP_QUERY_RESULTS_STEP ->
         getDecryptMembershipResultsTask(step)
-      StepCase.COPY_FROM_SHARED_STORAGE_STEP -> TODO()
-      StepCase.COPY_TO_SHARED_STORAGE_STEP -> TODO()
+      StepCase.COPY_FROM_SHARED_STORAGE_STEP -> getCopyFromSharedStorageTask(step)
+      StepCase.COPY_TO_SHARED_STORAGE_STEP -> getCopyToSharedStorageTask(step)
       else -> error("Unsupported step type")
     }
   }
@@ -66,7 +69,7 @@ abstract class ExchangeTaskMapperForJoinKeyExchange : ExchangeTaskMapper {
     require(step.inputLabelsMap.isEmpty())
     val blobKey = step.outputLabelsMap.values.single()
     return InputTask(
-      storage = privateStorage.build(),
+      storage = privateStorageFactory.build(),
       blobKey = blobKey,
       throttler = inputTaskThrottler
     )
@@ -101,7 +104,7 @@ abstract class ExchangeTaskMapperForJoinKeyExchange : ExchangeTaskMapper {
         queryIdAndJoinKeysFileName = step.outputLabelsMap.getValue("query-decryption-keys"),
       )
     return BuildPrivateMembershipQueriesTask(
-      storageFactory = privateStorage,
+      storageFactory = privateStorageFactory,
       parameters =
         CreateQueriesParameters(
           numShards = step.buildPrivateMembershipQueriesStep.numShards,
@@ -123,7 +126,7 @@ abstract class ExchangeTaskMapperForJoinKeyExchange : ExchangeTaskMapper {
         keyedDecryptedEventDataSetFileName = step.outputLabelsMap.getValue("decrypted-event-data"),
       )
     return DecryptPrivateMembershipResultsTask(
-      storageFactory = privateStorage,
+      storageFactory = privateStorageFactory,
       serializedParameters = step.decryptPrivateMembershipQueryResultsStep.serializedParameters,
       queryResultsDecryptor = queryResultsDecryptor,
       compressorFactory = compressorFactory,
@@ -148,10 +151,30 @@ abstract class ExchangeTaskMapperForJoinKeyExchange : ExchangeTaskMapper {
     val queryResultsEvaluator =
       getQueryResultsEvaluator(step.executePrivateMembershipQueriesStep.serializedParameters)
     return ExecutePrivateMembershipQueriesTask(
-      storageFactory = privateStorage,
+      storageFactory = privateStorageFactory,
       evaluateQueriesParameters = parameters,
       queryEvaluator = queryResultsEvaluator,
       outputs = outputs
+    )
+  }
+
+  private fun getCopyFromSharedStorageTask(step: ExchangeWorkflow.Step): ExchangeTask {
+    require(step.stepCase == StepCase.COPY_FROM_SHARED_STORAGE_STEP)
+    return SharedStorageTask(
+      step = step,
+      copyOptions = step.copyFromSharedStorageStep.copyOptions,
+      sourceStorageClient = sharedVerifiedStorageClient,
+      destinationStorageClient = privateVerifiedStorageClient,
+    )
+  }
+
+  private fun getCopyToSharedStorageTask(step: ExchangeWorkflow.Step): ExchangeTask {
+    require(step.stepCase == StepCase.COPY_TO_SHARED_STORAGE_STEP)
+    return SharedStorageTask(
+      step = step,
+      copyOptions = step.copyToSharedStorageStep.copyOptions,
+      sourceStorageClient = privateVerifiedStorageClient,
+      destinationStorageClient = sharedVerifiedStorageClient
     )
   }
 }
