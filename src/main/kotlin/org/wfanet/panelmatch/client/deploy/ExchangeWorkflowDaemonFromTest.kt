@@ -15,6 +15,7 @@
 package org.wfanet.panelmatch.client.deploy
 
 import io.grpc.Channel
+import java.security.cert.X509Certificate
 import java.time.Clock
 import java.time.Duration
 import org.wfanet.measurement.api.v2alpha.ExchangeStepAttemptsGrpcKt.ExchangeStepAttemptsCoroutineStub
@@ -28,19 +29,28 @@ import org.wfanet.panelmatch.client.launcher.Identity
 import org.wfanet.panelmatch.client.storage.VerifiedStorageClient
 import org.wfanet.panelmatch.common.Timeout
 import org.wfanet.panelmatch.common.asTimeout
-import picocli.CommandLine
+import org.wfanet.panelmatch.common.secrets.SecretMap
 
 /** Executes ExchangeWorkflows for InProcess Integration testing. */
 class ExchangeWorkflowDaemonFromTest(
-  val channel: Channel,
-  val providerId: String,
-  val providerType: ExchangeWorkflow.Party,
-  val taskTimeoutDuration: Duration,
-  val pollingInterval: Duration
+  private val channel: Channel,
+  private val providerId: String,
+  private val providerType: ExchangeWorkflow.Party,
+  private val taskTimeoutDuration: Duration,
+  private val pollingInterval: Duration,
+  private val validExchangeWorkflow: SecretMap
 ) : ExchangeWorkflowDaemon() {
 
   override val privateStorage: VerifiedStorageClient
     get() = TODO("Not yet implemented")
+  override val localCertificate: X509Certificate
+    get() = TODO("Not yet implemented")
+  override val uriPrefix: String
+    get() = TODO("Not yet implemented: coming from client storage")
+
+  override val validExchangeWorkflows: SecretMap by lazy {
+    validExchangeWorkflow
+  }
 
   override val apiClient: ApiClient by lazy {
     val exchangeStepsClient = ExchangeStepsCoroutineStub(channel)
