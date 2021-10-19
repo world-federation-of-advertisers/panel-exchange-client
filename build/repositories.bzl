@@ -33,24 +33,24 @@ def panel_exchange_client_repositories():
 
     http_archive(
         name = "wfa_common_jvm",
-        sha256 = "5118c3250a39fce4cb0670080fc064d45e142fc066a1bbcea0ed7232b2f4515e",
-        strip_prefix = "common-jvm-0.17.0",
-        url = "https://github.com/world-federation-of-advertisers/common-jvm/archive/v0.17.0.tar.gz",
+        sha256 = "dad40dc1efc67ad692e1847f0634440ab95fe6454143a2540c92a27d288f5c57",
+        strip_prefix = "common-jvm-0.18.0",
+        url = "https://github.com/world-federation-of-advertisers/common-jvm/archive/v0.18.0.tar.gz",
     )
 
     # TODO: remove dependencies on wfa_measurement_system
     http_archive(
         name = "wfa_measurement_system",
-        sha256 = "9d531684e3da0fd6a15260c591474802305748f42cb5af32893f84f516a19024",
-        strip_prefix = "cross-media-measurement-37267399a1563ded00375a7562bfcf8c44520531",
-        url = "https://github.com/world-federation-of-advertisers/cross-media-measurement/archive/37267399a1563ded00375a7562bfcf8c44520531.tar.gz",
+        sha256 = "69510d39150dfffb5a26b15b1a40f8a68102f6ea9ea25ee3bd4dfb0628503b93",
+        strip_prefix = "cross-media-measurement-1325121517f49116667972645dbfc94d3bd3214e",
+        url = "https://github.com/world-federation-of-advertisers/cross-media-measurement/archive/1325121517f49116667972645dbfc94d3bd3214e.tar.gz",
     )
 
     http_archive(
         name = "wfa_measurement_proto",
-        sha256 = "c3107b077103ce8717bd2de9ca54cba97253f39bf8c9c9bbb96f39baebec7a1b",
-        strip_prefix = "cross-media-measurement-api-0.7.4",
-        url = "https://github.com/world-federation-of-advertisers/cross-media-measurement-api/archive/v0.7.4.tar.gz",
+        sha256 = "4385a6ae12684d8896affdd60c19a470b284623b5094685dd3a616fd30178c52",
+        strip_prefix = "cross-media-measurement-api-0.9.0",
+        url = "https://github.com/world-federation-of-advertisers/cross-media-measurement-api/archive/v0.9.0.tar.gz",
     )
 
     http_archive(
@@ -62,9 +62,9 @@ def panel_exchange_client_repositories():
 
     http_archive(
         name = "wfa_consent_signaling_client",
-        sha256 = "b46a870d5be459f8db2f136e2685d9310580bf0c4a0c9e1fef5fb61d8f8beb5a",
-        strip_prefix = "consent-signaling-client-0.8.1",
-        url = "https://github.com/world-federation-of-advertisers/consent-signaling-client/archive/v0.8.1.tar.gz",
+        sha256 = "ff82af7bc1c659d726e64c57f3ff6a16f09b4d0ee231a70ea744f8d213412998",
+        strip_prefix = "consent-signaling-client-0.9.0",
+        url = "https://github.com/world-federation-of-advertisers/consent-signaling-client/archive/v0.9.0.tar.gz",
     )
 
     http_archive(
