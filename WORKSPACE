@@ -48,8 +48,3 @@ maven_install(
 load("@wfa_common_jvm//build:common_jvm_extra_deps.bzl", "common_jvm_extra_deps")
 
 common_jvm_extra_deps()
-
-local_repository(
-    name = "wfa_measurement_system",
-    path = "/usr/local/google/home/yunyeng/cross-media-measurement",
-)
