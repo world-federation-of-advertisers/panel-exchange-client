@@ -83,7 +83,7 @@ def panel_exchange_client_repositories():
 
     http_archive(
         name = "private_membership",
-        sha256 = "5267803c14f1468947825fa1d1e6b810c277e13115877d2a86ad8a5028c99196",
-        strip_prefix = "private-membership-e111e973646aec4b7735d439082a030849967dc3",
-        url = "https://github.com/google/private-membership/archive/e111e973646aec4b7735d439082a030849967dc3.zip",
+        sha256 = "8ef6b90df3c8abd300fe254bba73c6c0314d2c64127e369c04d7af1fb99a7115",
+        strip_prefix = "private-membership-2216c76f40c1c3d03e8cf7d1ad088af184ff6e4c",
+        url = "https://github.com/google/private-membership/archive/2216c76f40c1c3d03e8cf7d1ad088af184ff6e4c.zip",
     )
