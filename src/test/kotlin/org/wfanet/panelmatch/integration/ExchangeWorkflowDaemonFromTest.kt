@@ -12,21 +12,28 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package org.wfanet.panelmatch.client.deploy
+package org.wfanet.panelmatch.integration
 
 import io.grpc.Channel
-import java.security.cert.X509Certificate
+import io.grpc.Status
 import java.time.Clock
 import java.time.Duration
+import org.wfanet.measurement.api.v2alpha.DataProviderKey
 import org.wfanet.measurement.api.v2alpha.ExchangeStepAttemptsGrpcKt.ExchangeStepAttemptsCoroutineStub
 import org.wfanet.measurement.api.v2alpha.ExchangeStepsGrpcKt.ExchangeStepsCoroutineStub
 import org.wfanet.measurement.api.v2alpha.ExchangeWorkflow
+import org.wfanet.measurement.api.v2alpha.ModelProviderKey
+import org.wfanet.measurement.api.v2alpha.ResourceKey
+import org.wfanet.measurement.common.grpc.failGrpc
+import org.wfanet.measurement.common.identity.withPrincipalName
 import org.wfanet.measurement.common.throttler.MinimumIntervalThrottler
 import org.wfanet.measurement.common.throttler.Throttler
+import org.wfanet.panelmatch.client.deploy.ExchangeWorkflowDaemon
 import org.wfanet.panelmatch.client.launcher.ApiClient
 import org.wfanet.panelmatch.client.launcher.GrpcApiClient
 import org.wfanet.panelmatch.client.launcher.Identity
-import org.wfanet.panelmatch.client.storage.VerifiedStorageClient
+import org.wfanet.panelmatch.client.storage.FileSystemStorageFactory
+import org.wfanet.panelmatch.client.storage.StorageFactory
 import org.wfanet.panelmatch.common.Timeout
 import org.wfanet.panelmatch.common.asTimeout
 import org.wfanet.panelmatch.common.secrets.SecretMap
@@ -34,35 +41,38 @@ import org.wfanet.panelmatch.common.secrets.SecretMap
 /** Executes ExchangeWorkflows for InProcess Integration testing. */
 class ExchangeWorkflowDaemonFromTest(
   private val channel: Channel,
-  private val providerId: String,
-  private val providerType: ExchangeWorkflow.Party,
+  private val providerKey: ResourceKey,
   private val taskTimeoutDuration: Duration,
   private val pollingInterval: Duration,
-  private val validExchangeWorkflow: SecretMap
+  private val validExchangeWorkflow: SecretMap,
+  private val storageDirectory: String
 ) : ExchangeWorkflowDaemon() {
 
-  override val privateStorage: VerifiedStorageClient
-    get() = TODO("Not yet implemented")
-  override val localCertificate: X509Certificate
-    get() = TODO("Not yet implemented")
-  override val uriPrefix: String
-    get() = TODO("Not yet implemented: coming from client storage")
+  override val identity: Identity =
+    when (providerKey) {
+      is ModelProviderKey ->
+        Identity(providerKey.modelProviderId, ExchangeWorkflow.Party.MODEL_PROVIDER)
+      is DataProviderKey ->
+        Identity(providerKey.dataProviderId, ExchangeWorkflow.Party.DATA_PROVIDER)
+      else ->
+        failGrpc(Status.UNAUTHENTICATED) {
+          "Caller identity is neither DataProvider nor ModelProvider"
+        }
+    }
 
-  override val validExchangeWorkflows: SecretMap by lazy {
-    validExchangeWorkflow
+  override val privateStorageFactory: StorageFactory by lazy {
+    FileSystemStorageFactory(storageDirectory)
   }
 
+  override val validExchangeWorkflows: SecretMap by lazy { validExchangeWorkflow }
+
   override val apiClient: ApiClient by lazy {
-    val exchangeStepsClient = ExchangeStepsCoroutineStub(channel)
+    val exchangeStepsClient =
+      ExchangeStepsCoroutineStub(channel).withPrincipalName(providerKey.toName())
+    val exchangeStepAttemptsClient =
+      ExchangeStepAttemptsCoroutineStub(channel).withPrincipalName(providerKey.toName())
 
-    val exchangeStepAttemptsClient = ExchangeStepAttemptsCoroutineStub(channel)
-
-    GrpcApiClient(
-      Identity(providerId, providerType),
-      exchangeStepsClient,
-      exchangeStepAttemptsClient,
-      Clock.systemUTC()
-    )
+    GrpcApiClient(identity, exchangeStepsClient, exchangeStepAttemptsClient, Clock.systemUTC())
   }
 
   override val throttler: Throttler by lazy {
@@ -70,6 +80,4 @@ class ExchangeWorkflowDaemonFromTest(
   }
 
   override val taskTimeout: Timeout by lazy { taskTimeoutDuration.asTimeout() }
-
-  override val identity: Identity by lazy { Identity(providerId, providerType) }
 }

@@ -16,9 +16,6 @@ package org.wfanet.panelmatch.integration
 
 import com.google.protobuf.ByteString
 import com.google.type.Date
-import io.grpc.Metadata
-import io.grpc.stub.AbstractStub
-import io.grpc.stub.MetadataUtils
 import java.lang.IllegalArgumentException
 import java.time.Clock
 import java.time.Duration
@@ -26,124 +23,123 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneOffset
 import java.util.logging.Logger
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TestRule
 import org.wfanet.measurement.api.v2alpha.DataProviderKey
 import org.wfanet.measurement.api.v2alpha.ExchangeStepAttempt
 import org.wfanet.measurement.api.v2alpha.ExchangeStepAttemptKey
-import org.wfanet.measurement.api.v2alpha.ExchangeStepAttemptsGrpcKt.ExchangeStepAttemptsCoroutineStub
-import org.wfanet.measurement.api.v2alpha.ExchangeStepsGrpcKt.ExchangeStepsCoroutineStub
 import org.wfanet.measurement.api.v2alpha.ExchangeWorkflow
 import org.wfanet.measurement.api.v2alpha.ModelProviderKey
-import org.wfanet.measurement.common.identity.apiIdToExternalId
-import org.wfanet.measurement.common.identity.withPrincipalName
 import org.wfanet.measurement.common.parseTextProto
 import org.wfanet.measurement.common.testing.chainRulesSequentially
 import org.wfanet.measurement.common.toProtoDate
 import org.wfanet.measurement.integration.deploy.gcloud.buildKingdomSpannerEmulatorDatabaseRule
 import org.wfanet.measurement.integration.deploy.gcloud.buildSpannerInProcessKingdom
-import org.wfanet.panelmatch.client.deploy.ExchangeWorkflowDaemonFromTest
 import org.wfanet.panelmatch.client.launcher.ApiClient.ClaimedExchangeStep
 import org.wfanet.panelmatch.client.launcher.GrpcApiClient
-import org.wfanet.panelmatch.client.launcher.Identity
-import org.wfanet.panelmatch.client.logger.addToTaskLog
 import org.wfanet.panelmatch.common.secrets.testing.TestSecretMap
 
 private const val SCHEDULE = "@daily"
 private const val API_VERSION = "v2alpha"
-private val LAST_WEEK: Date = LocalDate.now().minusDays(7).toProtoDate()
-private const val DATA_PROVIDER_ID = "some-data-provider-id"
-private val DATA_PROVIDER_IDENTITY =
-  Identity(DATA_PROVIDER_ID, ExchangeWorkflow.Party.DATA_PROVIDER)
+private val TODAY: Date = LocalDate.now().toProtoDate()
 
 class InProcessPanelMatchIntegrationTest {
   private val clock: Clock = Clock.fixed(Instant.ofEpochSecond(123456789), ZoneOffset.UTC)
 
   val databaseRule = buildKingdomSpannerEmulatorDatabaseRule()
   val inProcessKingdom = buildSpannerInProcessKingdom(databaseRule, clock)
-  //
-  //  private val apiClient by lazy {
-  //    GrpcApiClient(
-  //      DATA_PROVIDER_IDENTITY,
-  //      ExchangeStepsCoroutineStub(inProcessKingdom.publicApiChannel),
-  //      ExchangeStepAttemptsCoroutineStub(inProcessKingdom.publicApiChannel),
-  //      clock
-  //    )
-  //  }
-
-  private fun makeClient(identity: Identity, principalName: String): GrpcApiClient {
-    return GrpcApiClient(
-      identity,
-      ExchangeStepsCoroutineStub(inProcessKingdom.publicApiChannel).withPrincipalName(principalName),
-      ExchangeStepAttemptsCoroutineStub(inProcessKingdom.publicApiChannel).withPrincipalName(principalName),
-      clock
-    )
-  }
 
   @get:Rule
   val ruleChain: TestRule by lazy { chainRulesSequentially(databaseRule, inProcessKingdom) }
 
-  val resourceSetup = inProcessKingdom.panelMatchResourceSetup
+  private val resourceSetup = inProcessKingdom.panelMatchResourceSetup
 
   private lateinit var dataProviderKey: String
   private lateinit var modelProviderKey: String
+  private lateinit var recurringExchangeApiId: String
 
-  private suspend fun setup() {
-
-    //    val principal = Principal.DataProvider(DataProviderKey(externalIdToApiId(12345L)))
-
+  @Before
+  fun setup() = runBlocking {
     val providers =
       resourceSetup.createResourcesForWorkflow(
         exchangeSchedule = SCHEDULE,
         apiVersion = API_VERSION,
         exchangeWorkflow = exchangeWorkflow,
-        exchangeDate = LAST_WEEK
+        exchangeDate = TODAY
       )
 
     dataProviderKey = providers.dataProviderKey
     modelProviderKey = providers.modelProviderKey
+    recurringExchangeApiId = providers.recurringExchangeApiId
   }
 
   @Test
   fun `entire process`() = runBlocking {
-    setup()
-//    logger.addToTaskLog(
-//      "Setup complete by creating a MP ${modelProviderKey} and an EDP ${dataProviderKey}."
-//    )
+    //    logger.addToTaskLog(
+    //      "Setup complete by creating a MP ${modelProviderKey} and an EDP ${dataProviderKey}."
+    //    )
 
-    val dataProviderIdentity =
-      Identity(DataProviderKey.fromName(dataProviderKey)!!.dataProviderId, ExchangeWorkflow.Party.DATA_PROVIDER)
-    val modelProviderIdentity =
-      Identity(ModelProviderKey.fromName(modelProviderKey)!!.modelProviderId, ExchangeWorkflow.Party.MODEL_PROVIDER)
-    val apiClient = makeClient(modelProviderIdentity, modelProviderKey)
-    val map = mutableMapOf<String, ByteString>()
-
-    val daemon = ExchangeWorkflowDaemonFromTest(
-      channel = inProcessKingdom.publicApiChannel,
-      providerId = ModelProviderKey.fromName(modelProviderKey)!!.modelProviderId,
-      providerType = ExchangeWorkflow.Party.MODEL_PROVIDER,
-      taskTimeoutDuration = Duration.ofSeconds(3),
-      pollingInterval = Duration.ofMinutes(1),
-      validExchangeWorkflow = TestSecretMap(map)
+    val map = mutableMapOf<String, ByteString>(
+      Pair(recurringExchangeApiId, exchangeWorkflow.toByteString())
     )
 
+    val edpDaemon =
+      ExchangeWorkflowDaemonFromTest(
+        channel = inProcessKingdom.publicApiChannel,
+        providerKey = DataProviderKey.fromName(dataProviderKey)!!,
+        taskTimeoutDuration = Duration.ofSeconds(3),
+        pollingInterval = Duration.ofSeconds(15),
+        validExchangeWorkflow = TestSecretMap(map),
+        storageDirectory = "/"
+      )
+    val mpDaemon =
+      ExchangeWorkflowDaemonFromTest(
+        channel = inProcessKingdom.publicApiChannel,
+        providerKey = ModelProviderKey.fromName(modelProviderKey)!!,
+        taskTimeoutDuration = Duration.ofSeconds(3),
+        pollingInterval = Duration.ofSeconds(15),
+        validExchangeWorkflow = TestSecretMap(map),
+        storageDirectory = "/"
+      )
 
-    val job = apiClient.claimJob()
-    println(job)
+    val attemptKey = java.util.UUID.randomUUID().toString()
+    //    val one = async(CoroutineName(attemptKey) + Dispatchers.Default) {
+    //      println("FIRST ONE????")
+    //    }
+    val attemptKey1 = java.util.UUID.randomUUID().toString()
+    val job1 = launch { edpDaemon.run() }
+    //    val attemptKey2 = java.util.UUID.randomUUID().toString()
+    //    val three = async(CoroutineName(attemptKey2) + Dispatchers.Default) {
+    //      println("SECONDDDDD ONE?!!!!!???")
+    //    }
+    val attemptKey3 = java.util.UUID.randomUUID().toString()
+    val job2 = launch { mpDaemon.run() }
+    //    println("The answer is ${one.await()}. ${two.await()}, ${three.await()}, ${four.await()}")
 
-//    var numberOfJobs = 0
-//    while (true) {
-//      val job = apiClient.claimJob()
-////      logger.addToTaskLog("Claimed a job with Step Index: ${job.exchangeStep.stepIndex}.")
-//      numberOfJobs++
-//
-//      apiClient.finishJob(job.exchangeStepAttempt, ExchangeStepAttempt.State.SUCCEEDED)
-////      logger.addToTaskLog(
-////        "Finished the job with Step Index: ${job.exchangeStep.stepIndex} successfully."
-////      )
-//    }
+    val job3 = launch { println("FIRST ONE????") }
+
+    job1.join()
+    job2.join()
+    job3.join()
+
+    //    val job = apiClient.claimJob()
+    //    println(job)
+
+    //    var numberOfJobs = 0
+    //    while (true) {
+    //      val job = apiClient.claimJob()
+    ////      logger.addToTaskLog("Claimed a job with Step Index: ${job.exchangeStep.stepIndex}.")
+    //      numberOfJobs++
+    //
+    //      apiClient.finishJob(job.exchangeStepAttempt, ExchangeStepAttempt.State.SUCCEEDED)
+    ////      logger.addToTaskLog(
+    ////        "Finished the job with Step Index: ${job.exchangeStep.stepIndex} successfully."
+    ////      )
+    //    }
 
     //    assertThat(numberOfJobs).isEqualTo(7)
   }
