@@ -14,12 +14,14 @@
 
 package org.wfanet.panelmatch.integration
 
+import com.google.protobuf.ByteString
 import com.google.type.Date
 import io.grpc.Metadata
 import io.grpc.stub.AbstractStub
 import io.grpc.stub.MetadataUtils
 import java.lang.IllegalArgumentException
 import java.time.Clock
+import java.time.Duration
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneOffset
@@ -47,6 +49,7 @@ import org.wfanet.panelmatch.client.launcher.ApiClient.ClaimedExchangeStep
 import org.wfanet.panelmatch.client.launcher.GrpcApiClient
 import org.wfanet.panelmatch.client.launcher.Identity
 import org.wfanet.panelmatch.client.logger.addToTaskLog
+import org.wfanet.panelmatch.common.secrets.testing.TestSecretMap
 
 private const val SCHEDULE = "@daily"
 private const val API_VERSION = "v2alpha"
@@ -115,10 +118,15 @@ class InProcessPanelMatchIntegrationTest {
     val modelProviderIdentity =
       Identity(ModelProviderKey.fromName(modelProviderKey)!!.modelProviderId, ExchangeWorkflow.Party.MODEL_PROVIDER)
     val apiClient = makeClient(modelProviderIdentity, modelProviderKey)
+    val map = mutableMapOf<String, ByteString>()
 
     val daemon = ExchangeWorkflowDaemonFromTest(
       channel = inProcessKingdom.publicApiChannel,
-
+      providerId = ModelProviderKey.fromName(modelProviderKey)!!.modelProviderId,
+      providerType = ExchangeWorkflow.Party.MODEL_PROVIDER,
+      taskTimeoutDuration = Duration.ofSeconds(3),
+      pollingInterval = Duration.ofMinutes(1),
+      validExchangeWorkflow = TestSecretMap(map)
     )
 
 

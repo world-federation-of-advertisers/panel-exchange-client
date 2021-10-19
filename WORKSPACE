@@ -51,5 +51,5 @@ common_jvm_extra_deps()
 
 local_repository(
     name = "wfa_measurement_system",
-    path = "/usr/local/google/home/yunyeng/principal/cross-media-measurement",
+    path = "/usr/local/google/home/yunyeng/cross-media-measurement",
 )
