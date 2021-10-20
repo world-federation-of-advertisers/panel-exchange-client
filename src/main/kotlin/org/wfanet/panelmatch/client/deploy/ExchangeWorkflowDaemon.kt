@@ -16,6 +16,7 @@ package org.wfanet.panelmatch.client.deploy
 
 import java.time.Clock
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.wfanet.measurement.common.logAndSuppressExceptionSuspend
 import org.wfanet.measurement.common.throttler.Throttler
@@ -79,7 +80,7 @@ abstract class ExchangeWorkflowDaemon : Runnable {
         jobLauncher = launcher
       )
 
-    runBlocking {
+    scope.launch {
       throttler.loopOnReady {
         logAndSuppressExceptionSuspend { exchangeStepLauncher.findAndRunExchangeStep() }
       }
