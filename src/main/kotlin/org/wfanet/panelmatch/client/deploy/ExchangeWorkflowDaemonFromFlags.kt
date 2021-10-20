@@ -59,10 +59,10 @@ abstract class ExchangeWorkflowDaemonFromFlags : ExchangeWorkflowDaemon() {
 
     val channel =
       buildMutualTlsChannel(
-        flags.exchangeApiTarget.toString(),
-        clientCerts,
-        flags.exchangeApiCertHost
-      )
+          flags.exchangeApiTarget.toString(),
+          clientCerts,
+          flags.exchangeApiCertHost
+        )
         .withShutdownTimeout(flags.channelShutdownTimeout)
 
     val exchangeStepsClient = ExchangeStepsCoroutineStub(channel)
@@ -85,7 +85,5 @@ abstract class ExchangeWorkflowDaemonFromFlags : ExchangeWorkflowDaemon() {
 
   override val identity: Identity by lazy { Identity(flags.id, flags.partyType) }
 
-  override val scope: CoroutineScope by lazy {
-    CoroutineScope(Dispatchers.Default)
-  }
+  override val scope: CoroutineScope by lazy { CoroutineScope(Dispatchers.Default) }
 }
