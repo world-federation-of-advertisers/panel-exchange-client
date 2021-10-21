@@ -15,6 +15,7 @@
 package org.wfanet.panelmatch.client.deploy
 
 import java.time.Clock
+import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import org.wfanet.measurement.common.logAndSuppressExceptionSuspend
@@ -57,7 +58,7 @@ abstract class ExchangeWorkflowDaemon : Runnable {
   /** Clock for ensuring future Exchanges don't execute yet. */
   abstract val clock: Clock
 
-  /** CoroutineScope so daemon can be cancelled if needed. */
+  /** Scope in which to run the daemon loop. */
   abstract val scope: CoroutineScope
 
   override fun run() {
@@ -79,7 +80,7 @@ abstract class ExchangeWorkflowDaemon : Runnable {
         jobLauncher = launcher
       )
 
-    scope.launch {
+    scope.launch(CoroutineName("ExchangeWorkflowDaemon")) {
       throttler.loopOnReady {
         logAndSuppressExceptionSuspend { exchangeStepLauncher.findAndRunExchangeStep() }
       }
