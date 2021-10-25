@@ -20,11 +20,20 @@ import org.wfanet.measurement.storage.testing.InMemoryStorageClient
 import org.wfanet.panelmatch.client.storage.StorageDetails
 import org.wfanet.panelmatch.client.storage.StorageFactory
 
-class InMemoryStorageFactory() : StorageFactory {
+class InMemoryStorageFactory(
+  val underylingStorage: InMemoryStorageClient = InMemoryStorageClient()
+) : StorageFactory {
 
   constructor(storageDetails: StorageDetails, exchangeKey: ExchangeKey) : this()
 
+  fun testBuilder(
+    storageDetails: StorageDetails,
+    exchangeKey: ExchangeKey
+  ): InMemoryStorageFactory {
+    return InMemoryStorageFactory(underylingStorage)
+  }
+
   override fun build(): StorageClient {
-    return InMemoryStorageClient()
+    return underylingStorage
   }
 }

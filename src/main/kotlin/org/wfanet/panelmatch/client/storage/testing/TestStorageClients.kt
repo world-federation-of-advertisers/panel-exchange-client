@@ -25,37 +25,47 @@ import org.wfanet.panelmatch.client.storage.VerifiedStorageClient
 import org.wfanet.panelmatch.common.certificates.testing.TestCertificateManager
 import org.wfanet.panelmatch.common.secrets.SecretMap
 
-fun makeTestPrivateStorageSelector(secretMap: SecretMap): PrivateStorageSelector {
+fun makeTestPrivateStorageSelector(
+  secretMap: SecretMap,
+  underlyingClient: InMemoryStorageClient
+): PrivateStorageSelector {
+
+  val rootInMemoryStorageFactory = InMemoryStorageFactory(underlyingClient)
 
   return PrivateStorageSelector(
     ImmutableMap.of(
       StorageDetails.PlatformCase.FILE,
-      ::InMemoryStorageFactory,
+      rootInMemoryStorageFactory::testBuilder,
       StorageDetails.PlatformCase.AWS,
-      ::InMemoryStorageFactory,
+      rootInMemoryStorageFactory::testBuilder,
       StorageDetails.PlatformCase.GCS,
-      ::InMemoryStorageFactory,
+      rootInMemoryStorageFactory::testBuilder,
       StorageDetails.PlatformCase.PLATFORM_NOT_SET,
-      ::InMemoryStorageFactory,
+      rootInMemoryStorageFactory::testBuilder,
     ),
     secretMap
   )
 }
 
-fun makeTestSharedStorageSelector(secretMap: SecretMap): SharedStorageSelector {
+fun makeTestSharedStorageSelector(
+  secretMap: SecretMap,
+  underlyingClient: InMemoryStorageClient
+): SharedStorageSelector {
+
+  val rootInMemoryStorageFactory = InMemoryStorageFactory(underlyingClient)
 
   return SharedStorageSelector(
     TestCertificateManager(),
     "owner",
     ImmutableMap.of(
       StorageDetails.PlatformCase.FILE,
-      ::InMemoryStorageFactory,
+      rootInMemoryStorageFactory::testBuilder,
       StorageDetails.PlatformCase.AWS,
-      ::InMemoryStorageFactory,
+      rootInMemoryStorageFactory::testBuilder,
       StorageDetails.PlatformCase.GCS,
-      ::InMemoryStorageFactory,
+      rootInMemoryStorageFactory::testBuilder,
       StorageDetails.PlatformCase.PLATFORM_NOT_SET,
-      ::InMemoryStorageFactory,
+      rootInMemoryStorageFactory::testBuilder,
     ),
     secretMap
   )
