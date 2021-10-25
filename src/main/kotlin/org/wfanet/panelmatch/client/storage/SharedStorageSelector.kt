@@ -68,7 +68,7 @@ class SharedStorageSelector(
       StorageDetails.parseFrom(
         sharedStorageInfo.get(recurringExchangeId)
           ?: throw StorageNotFoundException(
-            "No shared storage found for exchange $recurringExchangeId"
+            "Shared storage found for exchange $recurringExchangeId"
           )
       )
 

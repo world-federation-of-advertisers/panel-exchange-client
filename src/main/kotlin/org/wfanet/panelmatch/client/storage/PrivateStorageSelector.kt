@@ -62,7 +62,7 @@ class PrivateStorageSelector(
       StorageDetails.parseFrom(
         privateStorageInfo.get(recurringExchangeId)
           ?: throw StorageNotFoundException(
-            "No shared storage found for exchange $recurringExchangeId"
+            "Private storage found for exchange $recurringExchangeId"
           )
       )
 

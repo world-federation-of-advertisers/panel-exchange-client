@@ -16,15 +16,16 @@ package org.wfanet.panelmatch.client.launcher
 
 import com.google.common.truth.Truth.assertThat
 import com.google.protobuf.ByteString
+import java.util.concurrent.ConcurrentHashMap
 import kotlin.test.assertFailsWith
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.emptyFlow
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
 import org.mockito.kotlin.mock
 import org.wfanet.measurement.api.v2alpha.ExchangeStepAttemptKey
+import org.wfanet.measurement.api.v2alpha.ExchangeWorkflow
 import org.wfanet.measurement.api.v2alpha.ExchangeWorkflowKt.StepKt.encryptStep
 import org.wfanet.measurement.api.v2alpha.ExchangeWorkflowKt.step
 import org.wfanet.measurement.common.asBufferedFlow
@@ -33,16 +34,30 @@ import org.wfanet.measurement.storage.testing.InMemoryStorageClient
 import org.wfanet.panelmatch.client.exchangetasks.ExchangeTask
 import org.wfanet.panelmatch.client.launcher.testing.FakeTimeout
 import org.wfanet.panelmatch.client.launcher.testing.buildExchangeStep
-import org.wfanet.panelmatch.common.storage.createBlob
+import org.wfanet.panelmatch.client.storage.StorageDetails
+import org.wfanet.panelmatch.client.storage.StorageDetailsKt
+import org.wfanet.panelmatch.client.storage.storageDetails
+import org.wfanet.panelmatch.client.storage.testing.makeTestPrivateStorageSelector
+import org.wfanet.panelmatch.common.secrets.testing.TestSecretMap
 import org.wfanet.panelmatch.common.storage.toStringUtf8
 import org.wfanet.panelmatch.common.testing.runBlockingTest
 import org.wfanet.panelmatch.common.toByteString
 
 @RunWith(JUnit4::class)
 class ExchangeTaskExecutorTest {
+  private var underlyingMap = mapOf<String, ByteString>().toMutableMap()
+  private var underlyingStorageMap = ConcurrentHashMap<String, StorageClient.Blob>()
+  private var underlyingClient = InMemoryStorageClient(underlyingStorageMap)
   private val apiClient: ApiClient = mock()
-  private val storage = InMemoryStorageClient()
+
+  private val privateStorageSelector =
+    makeTestPrivateStorageSelector(TestSecretMap(underlyingMap), underlyingClient)
   private val timeout = FakeTimeout()
+
+  val storageDetails = storageDetails {
+    gcs = StorageDetailsKt.gcsStorage {}
+    visibility = StorageDetails.Visibility.PRIVATE
+  }
 
   private val exchangeTask =
     object : ExchangeTask {
@@ -56,17 +71,24 @@ class ExchangeTaskExecutorTest {
       }
     }
 
+  fun getTask(step: ExchangeWorkflow.Step, attemptKey: ExchangeStepAttemptKey): ExchangeTask {
+    return exchangeTask
+  }
+
   private val exchangeTaskExecutor =
-    ExchangeTaskExecutor(apiClient, timeout, storage) { exchangeTask }
+    ExchangeTaskExecutor(apiClient, timeout, privateStorageSelector, ::getTask)
 
   @Test
   fun `reads inputs and writes outputs`() = runBlockingTest {
     val blob = "some-blob".toByteString()
 
-    storage.createBlob("b", blob)
+    underlyingMap.clear()
+    underlyingMap.putIfAbsent("recurringId", storageDetails.toByteString())
+
+    underlyingClient.createBlob("b", blob.asBufferedFlow(1024))
 
     exchangeTaskExecutor.execute(
-      ExchangeStepAttemptKey("w", "x", "y", "z"),
+      ExchangeStepAttemptKey("recurringId", "x", "y", "z"),
       buildExchangeStep(
         name = "some-name",
         dataProviderName = "some-edp",
@@ -80,18 +102,19 @@ class ExchangeTaskExecutorTest {
       )
     )
 
-    assertThat(storage.getBlob("c")?.toStringUtf8()).isEqualTo("Out:some-blob")
+    assertThat(underlyingClient.getBlob("c")?.toStringUtf8()).isEqualTo("Out:some-blob")
   }
 
   @Test
   fun timeout() = runBlockingTest {
     timeout.expired = true
 
-    storage.createBlob("b", emptyFlow())
+    underlyingMap.clear()
+    underlyingMap.putIfAbsent("recurringId", storageDetails.toByteString())
 
     assertFailsWith<CancellationException> {
       exchangeTaskExecutor.execute(
-        ExchangeStepAttemptKey("w", "x", "y", "z"),
+        ExchangeStepAttemptKey("recurringId", "x", "y", "z"),
         buildExchangeStep(
           name = "some-name",
           dataProviderName = "some-edp",
@@ -106,6 +129,6 @@ class ExchangeTaskExecutorTest {
       )
     }
 
-    assertThat(storage.getBlob("c")).isNull()
+    assertThat(underlyingMap["c"]).isNull()
   }
 }
