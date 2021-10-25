@@ -38,7 +38,6 @@ abstract class ExchangeWorkflowDaemonFromFlags : ExchangeWorkflowDaemon() {
   protected lateinit var flags: ExchangeWorkflowFlags
     private set
 
-  // TODO(jonmolle): Implement certificateManager and the storage SecretMaps here.
   override val exchangeTaskMapper: ExchangeTaskMapper by lazy {
     ProductionExchangeTaskMapper(
       inputTaskThrottler = throttler,
