@@ -15,6 +15,8 @@
 package org.wfanet.panelmatch.client.storage.testing
 
 import com.google.common.collect.ImmutableMap
+import com.google.protobuf.ByteString
+import java.util.concurrent.ConcurrentHashMap
 import org.wfanet.measurement.api.v2alpha.ExchangeKey
 import org.wfanet.measurement.storage.StorageClient
 import org.wfanet.measurement.storage.testing.InMemoryStorageClient
@@ -24,41 +26,70 @@ import org.wfanet.panelmatch.client.storage.StorageDetails
 import org.wfanet.panelmatch.client.storage.VerifiedStorageClient
 import org.wfanet.panelmatch.common.certificates.testing.TestCertificateManager
 import org.wfanet.panelmatch.common.secrets.SecretMap
+import org.wfanet.panelmatch.common.secrets.testing.TestSecretMap
 
-fun makeTestPrivateStorageSelector(secretMap: SecretMap): PrivateStorageSelector {
+fun makeTestPrivateStorageSelector(
+  secretMap: SecretMap,
+  underlyingClient: InMemoryStorageClient
+): PrivateStorageSelector {
+
+  val rootInMemoryStorageFactory = InMemoryStorageFactory(underlyingClient)
+  val builder = { _: StorageDetails, _: ExchangeKey -> rootInMemoryStorageFactory }
 
   return PrivateStorageSelector(
     ImmutableMap.of(
       StorageDetails.PlatformCase.FILE,
-      ::InMemoryStorageFactory,
+      builder,
       StorageDetails.PlatformCase.AWS,
-      ::InMemoryStorageFactory,
+      builder,
       StorageDetails.PlatformCase.GCS,
-      ::InMemoryStorageFactory,
+      builder,
       StorageDetails.PlatformCase.PLATFORM_NOT_SET,
-      ::InMemoryStorageFactory,
+      builder,
     ),
     secretMap
   )
 }
 
-fun makeTestSharedStorageSelector(secretMap: SecretMap): SharedStorageSelector {
+class TestPrivateStorageSelector {
+  val storageDetailsMap = mutableMapOf<String, ByteString>()
+  val blobs = ConcurrentHashMap<String, StorageClient.Blob>()
+  val storageClient = InMemoryStorageClient(blobs)
+  private val secrets = TestSecretMap(storageDetailsMap)
+  val selector = makeTestPrivateStorageSelector(secrets, storageClient)
+}
+
+fun makeTestSharedStorageSelector(
+  secretMap: SecretMap,
+  underlyingClient: InMemoryStorageClient
+): SharedStorageSelector {
+
+  val rootInMemoryStorageFactory = InMemoryStorageFactory(underlyingClient)
+  val builder = { _: StorageDetails, _: ExchangeKey -> rootInMemoryStorageFactory }
 
   return SharedStorageSelector(
     TestCertificateManager(),
     "owner",
     ImmutableMap.of(
       StorageDetails.PlatformCase.FILE,
-      ::InMemoryStorageFactory,
+      builder,
       StorageDetails.PlatformCase.AWS,
-      ::InMemoryStorageFactory,
+      builder,
       StorageDetails.PlatformCase.GCS,
-      ::InMemoryStorageFactory,
+      builder,
       StorageDetails.PlatformCase.PLATFORM_NOT_SET,
-      ::InMemoryStorageFactory,
+      builder,
     ),
     secretMap
   )
+}
+
+class TestSharedStorageSelector {
+  val storageInfo = mutableMapOf<String, ByteString>()
+  val blobs = ConcurrentHashMap<String, StorageClient.Blob>()
+  val storageClient = InMemoryStorageClient(blobs)
+  private val secrets = TestSecretMap(storageInfo)
+  val selector = makeTestSharedStorageSelector(secrets, storageClient)
 }
 
 fun makeTestVerifiedStorageClient(
