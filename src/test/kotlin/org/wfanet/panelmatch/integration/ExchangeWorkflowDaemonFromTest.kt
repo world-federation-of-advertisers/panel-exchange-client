@@ -77,8 +77,7 @@ class ExchangeWorkflowDaemonFromTest(
   override val exchangeTaskMapper: ExchangeTaskMapper by lazy {
     InProcessExchangeTaskMapper(
       privateStorage = privateStorageFactory,
-      inputTaskThrottler = throttler,
-      storage = privateStorageFactory.build()
+      inputTaskThrottler = throttler
     )
   }
 

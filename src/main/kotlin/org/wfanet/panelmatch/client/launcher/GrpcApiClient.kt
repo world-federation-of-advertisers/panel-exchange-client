@@ -14,10 +14,7 @@
 
 package org.wfanet.panelmatch.client.launcher
 
-import java.time.Instant
 import java.time.Clock
-import org.wfanet.measurement.api.v2alpha.AppendLogEntryRequest
-import org.wfanet.measurement.api.v2alpha.ClaimReadyExchangeStepRequest
 import org.wfanet.measurement.api.v2alpha.DataProviderKey
 import org.wfanet.measurement.api.v2alpha.ExchangeStepAttempt
 import org.wfanet.measurement.api.v2alpha.ExchangeStepAttemptKey

@@ -15,7 +15,6 @@
 package org.wfanet.panelmatch.integration
 
 import org.wfanet.measurement.common.throttler.Throttler
-import org.wfanet.measurement.storage.StorageClient
 import org.wfanet.panelmatch.client.exchangetasks.ExchangeTaskMapperForJoinKeyExchange
 import org.wfanet.panelmatch.client.privatemembership.JniPrivateMembershipCryptor
 import org.wfanet.panelmatch.client.privatemembership.JniQueryEvaluator
@@ -26,7 +25,6 @@ import org.wfanet.panelmatch.common.crypto.JniDeterministicCommutativeCipher
 
 class InProcessExchangeTaskMapper(
   override val privateStorage: StorageFactory,
-  override val storage: StorageClient,
   override val inputTaskThrottler: Throttler,
 ) : ExchangeTaskMapperForJoinKeyExchange() {
   override val compressorFactory by lazy { BrotliCompressorFactory() }
