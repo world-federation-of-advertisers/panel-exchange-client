@@ -14,10 +14,7 @@
 
 package org.wfanet.panelmatch.integration
 
-import com.google.common.truth.Truth.assertThat
-import com.google.common.truth.extensions.proto.ProtoTruth.assertThat
 import com.google.protobuf.ByteString
-import com.google.protobuf.MessageLite
 import com.google.type.Date
 import java.time.Clock
 import java.time.Duration
@@ -31,6 +28,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
+import org.apache.beam.sdk.values.KV
 import org.apache.beam.sdk.values.PCollection
 import org.junit.Before
 import org.junit.Rule
@@ -38,6 +36,7 @@ import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import org.junit.rules.TestRule
 import org.wfanet.measurement.api.v2alpha.DataProviderKey
+import org.wfanet.measurement.api.v2alpha.ExchangeKey
 import org.wfanet.measurement.api.v2alpha.ExchangeWorkflow
 import org.wfanet.measurement.api.v2alpha.ModelProviderKey
 import org.wfanet.measurement.api.v2alpha.RecurringExchangeKey
@@ -51,13 +50,9 @@ import org.wfanet.panelmatch.client.eventpreprocessing.HardCodedDeterministicCom
 import org.wfanet.panelmatch.client.eventpreprocessing.HardCodedHkdfPepperProvider
 import org.wfanet.panelmatch.client.eventpreprocessing.HardCodedIdentifierHashPepperProvider
 import org.wfanet.panelmatch.client.eventpreprocessing.preprocessEventsInPipeline
-import org.wfanet.panelmatch.client.privatemembership.DatabaseEntry
-import org.wfanet.panelmatch.client.privatemembership.WriteShardedData
-import org.wfanet.panelmatch.client.privatemembership.databaseEntries
-import org.wfanet.panelmatch.client.privatemembership.databaseEntry
 import org.wfanet.panelmatch.client.storage.FileSystemStorageFactory
-import org.wfanet.panelmatch.common.ShardedFileName
 import org.wfanet.panelmatch.common.beam.testing.BeamTestBase
+import org.wfanet.panelmatch.common.compression.Dictionary
 import org.wfanet.panelmatch.common.compression.UncompressedDictionaryBuilder
 import org.wfanet.panelmatch.common.secrets.testing.TestSecretMap
 import org.wfanet.panelmatch.common.storage.createBlob
@@ -89,11 +84,13 @@ class InProcessPanelMatchIntegrationTest : BeamTestBase() {
   private lateinit var dataProviderKey: DataProviderKey
   private lateinit var modelProviderKey: ModelProviderKey
   private lateinit var recurringExchangeKey: RecurringExchangeKey
+  private lateinit var encryptedEvents: PCollection<KV<Long, ByteString>>
+  private lateinit var dictionary: PCollection<Dictionary>
 
   @Before
   fun setup() = runBlocking {
     val events = eventsOf("A" to "B", "C" to "D")
-    val (encryptedEvents, dictionary) =
+    val preprocessedEvents =
       preprocessEventsInPipeline(
         events,
         MAX_BYTE_SIZE,
@@ -102,15 +99,8 @@ class InProcessPanelMatchIntegrationTest : BeamTestBase() {
         CRYPTO_KEY_PROVIDER,
         UncompressedDictionaryBuilder()
       )
-
-    encr
-
-    val databaseEntries = databaseEntries {
-      encryptedEvents.
-      entries += databaseEntry {
-
-      }
-    }
+    encryptedEvents = preprocessedEvents.events
+    dictionary = preprocessedEvents.dictionary
 
     val providers =
       resourceSetup.createResourcesForWorkflow(
@@ -124,28 +114,28 @@ class InProcessPanelMatchIntegrationTest : BeamTestBase() {
     recurringExchangeKey = providers.recurringExchangeKey
   }
 
-  // TODO: consider also adding a helper to write non-sharded files.
-  protected fun <T : MessageLite> PCollection<T>.write(shardedFileName: ShardedFileName) {
-    apply("Write ${shardedFileName.spec}", WriteShardedData(shardedFileName.spec, storageFactory))
-  }
-
   @Test
   fun `entire process`() = runBlocking {
-    //    logger.addToTaskLog(
-    //      "Setup complete by creating a MP ${modelProviderKey} and an EDP ${dataProviderKey}."
-    //    )
+    val recurringExchangeId = recurringExchangeKey.recurringExchangeId
     val secretMap =
       TestSecretMap(
-        mutableMapOf<String, ByteString>(
-          Pair(recurringExchangeKey.recurringExchangeId, exchangeWorkflow.toByteString())
-        )
+        mutableMapOf<String, ByteString>(Pair(recurringExchangeId, exchangeWorkflow.toByteString()))
       )
 
     val edpScope = CoroutineScope(CoroutineName("EDP SCOPE" + Dispatchers.Default))
     val mpScope = CoroutineScope(CoroutineName("MP SCOPE" + Dispatchers.Default))
 
-    val edpStorageFactory = FileSystemStorageFactory(temporaryFolder.newFolder().absolutePath)
-    val mpStorageFactory = FileSystemStorageFactory(temporaryFolder.newFolder().absolutePath)
+    // TODO(@yunyeng): Figure out the correct Exchange Id.
+    val edpStorageFactory =
+      FileSystemStorageFactory(
+        temporaryFolder.newFolder().absolutePath,
+        ExchangeKey(recurringExchangeId, "1")
+      )
+    val mpStorageFactory =
+      FileSystemStorageFactory(
+        temporaryFolder.newFolder().absolutePath,
+        ExchangeKey(recurringExchangeId, "1")
+      )
 
     val edpInputBlobs =
       mapOf<String, ByteString>(
@@ -153,8 +143,6 @@ class InProcessPanelMatchIntegrationTest : BeamTestBase() {
         "edp-identifier-hash-pepper" to ByteString.copyFromUtf8("identifier-hash-pepper"),
         "edp-commutative-deterministic-key" to ByteString.copyFromUtf8("edp-key"),
         "edp-previous-single-blinded-join-keys" to ByteString.EMPTY,
-//        "edp-encrypted-event-data" to edpEncryptedEventData,
-//        "edp-event-data-dictionary" to edpEventDataDictionary,
       )
 
     val mpInputBlobs =
@@ -174,35 +162,33 @@ class InProcessPanelMatchIntegrationTest : BeamTestBase() {
 
     val edpDaemon =
       ExchangeWorkflowDaemonFromTest(
+        clock = clock,
+        scope = edpScope,
+        privateStorageFactory = edpStorageFactory,
+        validExchangeWorkflows = secretMap,
         channel = inProcessKingdom.publicApiChannel,
         providerKey = dataProviderKey,
         taskTimeoutDuration = Duration.ofSeconds(30),
         pollingInterval = Duration.ofSeconds(30),
-        validExchangeWorkflow = secretMap,
-        coroutineScope = edpScope,
-        storageFactory = edpStorageFactory
       )
     val mpDaemon =
       ExchangeWorkflowDaemonFromTest(
+        clock = clock,
+        scope = mpScope,
+        privateStorageFactory = mpStorageFactory,
+        validExchangeWorkflows = secretMap,
         channel = inProcessKingdom.publicApiChannel,
         providerKey = modelProviderKey,
         taskTimeoutDuration = Duration.ofSeconds(30),
         pollingInterval = Duration.ofSeconds(30),
-        validExchangeWorkflow = secretMap,
-        coroutineScope = mpScope,
-        storageFactory = mpStorageFactory
       )
     edpDaemon.run()
     mpDaemon.run()
-    delay(Duration.ofMinutes(3).toMillis())
+    delay(Duration.ofMinutes(1).toMillis())
     edpScope.cancel()
     mpScope.cancel()
 
-    val edpResponse = edpDaemon.apiClient.claimExchangeStep()
-    val mpResponse = mpDaemon.apiClient.claimExchangeStep()
-
-    assertThat(edpResponse).isNull()
-    assertThat(mpResponse).isNull()
+    // TODO(@yunyeng): Assert there isn't any Active Exchange Step left.
   }
 
   companion object {
