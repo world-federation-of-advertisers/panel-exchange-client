@@ -204,7 +204,7 @@ class InProcessPanelMatchIntegrationTest : BeamTestBase() {
       )
     edpDaemon.run()
     mpDaemon.run()
-    delay(Duration.ofMinutes(1).toMillis())
+    delay(Duration.ofSeconds(10).toMillis())
     edpScope.cancel()
     mpScope.cancel()
 
