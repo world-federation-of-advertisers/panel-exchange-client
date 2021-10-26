@@ -3,16 +3,16 @@ load("@wfa_common_jvm//src/main/kotlin/org/wfanet/measurement/gcloud/spanner/tes
 spanner_emulator_test(
     name = "InProcessPanelMatchIntegrationTest",
     size = "large",
-    srcs = [
-        "ExchangeWorkflowDaemonFromTest.kt",
-        "InProcessPanelMatchIntegrationTest.kt",
-    ],
+    srcs = glob(["*.kt"]),
     resources = [
         "//src/test/kotlin/org/wfanet/panelmatch/integration/config",
     ],
     test_class = "org.wfanet.panelmatch.integration.InProcessPanelMatchIntegrationTest",
     deps = [
+        "//src/main/kotlin/org/wfanet/panelmatch/client/common/testing",
         "//src/main/kotlin/org/wfanet/panelmatch/client/deploy",
+        "//src/main/kotlin/org/wfanet/panelmatch/client/eventpreprocessing",
+        "//src/main/kotlin/org/wfanet/panelmatch/client/eventpreprocessing/testing",
         "//src/main/kotlin/org/wfanet/panelmatch/client/launcher",
         "//src/main/kotlin/org/wfanet/panelmatch/common/secrets/testing",
         "//src/main/proto/wfa/measurement/api/v2alpha:exchange_step_attempt_kt_jvm_proto",
