@@ -18,6 +18,7 @@ import io.grpc.Channel
 import io.grpc.Status
 import java.time.Clock
 import java.time.Duration
+import kotlinx.coroutines.CoroutineScope
 import org.wfanet.measurement.api.v2alpha.DataProviderKey
 import org.wfanet.measurement.api.v2alpha.ExchangeStepAttemptsGrpcKt.ExchangeStepAttemptsCoroutineStub
 import org.wfanet.measurement.api.v2alpha.ExchangeStepsGrpcKt.ExchangeStepsCoroutineStub
@@ -28,11 +29,12 @@ import org.wfanet.measurement.common.grpc.failGrpc
 import org.wfanet.measurement.common.identity.withPrincipalName
 import org.wfanet.measurement.common.throttler.MinimumIntervalThrottler
 import org.wfanet.measurement.common.throttler.Throttler
+import org.wfanet.measurement.storage.StorageClient
 import org.wfanet.panelmatch.client.deploy.ExchangeWorkflowDaemon
+import org.wfanet.panelmatch.client.exchangetasks.ExchangeTaskMapper
 import org.wfanet.panelmatch.client.launcher.ApiClient
 import org.wfanet.panelmatch.client.launcher.GrpcApiClient
 import org.wfanet.panelmatch.client.launcher.Identity
-import org.wfanet.panelmatch.client.storage.FileSystemStorageFactory
 import org.wfanet.panelmatch.client.storage.StorageFactory
 import org.wfanet.panelmatch.common.Timeout
 import org.wfanet.panelmatch.common.asTimeout
@@ -45,7 +47,8 @@ class ExchangeWorkflowDaemonFromTest(
   private val taskTimeoutDuration: Duration,
   private val pollingInterval: Duration,
   private val validExchangeWorkflow: SecretMap,
-  private val storageDirectory: String
+  private val coroutineScope: CoroutineScope,
+  private val storageFactory: StorageFactory
 ) : ExchangeWorkflowDaemon() {
 
   override val identity: Identity =
@@ -60,9 +63,9 @@ class ExchangeWorkflowDaemonFromTest(
         }
     }
 
-  override val privateStorageFactory: StorageFactory by lazy {
-    FileSystemStorageFactory(storageDirectory)
-  }
+  override val privateStorageFactory: StorageFactory by lazy { storageFactory }
+
+  override val scope: CoroutineScope by lazy { coroutineScope }
 
   override val validExchangeWorkflows: SecretMap by lazy { validExchangeWorkflow }
 
@@ -77,6 +80,14 @@ class ExchangeWorkflowDaemonFromTest(
 
   override val throttler: Throttler by lazy {
     MinimumIntervalThrottler(Clock.systemUTC(), pollingInterval)
+  }
+
+  override val exchangeTaskMapper: ExchangeTaskMapper by lazy {
+    InProcessExchangeTaskMapper(
+      privateStorage = privateStorageFactory,
+      inputTaskThrottler = throttler,
+      storage = storageFactory.build()
+    )
   }
 
   override val taskTimeout: Timeout by lazy { taskTimeoutDuration.asTimeout() }
