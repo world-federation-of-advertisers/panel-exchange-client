@@ -83,7 +83,7 @@ class InProcessPanelMatchIntegrationTest {
   }
 
   private fun Date.format(): String {
-    return "${year}-${month}-${day}"
+    return "$year-$month-$day"
   }
 
   @Before
