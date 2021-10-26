@@ -17,6 +17,8 @@ spanner_emulator_test(
         "//src/main/kotlin/org/wfanet/panelmatch/common/secrets/testing",
         "//src/main/proto/wfa/measurement/api/v2alpha:exchange_step_attempt_kt_jvm_proto",
         "//src/main/proto/wfa/measurement/api/v2alpha:exchange_workflow_kt_jvm_proto",
+        "//src/main/proto/wfa/panelmatch/client/storage:storage_details_java_proto",
+        "//src/main/proto/wfa/panelmatch/client/storage:storage_details_kt_jvm_proto",
         "@wfa_common_jvm//imports/java/com/google/common/truth",
         "@wfa_common_jvm//imports/java/com/google/common/truth/extensions/proto",
         "@wfa_common_jvm//imports/kotlin/kotlinx/coroutines:core",

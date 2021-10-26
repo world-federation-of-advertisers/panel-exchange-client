@@ -51,6 +51,8 @@ import org.wfanet.panelmatch.client.eventpreprocessing.HardCodedHkdfPepperProvid
 import org.wfanet.panelmatch.client.eventpreprocessing.HardCodedIdentifierHashPepperProvider
 import org.wfanet.panelmatch.client.eventpreprocessing.preprocessEventsInPipeline
 import org.wfanet.panelmatch.client.storage.FileSystemStorageFactory
+import org.wfanet.panelmatch.client.storage.StorageDetailsKt.fileStorage
+import org.wfanet.panelmatch.client.storage.storageDetails
 import org.wfanet.panelmatch.common.beam.testing.BeamTestBase
 import org.wfanet.panelmatch.common.compression.Dictionary
 import org.wfanet.panelmatch.common.compression.UncompressedDictionaryBuilder
@@ -126,16 +128,34 @@ class InProcessPanelMatchIntegrationTest : BeamTestBase() {
     val mpScope = CoroutineScope(CoroutineName("MP SCOPE" + Dispatchers.Default))
 
     // TODO(@yunyeng): Figure out the correct Exchange Id.
+    val exchangeKey = ExchangeKey(recurringExchangeId, "1")
+
+    temporaryFolder.create()
+    val edpFolder = temporaryFolder.newFolder("edp")
+    val mpFolder = temporaryFolder.newFolder("mp")
+
+    temporaryFolder.newFolder(
+      "edp",
+      "recurringExchanges",
+      exchangeKey.recurringExchangeId,
+      "exchanges",
+      exchangeKey.exchangeId
+    )
+    temporaryFolder.newFolder(
+      "mp",
+      "recurringExchanges",
+      exchangeKey.recurringExchangeId,
+      "exchanges",
+      exchangeKey.exchangeId
+    )
+
+    val edpstorageDetails = storageDetails { file = fileStorage { path = edpFolder.path } }
+    val mpstorageDetails = storageDetails { file = fileStorage { path = mpFolder.path } }
+
     val edpStorageFactory =
-      FileSystemStorageFactory(
-        temporaryFolder.newFolder().absolutePath,
-        ExchangeKey(recurringExchangeId, "1")
-      )
+      FileSystemStorageFactory(storageDetails = edpstorageDetails, exchangeKey = exchangeKey)
     val mpStorageFactory =
-      FileSystemStorageFactory(
-        temporaryFolder.newFolder().absolutePath,
-        ExchangeKey(recurringExchangeId, "1")
-      )
+      FileSystemStorageFactory(storageDetails = mpstorageDetails, exchangeKey = exchangeKey)
 
     val edpInputBlobs =
       mapOf<String, ByteString>(
