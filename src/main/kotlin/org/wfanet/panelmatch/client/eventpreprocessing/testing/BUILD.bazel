@@ -4,7 +4,6 @@ package(
     default_testonly = True,
     default_visibility = [
         "//src/test/kotlin/org/wfanet/panelmatch/client/eventpreprocessing:__subpackages__",
-        "//src/test/kotlin/org/wfanet/panelmatch/integration:__pkg__",
     ],
 )
 

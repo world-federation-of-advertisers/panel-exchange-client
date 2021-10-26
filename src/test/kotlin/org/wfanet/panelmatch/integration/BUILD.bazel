@@ -11,8 +11,6 @@ spanner_emulator_test(
     deps = [
         "//src/main/kotlin/org/wfanet/panelmatch/client/common/testing",
         "//src/main/kotlin/org/wfanet/panelmatch/client/deploy",
-        "//src/main/kotlin/org/wfanet/panelmatch/client/eventpreprocessing",
-        "//src/main/kotlin/org/wfanet/panelmatch/client/eventpreprocessing/testing",
         "//src/main/kotlin/org/wfanet/panelmatch/client/launcher",
         "//src/main/kotlin/org/wfanet/panelmatch/common/secrets/testing",
         "//src/main/proto/wfa/measurement/api/v2alpha:exchange_step_attempt_kt_jvm_proto",

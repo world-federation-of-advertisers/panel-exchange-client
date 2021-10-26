@@ -40,7 +40,7 @@ import org.wfanet.panelmatch.common.asTimeout
 import org.wfanet.panelmatch.common.secrets.SecretMap
 
 /** Executes ExchangeWorkflows for InProcess Integration testing. */
-class ExchangeWorkflowDaemonFromTest(
+class ExchangeWorkflowDaemonForTest(
   override val clock: Clock,
   override val scope: CoroutineScope,
   override val privateStorageFactory: StorageFactory,
