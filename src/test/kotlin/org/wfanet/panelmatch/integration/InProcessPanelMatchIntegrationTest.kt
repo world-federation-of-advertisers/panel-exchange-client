@@ -26,7 +26,6 @@ import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import org.apache.beam.sdk.values.KV
 import org.apache.beam.sdk.values.PCollection
@@ -204,7 +203,6 @@ class InProcessPanelMatchIntegrationTest : BeamTestBase() {
       )
     edpDaemon.run()
     mpDaemon.run()
-    delay(Duration.ofSeconds(10).toMillis())
     edpScope.cancel()
     mpScope.cancel()
 
