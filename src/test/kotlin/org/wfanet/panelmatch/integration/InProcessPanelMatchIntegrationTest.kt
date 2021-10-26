@@ -61,8 +61,8 @@ import org.wfanet.panelmatch.common.toByteString
 
 private const val SCHEDULE = "@daily"
 private const val API_VERSION = "v2alpha"
-private val TODAY: Date = LocalDate.now().toProtoDate()
 private const val MAX_BYTE_SIZE = 8
+private val TODAY: Date = LocalDate.now().toProtoDate()
 private val IDENTIFIER_HASH_PEPPER_PROVIDER =
   HardCodedIdentifierHashPepperProvider("identifier-hash-pepper".toByteString())
 private val HKDF_PEPPER_PROVIDER = HardCodedHkdfPepperProvider("hkdf-pepper".toByteString())
@@ -126,8 +126,8 @@ class InProcessPanelMatchIntegrationTest : BeamTestBase() {
     val edpScope = CoroutineScope(CoroutineName("EDP SCOPE" + Dispatchers.Default))
     val mpScope = CoroutineScope(CoroutineName("MP SCOPE" + Dispatchers.Default))
 
-    // TODO(@yunyeng): Figure out the correct Exchange Id.
-    val exchangeKey = ExchangeKey(recurringExchangeId, "1")
+    val exchangeKey = ExchangeKey(recurringExchangeId, "${TODAY.year}-${TODAY.month}-${TODAY.day}")
+    println(exchangeKey.toName())
 
     temporaryFolder.create()
     val edpFolder = temporaryFolder.newFolder("edp")
