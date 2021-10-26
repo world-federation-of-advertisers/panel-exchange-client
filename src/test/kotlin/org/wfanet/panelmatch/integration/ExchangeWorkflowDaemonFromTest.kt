@@ -29,7 +29,6 @@ import org.wfanet.measurement.common.grpc.failGrpc
 import org.wfanet.measurement.common.identity.withPrincipalName
 import org.wfanet.measurement.common.throttler.MinimumIntervalThrottler
 import org.wfanet.measurement.common.throttler.Throttler
-import org.wfanet.measurement.storage.StorageClient
 import org.wfanet.panelmatch.client.deploy.ExchangeWorkflowDaemon
 import org.wfanet.panelmatch.client.exchangetasks.ExchangeTaskMapper
 import org.wfanet.panelmatch.client.launcher.ApiClient
@@ -42,13 +41,14 @@ import org.wfanet.panelmatch.common.secrets.SecretMap
 
 /** Executes ExchangeWorkflows for InProcess Integration testing. */
 class ExchangeWorkflowDaemonFromTest(
+  override val clock: Clock,
+  override val scope: CoroutineScope,
+  override val privateStorageFactory: StorageFactory,
+  override val validExchangeWorkflows: SecretMap,
   private val channel: Channel,
   private val providerKey: ResourceKey,
   private val taskTimeoutDuration: Duration,
   private val pollingInterval: Duration,
-  private val validExchangeWorkflow: SecretMap,
-  private val coroutineScope: CoroutineScope,
-  private val storageFactory: StorageFactory
 ) : ExchangeWorkflowDaemon() {
 
   override val identity: Identity =
@@ -63,30 +63,22 @@ class ExchangeWorkflowDaemonFromTest(
         }
     }
 
-  override val privateStorageFactory: StorageFactory by lazy { storageFactory }
-
-  override val scope: CoroutineScope by lazy { coroutineScope }
-
-  override val validExchangeWorkflows: SecretMap by lazy { validExchangeWorkflow }
-
   override val apiClient: ApiClient by lazy {
     val exchangeStepsClient =
       ExchangeStepsCoroutineStub(channel).withPrincipalName(providerKey.toName())
     val exchangeStepAttemptsClient =
       ExchangeStepAttemptsCoroutineStub(channel).withPrincipalName(providerKey.toName())
 
-    GrpcApiClient(identity, exchangeStepsClient, exchangeStepAttemptsClient, Clock.systemUTC())
+    GrpcApiClient(identity, exchangeStepsClient, exchangeStepAttemptsClient, clock)
   }
 
-  override val throttler: Throttler by lazy {
-    MinimumIntervalThrottler(Clock.systemUTC(), pollingInterval)
-  }
+  override val throttler: Throttler by lazy { MinimumIntervalThrottler(clock, pollingInterval) }
 
   override val exchangeTaskMapper: ExchangeTaskMapper by lazy {
     InProcessExchangeTaskMapper(
       privateStorage = privateStorageFactory,
       inputTaskThrottler = throttler,
-      storage = storageFactory.build()
+      storage = privateStorageFactory.build()
     )
   }
 
