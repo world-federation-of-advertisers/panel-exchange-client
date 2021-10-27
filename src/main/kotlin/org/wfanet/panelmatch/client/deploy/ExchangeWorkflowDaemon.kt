@@ -20,6 +20,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import org.wfanet.measurement.common.logAndSuppressExceptionSuspend
 import org.wfanet.measurement.common.throttler.Throttler
+import org.wfanet.panelmatch.client.common.ExchangeContext
 import org.wfanet.panelmatch.client.common.Identity
 import org.wfanet.panelmatch.client.exchangetasks.ExchangeTaskMapper
 import org.wfanet.panelmatch.client.launcher.ApiClient
@@ -29,6 +30,8 @@ import org.wfanet.panelmatch.client.launcher.ExchangeStepValidatorImpl
 import org.wfanet.panelmatch.client.launcher.ExchangeTaskExecutor
 import org.wfanet.panelmatch.client.storage.PrivateStorageSelector
 import org.wfanet.panelmatch.client.storage.SharedStorageSelector
+import org.wfanet.panelmatch.client.storage.StorageDetails
+import org.wfanet.panelmatch.client.storage.StorageFactory
 import org.wfanet.panelmatch.common.Timeout
 import org.wfanet.panelmatch.common.certificates.CertificateManager
 import org.wfanet.panelmatch.common.secrets.SecretMap
@@ -42,11 +45,39 @@ abstract class ExchangeWorkflowDaemon : Runnable {
   /** Kingdom [ApiClient]. */
   abstract val apiClient: ApiClient
 
+  /** [SecretMap] used as an interface to retrieve root certificates */
+  abstract val rootCertificates: SecretMap
+
+  /**
+   * [SecretMap] used as an interface to retrieve private keys associated with exchange certificates
+   */
+  abstract val privateKeys: SecretMap
+
   /** [PrivateStorageSelector] for writing to local (non-shared) storage. */
   abstract val privateStorageSelector: PrivateStorageSelector
 
+  /** Map of supported private storage platforms to their respective [StorageFactory] classes */
+  abstract val privateStorageFactories:
+    Map<StorageDetails.PlatformCase, ExchangeContext.(StorageDetails) -> StorageFactory>
+
+  /**
+   * [SecretMap] used as an interface with to the location where all recurring exchanges' private
+   * storage connection information is stored.
+   */
+  abstract val privateStorageInformation: SecretMap
+
   /** [SharedStorageSelector] for writing to shared storage. */
   abstract val sharedStorageSelector: SharedStorageSelector
+
+  /** Map of supported shared storage platforms to their respective [StorageFactory] classes */
+  abstract val sharedStorageFactories:
+    Map<StorageDetails.PlatformCase, ExchangeContext.(StorageDetails) -> StorageFactory>
+
+  /**
+   * [SecretMap] used as an interface with to the location where all recurring exchanges' shared
+   * storage connection information is stored.
+   */
+  abstract val sharedStorageInformation: SecretMap
 
   /**
    * [CertificateManager] for managing access to the certificate API service and private

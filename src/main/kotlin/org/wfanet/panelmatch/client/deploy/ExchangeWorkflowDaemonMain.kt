@@ -16,10 +16,10 @@ package org.wfanet.panelmatch.client.deploy
 
 import java.time.Clock
 import org.wfanet.measurement.common.commandLineMain
-import org.wfanet.panelmatch.client.storage.PrivateStorageSelector
-import org.wfanet.panelmatch.client.storage.SharedStorageSelector
+import org.wfanet.panelmatch.client.common.ExchangeContext
+import org.wfanet.panelmatch.client.storage.StorageDetails
+import org.wfanet.panelmatch.client.storage.StorageFactory
 import org.wfanet.panelmatch.client.storage.VerifiedStorageClient
-import org.wfanet.panelmatch.common.certificates.CertificateManager
 import org.wfanet.panelmatch.common.secrets.SecretMap
 import picocli.CommandLine
 
@@ -34,13 +34,33 @@ private object UnimplementedExchangeWorkflowDaemon : ExchangeWorkflowDaemonFromF
   lateinit var approvedWorkflowFlags: PlaintextApprovedWorkflowFileFlags
     private set
 
-  override val certificateManager: CertificateManager
+  // TODO: All SecretMaps should be implemented with a static storageClient- or KMS-backed SecretMap
+  //  based on flags. To start this should support our existing StorageFactory implementations
+  //  and call a helper function to choose based on storage details (similar to
+  //  privateStorageSelector, which we unfortunately can't use here as it depends on some of these.)
+  override val privateKeys: SecretMap
     get() = TODO("Not yet implemented")
 
-  override val privateStorageSelector: PrivateStorageSelector
+  override val rootCertificates: SecretMap
     get() = TODO("Not yet implemented")
 
-  override val sharedStorageSelector: SharedStorageSelector
+  override val privateStorageInformation: SecretMap
+    get() = TODO("Not yet implemented")
+
+  override val sharedStorageInformation: SecretMap
+    get() = TODO("Not yet implemented")
+
+  // TODO: set up some default supported factories.
+  // This is the most likely piece of storage to be customized, as it gives a party control over
+  // what StorageClient types they actually support for shared and private storage. That's the main
+  // reason it has been pushed all the way out here for implementation: we expect most custom main
+  // file implementations to want to specify these.
+  override val privateStorageFactories:
+    Map<StorageDetails.PlatformCase, ExchangeContext.(StorageDetails) -> StorageFactory>
+    get() = TODO("Not yet implemented")
+
+  override val sharedStorageFactories:
+    Map<StorageDetails.PlatformCase, ExchangeContext.(StorageDetails) -> StorageFactory>
     get() = TODO("Not yet implemented")
 
   override val clock: Clock = Clock.systemUTC()

@@ -17,6 +17,7 @@ package org.wfanet.panelmatch.client.deploy
 import java.time.Clock
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import org.wfanet.measurement.api.v2alpha.CertificatesGrpcKt
 import org.wfanet.measurement.api.v2alpha.ExchangeStepAttemptsGrpcKt.ExchangeStepAttemptsCoroutineStub
 import org.wfanet.measurement.api.v2alpha.ExchangeStepsGrpcKt.ExchangeStepsCoroutineStub
 import org.wfanet.measurement.common.crypto.SigningCerts
@@ -28,8 +29,11 @@ import org.wfanet.panelmatch.client.common.Identity
 import org.wfanet.panelmatch.client.exchangetasks.ExchangeTaskMapper
 import org.wfanet.panelmatch.client.launcher.ApiClient
 import org.wfanet.panelmatch.client.launcher.GrpcApiClient
+import org.wfanet.panelmatch.client.storage.PrivateStorageSelector
+import org.wfanet.panelmatch.client.storage.SharedStorageSelector
 import org.wfanet.panelmatch.common.Timeout
 import org.wfanet.panelmatch.common.asTimeout
+import org.wfanet.panelmatch.common.certificates.V2AlphaCertificateManager
 import picocli.CommandLine
 
 /** Executes ExchangeWorkflows. */
@@ -37,6 +41,50 @@ abstract class ExchangeWorkflowDaemonFromFlags : ExchangeWorkflowDaemon() {
   @CommandLine.Mixin
   protected lateinit var flags: ExchangeWorkflowFlags
     private set
+
+  override val certificateManager: V2AlphaCertificateManager by lazy {
+    val clientCerts =
+      SigningCerts.fromPemFiles(
+        certificateFile = flags.tlsFlags.certFile,
+        privateKeyFile = flags.tlsFlags.privateKeyFile,
+        trustedCertCollectionFile = flags.tlsFlags.certCollectionFile
+      )
+
+    val channel =
+      buildMutualTlsChannel(
+          flags.exchangeApiTarget.toString(),
+          clientCerts,
+          flags.exchangeApiCertHost
+        )
+        .withShutdownTimeout(flags.channelShutdownTimeout)
+
+    val certificateService = CertificatesGrpcKt.CertificatesCoroutineStub(channel)
+
+    V2AlphaCertificateManager(
+      certificateService = certificateService,
+      rootCerts = rootCertificates,
+      privateKeys = privateKeys,
+      algorithm = flags.certAlgorithm
+    )
+  }
+
+  override val privateStorageSelector by lazy {
+    PrivateStorageSelector(
+      // TODO(): S3 Support
+      privateStorageFactories = privateStorageFactories,
+      privateStorageInfo = privateStorageInformation
+    )
+  }
+
+  override val sharedStorageSelector by lazy {
+    SharedStorageSelector(
+      certificateManager = certificateManager,
+      // TODO(): Get Owner Name
+      ownerName = flags.id,
+      sharedStorageFactories = sharedStorageFactories,
+      sharedStorageInfo = sharedStorageInformation
+    )
+  }
 
   override val exchangeTaskMapper: ExchangeTaskMapper by lazy {
     ProductionExchangeTaskMapper(
