@@ -15,7 +15,7 @@
 package org.wfanet.panelmatch.client.storage
 
 import com.google.common.collect.ImmutableMap
-import org.wfanet.measurement.api.v2alpha.ExchangeKey
+import com.google.type.Date
 import org.wfanet.measurement.api.v2alpha.ExchangeStepAttemptKey
 import org.wfanet.measurement.api.v2alpha.ExchangeWorkflow
 import org.wfanet.panelmatch.common.certificates.CertificateManager
@@ -48,19 +48,20 @@ class SharedStorageSelector(
   private val certificateManager: CertificateManager,
   private val ownerName: String,
   private val sharedStorageFactories:
-    ImmutableMap<StorageDetails.PlatformCase, (StorageDetails, ExchangeKey) -> StorageFactory>,
+    ImmutableMap<StorageDetails.PlatformCase, (StorageDetails, String, Date) -> StorageFactory>,
   private val sharedStorageInfo: SecretMap
 ) {
 
   private suspend fun getStorageFactory(
     storageDetails: StorageDetails,
-    exchangeKey: ExchangeKey
+    recurringExchangeId: String,
+    exchangeDate: Date
   ): StorageFactory {
     val storageFactoryBuilder =
       requireNotNull(sharedStorageFactories[storageDetails.platformCase]) {
         "Missing private StorageFactory for ${storageDetails.platformCase}"
       }
-    return storageFactoryBuilder(storageDetails, exchangeKey)
+    return storageFactoryBuilder(storageDetails, recurringExchangeId, exchangeDate)
   }
 
   private suspend fun getStorageDetails(recurringExchangeId: String): StorageDetails {
@@ -92,11 +93,12 @@ class SharedStorageSelector(
    */
   suspend fun getSharedStorage(
     storageType: ExchangeWorkflow.StorageType,
-    attemptKey: ExchangeStepAttemptKey,
+    recurringExchangeId: String,
+    exchangeDate: Date,
     partnerName: String,
     ownerCertificateResourceName: String?
   ): VerifiedStorageClient {
-    val storageDetails = getStorageDetails(attemptKey.recurringExchangeId)
+    val storageDetails = getStorageDetails(recurringExchangeId)
     when (storageType) {
       ExchangeWorkflow.StorageType.GOOGLE_CLOUD_STORAGE -> requireNotNull(storageDetails.gcs)
       ExchangeWorkflow.StorageType.AMAZON_S3 -> requireNotNull(storageDetails.aws)
@@ -105,7 +107,8 @@ class SharedStorageSelector(
 
     return getVerifiedStorageClient(
       storageDetails,
-      ExchangeKey(attemptKey.recurringExchangeId, attemptKey.exchangeId),
+      recurringExchangeId,
+      exchangeDate,
       partnerName,
       ownerCertificateResourceName
     )
@@ -113,14 +116,16 @@ class SharedStorageSelector(
 
   private suspend fun getVerifiedStorageClient(
     storageDetails: StorageDetails,
-    exchangeKey: ExchangeKey,
+    recurringExchangeId: String,
+    exchangeDate: Date,
     partnerName: String,
     ownerCertificateResourceName: String?
   ): VerifiedStorageClient {
 
     return VerifiedStorageClient(
-      storageClient = getStorageFactory(storageDetails, exchangeKey).build(),
-      exchangeKey = exchangeKey,
+      storageClient = getStorageFactory(storageDetails, recurringExchangeId, exchangeDate).build(),
+      recurringExchangeId,
+      exchangeDate,
       ownerName,
       partnerName,
       ownerCertificateResourceName,

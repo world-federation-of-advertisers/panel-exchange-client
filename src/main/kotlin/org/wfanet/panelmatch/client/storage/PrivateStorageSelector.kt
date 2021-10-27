@@ -15,7 +15,7 @@
 package org.wfanet.panelmatch.client.storage
 
 import com.google.common.collect.ImmutableMap
-import org.wfanet.measurement.api.v2alpha.ExchangeKey
+import com.google.type.Date
 import org.wfanet.measurement.api.v2alpha.ExchangeStepAttemptKey
 import org.wfanet.measurement.storage.StorageClient
 import org.wfanet.panelmatch.common.secrets.SecretMap
@@ -42,19 +42,20 @@ import org.wfanet.panelmatch.common.secrets.SecretMap
  */
 class PrivateStorageSelector(
   private val privateStorageFactories:
-    ImmutableMap<StorageDetails.PlatformCase, (StorageDetails, ExchangeKey) -> StorageFactory>,
+    ImmutableMap<StorageDetails.PlatformCase, (StorageDetails, String, Date) -> StorageFactory>,
   private val privateStorageInfo: SecretMap
 ) {
 
   private suspend fun getStorageFactory(
     storageDetails: StorageDetails,
-    exchangeKey: ExchangeKey
+    recurringExchangeId: String,
+    exchangeDate: Date
   ): StorageFactory {
     val storageFactoryBuilder =
       requireNotNull(privateStorageFactories[storageDetails.platformCase]) {
         "Missing private StorageFactory for ${storageDetails.platformCase}"
       }
-    return storageFactoryBuilder(storageDetails, exchangeKey)
+    return storageFactoryBuilder(storageDetails, recurringExchangeId, exchangeDate)
   }
 
   private suspend fun getStorageDetails(recurringExchangeId: String): StorageDetails {
@@ -73,10 +74,11 @@ class PrivateStorageSelector(
    * active with private storage recorded in our secret map. Note that since we only expect to need
    * a StorageFactory for private storage, this does not ever check [privateStorageInfo].
    */
-  suspend fun getStorageFactory(attemptKey: ExchangeStepAttemptKey): StorageFactory {
+  suspend fun getStorageFactory(recurringExchangeId: String, exchangeDate: Date): StorageFactory {
     return getStorageFactory(
-      getStorageDetails(attemptKey.recurringExchangeId),
-      ExchangeKey(attemptKey.recurringExchangeId, attemptKey.exchangeId)
+      getStorageDetails(recurringExchangeId),
+      recurringExchangeId,
+      exchangeDate
     )
   }
 
@@ -84,7 +86,7 @@ class PrivateStorageSelector(
    * Gets the appropriate [StorageClient] for the current exchange. Requires the exchange to be
    * active with private storage recorded in our secret map.
    */
-  suspend fun getStorageClient(attemptKey: ExchangeStepAttemptKey): StorageClient {
-    return getStorageFactory(attemptKey).build()
+  suspend fun getStorageClient(recurringExchangeId: String, exchangeDate: Date): StorageClient {
+    return getStorageFactory(recurringExchangeId, exchangeDate).build()
   }
 }

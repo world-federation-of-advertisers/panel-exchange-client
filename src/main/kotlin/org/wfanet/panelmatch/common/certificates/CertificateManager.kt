@@ -14,9 +14,9 @@
 
 package org.wfanet.panelmatch.common.certificates
 
+import com.google.type.Date
 import java.security.PrivateKey
 import java.security.cert.X509Certificate
-import org.wfanet.measurement.api.v2alpha.ExchangeKey
 
 /**
  * Interface to grab and validate certificates. Provides validated X509 certificates for an exchange
@@ -31,7 +31,8 @@ interface CertificateManager {
    * [certResourceName] is the V2Alpha API resource name for the certificate we want to retrieve.
    */
   suspend fun getCertificate(
-    exchangeKey: ExchangeKey,
+    recurringExchangeId: String,
+    exchangeDate: Date,
     certOwnerName: String,
     certResourceName: String,
   ): X509Certificate
@@ -40,5 +41,8 @@ interface CertificateManager {
   suspend fun getPartnerRootCertificate(partnerName: String): X509Certificate
 
   /** Gets the [PrivateKey] created for the current exchange */
-  suspend fun getExchangePrivateKey(exchangeKey: ExchangeKey): PrivateKey
+  suspend fun getExchangePrivateKey(
+    recurringExchangeId: String,
+    exchangeDate: Date,
+  ): PrivateKey
 }

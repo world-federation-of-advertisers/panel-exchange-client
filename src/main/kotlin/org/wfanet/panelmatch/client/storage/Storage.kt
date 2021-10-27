@@ -16,11 +16,11 @@ package org.wfanet.panelmatch.client.storage
 
 import com.google.common.collect.ImmutableMap
 import com.google.protobuf.ByteString
+import com.google.type.Date
 import java.lang.Exception
 import java.security.PrivateKey
 import java.security.cert.X509Certificate
 import kotlinx.coroutines.flow.Flow
-import org.wfanet.measurement.api.v2alpha.ExchangeKey
 import org.wfanet.measurement.common.asBufferedFlow
 import org.wfanet.measurement.common.crypto.signFlow
 import org.wfanet.measurement.common.crypto.verifySignedFlow
@@ -36,7 +36,8 @@ class StorageNotFoundException(inputKey: String) : Exception("$inputKey not foun
 
 class VerifiedStorageClient(
   private val storageClient: StorageClient,
-  private val exchangeKey: ExchangeKey,
+  private val recurringExchangeId: String,
+  private val exchangeDate: Date,
   private val ownerName: String,
   private val partnerName: String,
   private val ownerCertificateName: String?,
@@ -44,11 +45,6 @@ class VerifiedStorageClient(
 ) {
 
   val defaultBufferSizeBytes: Int = storageClient.defaultBufferSizeBytes
-
-  // TODO: This is just wildly a bad idea and I'm only keeping it here to reduce the number of files
-  //   I'm changing. I will immediately rework this in a following PR once StorageSelector is
-  //   implemented. - jmolle
-  suspend fun getPrivateKey(): PrivateKey = certificateManager.getExchangePrivateKey(exchangeKey)
 
   /** A helper function to get the implicit path for a input's signature. */
   private fun getSigPath(blobKey: String): String = "${blobKey}_signature"
@@ -105,7 +101,12 @@ class VerifiedStorageClient(
     return VerifiedBlob(
       sourceBlob,
       namedSignature.signature,
-      certificateManager.getCertificate(exchangeKey, partnerName, namedSignature.certificateName)
+      certificateManager.getCertificate(
+        recurringExchangeId,
+        exchangeDate,
+        partnerName,
+        namedSignature.certificateName
+      )
     )
   }
 
@@ -124,10 +125,11 @@ class VerifiedStorageClient(
    */
   @Suppress("EXPERIMENTAL_API_USAGE")
   suspend fun createBlob(blobKey: String, content: Flow<ByteString>): VerifiedBlob {
-    val privateKey = certificateManager.getExchangePrivateKey(exchangeKey)
+    val privateKey = certificateManager.getExchangePrivateKey(recurringExchangeId, exchangeDate)
     val ownerCertificate =
       certificateManager.getCertificate(
-        exchangeKey,
+        recurringExchangeId,
+        exchangeDate,
         ownerName,
         requireNotNull(ownerCertificateName)
       )
@@ -179,43 +181,3 @@ class VerifiedStorageClient(
     suspend fun toStringUtf8(): String = toByteString().toStringUtf8()
   }
 }
-
-/** Writes output [data] based on [outputLabels]. */
-suspend fun StorageClient.batchWrite(
-  outputLabels: Map<String, String>,
-  data: Map<String, Flow<ByteString>>,
-  exchangeKey: ExchangeKey
-) {
-  // create an immutable copy of outputLabels to avoid race conditions if the underlying label map
-  // is changed during execution.
-  val immutableOutputs: ImmutableMap<String, String> = ImmutableMap.copyOf(outputLabels)
-  require(immutableOutputs.values.toSet().size == immutableOutputs.size) {
-    "Cannot write to the same output location twice"
-  }
-  for ((key, value) in immutableOutputs) {
-    val payload = requireNotNull(data[key]) { "Key $key not found in ${data.keys}" }
-    createBlob(blobKey = prefixBlobKey(value, exchangeKey), content = payload)
-  }
-}
-
-/**
- * Transforms values of [inputLabels] into the underlying blobs.
- *
- * If any blob can't be found, it throws [StorageNotFoundException].
- *
- * All files read are verified against the appropriate [X509Certificate] to validate that the files
- * came from the expected source.
- */
-@Throws(StorageNotFoundException::class)
-suspend fun StorageClient.batchRead(
-  inputLabels: Map<String, String>,
-  exchangeKey: ExchangeKey
-): Map<String, StorageClient.Blob> {
-  return inputLabels.mapValues { entry ->
-    requireNotNull(getBlob(blobKey = prefixBlobKey(entry.value, exchangeKey)))
-  }
-}
-
-/** Provides a unique per-exchange prefix to prevent collision between multiple workflows */
-private fun prefixBlobKey(blobKey: String, exchangeKey: ExchangeKey): String =
-  "${exchangeKey.toName()}/$blobKey"
