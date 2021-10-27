@@ -20,14 +20,14 @@ import org.wfanet.panelmatch.client.privatemembership.JniPrivateMembershipCrypto
 import org.wfanet.panelmatch.client.privatemembership.JniQueryEvaluator
 import org.wfanet.panelmatch.client.privatemembership.JniQueryResultsDecryptor
 import org.wfanet.panelmatch.client.storage.StorageFactory
-import org.wfanet.panelmatch.common.compression.BrotliCompressorFactory
+import org.wfanet.panelmatch.common.compression.NoOpCompressorFactory
 import org.wfanet.panelmatch.common.crypto.JniDeterministicCommutativeCipher
 
 class InProcessExchangeTaskMapper(
   override val privateStorage: StorageFactory,
   override val inputTaskThrottler: Throttler,
 ) : ExchangeTaskMapperForJoinKeyExchange() {
-  override val compressorFactory by lazy { BrotliCompressorFactory() }
+  override val compressorFactory by lazy { NoOpCompressorFactory }
   override val deterministicCommutativeCryptor by lazy { JniDeterministicCommutativeCipher() }
   override val getPrivateMembershipCryptor = ::JniPrivateMembershipCryptor
   override val getQueryResultsEvaluator = ::JniQueryEvaluator
