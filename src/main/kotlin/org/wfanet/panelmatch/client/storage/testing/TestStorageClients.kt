@@ -15,7 +15,8 @@
 package org.wfanet.panelmatch.client.storage.testing
 
 import com.google.common.collect.ImmutableMap
-import org.wfanet.measurement.api.v2alpha.ExchangeKey
+import com.google.type.Date
+import com.google.type.date
 import org.wfanet.measurement.storage.StorageClient
 import org.wfanet.measurement.storage.testing.InMemoryStorageClient
 import org.wfanet.panelmatch.client.storage.PrivateStorageSelector
@@ -31,7 +32,7 @@ fun makeTestPrivateStorageSelector(
 ): PrivateStorageSelector {
 
   val rootInMemoryStorageFactory = InMemoryStorageFactory(underlyingClient)
-  val builder = { _: StorageDetails, _: ExchangeKey -> rootInMemoryStorageFactory }
+  val builder = { _: StorageDetails, _: String, _: Date -> rootInMemoryStorageFactory }
 
   return PrivateStorageSelector(
     ImmutableMap.of(
@@ -54,7 +55,7 @@ fun makeTestSharedStorageSelector(
 ): SharedStorageSelector {
 
   val rootInMemoryStorageFactory = InMemoryStorageFactory(underlyingClient)
-  val builder = { _: StorageDetails, _: ExchangeKey -> rootInMemoryStorageFactory }
+  val builder = { _: StorageDetails, _: String, _: Date -> rootInMemoryStorageFactory }
 
   return SharedStorageSelector(
     TestCertificateManager(),
@@ -78,7 +79,12 @@ fun makeTestVerifiedStorageClient(
 ): VerifiedStorageClient {
   return VerifiedStorageClient(
     underlyingClient,
-    ExchangeKey("test", "prefix"),
+    "test",
+    date {
+      year = 2020
+      month = 10
+      day = 6
+    },
     "owner",
     "partner",
     "ownerCert",

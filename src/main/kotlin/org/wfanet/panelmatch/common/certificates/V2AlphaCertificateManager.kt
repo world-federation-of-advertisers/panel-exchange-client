@@ -14,20 +14,21 @@
 
 package org.wfanet.panelmatch.common.certificates
 
+import com.google.type.Date
 import java.security.KeyFactory
 import java.security.PrivateKey
 import java.security.cert.X509Certificate
 import java.security.spec.PKCS8EncodedKeySpec
 import java.util.concurrent.ConcurrentHashMap
 import org.wfanet.measurement.api.v2alpha.CertificatesGrpcKt.CertificatesCoroutineStub
-import org.wfanet.measurement.api.v2alpha.ExchangeKey
 import org.wfanet.measurement.api.v2alpha.getCertificateRequest
 import org.wfanet.measurement.common.crypto.jceProvider
 import org.wfanet.measurement.common.crypto.readCertificate
+import org.wfanet.measurement.common.toLocalDate
 import org.wfanet.panelmatch.common.secrets.SecretMap
 
 /** [CertificateManager] that loads [X509Certificate]s from [certificateService]. */
-class GrpcCertificateManager(
+class V2AlphaCertificateManager(
   /** Connection to the APIs certificate service used to grab certs registered with the Kingdom */
   private val certificateService: CertificatesCoroutineStub,
   private val rootCerts: SecretMap,
@@ -36,6 +37,10 @@ class GrpcCertificateManager(
 ) : CertificateManager {
 
   private val cache = ConcurrentHashMap<Pair<String, String>, X509Certificate>()
+
+  private fun getExchangeName(recurringExchangeId: String, exchangeDate: Date): String {
+    return "recurringExchanges/$recurringExchangeId/exchanges/${exchangeDate.toLocalDate()}"
+  }
 
   private suspend fun verifyCertificate(
     certificate: X509Certificate,
@@ -47,11 +52,12 @@ class GrpcCertificateManager(
   }
 
   override suspend fun getCertificate(
-    exchangeKey: ExchangeKey,
+    recurringExchangeId: String,
+    exchangeDate: Date,
     certOwnerName: String,
     certResourceName: String
   ): X509Certificate {
-    return cache.getOrPut((certOwnerName to exchangeKey.toName())) {
+    return cache.getOrPut((certOwnerName to getExchangeName(recurringExchangeId, exchangeDate))) {
       val response =
         certificateService.getCertificate(getCertificateRequest { name = certResourceName })
       val x509 = readCertificate(response.x509Der)
@@ -60,8 +66,12 @@ class GrpcCertificateManager(
     }
   }
 
-  override suspend fun getExchangePrivateKey(exchangeKey: ExchangeKey): PrivateKey {
-    val keyBytes = requireNotNull(privateKeys.get(exchangeKey.toName()))
+  override suspend fun getExchangePrivateKey(
+    recurringExchangeId: String,
+    exchangeDate: Date,
+  ): PrivateKey {
+    val keyBytes =
+      requireNotNull(privateKeys.get(getExchangeName(recurringExchangeId, exchangeDate)))
     return KeyFactory.getInstance(algorithm, jceProvider)
       .generatePrivate(PKCS8EncodedKeySpec(keyBytes.toByteArray()))
   }

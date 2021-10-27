@@ -16,11 +16,11 @@ package org.wfanet.panelmatch.client.exchangetasks
 
 import com.google.common.truth.Truth.assertThat
 import com.google.protobuf.ByteString
+import com.google.type.date
 import java.util.concurrent.ConcurrentHashMap
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
-import org.wfanet.measurement.api.v2alpha.ExchangeStepAttemptKey
 import org.wfanet.measurement.api.v2alpha.ExchangeWorkflowKt.StepKt.encryptStep
 import org.wfanet.measurement.api.v2alpha.ExchangeWorkflowKt.step
 import org.wfanet.measurement.storage.StorageClient
@@ -83,15 +83,13 @@ class ExchangeTaskMapperForJoinKeyExchangeTest {
   fun `map input task`() = runBlockingTest {
     testPrivateStorageSelector.storageDetailsMap["recurringId"] = testStorageDetails.toByteString()
     val testStep = inputStep("a" to "b")
-    val testAttemptKey =
-      ExchangeStepAttemptKey(
-        recurringExchangeId = "recurringId",
-        exchangeId = "exchangeId",
-        exchangeStepId = "unused",
-        exchangeStepAttemptId = "unused"
-      )
-    val exchangeTask: ExchangeTask =
-      exchangeTaskMapper.getExchangeTaskForStep(testStep, testAttemptKey)
+    val exchangeDate = date {
+      year = 2020
+      month = 10
+      day = 6
+    }
+    val exchangeTask =
+      exchangeTaskMapper.getExchangeTaskForStep(testStep, "recurringId", exchangeDate)
     assertThat(exchangeTask).isInstanceOf(InputTask::class.java)
   }
 
@@ -100,15 +98,16 @@ class ExchangeTaskMapperForJoinKeyExchangeTest {
     testPrivateStorageSelector.storageDetailsMap["recurringId"] = testStorageDetails.toByteString()
 
     val testStep = step { encryptStep = encryptStep {} }
-    val testAttemptKey =
-      ExchangeStepAttemptKey(
-        recurringExchangeId = "recurringId",
-        exchangeId = "exchangeId",
-        exchangeStepId = "unused",
-        exchangeStepAttemptId = "unused"
+    val exchangeTask =
+      exchangeTaskMapper.getExchangeTaskForStep(
+        testStep,
+        "recurringId",
+        date {
+          year = 2020
+          month = 10
+          day = 6
+        }
       )
-    val exchangeTask: ExchangeTask =
-      exchangeTaskMapper.getExchangeTaskForStep(testStep, testAttemptKey)
     assertThat(exchangeTask).isInstanceOf(CryptorExchangeTask::class.java)
   }
 }
