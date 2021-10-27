@@ -1,7 +1,6 @@
 filegroup(
     name = "config",
     srcs = [
-        "full_test_exchange_workflow.textproto",
         "mini_exchange_workflow.textproto",
     ],
     visibility = [
