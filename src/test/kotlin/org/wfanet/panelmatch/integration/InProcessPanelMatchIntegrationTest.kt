@@ -31,6 +31,8 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import org.junit.rules.TestRule
+import org.junit.runner.RunWith
+import org.junit.runners.JUnit4
 import org.wfanet.measurement.api.v2alpha.DataProviderKey
 import org.wfanet.measurement.api.v2alpha.ExchangeKey
 import org.wfanet.measurement.api.v2alpha.ExchangeWorkflow
@@ -59,6 +61,8 @@ private val TASK_TIMEOUT_DURATION = Duration.ofSeconds(3)
 private val POLLING_INTERVAL = Duration.ofSeconds(3)
 private val DAEMONS_DELAY_DURATION = Duration.ofSeconds(1).toMillis()
 
+/** E2E Test for Panel Match that everything is wired up and working properly. */
+@RunWith(JUnit4::class)
 class InProcessPanelMatchIntegrationTest {
   private val databaseRule = buildKingdomSpannerEmulatorDatabaseRule()
   private val inProcessKingdom = buildSpannerInProcessKingdom(databaseRule, CLOCK)
