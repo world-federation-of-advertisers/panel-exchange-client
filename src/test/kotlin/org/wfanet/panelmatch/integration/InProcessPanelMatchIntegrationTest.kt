@@ -31,7 +31,6 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import org.junit.rules.TestRule
-import org.mockito.kotlin.times
 import org.wfanet.measurement.api.v2alpha.DataProviderKey
 import org.wfanet.measurement.api.v2alpha.ExchangeKey
 import org.wfanet.measurement.api.v2alpha.ExchangeWorkflow
@@ -40,6 +39,7 @@ import org.wfanet.measurement.api.v2alpha.RecurringExchangeKey
 import org.wfanet.measurement.api.v2alpha.copy
 import org.wfanet.measurement.common.parseTextProto
 import org.wfanet.measurement.common.testing.chainRulesSequentially
+import org.wfanet.measurement.common.toLocalDate
 import org.wfanet.measurement.common.toProtoDate
 import org.wfanet.measurement.integration.deploy.gcloud.buildKingdomSpannerEmulatorDatabaseRule
 import org.wfanet.measurement.integration.deploy.gcloud.buildSpannerInProcessKingdom
@@ -82,8 +82,12 @@ class InProcessPanelMatchIntegrationTest {
     )
   }
 
+  private fun createScope(name: String): CoroutineScope {
+    return CoroutineScope(CoroutineName(name + Dispatchers.Default))
+  }
+
   private fun Date.format(): String {
-    return "$year-$month-$day"
+    return toLocalDate().toString()
   }
 
   @Before
@@ -116,18 +120,18 @@ class InProcessPanelMatchIntegrationTest {
     createFolder("edp", exchangeKey)
     createFolder("mp", exchangeKey)
 
-    val edpstorageDetails = storageDetails { file = fileStorage { path = edpFolder.path } }
-    val mpstorageDetails = storageDetails { file = fileStorage { path = mpFolder.path } }
+    val edpStorageDetails = storageDetails { file = fileStorage { path = edpFolder.path } }
+    val mpStorageDetails = storageDetails { file = fileStorage { path = mpFolder.path } }
     val edpStorageFactory =
-      FileSystemStorageFactory(storageDetails = edpstorageDetails, exchangeKey = exchangeKey)
+      FileSystemStorageFactory(storageDetails = edpStorageDetails, exchangeKey = exchangeKey)
     val mpStorageFactory =
-      FileSystemStorageFactory(storageDetails = mpstorageDetails, exchangeKey = exchangeKey)
+      FileSystemStorageFactory(storageDetails = mpStorageDetails, exchangeKey = exchangeKey)
 
     // TODO(@yunyeng): Build storage from InputBlobs map.
     val edpStorage = edpStorageFactory.build()
     edpStorage.createBlob("edp-hkdf-pepper", HKDF_PEPPER)
 
-    val edpScope = CoroutineScope(CoroutineName("EDP SCOPE" + Dispatchers.Default))
+    val edpScope = createScope("EDP SCOPE")
     val edpDaemon =
       ExchangeWorkflowDaemonForTest(
         clock = CLOCK,
@@ -140,7 +144,7 @@ class InProcessPanelMatchIntegrationTest {
         pollingInterval = POLLING_INTERVAL,
       )
 
-    val mpScope = CoroutineScope(CoroutineName("MP SCOPE" + Dispatchers.Default))
+    val mpScope = createScope("MP SCOPE")
     val mpDaemon =
       ExchangeWorkflowDaemonForTest(
         clock = CLOCK,
@@ -174,6 +178,7 @@ class InProcessPanelMatchIntegrationTest {
           .use { input ->
             parseTextProto(input.bufferedReader(), ExchangeWorkflow.getDefaultInstance())
           }
+          // TODO(@yunyeng): Think about the tests that start running around midnight.
           .copy { this.firstExchangeDate = TODAY }
     }
   }
