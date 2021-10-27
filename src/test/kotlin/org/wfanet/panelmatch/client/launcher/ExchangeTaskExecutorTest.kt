@@ -16,6 +16,7 @@ package org.wfanet.panelmatch.client.launcher
 
 import com.google.common.truth.Truth.assertThat
 import com.google.protobuf.ByteString
+import com.google.type.Date
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.test.assertFailsWith
 import kotlinx.coroutines.CancellationException
@@ -76,7 +77,8 @@ class ExchangeTaskExecutorTest {
 
   private fun getTask(
     step: ExchangeWorkflow.Step,
-    attemptKey: ExchangeStepAttemptKey
+    recurringExchangeId: String,
+    exchangeDate: Date
   ): ExchangeTask {
     return exchangeTask
   }

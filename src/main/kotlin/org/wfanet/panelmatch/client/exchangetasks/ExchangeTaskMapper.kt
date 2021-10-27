@@ -14,13 +14,14 @@
 
 package org.wfanet.panelmatch.client.exchangetasks
 
-import org.wfanet.measurement.api.v2alpha.ExchangeStepAttemptKey
+import com.google.type.Date
 import org.wfanet.measurement.api.v2alpha.ExchangeWorkflow
 
 /** Maps ExchangeWorkflow.Step to respective task. */
 interface ExchangeTaskMapper {
   suspend fun getExchangeTaskForStep(
     step: ExchangeWorkflow.Step,
-    attemptKey: ExchangeStepAttemptKey
+    recurringExchangeId: String,
+    exchangeDate: Date
   ): ExchangeTask
 }

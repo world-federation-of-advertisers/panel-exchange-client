@@ -15,7 +15,7 @@
 package org.wfanet.panelmatch.client.exchangetasks
 
 import com.google.protobuf.ByteString
-import org.wfanet.measurement.api.v2alpha.ExchangeStepAttemptKey
+import com.google.type.Date
 import org.wfanet.measurement.api.v2alpha.ExchangeWorkflow
 import org.wfanet.measurement.api.v2alpha.ExchangeWorkflow.Step.StepCase
 import org.wfanet.measurement.common.throttler.Throttler
@@ -44,7 +44,8 @@ abstract class ExchangeTaskMapperForJoinKeyExchange : ExchangeTaskMapper {
 
   override suspend fun getExchangeTaskForStep(
     step: ExchangeWorkflow.Step,
-    attemptKey: ExchangeStepAttemptKey
+    recurringExchangeId: String,
+    exchangeDate: Date
   ): ExchangeTask {
     @Suppress("WHEN_ENUM_CAN_BE_NULL_IN_JAVA")
     return when (step.stepCase) {
@@ -52,18 +53,18 @@ abstract class ExchangeTaskMapperForJoinKeyExchange : ExchangeTaskMapper {
       StepCase.REENCRYPT_STEP ->
         CryptorExchangeTask.forReEncryption(deterministicCommutativeCryptor)
       StepCase.DECRYPT_STEP -> CryptorExchangeTask.forDecryption(deterministicCommutativeCryptor)
-      StepCase.INPUT_STEP -> getInputStepTask(step, attemptKey)
+      StepCase.INPUT_STEP -> getInputStepTask(step, recurringExchangeId, exchangeDate)
       StepCase.INTERSECT_AND_VALIDATE_STEP -> getIntersectAndValidateStepTask(step)
       StepCase.GENERATE_COMMUTATIVE_DETERMINISTIC_KEY_STEP ->
         GenerateSymmetricKeyTask(generateKey = deterministicCommutativeCryptor::generateKey)
       StepCase.GENERATE_SERIALIZED_RLWE_KEYS_STEP -> getGenerateSerializedRLWEKeysStepTask(step)
       StepCase.GENERATE_CERTIFICATE_STEP -> TODO()
       StepCase.EXECUTE_PRIVATE_MEMBERSHIP_QUERIES_STEP ->
-        getExecutePrivateMembershipQueriesTask(step, attemptKey)
+        getExecutePrivateMembershipQueriesTask(step, recurringExchangeId, exchangeDate)
       StepCase.BUILD_PRIVATE_MEMBERSHIP_QUERIES_STEP ->
-        getBuildPrivateMembershipQueriesTask(step, attemptKey)
+        getBuildPrivateMembershipQueriesTask(step, recurringExchangeId, exchangeDate)
       StepCase.DECRYPT_PRIVATE_MEMBERSHIP_QUERY_RESULTS_STEP ->
-        getDecryptMembershipResultsTask(step, attemptKey)
+        getDecryptMembershipResultsTask(step, recurringExchangeId, exchangeDate)
       StepCase.COPY_FROM_SHARED_STORAGE_STEP -> TODO()
       StepCase.COPY_TO_SHARED_STORAGE_STEP -> TODO()
       else -> error("Unsupported step type")
@@ -72,13 +73,14 @@ abstract class ExchangeTaskMapperForJoinKeyExchange : ExchangeTaskMapper {
 
   private suspend fun getInputStepTask(
     step: ExchangeWorkflow.Step,
-    attemptKey: ExchangeStepAttemptKey
+    recurringExchangeId: String,
+    exchangeDate: Date
   ): ExchangeTask {
     require(step.stepCase == StepCase.INPUT_STEP)
     require(step.inputLabelsMap.isEmpty())
     val blobKey = step.outputLabelsMap.values.single()
     return InputTask(
-      storage = privateStorageSelector.getStorageClient(attemptKey),
+      storage = privateStorageSelector.getStorageClient(recurringExchangeId, exchangeDate),
       blobKey = blobKey,
       throttler = inputTaskThrottler
     )
@@ -107,7 +109,8 @@ abstract class ExchangeTaskMapperForJoinKeyExchange : ExchangeTaskMapper {
 
   private suspend fun getBuildPrivateMembershipQueriesTask(
     step: ExchangeWorkflow.Step,
-    attemptKey: ExchangeStepAttemptKey
+    recurringExchangeId: String,
+    exchangeDate: Date
   ): ExchangeTask {
     require(step.stepCase == StepCase.BUILD_PRIVATE_MEMBERSHIP_QUERIES_STEP)
     val privateMembershipCryptor =
@@ -122,7 +125,7 @@ abstract class ExchangeTaskMapperForJoinKeyExchange : ExchangeTaskMapper {
         queryIdAndJoinKeysFileName = step.outputLabelsMap.getValue("query-decryption-keys"),
       )
     return BuildPrivateMembershipQueriesTask(
-      storageFactory = privateStorageSelector.getStorageFactory(attemptKey),
+      storageFactory = privateStorageSelector.getStorageFactory(recurringExchangeId, exchangeDate),
       parameters =
         CreateQueriesParameters(
           numShards = step.buildPrivateMembershipQueriesStep.numShards,
@@ -137,7 +140,8 @@ abstract class ExchangeTaskMapperForJoinKeyExchange : ExchangeTaskMapper {
 
   private suspend fun getDecryptMembershipResultsTask(
     step: ExchangeWorkflow.Step,
-    attemptKey: ExchangeStepAttemptKey
+    recurringExchangeId: String,
+    exchangeDate: Date
   ): ExchangeTask {
     require(step.stepCase == StepCase.DECRYPT_PRIVATE_MEMBERSHIP_QUERY_RESULTS_STEP)
     val outputs =
@@ -147,7 +151,7 @@ abstract class ExchangeTaskMapperForJoinKeyExchange : ExchangeTaskMapper {
         keyedDecryptedEventDataSetFileName = step.outputLabelsMap.getValue("decrypted-event-data"),
       )
     return DecryptPrivateMembershipResultsTask(
-      storageFactory = privateStorageSelector.getStorageFactory(attemptKey),
+      storageFactory = privateStorageSelector.getStorageFactory(recurringExchangeId, exchangeDate),
       serializedParameters = step.decryptPrivateMembershipQueryResultsStep.serializedParameters,
       queryResultsDecryptor = queryResultsDecryptor,
       compressorFactory = compressorFactory,
@@ -157,7 +161,8 @@ abstract class ExchangeTaskMapperForJoinKeyExchange : ExchangeTaskMapper {
 
   private suspend fun getExecutePrivateMembershipQueriesTask(
     step: ExchangeWorkflow.Step,
-    attemptKey: ExchangeStepAttemptKey
+    recurringExchangeId: String,
+    exchangeDate: Date
   ): ExchangeTask {
     require(step.stepCase == StepCase.EXECUTE_PRIVATE_MEMBERSHIP_QUERIES_STEP)
     val outputs =
@@ -175,7 +180,7 @@ abstract class ExchangeTaskMapperForJoinKeyExchange : ExchangeTaskMapper {
     val queryResultsEvaluator =
       getQueryResultsEvaluator(step.executePrivateMembershipQueriesStep.serializedParameters)
     return ExecutePrivateMembershipQueriesTask(
-      storageFactory = privateStorageSelector.getStorageFactory(attemptKey),
+      storageFactory = privateStorageSelector.getStorageFactory(recurringExchangeId, exchangeDate),
       evaluateQueriesParameters = parameters,
       queryEvaluator = queryResultsEvaluator,
       outputs = outputs

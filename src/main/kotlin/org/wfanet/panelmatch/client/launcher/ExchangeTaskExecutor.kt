@@ -15,6 +15,7 @@
 package org.wfanet.panelmatch.client.launcher
 
 import com.google.protobuf.ByteString
+import com.google.type.Date
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
@@ -23,6 +24,7 @@ import org.wfanet.measurement.api.v2alpha.ExchangeStepAttempt
 import org.wfanet.measurement.api.v2alpha.ExchangeStepAttemptKey
 import org.wfanet.measurement.api.v2alpha.ExchangeWorkflow
 import org.wfanet.measurement.api.v2alpha.ExchangeWorkflow.Step
+import org.wfanet.measurement.common.toLocalDate
 import org.wfanet.measurement.storage.StorageClient
 import org.wfanet.panelmatch.client.exchangetasks.ExchangeTask
 import org.wfanet.panelmatch.client.logger.addToTaskLog
@@ -42,7 +44,7 @@ class ExchangeTaskExecutor(
   private val apiClient: ApiClient,
   private val timeout: Timeout,
   private val privateStorageSelector: PrivateStorageSelector,
-  private val getExchangeTaskForStep: suspend (Step, ExchangeStepAttemptKey) -> ExchangeTask
+  private val getExchangeTaskForStep: suspend (Step, String, Date) -> ExchangeTask
 ) : ExchangeStepExecutor {
   /** Reads inputs for [step], executes [step], and writes the outputs to [privateStorage]. */
   override suspend fun execute(attemptKey: ExchangeStepAttemptKey, exchangeStep: ExchangeStep) {
@@ -50,7 +52,7 @@ class ExchangeTaskExecutor(
       try {
         @Suppress("BlockingMethodInNonBlockingContext") // Proto parsing is lightweight
         val workflow = ExchangeWorkflow.parseFrom(exchangeStep.serializedExchangeWorkflow)
-        tryExecute(attemptKey, workflow.getSteps(exchangeStep.stepIndex))
+        tryExecute(attemptKey, workflow.getSteps(exchangeStep.stepIndex), exchangeStep.exchangeDate)
       } catch (e: Exception) {
         logger.addToTaskLog(e.toString())
         markAsFinished(attemptKey, ExchangeStepAttempt.State.FAILED)
@@ -86,24 +88,32 @@ class ExchangeTaskExecutor(
     apiClient.finishExchangeStepAttempt(attemptKey, state, getAndClearTaskLog())
   }
 
-  private suspend fun tryExecute(attemptKey: ExchangeStepAttemptKey, step: Step) {
-    logger.addToTaskLog("Executing $step with attempt $attemptKey")
-    val privateStorageClient: StorageClient = privateStorageSelector.getStorageClient(attemptKey)
+  private suspend fun tryExecute(
+    attemptKey: ExchangeStepAttemptKey,
+    step: Step,
+    exchangeDate: Date
+  ) {
+    logger.addToTaskLog(
+      "Executing $step with attempt $attemptKey for exchange date ${exchangeDate.toLocalDate()}"
+    )
+    val privateStorageClient: StorageClient =
+      privateStorageSelector.getStorageClient(attemptKey.recurringExchangeId, exchangeDate)
     if (!isAlreadyComplete(step, privateStorageClient)) {
-      runStep(attemptKey, step, privateStorageClient)
+      runStep(attemptKey.recurringExchangeId, step, privateStorageClient, exchangeDate)
       writeDoneBlob(step, privateStorageClient)
     }
     markAsFinished(attemptKey, ExchangeStepAttempt.State.SUCCEEDED)
   }
 
   private suspend fun runStep(
-    attemptKey: ExchangeStepAttemptKey,
+    recurringExchangeId: String,
     step: Step,
-    privateStorage: StorageClient
+    privateStorage: StorageClient,
+    exchangeDate: Date
   ) {
     timeout.runWithTimeout {
-      val exchangeTask: ExchangeTask = getExchangeTaskForStep(step, attemptKey)
-
+      val exchangeTask: ExchangeTask =
+        getExchangeTaskForStep(step, recurringExchangeId, exchangeDate)
       val taskInput: Map<String, StorageClient.Blob> = readInputs(step, privateStorage)
       val taskOutput: Map<String, Flow<ByteString>> = exchangeTask.execute(taskInput)
       writeOutputs(step, taskOutput, privateStorage)
