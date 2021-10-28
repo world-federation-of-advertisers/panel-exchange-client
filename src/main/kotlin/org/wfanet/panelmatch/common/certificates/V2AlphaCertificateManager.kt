@@ -14,7 +14,6 @@
 
 package org.wfanet.panelmatch.common.certificates
 
-import com.google.type.Date
 import java.security.KeyFactory
 import java.security.PrivateKey
 import java.security.cert.X509Certificate
@@ -24,12 +23,11 @@ import org.wfanet.measurement.api.v2alpha.CertificatesGrpcKt.CertificatesCorouti
 import org.wfanet.measurement.api.v2alpha.getCertificateRequest
 import org.wfanet.measurement.common.crypto.jceProvider
 import org.wfanet.measurement.common.crypto.readCertificate
-import org.wfanet.measurement.common.toLocalDate
+import org.wfanet.panelmatch.common.ExchangeDateKey
 import org.wfanet.panelmatch.common.secrets.SecretMap
 
 /** [CertificateManager] that loads [X509Certificate]s from [certificateService]. */
 class V2AlphaCertificateManager(
-  /** Connection to the APIs certificate service used to grab certs registered with the Kingdom */
   private val certificateService: CertificatesCoroutineStub,
   private val rootCerts: SecretMap,
   private val privateKeys: SecretMap,
@@ -37,10 +35,6 @@ class V2AlphaCertificateManager(
 ) : CertificateManager {
 
   private val cache = ConcurrentHashMap<Pair<String, String>, X509Certificate>()
-
-  private fun getExchangeName(recurringExchangeId: String, exchangeDate: Date): String {
-    return "recurringExchanges/$recurringExchangeId/exchanges/${exchangeDate.toLocalDate()}"
-  }
 
   private suspend fun verifyCertificate(
     certificate: X509Certificate,
@@ -52,28 +46,22 @@ class V2AlphaCertificateManager(
   }
 
   override suspend fun getCertificate(
-    recurringExchangeId: String,
-    exchangeDate: Date,
+    exchange: ExchangeDateKey,
     certOwnerName: String,
     certResourceName: String
   ): X509Certificate {
-    return cache.getOrPut((certOwnerName to getExchangeName(recurringExchangeId, exchangeDate))) {
-      val response =
-        certificateService.getCertificate(getCertificateRequest { name = certResourceName })
+    return cache.getOrPut(certOwnerName to exchange.path) {
+      val request = getCertificateRequest { name = certResourceName }
+      val response = certificateService.getCertificate(request)
       val x509 = readCertificate(response.x509Der)
-
       verifyCertificate(x509, certOwnerName)
     }
   }
 
-  override suspend fun getExchangePrivateKey(
-    recurringExchangeId: String,
-    exchangeDate: Date,
-  ): PrivateKey {
-    val keyBytes =
-      requireNotNull(privateKeys.get(getExchangeName(recurringExchangeId, exchangeDate)))
-    return KeyFactory.getInstance(algorithm, jceProvider)
-      .generatePrivate(PKCS8EncodedKeySpec(keyBytes.toByteArray()))
+  override suspend fun getExchangePrivateKey(exchange: ExchangeDateKey): PrivateKey {
+    val keyBytes = requireNotNull(privateKeys.get(exchange.path))
+    val keyFactory = KeyFactory.getInstance(algorithm, jceProvider)
+    return keyFactory.generatePrivate(PKCS8EncodedKeySpec(keyBytes.toByteArray()))
   }
 
   override suspend fun getPartnerRootCertificate(partnerName: String): X509Certificate {
