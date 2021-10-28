@@ -29,6 +29,10 @@ class FileSystemStorageFactory(
   override fun build(): StorageClient {
     val exchangePath =
       "recurringExchanges/$recurringExchangeId/exchanges/${exchangeDate.toLocalDate()}"
-    return FileSystemStorageClient(File("${storageDetails.file.path}/$exchangePath"))
+    val directory = File("${storageDetails.file.path}/$exchangePath")
+    check(directory.exists() || directory.mkdirs()) {
+      "Unable to create recursively directory: ${directory.absolutePath}"
+    }
+    return FileSystemStorageClient(directory)
   }
 }
