@@ -12,11 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package org.wfanet.panelmatch.client.exchangetasks
+package org.wfanet.panelmatch.client.common
 
-import org.wfanet.panelmatch.client.common.ExchangeContext
+import org.wfanet.measurement.api.v2alpha.ExchangeWorkflow.Party
 
-/** Maps ExchangeWorkflow.Step to respective task. */
-interface ExchangeTaskMapper {
-  suspend fun getExchangeTaskForStep(context: ExchangeContext): ExchangeTask
+/** Set of valid parties -- to allow excluding unknown or unspecified proto enum values. */
+private val VALID_PARTIES = setOf(Party.DATA_PROVIDER, Party.MODEL_PROVIDER)
+
+/** Compact representation of one of the two parties along with its id. */
+data class Identity(val id: String, val party: Party) {
+  init {
+    require(party in VALID_PARTIES)
+  }
 }

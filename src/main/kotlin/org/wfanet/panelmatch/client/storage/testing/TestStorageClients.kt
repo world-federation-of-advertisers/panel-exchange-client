@@ -15,13 +15,19 @@
 package org.wfanet.panelmatch.client.storage.testing
 
 import com.google.common.collect.ImmutableMap
-import com.google.type.Date
-import com.google.type.date
+import java.time.LocalDate
+import org.wfanet.measurement.api.v2alpha.ExchangeStepAttemptKey
+import org.wfanet.measurement.api.v2alpha.ExchangeWorkflow
+import org.wfanet.measurement.api.v2alpha.ExchangeWorkflowKt.exchangeIdentifiers
+import org.wfanet.measurement.api.v2alpha.ExchangeWorkflowKt.step
+import org.wfanet.measurement.api.v2alpha.exchangeWorkflow
 import org.wfanet.measurement.storage.StorageClient
 import org.wfanet.measurement.storage.testing.InMemoryStorageClient
+import org.wfanet.panelmatch.client.common.ExchangeContext
 import org.wfanet.panelmatch.client.storage.PrivateStorageSelector
 import org.wfanet.panelmatch.client.storage.SharedStorageSelector
 import org.wfanet.panelmatch.client.storage.StorageDetails
+import org.wfanet.panelmatch.client.storage.StorageFactory
 import org.wfanet.panelmatch.client.storage.VerifiedStorageClient
 import org.wfanet.panelmatch.common.certificates.testing.TestCertificateManager
 import org.wfanet.panelmatch.common.secrets.SecretMap
@@ -32,7 +38,7 @@ fun makeTestPrivateStorageSelector(
 ): PrivateStorageSelector {
 
   val rootInMemoryStorageFactory = InMemoryStorageFactory(underlyingClient)
-  val builder = { _: StorageDetails, _: String, _: Date -> rootInMemoryStorageFactory }
+  val builder = makeStorageFactoryBuilder(rootInMemoryStorageFactory)
 
   return PrivateStorageSelector(
     ImmutableMap.of(
@@ -55,7 +61,7 @@ fun makeTestSharedStorageSelector(
 ): SharedStorageSelector {
 
   val rootInMemoryStorageFactory = InMemoryStorageFactory(underlyingClient)
-  val builder = { _: StorageDetails, _: String, _: Date -> rootInMemoryStorageFactory }
+  val builder = makeStorageFactoryBuilder(rootInMemoryStorageFactory)
 
   return SharedStorageSelector(
     TestCertificateManager(),
@@ -74,20 +80,42 @@ fun makeTestSharedStorageSelector(
   )
 }
 
+private val WORKFLOW = exchangeWorkflow {
+  exchangeIdentifiers =
+    exchangeIdentifiers {
+      modelProvider = "some-model-provider"
+      dataProvider = "some-data-provider"
+    }
+  steps += step { party = ExchangeWorkflow.Party.DATA_PROVIDER }
+}
+
+private val TEST_CONTEXT =
+  ExchangeContext(
+    ExchangeStepAttemptKey(
+      "some-recurring-exchange-id",
+      "some-exchange-id",
+      "some-step-id",
+      "some-attempt-id"
+    ),
+    LocalDate.of(2020, 10, 6),
+    WORKFLOW,
+    WORKFLOW.stepsList.first()
+  )
+
 fun makeTestVerifiedStorageClient(
   underlyingClient: StorageClient = InMemoryStorageClient()
 ): VerifiedStorageClient {
   return VerifiedStorageClient(
     underlyingClient,
-    "test",
-    date {
-      year = 2020
-      month = 10
-      day = 6
-    },
-    "owner",
-    "partner",
+    TEST_CONTEXT,
     "ownerCert",
     TestCertificateManager()
   )
+}
+
+// Yes, this is a factory-factory-factory.
+private fun makeStorageFactoryBuilder(
+  storageFactory: StorageFactory
+): ExchangeContext.(StorageDetails) -> StorageFactory {
+  return { storageFactory }
 }
