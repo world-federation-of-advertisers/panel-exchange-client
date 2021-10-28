@@ -14,10 +14,7 @@
 
 package org.wfanet.panelmatch.client.storage
 
-import com.google.common.collect.ImmutableMap
 import com.google.protobuf.ByteString
-import com.google.type.Date
-import java.lang.Exception
 import java.security.PrivateKey
 import java.security.cert.X509Certificate
 import kotlinx.coroutines.flow.Flow
@@ -28,61 +25,24 @@ import org.wfanet.measurement.common.flatten
 import org.wfanet.measurement.storage.StorageClient
 import org.wfanet.measurement.storage.StorageClient.Blob
 import org.wfanet.measurement.storage.createBlob
+import org.wfanet.panelmatch.client.common.ExchangeContext
 import org.wfanet.panelmatch.common.certificates.CertificateManager
 import org.wfanet.panelmatch.protocol.NamedSignature
 import org.wfanet.panelmatch.protocol.namedSignature
 
-class StorageNotFoundException(inputKey: String) : Exception("$inputKey not found")
-
+/** [StorageClient] that writes a signature when creating blobs and verifies signatures on reads. */
 class VerifiedStorageClient(
   private val storageClient: StorageClient,
-  private val recurringExchangeId: String,
-  private val exchangeDate: Date,
-  private val ownerName: String,
-  private val partnerName: String,
+  private val context: ExchangeContext,
   private val ownerCertificateName: String?,
   private val certificateManager: CertificateManager,
 ) {
 
-  val defaultBufferSizeBytes: Int = storageClient.defaultBufferSizeBytes
+  private val defaultBufferSizeBytes: Int
+    get() = storageClient.defaultBufferSizeBytes
 
   /** A helper function to get the implicit path for a input's signature. */
   private fun getSigPath(blobKey: String): String = "${blobKey}_signature"
-
-  /**
-   * Transforms values of [inputLabels] into the underlying blobs.
-   *
-   * If any blob can't be found, it throws [StorageNotFoundException].
-   *
-   * All files read are verified against the appropriate [X509Certificate] to validate that the
-   * files came from the expected source.
-   */
-  @Throws(StorageNotFoundException::class)
-  suspend fun verifiedBatchRead(inputLabels: Map<String, String>): Map<String, VerifiedBlob> {
-    return inputLabels.mapValues { entry -> getBlob(blobKey = entry.value) }
-  }
-
-  /**
-   * Writes output [data] based on [outputLabels].
-   *
-   * All outputs written by this function are signed by the user's PrivateKey, which is also written
-   * as a separate file.
-   */
-  suspend fun verifiedBatchWrite(
-    outputLabels: Map<String, String>,
-    data: Map<String, Flow<ByteString>>
-  ) {
-    // create an immutable copy of outputLabels to avoid race conditions if the underlying label map
-    // is changed during execution.
-    val immutableOutputs: ImmutableMap<String, String> = ImmutableMap.copyOf(outputLabels)
-    require(immutableOutputs.values.toSet().size == immutableOutputs.size) {
-      "Cannot write to the same output location twice"
-    }
-    for ((key, value) in immutableOutputs) {
-      val payload = requireNotNull(data[key]) { "Key $key not found in ${data.keys}" }
-      createBlob(blobKey = value, content = payload)
-    }
-  }
 
   /**
    * Replacement for StorageClient.getBlob(). Intended to be used in combination with another
@@ -102,9 +62,8 @@ class VerifiedStorageClient(
       sourceBlob,
       namedSignature.signature,
       certificateManager.getCertificate(
-        recurringExchangeId,
-        exchangeDate,
-        partnerName,
+        context.exchangeDateKey,
+        context.partnerName,
         namedSignature.certificateName
       )
     )
@@ -114,8 +73,10 @@ class VerifiedStorageClient(
     val signatureBlob: Blob =
       storageClient.getBlob(getSigPath(blobKey))
         ?: throw StorageNotFoundException(getSigPath(blobKey))
+    val serializedSignature = signatureBlob.read(defaultBufferSizeBytes).flatten()
 
-    return NamedSignature.parseFrom(signatureBlob.read(defaultBufferSizeBytes).flatten())
+    @Suppress("BlockingMethodInNonBlockingContext")
+    return NamedSignature.parseFrom(serializedSignature)
   }
 
   /**
@@ -123,14 +84,13 @@ class VerifiedStorageClient(
    * [PrivateKey] , this creates a signature in shared storage for the written blob that can be
    * verified by the other party using a pre-provided [X509Certificate].
    */
-  @Suppress("EXPERIMENTAL_API_USAGE")
+  @Suppress("EXPERIMENTAL_API_USAGE") // For Deferred.getCompleted.
   suspend fun createBlob(blobKey: String, content: Flow<ByteString>): VerifiedBlob {
-    val privateKey = certificateManager.getExchangePrivateKey(recurringExchangeId, exchangeDate)
+    val privateKey = certificateManager.getExchangePrivateKey(context.exchangeDateKey)
     val ownerCertificate =
       certificateManager.getCertificate(
-        recurringExchangeId,
-        exchangeDate,
-        ownerName,
+        context.exchangeDateKey,
+        context.localName,
         requireNotNull(ownerCertificateName)
       )
     val (signedContent, deferredSig) = privateKey.signFlow(ownerCertificate, content)
@@ -153,12 +113,8 @@ class VerifiedStorageClient(
     private val signature: ByteString,
     private val cert: X509Certificate
   ) {
-
     val size: Long
       get() = sourceBlob.size
-
-    val defaultBufferSizeBytes: Int
-      get() = sourceBlob.storageClient.defaultBufferSizeBytes
 
     /**
      * Stub for verified read function. Intended to be used in combination with a the other party's
@@ -172,7 +128,7 @@ class VerifiedStorageClient(
       return cert.verifySignedFlow(sourceBlob.read(bufferSize), signature)
     }
 
-    fun read(bufferSize: Int = this.defaultBufferSizeBytes): Flow<ByteString> {
+    fun read(bufferSize: Int = sourceBlob.storageClient.defaultBufferSizeBytes): Flow<ByteString> {
       return verifiedRead(bufferSize)
     }
 

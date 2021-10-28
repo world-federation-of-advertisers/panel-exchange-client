@@ -16,7 +16,6 @@ package org.wfanet.panelmatch.client.storage.testing
 
 import com.google.common.truth.Truth.assertThat
 import kotlin.test.assertFailsWith
-import kotlinx.coroutines.flow.reduce
 import org.junit.Test
 import org.wfanet.measurement.common.asBufferedFlow
 import org.wfanet.panelmatch.client.storage.StorageNotFoundException
@@ -43,26 +42,16 @@ abstract class AbstractVerifiedStorageTest {
   }
 
   @Test
-  fun `get error for rewriting to same key 2x in Storage`() = runBlockingTest {
-    assertFailsWith<IllegalArgumentException> {
-      privateStorage.verifiedBatchWrite(
-        mapOf("a" to KEY, "b" to KEY),
-        mapOf(KEY to VALUE.asBufferedFlow(1024))
-      )
-    }
-  }
-
-  @Test
   fun `shared storage cannot read from private storage`() = runBlockingTest {
     privateStorage.createBlob(KEY, VALUE.asBufferedFlow(1024))
-    privateStorage.getBlob(KEY).read(1024).reduce { a, b -> a.concat(b) } // Does not throw.
+    privateStorage.getBlob(KEY).toByteString() // Does not throw.
     assertFailsWith<StorageNotFoundException> { sharedStorage.getBlob(KEY) }
   }
 
   @Test
   fun `private storage cannot read from shared storage`() = runBlockingTest {
     sharedStorage.createBlob(KEY, VALUE.asBufferedFlow(1024))
-    sharedStorage.getBlob(KEY).read(1024).reduce { a, b -> a.concat(b) } // Does not throw.
+    sharedStorage.getBlob(KEY).toByteString() // Does not throw.
     assertFailsWith<StorageNotFoundException> { privateStorage.getBlob(KEY) }
   }
 

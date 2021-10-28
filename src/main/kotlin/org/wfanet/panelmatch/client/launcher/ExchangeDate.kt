@@ -12,11 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package org.wfanet.panelmatch.client.exchangetasks
+package org.wfanet.panelmatch.client.launcher
 
-import org.wfanet.panelmatch.client.common.ExchangeContext
+import java.time.LocalDate
 
-/** Maps ExchangeWorkflow.Step to respective task. */
-interface ExchangeTaskMapper {
-  suspend fun getExchangeTaskForStep(context: ExchangeContext): ExchangeTask
+/** Unique identifier for an Exchange: the parent [recurringExchangeId] and the Exchange's date. */
+data class ExchangeDate(val recurringExchangeId: String, val date: LocalDate) {
+  val path: String by lazy { "recurringExchanges/$recurringExchangeId/exchanges/$date" }
 }
