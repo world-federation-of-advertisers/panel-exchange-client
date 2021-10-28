@@ -20,6 +20,7 @@ import org.wfanet.measurement.api.v2alpha.ExchangeStep
 import org.wfanet.measurement.api.v2alpha.ExchangeStepKey
 import org.wfanet.measurement.api.v2alpha.ExchangeWorkflow
 import org.wfanet.measurement.common.toLocalDate
+import org.wfanet.panelmatch.client.launcher.ExchangeStepValidator.ValidatedExchangeStep
 import org.wfanet.panelmatch.common.secrets.SecretMap
 
 /** Real implementation of [ExchangeStepValidator]. */
@@ -28,7 +29,7 @@ class ExchangeStepValidatorImpl(
   private val validExchangeWorkflows: SecretMap,
   private val clock: Clock
 ) : ExchangeStepValidator {
-  override suspend fun validate(exchangeStep: ExchangeStep) {
+  override suspend fun validate(exchangeStep: ExchangeStep): ValidatedExchangeStep {
     val serializedExchangeWorkflow = exchangeStep.serializedExchangeWorkflow
     val recurringExchangeId =
       requireNotNull(ExchangeStepKey.fromName(exchangeStep.name)).recurringExchangeId
@@ -81,5 +82,7 @@ class ExchangeStepValidatorImpl(
         "exchange_date is in the future"
       )
     }
+
+    return ValidatedExchangeStep(workflow, step, exchangeDate)
   }
 }
