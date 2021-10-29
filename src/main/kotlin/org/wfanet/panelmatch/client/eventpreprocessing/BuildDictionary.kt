@@ -42,6 +42,6 @@ class BuildDictionary(private val dictionaryBuilder: DictionaryBuilder) :
         Sample.any(OVERSAMPLING_FACTOR * dictionaryBuilder.preferredSampleSize)
       )
       .apply("Uniform Sample", Sample.fixedSizeGlobally(dictionaryBuilder.preferredSampleSize))
-      .map("Train Compressor") { dictionaryBuilder.buildDictionary(it) }
+      .map("Build Dictionary from Samples") { dictionaryBuilder.buildDictionary(it) }
   }
 }
