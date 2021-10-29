@@ -12,23 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package org.wfanet.panelmatch.client.common.testing
+package org.wfanet.panelmatch.client.common
 
 import com.google.protobuf.ByteString
+import org.apache.beam.sdk.coders.Coder
+import org.apache.beam.sdk.coders.KvCoder
+import org.apache.beam.sdk.extensions.protobuf.ByteStringCoder
 import org.apache.beam.sdk.values.KV
-import org.apache.beam.sdk.values.PCollection
-import org.wfanet.panelmatch.client.common.eventCoder
-import org.wfanet.panelmatch.common.beam.kvOf
-import org.wfanet.panelmatch.common.beam.testing.BeamTestBase
-import org.wfanet.panelmatch.common.toByteString
 
-fun BeamTestBase.eventsOf(
-  vararg pairs: Pair<String, String>
-): PCollection<KV<ByteString, ByteString>> {
-  @Suppress("NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
-  return pcollectionOf(
-    "Create Events",
-    pairs.map { kvOf(it.first.toByteString(), it.second.toByteString()) },
-    coder = eventCoder
-  )
-}
+/** Used for encoding collections of events to be compressed or encrypted. */
+val eventCoder: Coder<KV<ByteString, ByteString>> =
+  KvCoder.of(ByteStringCoder.of(), ByteStringCoder.of())

@@ -15,7 +15,6 @@
 package org.wfanet.panelmatch.client.eventpreprocessing
 
 import com.google.protobuf.ByteString
-import org.apache.beam.sdk.transforms.Sample
 import org.apache.beam.sdk.values.KV
 import org.apache.beam.sdk.values.PCollection
 import org.wfanet.panelmatch.client.combinedEvents
@@ -23,33 +22,18 @@ import org.wfanet.panelmatch.client.common.CompressedEvents
 import org.wfanet.panelmatch.client.common.buildAsPCollectionView
 import org.wfanet.panelmatch.common.beam.groupByKey
 import org.wfanet.panelmatch.common.beam.kvOf
-import org.wfanet.panelmatch.common.beam.map
 import org.wfanet.panelmatch.common.beam.mapValues
 import org.wfanet.panelmatch.common.beam.mapWithSideInput
-import org.wfanet.panelmatch.common.beam.values
 import org.wfanet.panelmatch.common.compression.Compressor
 import org.wfanet.panelmatch.common.compression.Dictionary
 import org.wfanet.panelmatch.common.compression.DictionaryBuilder
-
-/**
- * First use [Sample.any] -- which is not guaranteed to be uniform -- to significantly over-sample
- * then use [Sample.fixedSizeGlobally], which is uniform random but inefficient on lots of data.
- *
- * We coarsely sample 10 times as much data as is necessary; this should be adjusted experimentally.
- */
-private const val OVERSAMPLING_FACTOR = 10L
 
 /** Trains a [Compressor] and applies it to a [PCollection]. */
 fun DictionaryBuilder.compressByKey(
   events: PCollection<KV<ByteString, ByteString>>
 ): CompressedEvents {
 
-  val dictionary: PCollection<Dictionary> =
-    events
-      .values()
-      .apply("Rough Sample", Sample.any(OVERSAMPLING_FACTOR * preferredSampleSize))
-      .apply("Uniform Sample", Sample.fixedSizeGlobally(preferredSampleSize))
-      .map("Train Compressor") { buildDictionary(it) }
+  val dictionary: PCollection<Dictionary> = events.apply("Create Dictionary", BuildDictionary(this))
 
   val compressorView = factory.buildAsPCollectionView(dictionary)
 
