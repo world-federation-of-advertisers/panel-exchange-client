@@ -19,7 +19,7 @@ import org.apache.beam.sdk.values.KV
 import org.apache.beam.sdk.values.PCollection
 import org.apache.beam.sdk.values.PCollectionTuple
 import org.wfanet.panelmatch.client.common.CompressedEvents
-import org.wfanet.panelmatch.common.beam.*
+import org.wfanet.panelmatch.common.beam.values
 import org.wfanet.panelmatch.common.compression.Compressor
 import org.wfanet.panelmatch.common.compression.Dictionary
 import org.wfanet.panelmatch.common.compression.DictionaryBuilder
