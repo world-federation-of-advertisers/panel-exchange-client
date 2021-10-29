@@ -33,17 +33,17 @@ def panel_exchange_client_repositories():
 
     http_archive(
         name = "wfa_common_jvm",
-        sha256 = "dad40dc1efc67ad692e1847f0634440ab95fe6454143a2540c92a27d288f5c57",
-        strip_prefix = "common-jvm-0.18.0",
-        url = "https://github.com/world-federation-of-advertisers/common-jvm/archive/v0.18.0.tar.gz",
+        sha256 = "01cc659874288a42f65efe29477645ed57e5027747bb2ce73615ebb250667d83",
+        strip_prefix = "common-jvm-0.19.0",
+        url = "https://github.com/world-federation-of-advertisers/common-jvm/archive/v0.19.0.tar.gz",
     )
 
     # TODO: remove dependencies on wfa_measurement_system
     http_archive(
         name = "wfa_measurement_system",
-        sha256 = "2285ea799673145b696ac9ae459ea395ab37461603def285494ce44ddefaa67a",
-        strip_prefix = "cross-media-measurement-c063408514d44ab21e8caabf1ea9811f3564e2e6",
-        url = "https://github.com/world-federation-of-advertisers/cross-media-measurement/archive/c063408514d44ab21e8caabf1ea9811f3564e2e6.tar.gz",
+        sha256 = "d8541f19d61a307814e2c7423a8f781b0f560c06c99b8ee3be6b47338a69ed8d",
+        strip_prefix = "cross-media-measurement-976a969fbfd37b04576f05cca62123cd4715a81b",
+        url = "https://github.com/world-federation-of-advertisers/cross-media-measurement/archive/976a969fbfd37b04576f05cca62123cd4715a81b.tar.gz",
     )
 
     http_archive(
