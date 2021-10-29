@@ -17,7 +17,7 @@ package org.wfanet.panelmatch.client.common.testing
 import com.google.protobuf.ByteString
 import org.apache.beam.sdk.values.KV
 import org.apache.beam.sdk.values.PCollection
-import org.wfanet.panelmatch.client.common.eventCoder
+import org.wfanet.panelmatch.common.beam.byteStringKvCoder
 import org.wfanet.panelmatch.common.beam.kvOf
 import org.wfanet.panelmatch.common.beam.testing.BeamTestBase
 import org.wfanet.panelmatch.common.toByteString
@@ -29,6 +29,6 @@ fun BeamTestBase.eventsOf(
   return pcollectionOf(
     "Create Events",
     pairs.map { kvOf(it.first.toByteString(), it.second.toByteString()) },
-    coder = eventCoder
+    coder = byteStringKvCoder
   )
 }

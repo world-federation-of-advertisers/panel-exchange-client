@@ -17,13 +17,9 @@ package org.wfanet.panelmatch.client.eventpreprocessing
 import com.google.protobuf.ByteString
 import org.apache.beam.sdk.values.KV
 import org.apache.beam.sdk.values.PCollection
-import org.wfanet.panelmatch.client.combinedEvents
+import org.apache.beam.sdk.values.PCollectionTuple
 import org.wfanet.panelmatch.client.common.CompressedEvents
-import org.wfanet.panelmatch.client.common.buildAsPCollectionView
-import org.wfanet.panelmatch.common.beam.groupByKey
-import org.wfanet.panelmatch.common.beam.kvOf
-import org.wfanet.panelmatch.common.beam.mapValues
-import org.wfanet.panelmatch.common.beam.mapWithSideInput
+import org.wfanet.panelmatch.common.beam.*
 import org.wfanet.panelmatch.common.compression.Compressor
 import org.wfanet.panelmatch.common.compression.Dictionary
 import org.wfanet.panelmatch.common.compression.DictionaryBuilder
@@ -33,19 +29,13 @@ fun DictionaryBuilder.compressByKey(
   events: PCollection<KV<ByteString, ByteString>>
 ): CompressedEvents {
 
-  val dictionary: PCollection<Dictionary> = events.apply("Create Dictionary", BuildDictionary(this))
+  val dictionary: PCollection<Dictionary> =
+    events.values().apply("Create Dictionary", BuildDictionary(this))
 
-  val compressorView = factory.buildAsPCollectionView(dictionary)
-
-  val compressedEvents: PCollection<KV<ByteString, ByteString>> =
-    events
-      .groupByKey()
-      .mapValues { combinedEvents { serializedEvents += it }.toByteString() }
-      .mapWithSideInput(compressorView, name = "Compress") {
-        keyAndEvents: KV<ByteString, ByteString>,
-        compressor: Compressor ->
-        kvOf(keyAndEvents.key, compressor.compress(keyAndEvents.value))
-      }
+  val compressedEvents =
+    PCollectionTuple.of(CompressEvents.eventsTag, events)
+      .and(CompressEvents.dictionaryTag, dictionary)
+      .apply("Compress Events", CompressEvents(this))
 
   return CompressedEvents(compressedEvents, dictionary)
 }

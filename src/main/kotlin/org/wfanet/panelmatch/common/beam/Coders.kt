@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package org.wfanet.panelmatch.client.common
+package org.wfanet.panelmatch.common.beam
 
 import com.google.protobuf.ByteString
 import org.apache.beam.sdk.coders.Coder
@@ -21,5 +21,5 @@ import org.apache.beam.sdk.extensions.protobuf.ByteStringCoder
 import org.apache.beam.sdk.values.KV
 
 /** Used for encoding collections of events to be compressed or encrypted. */
-val eventCoder: Coder<KV<ByteString, ByteString>> =
+val byteStringKvCoder: Coder<KV<ByteString, ByteString>> =
   KvCoder.of(ByteStringCoder.of(), ByteStringCoder.of())
