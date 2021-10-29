@@ -34,22 +34,28 @@ import org.wfanet.panelmatch.client.exchangetasks.ExchangeTaskMapper
 import org.wfanet.panelmatch.client.launcher.ApiClient
 import org.wfanet.panelmatch.client.launcher.GrpcApiClient
 import org.wfanet.panelmatch.client.launcher.Identity
-import org.wfanet.panelmatch.client.storage.StorageFactory
+import org.wfanet.panelmatch.client.storage.PrivateStorageSelector
+import org.wfanet.panelmatch.client.storage.SharedStorageSelector
 import org.wfanet.panelmatch.common.Timeout
 import org.wfanet.panelmatch.common.asTimeout
+import org.wfanet.panelmatch.common.certificates.CertificateManager
+import org.wfanet.panelmatch.common.certificates.testing.TestCertificateManager
 import org.wfanet.panelmatch.common.secrets.SecretMap
 
 /** Executes ExchangeWorkflows for InProcess Integration testing. */
 class ExchangeWorkflowDaemonForTest(
+  override val privateStorageSelector: PrivateStorageSelector,
+  override val sharedStorageSelector: SharedStorageSelector,
   override val clock: Clock,
   override val scope: CoroutineScope,
-  override val privateStorageFactory: StorageFactory,
   override val validExchangeWorkflows: SecretMap,
   private val channel: Channel,
   private val providerKey: ResourceKey,
   private val taskTimeoutDuration: Duration,
   private val pollingInterval: Duration,
 ) : ExchangeWorkflowDaemon() {
+
+  override val certificateManager: CertificateManager by lazy { TestCertificateManager() }
 
   override val identity: Identity =
     when (providerKey) {
@@ -76,7 +82,9 @@ class ExchangeWorkflowDaemonForTest(
 
   override val exchangeTaskMapper: ExchangeTaskMapper by lazy {
     InProcessExchangeTaskMapper(
-      privateStorage = privateStorageFactory,
+      privateStorageSelector = privateStorageSelector,
+      sharedStorageSelector = sharedStorageSelector,
+      certificateManager = certificateManager,
       inputTaskThrottler = throttler
     )
   }

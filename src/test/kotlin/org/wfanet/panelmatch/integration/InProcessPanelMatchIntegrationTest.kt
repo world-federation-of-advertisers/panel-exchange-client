@@ -45,9 +45,9 @@ import org.wfanet.measurement.common.toLocalDate
 import org.wfanet.measurement.common.toProtoDate
 import org.wfanet.measurement.integration.deploy.gcloud.buildKingdomSpannerEmulatorDatabaseRule
 import org.wfanet.measurement.integration.deploy.gcloud.buildSpannerInProcessKingdom
-import org.wfanet.panelmatch.client.storage.FileSystemStorageFactory
-import org.wfanet.panelmatch.client.storage.StorageDetailsKt.fileStorage
-import org.wfanet.panelmatch.client.storage.storageDetails
+import org.wfanet.measurement.storage.testing.InMemoryStorageClient
+import org.wfanet.panelmatch.client.storage.testing.makeTestPrivateStorageSelector
+import org.wfanet.panelmatch.client.storage.testing.makeTestSharedStorageSelector
 import org.wfanet.panelmatch.common.secrets.testing.TestSecretMap
 import org.wfanet.panelmatch.common.storage.createBlob
 import org.wfanet.panelmatch.common.toByteString
@@ -116,31 +116,18 @@ class InProcessPanelMatchIntegrationTest {
         mutableMapOf<String, ByteString>(Pair(recurringExchangeId, exchangeWorkflow.toByteString()))
       )
 
-    val exchangeKey = ExchangeKey(recurringExchangeId, TODAY.format())
-
-    temporaryFolder.create()
-    val edpFolder = temporaryFolder.newFolder("edp")
-    val mpFolder = temporaryFolder.newFolder("mp")
-    createFolder("edp", exchangeKey)
-    createFolder("mp", exchangeKey)
-
-    val edpStorageDetails = storageDetails { file = fileStorage { path = edpFolder.path } }
-    val mpStorageDetails = storageDetails { file = fileStorage { path = mpFolder.path } }
-    val edpStorageFactory =
-      FileSystemStorageFactory(storageDetails = edpStorageDetails, exchangeKey = exchangeKey)
-    val mpStorageFactory =
-      FileSystemStorageFactory(storageDetails = mpStorageDetails, exchangeKey = exchangeKey)
-
     // TODO(@yunyeng): Build storage from InputBlobs map.
-    val edpStorage = edpStorageFactory.build()
-    edpStorage.createBlob("edp-hkdf-pepper", HKDF_PEPPER)
+    val edpStorageClient = InMemoryStorageClient()
+    val mpStorageClient = InMemoryStorageClient()
+    edpStorageClient.createBlob("edp-hkdf-pepper", HKDF_PEPPER)
 
     val edpScope = createScope("EDP SCOPE")
     val edpDaemon =
       ExchangeWorkflowDaemonForTest(
+        privateStorageSelector = makeTestPrivateStorageSelector(secretMap, edpStorageClient),
+        sharedStorageSelector = makeTestSharedStorageSelector(secretMap, edpStorageClient),
         clock = CLOCK,
         scope = edpScope,
-        privateStorageFactory = edpStorageFactory,
         validExchangeWorkflows = secretMap,
         channel = inProcessKingdom.publicApiChannel,
         providerKey = dataProviderKey,
@@ -151,9 +138,10 @@ class InProcessPanelMatchIntegrationTest {
     val mpScope = createScope("MP SCOPE")
     val mpDaemon =
       ExchangeWorkflowDaemonForTest(
+        privateStorageSelector = makeTestPrivateStorageSelector(secretMap, mpStorageClient),
+        sharedStorageSelector = makeTestSharedStorageSelector(secretMap, mpStorageClient),
         clock = CLOCK,
         scope = mpScope,
-        privateStorageFactory = mpStorageFactory,
         validExchangeWorkflows = secretMap,
         channel = inProcessKingdom.publicApiChannel,
         providerKey = modelProviderKey,
