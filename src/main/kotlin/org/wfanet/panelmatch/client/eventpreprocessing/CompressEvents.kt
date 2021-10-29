@@ -22,8 +22,8 @@ import org.apache.beam.sdk.values.PCollectionTuple
 import org.apache.beam.sdk.values.TupleTag
 import org.wfanet.panelmatch.client.combinedEvents
 import org.wfanet.panelmatch.client.common.buildAsPCollectionView
-import org.wfanet.panelmatch.common.beam.kvOf
 import org.wfanet.panelmatch.common.beam.groupByKey
+import org.wfanet.panelmatch.common.beam.kvOf
 import org.wfanet.panelmatch.common.beam.mapValues
 import org.wfanet.panelmatch.common.beam.mapWithSideInput
 import org.wfanet.panelmatch.common.compression.Compressor
