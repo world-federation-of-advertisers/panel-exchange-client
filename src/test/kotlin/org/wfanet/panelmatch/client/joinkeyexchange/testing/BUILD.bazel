@@ -1,0 +1,16 @@
+load("@io_bazel_rules_kotlin//kotlin:jvm.bzl", "kt_jvm_test")
+
+kt_jvm_test(
+    name = "FakeJoinKeyCryptorTest",
+    timeout = "short",
+    srcs = ["FakeJoinKeyCryptorTest.kt"],
+    test_class = "org.wfanet.panelmatch.client.joinkeyexchange.testing.FakeJoinKeyCryptorTest",
+    deps = [
+        "//src/main/kotlin/org/wfanet/panelmatch/client/joinkeyexchange",
+        "//src/main/kotlin/org/wfanet/panelmatch/client/joinkeyexchange/testing",
+        "@wfa_common_jvm//imports/java/com/google/common/truth",
+        "@wfa_common_jvm//imports/java/com/google/common/truth/extensions/proto",
+        "@wfa_common_jvm//imports/java/org/junit",
+        "@wfa_common_jvm//imports/kotlin/kotlin/test",
+    ],
+)

@@ -24,14 +24,19 @@
 namespace wfa::panelmatch::client::privatemembership {
 namespace {
 
+using wfa::panelmatch::client::joinkeyexchange::JoinKeyAndId;
+
 TEST(PrepareQuery, PrepareQueryTest) {
   PrepareQueryRequest test_request;
   test_request.set_identifier_hash_pepper("some-pepper");
-  test_request.add_single_blinded_keys("some joinkey0");
-  test_request.add_single_blinded_keys("some joinkey1");
-  test_request.add_single_blinded_keys("some joinkey2");
-  test_request.add_single_blinded_keys("some joinkey3");
-  test_request.add_single_blinded_keys("some joinkey4");
+  JoinKeyAndId lookup_key_and_id_1;
+  lookup_key_and_id_1.mutable_join_key()->set_key("some joinkey0");
+  lookup_key_and_id_1.mutable_join_key_identifier()->set_id("some identifier0");
+  *test_request.add_lookup_key_and_ids() = lookup_key_and_id_1;
+  JoinKeyAndId lookup_key_and_id_2;
+  lookup_key_and_id_1.mutable_join_key()->set_key("some joinkey1");
+  lookup_key_and_id_1.mutable_join_key_identifier()->set_id("some identifier1");
+  *test_request.add_lookup_key_and_ids() = lookup_key_and_id_2;
   absl::StatusOr<PrepareQueryResponse> test_response =
       PrepareQuery(test_request);
   EXPECT_THAT(test_response.status(), IsOk());

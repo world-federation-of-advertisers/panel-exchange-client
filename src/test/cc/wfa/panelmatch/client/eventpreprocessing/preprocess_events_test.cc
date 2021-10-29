@@ -26,18 +26,18 @@
 #include "google/protobuf/descriptor.h"
 #include "google/protobuf/message.h"
 #include "gtest/gtest.h"
+#include "wfa/panelmatch/client/eventpreprocessing/event_data_preprocessor.h"
 #include "wfa/panelmatch/client/eventpreprocessing/preprocess_events.pb.h"
-#include "wfa/panelmatch/protocol/crypto/event_data_preprocessor.h"
 
-namespace wfa::panelmatch::client {
+namespace wfa::panelmatch::client::eventpreprocessing {
 namespace {
 using ::testing::ContainerEq;
 using ::testing::Eq;
 using ::testing::Ne;
 using ::testing::Not;
 using ::testing::Pointwise;
-using ::wfa::panelmatch::protocol::crypto::EventDataPreprocessor;
-using ::wfa::panelmatch::protocol::crypto::ProcessedData;
+using ::wfa::panelmatch::client::eventpreprocessing::EventDataPreprocessor;
+using ::wfa::panelmatch::client::eventpreprocessing::ProcessedData;
 
 // Test using actual implementations to ensure nothing crashes
 TEST(PreprocessEventsTest, ActualValues) {
@@ -151,4 +151,4 @@ TEST(PreprocessEventsTest, MultipleUnprocessedEvents) {
   EXPECT_NE(processed.processed_events(2).encrypted_data(), "some-data3");
 }
 }  // namespace
-}  // namespace wfa::panelmatch::client
+}  // namespace wfa::panelmatch::client::eventpreprocessing

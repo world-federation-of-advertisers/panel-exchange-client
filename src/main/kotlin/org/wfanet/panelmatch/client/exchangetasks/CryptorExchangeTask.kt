@@ -18,16 +18,19 @@ import com.google.protobuf.ByteString
 import kotlinx.coroutines.flow.Flow
 import org.wfanet.measurement.common.asBufferedFlow
 import org.wfanet.measurement.storage.StorageClient
+import org.wfanet.panelmatch.client.joinkeyexchange.JoinKeyAndId
+import org.wfanet.panelmatch.client.joinkeyexchange.JoinKeyAndIdCollection
+import org.wfanet.panelmatch.client.joinkeyexchange.JoinKeyCryptor
+import org.wfanet.panelmatch.client.joinkeyexchange.joinKeyAndIdCollection
 import org.wfanet.panelmatch.client.logger.addToTaskLog
 import org.wfanet.panelmatch.client.logger.loggerFor
-import org.wfanet.panelmatch.common.crypto.DeterministicCommutativeCipher
 import org.wfanet.panelmatch.common.storage.toByteString
 
 private const val INPUT_CRYPTO_KEY_LABEL = "encryption-key"
 
 class CryptorExchangeTask
 internal constructor(
-  private val operation: (ByteString, List<ByteString>) -> List<ByteString>,
+  private val operation: (ByteString, List<JoinKeyAndId>) -> List<JoinKeyAndId>,
   private val inputDataLabel: String,
   private val outputDataLabel: String
 ) : ExchangeTask {
@@ -44,22 +47,10 @@ internal constructor(
     //  serialization.
     val cryptoKey = input.getValue(INPUT_CRYPTO_KEY_LABEL).toByteString()
     val serializedInputs = input.getValue(inputDataLabel).toByteString()
-    val inputList = JoinKeyAndIdCollection.parseFrom(serializedInputs).joinKeysAndIdsList
-    val joinKeys = inputList.map { it.joinKey.key }
-    val joinKeyIds = inputList.map { it.joinKeyIdentifier }
-    val results = operation(cryptoKey, joinKeys)
-    /** For now, we assume the join keys return in the same order that they were input. */
-    val serializedOutput =
-      joinKeyAndIdCollection {
-          joinKeysAndIds +=
-            results.zip(joinKeyIds) { result: ByteString, joinKeyId: JoinKeyIdentifier ->
-              joinKeyAndId {
-                this.joinKey = joinKey { key = result }
-                this.joinKeyIdentifier = joinKeyId
-              }
-            }
-        }
-        .toByteString()
+    val results =
+      operation(cryptoKey, JoinKeyAndIdCollection.parseFrom(serializedInputs).joinKeysAndIdsList)
+
+    val serializedOutput = joinKeyAndIdCollection { joinKeysAndIds += results }.toByteString()
     return mapOf(outputDataLabel to serializedOutput.asBufferedFlow(1024))
   }
 
@@ -68,11 +59,9 @@ internal constructor(
 
     /** Returns an [ExchangeTask] that removes encryption from data. */
     @JvmStatic
-    fun forDecryption(
-      DeterministicCommutativeCipher: DeterministicCommutativeCipher
-    ): ExchangeTask {
+    fun forDecryption(JoinKeyCryptor: JoinKeyCryptor): ExchangeTask {
       return CryptorExchangeTask(
-        operation = DeterministicCommutativeCipher::decrypt,
+        operation = JoinKeyCryptor::decrypt,
         inputDataLabel = "encrypted-data",
         outputDataLabel = "decrypted-data"
       )
@@ -80,11 +69,9 @@ internal constructor(
 
     /** Returns an [ExchangeTask] that adds encryption to plaintext. */
     @JvmStatic
-    fun forEncryption(
-      DeterministicCommutativeCipher: DeterministicCommutativeCipher
-    ): ExchangeTask {
+    fun forEncryption(JoinKeyCryptor: JoinKeyCryptor): ExchangeTask {
       return CryptorExchangeTask(
-        operation = DeterministicCommutativeCipher::encrypt,
+        operation = JoinKeyCryptor::encrypt,
         inputDataLabel = "unencrypted-data",
         outputDataLabel = "encrypted-data"
       )
@@ -92,11 +79,9 @@ internal constructor(
 
     /** Returns an [ExchangeTask] that adds another layer of encryption to data. */
     @JvmStatic
-    fun forReEncryption(
-      DeterministicCommutativeCipher: DeterministicCommutativeCipher
-    ): ExchangeTask {
+    fun forReEncryption(JoinKeyCryptor: JoinKeyCryptor): ExchangeTask {
       return CryptorExchangeTask(
-        operation = DeterministicCommutativeCipher::reEncrypt,
+        operation = JoinKeyCryptor::reEncrypt,
         inputDataLabel = "encrypted-data",
         outputDataLabel = "reencrypted-data"
       )

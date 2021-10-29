@@ -16,13 +16,13 @@ syntax = "proto3";
 
 package wfa.panelmatch.client.privatemembership;
 
-import "wfa/panelmatch/client/exchangetasks/join_key_exchange.proto";
+import "wfa/panelmatch/client/joinkeyexchange/join_key.proto";
 import "wfa/panelmatch/client/privatemembership/query.proto";
 
 option java_package = "org.wfanet.panelmatch.client.privatemembership";
 option java_multiple_files = true;
 
-// Removes the final layer of encryption for event data using the joinkey and
+// Removes the final layer of encryption for event data using the lookup key and
 // pepper.
 message DecryptEventDataRequest {
   message EncryptedEventDataSet {
@@ -30,7 +30,7 @@ message DecryptEventDataRequest {
     EncryptedEventData encrypted_event_data = 2;
   }
   EncryptedEventDataSet encrypted_event_data_set = 1;
-  wfa.panelmatch.client.exchangetasks.JoinKey lookup_key = 2;
+  wfa.panelmatch.client.joinkeyexchange.JoinKey lookup_key = 2;
   bytes hkdf_pepper = 3;
 }
 
@@ -41,7 +41,7 @@ message DecryptedEventDataSet {
 }
 
 message KeyedDecryptedEventDataSet {
-  wfa.panelmatch.client.exchangetasks.JoinKey hashed_join_key = 1;
+  wfa.panelmatch.client.joinkeyexchange.JoinKey hashed_join_key = 1;
   repeated Plaintext decrypted_event_data = 2;
 }
 
@@ -52,7 +52,7 @@ message DecryptQueryResultsRequest {
   bytes serialized_public_key = 2;
   bytes serialized_private_key = 3;
   repeated EncryptedQueryResult encrypted_query_results = 4;
-  wfa.panelmatch.client.exchangetasks.JoinKey lookup_key = 5;
+  wfa.panelmatch.client.joinkeyexchange.JoinKey lookup_key = 5;
   bytes hkdf_pepper = 6;
 }
 

@@ -24,24 +24,6 @@ import org.wfanet.measurement.api.v2alpha.exchangeStep
 import org.wfanet.measurement.api.v2alpha.exchangeWorkflow
 import org.wfanet.panelmatch.common.toByteString
 
-val JOIN_KEYS =
-  listOf(
-    "some joinkey0".toByteString(),
-    "some joinkey1".toByteString(),
-    "some joinkey2".toByteString(),
-    "some joinkey3".toByteString(),
-    "some joinkey4".toByteString()
-  )
-
-val SINGLE_BLINDED_KEYS =
-  listOf(
-    "some single-blinded key0".toByteString(),
-    "some single-blinded key1".toByteString(),
-    "some single-blinded key2".toByteString(),
-    "some single-blinded key3".toByteString(),
-    "some single-blinded key4".toByteString()
-  )
-
 fun buildWorkflow(
   testedStep: Step,
   dataProviderName: String,

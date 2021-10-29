@@ -25,6 +25,7 @@ import org.wfanet.measurement.api.v2alpha.ExchangeWorkflowKt.StepKt.encryptStep
 import org.wfanet.measurement.api.v2alpha.ExchangeWorkflowKt.step
 import org.wfanet.measurement.storage.StorageClient
 import org.wfanet.measurement.storage.testing.InMemoryStorageClient
+import org.wfanet.panelmatch.client.joinkeyexchange.testing.FakeJoinKeyCryptor
 import org.wfanet.panelmatch.client.launcher.testing.inputStep
 import org.wfanet.panelmatch.client.privatemembership.testing.PlaintextPrivateMembershipCryptor
 import org.wfanet.panelmatch.client.privatemembership.testing.PlaintextQueryEvaluator
@@ -36,7 +37,6 @@ import org.wfanet.panelmatch.client.storage.testing.makeTestPrivateStorageSelect
 import org.wfanet.panelmatch.client.storage.testing.makeTestSharedStorageSelector
 import org.wfanet.panelmatch.common.certificates.testing.TestCertificateManager
 import org.wfanet.panelmatch.common.compression.NoOpCompressorFactory
-import org.wfanet.panelmatch.common.crypto.testing.FakeDeterministicCommutativeCipher
 import org.wfanet.panelmatch.common.secrets.testing.TestSecretMap
 import org.wfanet.panelmatch.common.testing.AlwaysReadyThrottler
 import org.wfanet.panelmatch.common.testing.runBlockingTest
@@ -64,7 +64,7 @@ class ExchangeTaskMapperForJoinKeyExchangeTest {
   private val exchangeTaskMapper =
     object : ExchangeTaskMapperForJoinKeyExchange() {
       override val compressorFactory = NoOpCompressorFactory
-      override val deterministicCommutativeCryptor = FakeDeterministicCommutativeCipher
+      override val deterministicCommutativeCryptor = FakeJoinKeyCryptor
       override val getPrivateMembershipCryptor = ::PlaintextPrivateMembershipCryptor
       override val queryResultsDecryptor = PlaintextQueryResultsDecryptor()
       override val privateStorageSelector = testPrivateStorageSelector.selector

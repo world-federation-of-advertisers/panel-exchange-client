@@ -1,0 +1,84 @@
+// Copyright 2021 The Cross-Media Measurement Authors
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+package org.wfanet.panelmatch.client.joinkeyexchange.testing
+
+import com.google.common.truth.Truth.assertThat
+import com.google.protobuf.ByteString
+import kotlin.test.assertFails
+import org.junit.Test
+import org.wfanet.panelmatch.client.common.joinKeyAndIdOf
+import org.wfanet.panelmatch.client.joinkeyexchange.JoinKeyCryptor
+import org.wfanet.panelmatch.common.toByteString
+
+val PLAINTEXT_JOIN_KEYS =
+  listOf(
+    joinKeyAndIdOf("some plaintext0".toByteString(), "some identifier0".toByteString()),
+    joinKeyAndIdOf("some plaintext1".toByteString(), "some identifier1".toByteString()),
+    joinKeyAndIdOf("some plaintext2".toByteString(), "some identifier2".toByteString()),
+    joinKeyAndIdOf("some plaintext3".toByteString(), "some identifier3".toByteString()),
+    joinKeyAndIdOf("some plaintext4".toByteString(), "some identifier4".toByteString()),
+  )
+
+private val INVALID_ENCRYPTED_JOIN_KEYS =
+  listOf(
+    joinKeyAndIdOf("some ciphertext0".toByteString(), "some identifier0".toByteString()),
+    joinKeyAndIdOf("some ciphertext1".toByteString(), "some identifier1".toByteString()),
+  )
+
+/** Abstract base class for testing implementations of [cipher]. */
+abstract class AbstractJoinKeyCryptorTest {
+  abstract val cipher: JoinKeyCryptor
+  abstract val privateKey1: ByteString
+  abstract val privateKey2: ByteString
+  abstract val invalidKey: ByteString
+
+  @Test
+  fun testCryptor() {
+
+    val encryptedTexts1 = cipher.encrypt(privateKey1, PLAINTEXT_JOIN_KEYS)
+    val encryptedTexts2 = cipher.encrypt(privateKey2, PLAINTEXT_JOIN_KEYS)
+    assertThat(encryptedTexts1).isNotEqualTo(encryptedTexts2)
+
+    val reEncryptedTexts1 = cipher.reEncrypt(privateKey1, encryptedTexts2)
+    val reEncryptedTexts2 = cipher.reEncrypt(privateKey2, encryptedTexts1)
+    assertThat(reEncryptedTexts1).isNotEqualTo(encryptedTexts2)
+    assertThat(reEncryptedTexts2).isNotEqualTo(encryptedTexts1)
+
+    val decryptedTexts1 = cipher.decrypt(privateKey1, reEncryptedTexts1)
+    val decryptedTexts2 = cipher.decrypt(privateKey1, reEncryptedTexts2)
+    assertThat(decryptedTexts1).isEqualTo(encryptedTexts2)
+    assertThat(decryptedTexts2).isEqualTo(encryptedTexts2)
+
+    val decryptedTexts3 = cipher.decrypt(privateKey2, reEncryptedTexts1)
+    val decryptedTexts4 = cipher.decrypt(privateKey2, reEncryptedTexts2)
+    assertThat(decryptedTexts3).isEqualTo(encryptedTexts1)
+    assertThat(decryptedTexts4).isEqualTo(encryptedTexts1)
+  }
+
+  @Test
+  fun `invalid key`() {
+    val localInvalidKey = invalidKey
+    assertFails { cipher.encrypt(localInvalidKey, PLAINTEXT_JOIN_KEYS) }
+    assertFails { cipher.decrypt(localInvalidKey, PLAINTEXT_JOIN_KEYS) }
+    assertFails { cipher.reEncrypt(localInvalidKey, PLAINTEXT_JOIN_KEYS) }
+  }
+
+  @Test
+  fun `invalid ciphertexts`() {
+    val key: ByteString = cipher.generateKey()
+    assertFails { cipher.decrypt(key, INVALID_ENCRYPTED_JOIN_KEYS) }
+    assertFails { cipher.reEncrypt(key, INVALID_ENCRYPTED_JOIN_KEYS) }
+  }
+}

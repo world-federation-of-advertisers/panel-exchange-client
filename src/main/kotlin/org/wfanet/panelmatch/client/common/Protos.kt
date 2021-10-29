@@ -15,12 +15,12 @@
 package org.wfanet.panelmatch.client.common
 
 import com.google.protobuf.ByteString
-import org.wfanet.panelmatch.client.exchangetasks.JoinKey
-import org.wfanet.panelmatch.client.exchangetasks.JoinKeyAndId
-import org.wfanet.panelmatch.client.exchangetasks.JoinKeyIdentifier
-import org.wfanet.panelmatch.client.exchangetasks.joinKey
-import org.wfanet.panelmatch.client.exchangetasks.joinKeyAndId
-import org.wfanet.panelmatch.client.exchangetasks.joinKeyIdentifier
+import org.wfanet.panelmatch.client.joinkeyexchange.JoinKey
+import org.wfanet.panelmatch.client.joinkeyexchange.JoinKeyAndId
+import org.wfanet.panelmatch.client.joinkeyexchange.JoinKeyIdentifier
+import org.wfanet.panelmatch.client.joinkeyexchange.joinKey
+import org.wfanet.panelmatch.client.joinkeyexchange.joinKeyAndId
+import org.wfanet.panelmatch.client.joinkeyexchange.joinKeyIdentifier
 import org.wfanet.panelmatch.client.privatemembership.Bucket
 import org.wfanet.panelmatch.client.privatemembership.BucketId
 import org.wfanet.panelmatch.client.privatemembership.DatabaseEntry

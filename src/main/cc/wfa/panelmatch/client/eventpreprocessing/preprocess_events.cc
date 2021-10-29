@@ -26,18 +26,20 @@
 #include "common_cpp/fingerprinters/fingerprinters.h"
 #include "common_cpp/macros/macros.h"
 #include "tink/util/secret_data.h"
+#include "wfa/panelmatch/client/eventpreprocessing/event_data_preprocessor.h"
 #include "wfa/panelmatch/client/eventpreprocessing/preprocess_events.pb.h"
 #include "wfa/panelmatch/common/crypto/aes.h"
 #include "wfa/panelmatch/common/crypto/aes_with_hkdf.h"
 #include "wfa/panelmatch/common/crypto/deterministic_commutative_cipher.h"
 #include "wfa/panelmatch/common/crypto/hkdf.h"
 #include "wfa/panelmatch/common/crypto/key_loader.h"
-#include "wfa/panelmatch/protocol/crypto/event_data_preprocessor.h"
 
-namespace wfa::panelmatch::client {
+namespace wfa::panelmatch::client::eventpreprocessing {
 using ::crypto::tink::util::SecretData;
 using ::crypto::tink::util::SecretDataAsStringView;
 using ::crypto::tink::util::SecretDataFromStringView;
+using ::wfa::panelmatch::client::eventpreprocessing::EventDataPreprocessor;
+using ::wfa::panelmatch::client::eventpreprocessing::ProcessedData;
 using ::wfa::panelmatch::common::crypto::Aes;
 using ::wfa::panelmatch::common::crypto::AesWithHkdf;
 using ::wfa::panelmatch::common::crypto::GetAesSivCmac512;
@@ -45,8 +47,6 @@ using ::wfa::panelmatch::common::crypto::GetSha256Hkdf;
 using ::wfa::panelmatch::common::crypto::Hkdf;
 using ::wfa::panelmatch::common::crypto::LoadKey;
 using ::wfa::panelmatch::common::crypto::NewDeterministicCommutativeCipher;
-using ::wfa::panelmatch::protocol::crypto::EventDataPreprocessor;
-using ::wfa::panelmatch::protocol::crypto::ProcessedData;
 
 absl::StatusOr<PreprocessEventsResponse> PreprocessEvents(
     const PreprocessEventsRequest& request) {
@@ -87,4 +87,4 @@ absl::StatusOr<PreprocessEventsResponse> PreprocessEvents(
   }
   return processed;
 }
-}  // namespace wfa::panelmatch::client
+}  // namespace wfa::panelmatch::client::eventpreprocessing

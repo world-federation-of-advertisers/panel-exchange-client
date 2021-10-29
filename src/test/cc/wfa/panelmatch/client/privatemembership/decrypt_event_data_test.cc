@@ -34,7 +34,7 @@ using ::google::protobuf::RepeatedPtrField;
 using ::testing::Eq;
 using ::testing::Pointwise;
 using ::wfa::EqualsProto;
-using ::wfa::panelmatch::client::exchangetasks::JoinKey;
+using ::wfa::panelmatch::client::joinkeyexchange::JoinKey;
 using ::wfa::panelmatch::common::crypto::Aes;
 using ::wfa::panelmatch::common::crypto::AesWithHkdf;
 using ::wfa::panelmatch::common::crypto::GetAesSivCmac512;

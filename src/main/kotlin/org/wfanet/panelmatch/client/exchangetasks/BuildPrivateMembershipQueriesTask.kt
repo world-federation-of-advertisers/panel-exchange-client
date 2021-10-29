@@ -21,6 +21,7 @@ import org.apache.beam.sdk.Pipeline
 import org.apache.beam.sdk.values.PCollection
 import org.apache.beam.sdk.values.PCollectionView
 import org.wfanet.measurement.storage.StorageClient
+import org.wfanet.panelmatch.client.joinkeyexchange.joinKeyAndId
 import org.wfanet.panelmatch.client.logger.addToTaskLog
 import org.wfanet.panelmatch.client.logger.loggerFor
 import org.wfanet.panelmatch.client.privatemembership.CreateQueriesParameters

@@ -23,22 +23,22 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
 import org.wfanet.measurement.common.flatten
-import org.wfanet.panelmatch.common.crypto.testing.FakeDeterministicCommutativeCipher
+import org.wfanet.panelmatch.client.joinkeyexchange.testing.FakeJoinKeyCryptor
 
 private const val ATTEMPT_KEY = "some-arbitrary-attempt-key"
 
 @RunWith(JUnit4::class)
 class GenerateSymmetricKeyTaskTest {
-  private val deterministicCommutativeCryptor = FakeDeterministicCommutativeCipher
+  private val joinKeyCryptor = FakeJoinKeyCryptor
 
   @Test
   fun `generate key 2x yields different keys`() = withTestContext {
     val result1 =
-      GenerateSymmetricKeyTask(generateKey = deterministicCommutativeCryptor::generateKey)
+      GenerateSymmetricKeyTask(generateKey = joinKeyCryptor::generateKey)
         .execute(emptyMap())
         .mapValues { it.value.flatten() }
     val result2 =
-      GenerateSymmetricKeyTask(generateKey = deterministicCommutativeCryptor::generateKey)
+      GenerateSymmetricKeyTask(generateKey = joinKeyCryptor::generateKey)
         .execute(emptyMap())
         .mapValues { it.value.flatten() }
 

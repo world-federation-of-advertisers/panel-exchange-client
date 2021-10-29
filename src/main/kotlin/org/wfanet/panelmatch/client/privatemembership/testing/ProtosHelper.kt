@@ -23,9 +23,9 @@ import org.wfanet.panelmatch.client.common.plaintextOf
 import org.wfanet.panelmatch.client.common.queryIdOf
 import org.wfanet.panelmatch.client.common.shardIdOf
 import org.wfanet.panelmatch.client.common.unencryptedQueryOf
-import org.wfanet.panelmatch.client.exchangetasks.JoinKey
-import org.wfanet.panelmatch.client.exchangetasks.JoinKeyIdentifier
-import org.wfanet.panelmatch.client.exchangetasks.joinKey
+import org.wfanet.panelmatch.client.joinkeyexchange.JoinKey
+import org.wfanet.panelmatch.client.joinkeyexchange.JoinKeyIdentifier
+import org.wfanet.panelmatch.client.joinkeyexchange.joinKey
 import org.wfanet.panelmatch.client.privatemembership.DecryptEventDataRequest.EncryptedEventDataSet
 import org.wfanet.panelmatch.client.privatemembership.DecryptEventDataRequestKt.encryptedEventDataSet
 import org.wfanet.panelmatch.client.privatemembership.DecryptedQueryResult

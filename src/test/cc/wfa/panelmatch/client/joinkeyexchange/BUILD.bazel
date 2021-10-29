@@ -1,0 +1,21 @@
+load("@rules_cc//cc:defs.bzl", "cc_test")
+
+cc_test(
+    name = "join_key_cryptor_test",
+    timeout = "short",
+    srcs = ["join_key_cryptor_test.cc"],
+    deps = [
+        "//src/main/cc/wfa/panelmatch/client/joinkeyexchange:join_key_cryptor",
+        "//src/main/cc/wfa/panelmatch/common/crypto:register_identity_key_loader",
+        "//src/main/proto/wfa/panelmatch/client/joinkeyexchange:join_key_cryptor_cc_proto",
+        "@com_google_absl//absl/base:core_headers",
+        "@com_google_absl//absl/memory",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/status:statusor",
+        "@com_google_absl//absl/types:span",
+        "@com_google_googletest//:gtest_main",
+        "@com_google_protobuf//:protobuf",
+        "@wfa_common_cpp//src/main/cc/common_cpp/testing:common_matchers",
+        "@wfa_common_cpp//src/main/cc/common_cpp/testing:status",
+    ],
+)

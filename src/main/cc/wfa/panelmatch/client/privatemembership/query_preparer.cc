@@ -30,6 +30,7 @@
 namespace wfa::panelmatch::client::privatemembership {
 using ::crypto::tink::util::SecretData;
 using ::crypto::tink::util::SecretDataFromStringView;
+using ::wfa::panelmatch::client::joinkeyexchange::JoinKeyAndId;
 
 absl::StatusOr<PrepareQueryResponse> PrepareQuery(
     const PrepareQueryRequest& request) {
@@ -42,9 +43,14 @@ absl::StatusOr<PrepareQueryResponse> PrepareQuery(
           &fingerprinter,
           SecretDataFromStringView(request.identifier_hash_pepper()));
   PrepareQueryResponse prepared_query;
-  for (const std::string& single_blinded_key : request.single_blinded_keys()) {
-    prepared_query.add_hashed_single_blinded_keys(
-        peppered_fingerprinter->Fingerprint(single_blinded_key));
+  for (const JoinKeyAndId& lookup_key_and_id : request.lookup_key_and_ids()) {
+    LookupKeyAndIdAndHash lookup_key_and_id_and_hash;
+    lookup_key_and_id_and_hash.set_hash(peppered_fingerprinter->Fingerprint(
+        lookup_key_and_id.join_key().key()));
+    lookup_key_and_id_and_hash.mutable_lookup_key_and_id()->CopyFrom(
+        lookup_key_and_id);
+    *prepared_query.add_lookup_key_and_id_and_hashes() =
+        lookup_key_and_id_and_hash;
   }
   return prepared_query;
 }

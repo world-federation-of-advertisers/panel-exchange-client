@@ -19,7 +19,7 @@ import com.google.protobuf.listValue
 import com.google.protobuf.value
 import org.wfanet.panelmatch.client.common.queryBundleOf
 import org.wfanet.panelmatch.client.common.resultOf
-import org.wfanet.panelmatch.client.exchangetasks.JoinKey
+import org.wfanet.panelmatch.client.joinkeyexchange.JoinKey
 import org.wfanet.panelmatch.client.privatemembership.BucketId
 import org.wfanet.panelmatch.client.privatemembership.DecryptEventDataRequest.EncryptedEventDataSet
 import org.wfanet.panelmatch.client.privatemembership.DecryptEventDataRequestKt.encryptedEventDataSet

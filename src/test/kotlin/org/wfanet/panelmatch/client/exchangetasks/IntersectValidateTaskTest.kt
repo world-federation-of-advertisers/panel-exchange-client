@@ -26,6 +26,12 @@ import org.junit.runners.JUnit4
 import org.wfanet.measurement.common.flatten
 import org.wfanet.measurement.storage.StorageClient.Blob
 import org.wfanet.measurement.storage.testing.InMemoryStorageClient
+import org.wfanet.panelmatch.client.joinkeyexchange.JoinKeyAndId
+import org.wfanet.panelmatch.client.joinkeyexchange.JoinKeyAndIdCollection
+import org.wfanet.panelmatch.client.joinkeyexchange.joinKey
+import org.wfanet.panelmatch.client.joinkeyexchange.joinKeyAndId
+import org.wfanet.panelmatch.client.joinkeyexchange.joinKeyAndIdCollection
+import org.wfanet.panelmatch.client.joinkeyexchange.joinKeyIdentifier
 import org.wfanet.panelmatch.common.storage.createBlob
 import org.wfanet.panelmatch.common.toByteString
 

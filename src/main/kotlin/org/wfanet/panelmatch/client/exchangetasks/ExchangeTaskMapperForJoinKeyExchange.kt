@@ -19,6 +19,7 @@ import org.wfanet.measurement.api.v2alpha.ExchangeStepAttemptKey
 import org.wfanet.measurement.api.v2alpha.ExchangeWorkflow
 import org.wfanet.measurement.api.v2alpha.ExchangeWorkflow.Step.StepCase
 import org.wfanet.measurement.common.throttler.Throttler
+import org.wfanet.panelmatch.client.joinkeyexchange.JoinKeyCryptor
 import org.wfanet.panelmatch.client.privatemembership.CreateQueriesParameters
 import org.wfanet.panelmatch.client.privatemembership.EvaluateQueriesParameters
 import org.wfanet.panelmatch.client.privatemembership.PrivateMembershipCryptor
@@ -28,12 +29,11 @@ import org.wfanet.panelmatch.client.storage.PrivateStorageSelector
 import org.wfanet.panelmatch.client.storage.SharedStorageSelector
 import org.wfanet.panelmatch.common.certificates.CertificateManager
 import org.wfanet.panelmatch.common.compression.CompressorFactory
-import org.wfanet.panelmatch.common.crypto.DeterministicCommutativeCipher
 
 /** Maps join key exchange steps to exchange tasks */
 abstract class ExchangeTaskMapperForJoinKeyExchange : ExchangeTaskMapper {
   abstract val compressorFactory: CompressorFactory
-  abstract val deterministicCommutativeCryptor: DeterministicCommutativeCipher
+  abstract val deterministicCommutativeCryptor: JoinKeyCryptor
   abstract val getPrivateMembershipCryptor: (ByteString) -> PrivateMembershipCryptor
   abstract val queryResultsDecryptor: QueryResultsDecryptor
   abstract val getQueryResultsEvaluator: (ByteString) -> QueryEvaluator
