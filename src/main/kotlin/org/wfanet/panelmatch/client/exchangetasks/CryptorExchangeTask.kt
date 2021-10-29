@@ -67,7 +67,7 @@ internal constructor(
     private val logger by loggerFor()
 
     /** Returns an [ExchangeTask] that removes encryption from data. */
-    fun forDecryption(
+    @JvmStatic fun forDecryption(
       DeterministicCommutativeCipher: DeterministicCommutativeCipher
     ): ExchangeTask {
       return CryptorExchangeTask(
@@ -78,7 +78,7 @@ internal constructor(
     }
 
     /** Returns an [ExchangeTask] that adds encryption to plaintext. */
-    fun forEncryption(
+    @JvmStatic fun forEncryption(
       DeterministicCommutativeCipher: DeterministicCommutativeCipher
     ): ExchangeTask {
       return CryptorExchangeTask(
@@ -89,7 +89,7 @@ internal constructor(
     }
 
     /** Returns an [ExchangeTask] that adds another layer of encryption to data. */
-    fun forReEncryption(
+    @JvmStatic fun forReEncryption(
       DeterministicCommutativeCipher: DeterministicCommutativeCipher
     ): ExchangeTask {
       return CryptorExchangeTask(
