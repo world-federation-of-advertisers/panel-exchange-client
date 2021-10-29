@@ -19,7 +19,7 @@ Step 4 of configuring WORKSPACE: Maven.
 load("@wfa_common_jvm//build/maven:artifacts.bzl", "artifacts")
 load("@wfa_common_jvm//build:common_jvm_maven.bzl", "COMMON_JVM_MAVEN_OVERRIDE_TARGETS", "common_jvm_maven_artifacts")
 
-_BEAM_VERSION = "2.31.0"
+_BEAM_VERSION = "2.33.0"
 
 # TODO: this list can likely be minimized
 _ARTIFACTS = artifacts.dict_to_list({
