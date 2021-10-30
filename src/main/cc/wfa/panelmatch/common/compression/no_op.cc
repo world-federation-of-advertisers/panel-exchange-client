@@ -12,25 +12,35 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "wfa/panelmatch/common/compression/brotli_wrapper.h"
+#include "wfa/panelmatch/common/compression/no_op.h"
 
+#include <memory>
 #include <string>
 
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
-#include "common_cpp/jni/jni_wrap.h"
-#include "wfa/panelmatch/common/compression/brotli.h"
+#include "wfa/panelmatch/common/compression/compressor.h"
 
 namespace wfa::panelmatch {
+namespace {
+class NoOpCompressor : public Compressor {
+ public:
+  NoOpCompressor() = default;
 
-absl::StatusOr<std::string> BrotliCompressWrapper(
-    const std::string& serialized_request) {
-  return JniWrap(serialized_request, BrotliCompress);
-}
+  absl::StatusOr<std::string> Compress(
+      absl::string_view uncompressed_data) const override {
+    return std::string(uncompressed_data);
+  }
 
-absl::StatusOr<std::string> BrotliDecompressWrapper(
-    const std::string& serialized_request) {
-  return JniWrap(serialized_request, BrotliDecompress);
+  absl::StatusOr<std::string> Decompress(
+      absl::string_view compressed_data) const override {
+    return std::string(compressed_data);
+  }
+};
+}  // namespace
+
+std::unique_ptr<Compressor> BuildNoOpCompressor() {
+  return absl::make_unique<NoOpCompressor>();
 }
 
 }  // namespace wfa::panelmatch

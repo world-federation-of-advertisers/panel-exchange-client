@@ -19,6 +19,8 @@ import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
 import org.wfanet.panelmatch.client.PreprocessEventsRequestKt.unprocessedEvent
 import org.wfanet.panelmatch.client.preprocessEventsRequest
+import org.wfanet.panelmatch.common.compression.CompressionParametersKt.noCompression
+import org.wfanet.panelmatch.common.compression.compressionParameters
 import org.wfanet.panelmatch.common.toByteString
 
 @RunWith(JUnit4::class)
@@ -30,13 +32,14 @@ class EncryptEventsTest {
       cryptoKey = "crypto-key".toByteString()
       identifierHashPepper = "identifier-hash-pepper".toByteString()
       hkdfPepper = "hkdf-pepper".toByteString()
+      compressionParameters = compressionParameters { uncompressed = noCompression {} }
       unprocessedEvents +=
         unprocessedEvent {
           id = "identifier".toByteString()
           data = "event-data".toByteString()
         }
     }
-    val encryptEvents = EncryptEvents()
+    val encryptEvents = JniEventPreprocessorFn()
 
     // TODO(@efoxepstein): once we have a JNIed way to decrypt, this should check roundtrips.
     encryptEvents.apply(request) // Does not throw

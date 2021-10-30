@@ -20,6 +20,7 @@ import org.apache.beam.sdk.coders.KvCoder
 import org.apache.beam.sdk.coders.ListCoder
 import org.apache.beam.sdk.extensions.protobuf.ByteStringCoder
 import org.apache.beam.sdk.transforms.DoFn
+import org.apache.beam.sdk.transforms.ParDo
 import org.apache.beam.sdk.transforms.SerializableFunction
 import org.apache.beam.sdk.values.KV
 import org.junit.Test
@@ -30,9 +31,9 @@ import org.wfanet.panelmatch.client.PreprocessEventsResponse
 import org.wfanet.panelmatch.client.PreprocessEventsResponseKt.processedEvent
 import org.wfanet.panelmatch.client.preprocessEventsResponse
 import org.wfanet.panelmatch.common.beam.kvOf
-import org.wfanet.panelmatch.common.beam.parDo
 import org.wfanet.panelmatch.common.beam.testing.BeamTestBase
 import org.wfanet.panelmatch.common.beam.testing.assertThat
+import org.wfanet.panelmatch.common.compression.compressionParameters
 import org.wfanet.panelmatch.common.toByteString
 
 private const val IDENTIFIER_HASH_PEPPER = "<some-identifier-hash-pepper>"
@@ -53,15 +54,19 @@ class EncryptEventsDoFnTest : BeamTestBase() {
       mutableListOf(inputOf("1000", "2"), inputOf("2000", "4"))
     val collection = pcollectionOf("collection1", arbitraryUnprocessedEvents, coder = coder)
 
+    val compressionParameters =
+      pcollectionViewOf("Create CompressionParameters", compressionParameters {})
+
     val doFn: DoFn<MutableList<KV<ByteString, ByteString>>, KV<Long, ByteString>> =
       EncryptEventsDoFn(
         FakeEncryptEvents,
         HardCodedIdentifierHashPepperProvider(IDENTIFIER_HASH_PEPPER.toByteString()),
         HardCodedHkdfPepperProvider(HKDF_HASH_PEPPER.toByteString()),
-        HardCodedDeterministicCommutativeCipherKeyProvider(CRYPTO_KEY.toByteString())
+        HardCodedDeterministicCommutativeCipherKeyProvider(CRYPTO_KEY.toByteString()),
+        compressionParameters
       )
 
-    assertThat(collection.parDo(doFn))
+    assertThat(collection.apply(ParDo.of(doFn).withSideInputs(compressionParameters)))
       .containsInAnyOrder(expectedOutputOf(1001, "2"), expectedOutputOf(2001, "4"))
   }
 }

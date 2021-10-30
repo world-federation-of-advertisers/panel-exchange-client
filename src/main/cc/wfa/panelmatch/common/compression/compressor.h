@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef SRC_MAIN_CC_WFA_PANELMATCH_COMMON_COMPRESSION_BROTLI_WRAPPER_H_
-#define SRC_MAIN_CC_WFA_PANELMATCH_COMMON_COMPRESSION_BROTLI_WRAPPER_H_
+#ifndef SRC_MAIN_CC_WFA_PANELMATCH_COMMON_COMPRESSION_COMPRESSOR_H_
+#define SRC_MAIN_CC_WFA_PANELMATCH_COMMON_COMPRESSION_COMPRESSOR_H_
 
 #include <string>
 
@@ -24,12 +24,16 @@
 
 namespace wfa::panelmatch {
 
-absl::StatusOr<std::string> BrotliCompressWrapper(
-    const std::string& serialized_request);
+class Compressor {
+ public:
+  virtual ~Compressor() = default;
 
-absl::StatusOr<std::string> BrotliDecompressWrapper(
-    const std::string& serialized_request);
+  virtual absl::StatusOr<std::string> Compress(
+      absl::string_view uncompressed_data) const = 0;
+  virtual absl::StatusOr<std::string> Decompress(
+      absl::string_view compressed_data) const = 0;
+};
 
 }  // namespace wfa::panelmatch
 
-#endif  // SRC_MAIN_CC_WFA_PANELMATCH_COMMON_COMPRESSION_BROTLI_WRAPPER_H_
+#endif  // SRC_MAIN_CC_WFA_PANELMATCH_COMMON_COMPRESSION_COMPRESSOR_H_

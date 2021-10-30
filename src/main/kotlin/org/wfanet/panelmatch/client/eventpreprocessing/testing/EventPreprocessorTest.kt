@@ -15,36 +15,39 @@
 package org.wfanet.panelmatch.client.eventpreprocessing.testing
 
 import com.google.common.truth.Truth.assertThat
-import com.google.protobuf.ByteString
 import org.junit.Test
 import org.wfanet.panelmatch.client.PreprocessEventsRequestKt.unprocessedEvent
-import org.wfanet.panelmatch.client.eventpreprocessing.PreprocessEvents
+import org.wfanet.panelmatch.client.eventpreprocessing.EventPreprocessor
 import org.wfanet.panelmatch.client.preprocessEventsRequest
+import org.wfanet.panelmatch.common.compression.CompressionParametersKt.brotliCompressionParameters
+import org.wfanet.panelmatch.common.compression.compressionParameters
 import org.wfanet.panelmatch.common.toByteString
 
-/** Abstract base class for testing implementations of [PreprocessEvents]. */
-abstract class AbstractPreprocessEventsTest {
-  abstract val preprocessEvents: PreprocessEvents
+/** Abstract base class for testing implementations of [EventPreprocessor]. */
+abstract class EventPreprocessorTest {
+  abstract val eventPreprocessor: EventPreprocessor
 
   @Test
   fun testPreprocessEvents() {
-    val arbitraryId: ByteString = "arbitrary-id".toByteString()
-    val arbitraryData: ByteString = "arbitrary-data".toByteString()
-    val arbitraryCryptoKey: ByteString = "arbitrary-crypto-key".toByteString()
-    val arbitraryHkdfPepper: ByteString = "arbitrary-hkdf-pepper".toByteString()
-    val arbitraryIdentifierHashPepper: ByteString =
-      "arbitrary-identifier-hash-pepper".toByteString()
-
     val request = preprocessEventsRequest {
-      cryptoKey = arbitraryCryptoKey
-      identifierHashPepper = arbitraryIdentifierHashPepper
-      hkdfPepper = arbitraryHkdfPepper
+      cryptoKey = "some-crypto-key".toByteString()
+      identifierHashPepper = "some-identifier-hash-pepper".toByteString()
+      hkdfPepper = "some-hkdf-pepper".toByteString()
+      compressionParameters =
+        compressionParameters {
+          brotli = brotliCompressionParameters { dictionary = "some-dictionary".toByteString() }
+        }
       unprocessedEvents +=
         unprocessedEvent {
-          id = arbitraryId
-          data = arbitraryData
+          id = "some-id".toByteString()
+          data = "some-data".toByteString()
+        }
+      unprocessedEvents +=
+        unprocessedEvent {
+          id = "some-other-id".toByteString()
+          data = "some-other-data".toByteString()
         }
     }
-    assertThat(preprocessEvents.preprocess(request)).isNotNull()
+    assertThat(eventPreprocessor.preprocess(request)).isNotNull()
   }
 }
