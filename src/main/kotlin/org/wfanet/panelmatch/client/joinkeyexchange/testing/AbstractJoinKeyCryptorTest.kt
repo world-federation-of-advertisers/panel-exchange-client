@@ -16,25 +16,25 @@ package org.wfanet.panelmatch.client.joinkeyexchange.testing
 
 import com.google.common.truth.Truth.assertThat
 import com.google.protobuf.ByteString
+import com.google.protobuf.kotlin.toByteStringUtf8
 import kotlin.test.assertFails
 import org.junit.Test
 import org.wfanet.panelmatch.client.common.joinKeyAndIdOf
 import org.wfanet.panelmatch.client.joinkeyexchange.JoinKeyCryptor
-import org.wfanet.panelmatch.common.toByteString
 
 val PLAINTEXT_JOIN_KEYS =
   listOf(
-    joinKeyAndIdOf("some plaintext0".toByteString(), "some identifier0".toByteString()),
-    joinKeyAndIdOf("some plaintext1".toByteString(), "some identifier1".toByteString()),
-    joinKeyAndIdOf("some plaintext2".toByteString(), "some identifier2".toByteString()),
-    joinKeyAndIdOf("some plaintext3".toByteString(), "some identifier3".toByteString()),
-    joinKeyAndIdOf("some plaintext4".toByteString(), "some identifier4".toByteString()),
+    joinKeyAndIdOf("some plaintext0".toByteStringUtf8(), "some identifier0".toByteStringUtf8()),
+    joinKeyAndIdOf("some plaintext1".toByteStringUtf8(), "some identifier1".toByteStringUtf8()),
+    joinKeyAndIdOf("some plaintext2".toByteStringUtf8(), "some identifier2".toByteStringUtf8()),
+    joinKeyAndIdOf("some plaintext3".toByteStringUtf8(), "some identifier3".toByteStringUtf8()),
+    joinKeyAndIdOf("some plaintext4".toByteStringUtf8(), "some identifier4".toByteStringUtf8()),
   )
 
 private val INVALID_ENCRYPTED_JOIN_KEYS =
   listOf(
-    joinKeyAndIdOf("some ciphertext0".toByteString(), "some identifier0".toByteString()),
-    joinKeyAndIdOf("some ciphertext1".toByteString(), "some identifier1".toByteString()),
+    joinKeyAndIdOf("some ciphertext0".toByteStringUtf8(), "some identifier0".toByteStringUtf8()),
+    joinKeyAndIdOf("some ciphertext1".toByteStringUtf8(), "some identifier1".toByteStringUtf8()),
   )
 
 /** Abstract base class for testing implementations of [cipher]. */

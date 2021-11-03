@@ -15,24 +15,24 @@
 package org.wfanet.panelmatch.client.joinkeyexchange.testing
 
 import com.google.protobuf.ByteString
+import com.google.protobuf.kotlin.toByteStringUtf8
 import org.wfanet.panelmatch.client.joinkeyexchange.JoinKeyAndId
 import org.wfanet.panelmatch.client.joinkeyexchange.JoinKeyCryptor
 import org.wfanet.panelmatch.client.joinkeyexchange.joinKey
 import org.wfanet.panelmatch.client.joinkeyexchange.joinKeyAndId
-import org.wfanet.panelmatch.common.toByteString
 
 private const val SEPARATOR = " encrypted by "
 
 /** For testing only. Does not play nicely with non-Utf8 source data. */
 object FakeJoinKeyCryptor : JoinKeyCryptor {
-  val INVALID_KEY = "invalid key".toByteString()
+  val INVALID_KEY = "invalid key".toByteStringUtf8()
 
   override fun generateKey(): ByteString {
     var key = ""
     for (i in 1..20) {
       key += ('A'..'Z').random()
     }
-    return key.toByteString()
+    return key.toByteStringUtf8()
   }
 
   override fun encrypt(privateKey: ByteString, plaintexts: List<JoinKeyAndId>): List<JoinKeyAndId> {
@@ -41,7 +41,7 @@ object FakeJoinKeyCryptor : JoinKeyCryptor {
       joinKeyAndId {
         this.joinKey =
           joinKey {
-            key = plaintext.joinKey.key.concat(SEPARATOR.toByteString()).concat(privateKey)
+            key = plaintext.joinKey.key.concat(SEPARATOR.toByteStringUtf8()).concat(privateKey)
           }
         joinKeyIdentifier = plaintext.joinKeyIdentifier
       }
@@ -58,7 +58,7 @@ object FakeJoinKeyCryptor : JoinKeyCryptor {
       joinKeyAndId {
         this.joinKey =
           joinKey {
-            key = ciphertext.joinKey.key.concat(SEPARATOR.toByteString()).concat(privateKey)
+            key = ciphertext.joinKey.key.concat(SEPARATOR.toByteStringUtf8()).concat(privateKey)
           }
         joinKeyIdentifier = ciphertext.joinKeyIdentifier
       }
@@ -75,7 +75,7 @@ object FakeJoinKeyCryptor : JoinKeyCryptor {
       val dataString = ciphertext.joinKey.key.toStringUtf8()
       require(dataString.contains(encryptionString)) { "invalid ciphertext" }
       joinKeyAndId {
-        this.joinKey = joinKey { key = dataString.replace(encryptionString, "").toByteString() }
+        this.joinKey = joinKey { key = dataString.replace(encryptionString, "").toByteStringUtf8() }
         joinKeyIdentifier = ciphertext.joinKeyIdentifier
       }
     }

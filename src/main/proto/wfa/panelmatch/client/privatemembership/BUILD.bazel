@@ -128,6 +128,7 @@ proto_library(
     deps = [
         ":query_proto",
         "//src/main/proto/wfa/panelmatch/client/joinkeyexchange:join_key_exchange_proto",
+        "//src/main/proto/wfa/panelmatch/common/compression:compression_proto",
     ],
 )
 

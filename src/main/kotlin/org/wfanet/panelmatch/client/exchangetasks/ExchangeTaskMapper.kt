@@ -14,13 +14,9 @@
 
 package org.wfanet.panelmatch.client.exchangetasks
 
-import org.wfanet.measurement.api.v2alpha.ExchangeStepAttemptKey
-import org.wfanet.measurement.api.v2alpha.ExchangeWorkflow
+import org.wfanet.panelmatch.client.common.ExchangeContext
 
 /** Maps ExchangeWorkflow.Step to respective task. */
 interface ExchangeTaskMapper {
-  suspend fun getExchangeTaskForStep(
-    step: ExchangeWorkflow.Step,
-    attemptKey: ExchangeStepAttemptKey
-  ): ExchangeTask
+  suspend fun getExchangeTaskForStep(context: ExchangeContext): ExchangeTask
 }

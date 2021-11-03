@@ -17,20 +17,16 @@
 #ifndef SRC_MAIN_CC_WFA_PANELMATCH_COMMON_COMPRESSION_BROTLI_H_
 #define SRC_MAIN_CC_WFA_PANELMATCH_COMMON_COMPRESSION_BROTLI_H_
 
+#include <memory>
 #include <string>
 
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
-#include "wfa/panelmatch/common/compression/compression.pb.h"
+#include "wfa/panelmatch/common/compression/compressor.h"
 
 namespace wfa::panelmatch {
 
-// Compresses elements in `request` using Brotli.
-absl::StatusOr<CompressResponse> BrotliCompress(const CompressRequest& request);
-
-// Decompresses Brotli-compressed elements in `request`.
-absl::StatusOr<DecompressResponse> BrotliDecompress(
-    const DecompressRequest& request);
+std::unique_ptr<Compressor> BuildBrotliCompressor(absl::string_view dictionary);
 
 }  // namespace wfa::panelmatch
 

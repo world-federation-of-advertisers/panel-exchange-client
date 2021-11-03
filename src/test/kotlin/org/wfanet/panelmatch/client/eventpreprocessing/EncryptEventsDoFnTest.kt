@@ -15,11 +15,13 @@
 package org.wfanet.panelmatch.client.eventpreprocessing
 
 import com.google.protobuf.ByteString
+import com.google.protobuf.kotlin.toByteStringUtf8
 import org.apache.beam.sdk.coders.Coder
 import org.apache.beam.sdk.coders.KvCoder
 import org.apache.beam.sdk.coders.ListCoder
 import org.apache.beam.sdk.extensions.protobuf.ByteStringCoder
 import org.apache.beam.sdk.transforms.DoFn
+import org.apache.beam.sdk.transforms.ParDo
 import org.apache.beam.sdk.transforms.SerializableFunction
 import org.apache.beam.sdk.values.KV
 import org.junit.Test
@@ -30,10 +32,9 @@ import org.wfanet.panelmatch.client.PreprocessEventsResponse
 import org.wfanet.panelmatch.client.PreprocessEventsResponseKt.processedEvent
 import org.wfanet.panelmatch.client.preprocessEventsResponse
 import org.wfanet.panelmatch.common.beam.kvOf
-import org.wfanet.panelmatch.common.beam.parDo
 import org.wfanet.panelmatch.common.beam.testing.BeamTestBase
 import org.wfanet.panelmatch.common.beam.testing.assertThat
-import org.wfanet.panelmatch.common.toByteString
+import org.wfanet.panelmatch.common.compression.compressionParameters
 
 private const val IDENTIFIER_HASH_PEPPER = "<some-identifier-hash-pepper>"
 private const val HKDF_HASH_PEPPER = "<some-hkdf-hash-pepper>"
@@ -53,25 +54,29 @@ class EncryptEventsDoFnTest : BeamTestBase() {
       mutableListOf(inputOf("1000", "2"), inputOf("2000", "4"))
     val collection = pcollectionOf("collection1", arbitraryUnprocessedEvents, coder = coder)
 
+    val compressionParameters =
+      pcollectionViewOf("Create CompressionParameters", compressionParameters {})
+
     val doFn: DoFn<MutableList<KV<ByteString, ByteString>>, KV<Long, ByteString>> =
       EncryptEventsDoFn(
         FakeEncryptEvents,
-        HardCodedIdentifierHashPepperProvider(IDENTIFIER_HASH_PEPPER.toByteString()),
-        HardCodedHkdfPepperProvider(HKDF_HASH_PEPPER.toByteString()),
-        HardCodedDeterministicCommutativeCipherKeyProvider(CRYPTO_KEY.toByteString())
+        HardCodedIdentifierHashPepperProvider(IDENTIFIER_HASH_PEPPER.toByteStringUtf8()),
+        HardCodedHkdfPepperProvider(HKDF_HASH_PEPPER.toByteStringUtf8()),
+        HardCodedDeterministicCommutativeCipherKeyProvider(CRYPTO_KEY.toByteStringUtf8()),
+        compressionParameters
       )
 
-    assertThat(collection.parDo(doFn))
+    assertThat(collection.apply(ParDo.of(doFn).withSideInputs(compressionParameters)))
       .containsInAnyOrder(expectedOutputOf(1001, "2"), expectedOutputOf(2001, "4"))
   }
 }
 
 private fun inputOf(key: String, value: String): KV<ByteString, ByteString> {
-  return kvOf(key.toByteString(), value.toByteString())
+  return kvOf(key.toByteStringUtf8(), value.toByteStringUtf8())
 }
 
 private fun outputOf(key: Long, value: String): KV<Long, ByteString> {
-  return kvOf(key, value.toByteString())
+  return kvOf(key, value.toByteStringUtf8())
 }
 
 private fun expectedOutputOf(key: Long, value: String): KV<Long, ByteString> {

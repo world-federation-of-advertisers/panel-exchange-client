@@ -16,15 +16,19 @@ package org.wfanet.panelmatch.client.exchangetasks
 
 import com.google.common.truth.Truth.assertThat
 import com.google.protobuf.ByteString
+import java.time.LocalDate
 import java.util.concurrent.ConcurrentHashMap
+import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
 import org.wfanet.measurement.api.v2alpha.ExchangeStepAttemptKey
 import org.wfanet.measurement.api.v2alpha.ExchangeWorkflowKt.StepKt.encryptStep
 import org.wfanet.measurement.api.v2alpha.ExchangeWorkflowKt.step
+import org.wfanet.measurement.api.v2alpha.exchangeWorkflow
 import org.wfanet.measurement.storage.StorageClient
 import org.wfanet.measurement.storage.testing.InMemoryStorageClient
+import org.wfanet.panelmatch.client.common.ExchangeContext
 import org.wfanet.panelmatch.client.joinkeyexchange.testing.FakeJoinKeyCryptor
 import org.wfanet.panelmatch.client.launcher.testing.inputStep
 import org.wfanet.panelmatch.client.privatemembership.testing.PlaintextPrivateMembershipCryptor
@@ -36,26 +40,38 @@ import org.wfanet.panelmatch.client.storage.storageDetails
 import org.wfanet.panelmatch.client.storage.testing.makeTestPrivateStorageSelector
 import org.wfanet.panelmatch.client.storage.testing.makeTestSharedStorageSelector
 import org.wfanet.panelmatch.common.certificates.testing.TestCertificateManager
-import org.wfanet.panelmatch.common.compression.NoOpCompressorFactory
 import org.wfanet.panelmatch.common.secrets.testing.TestSecretMap
 import org.wfanet.panelmatch.common.testing.AlwaysReadyThrottler
 import org.wfanet.panelmatch.common.testing.runBlockingTest
 
+// TODO: move elsewhere to enable reuse.
 class TestPrivateStorageSelector {
-  val storageDetailsMap = mutableMapOf<String, ByteString>()
-  val blobs = ConcurrentHashMap<String, StorageClient.Blob>()
+  private val blobs = ConcurrentHashMap<String, StorageClient.Blob>()
+
   val storageClient = InMemoryStorageClient(blobs)
-  private val secrets = TestSecretMap(storageDetailsMap)
-  val selector = makeTestPrivateStorageSelector(secrets, storageClient)
+  val storageDetails = TestSecretMap()
+  val selector = makeTestPrivateStorageSelector(storageDetails, storageClient)
 }
 
+// TODO: move elsewhere to enable reuse.
 class TestSharedStorageSelector {
-  val storageInfo = mutableMapOf<String, ByteString>()
-  val blobs = ConcurrentHashMap<String, StorageClient.Blob>()
+  private val blobs = ConcurrentHashMap<String, StorageClient.Blob>()
+
   val storageClient = InMemoryStorageClient(blobs)
-  private val secrets = TestSecretMap(storageInfo)
-  val selector = makeTestSharedStorageSelector(secrets, storageClient)
+  val storageDetails = TestSecretMap()
+  val selector = makeTestSharedStorageSelector(storageDetails, storageClient)
 }
+
+private val WORKFLOW = exchangeWorkflow {
+  steps += inputStep("a" to "b")
+  steps += step { encryptStep = encryptStep {} }
+}
+
+private val DATE: LocalDate = LocalDate.of(2021, 11, 1)
+
+private const val RECURRING_EXCHANGE_ID = "some-recurring-exchange-id"
+private val ATTEMPT_KEY =
+  ExchangeStepAttemptKey(RECURRING_EXCHANGE_ID, "some-exchange", "some-step", "some-attempt")
 
 @RunWith(JUnit4::class)
 class ExchangeTaskMapperForJoinKeyExchangeTest {
@@ -63,8 +79,7 @@ class ExchangeTaskMapperForJoinKeyExchangeTest {
   private val testPrivateStorageSelector = TestPrivateStorageSelector()
   private val exchangeTaskMapper =
     object : ExchangeTaskMapperForJoinKeyExchange() {
-      override val compressorFactory = NoOpCompressorFactory
-      override val deterministicCommutativeCryptor = FakeJoinKeyCryptor
+      override val joinKeyCryptor = FakeJoinKeyCryptor
       override val getPrivateMembershipCryptor = ::PlaintextPrivateMembershipCryptor
       override val queryResultsDecryptor = PlaintextQueryResultsDecryptor()
       override val privateStorageSelector = testPrivateStorageSelector.selector
@@ -79,36 +94,23 @@ class ExchangeTaskMapperForJoinKeyExchangeTest {
     visibility = StorageDetails.Visibility.PRIVATE
   }
 
+  @Before
+  fun setUpStorageDetails() {
+    testPrivateStorageSelector.storageDetails.underlyingMap[RECURRING_EXCHANGE_ID] =
+      testStorageDetails.toByteString()
+  }
+
   @Test
   fun `map input task`() = runBlockingTest {
-    testPrivateStorageSelector.storageDetailsMap["recurringId"] = testStorageDetails.toByteString()
-    val testStep = inputStep("a" to "b")
-    val testAttemptKey =
-      ExchangeStepAttemptKey(
-        recurringExchangeId = "recurringId",
-        exchangeId = "exchangeId",
-        exchangeStepId = "unused",
-        exchangeStepAttemptId = "unused"
-      )
-    val exchangeTask: ExchangeTask =
-      exchangeTaskMapper.getExchangeTaskForStep(testStep, testAttemptKey)
+    val context = ExchangeContext(ATTEMPT_KEY, DATE, WORKFLOW, WORKFLOW.getSteps(0))
+    val exchangeTask = exchangeTaskMapper.getExchangeTaskForStep(context)
     assertThat(exchangeTask).isInstanceOf(InputTask::class.java)
   }
 
   @Test
   fun `map crypto task`() = runBlockingTest {
-    testPrivateStorageSelector.storageDetailsMap["recurringId"] = testStorageDetails.toByteString()
-
-    val testStep = step { encryptStep = encryptStep {} }
-    val testAttemptKey =
-      ExchangeStepAttemptKey(
-        recurringExchangeId = "recurringId",
-        exchangeId = "exchangeId",
-        exchangeStepId = "unused",
-        exchangeStepAttemptId = "unused"
-      )
-    val exchangeTask: ExchangeTask =
-      exchangeTaskMapper.getExchangeTaskForStep(testStep, testAttemptKey)
+    val context = ExchangeContext(ATTEMPT_KEY, DATE, WORKFLOW, WORKFLOW.getSteps(1))
+    val exchangeTask = exchangeTaskMapper.getExchangeTaskForStep(context)
     assertThat(exchangeTask).isInstanceOf(CryptorExchangeTask::class.java)
   }
 }

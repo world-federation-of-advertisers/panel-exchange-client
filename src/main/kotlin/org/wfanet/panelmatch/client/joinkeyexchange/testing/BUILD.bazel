@@ -11,7 +11,6 @@ kt_jvm_library(
     deps = [
         "//src/main/kotlin/org/wfanet/panelmatch/client/common",
         "//src/main/kotlin/org/wfanet/panelmatch/client/joinkeyexchange",
-        "//src/main/kotlin/org/wfanet/panelmatch/common",
         "//src/main/kotlin/org/wfanet/panelmatch/common/testing",
         "@wfa_common_jvm//imports/java/com/google/common/truth",
         "@wfa_common_jvm//imports/java/com/google/protobuf",

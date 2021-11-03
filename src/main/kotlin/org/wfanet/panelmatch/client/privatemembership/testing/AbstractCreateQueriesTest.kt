@@ -16,6 +16,7 @@ package org.wfanet.panelmatch.client.privatemembership.testing
 
 import com.google.common.truth.Truth.assertThat
 import com.google.protobuf.ByteString
+import com.google.protobuf.kotlin.toByteStringUtf8
 import kotlin.test.assertFailsWith
 import org.apache.beam.sdk.metrics.MetricNameFilter
 import org.apache.beam.sdk.metrics.MetricsFilter
@@ -24,7 +25,6 @@ import org.apache.beam.sdk.values.PCollection
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
-import org.wfanet.panelmatch.client.common.joinKeyIdentifierOf
 import org.wfanet.panelmatch.client.common.joinKeyOf
 import org.wfanet.panelmatch.client.common.shardIdOf
 import org.wfanet.panelmatch.client.joinkeyexchange.JoinKeyAndId
@@ -40,11 +40,9 @@ import org.wfanet.panelmatch.common.beam.flatMap
 import org.wfanet.panelmatch.common.beam.join
 import org.wfanet.panelmatch.common.beam.keyBy
 import org.wfanet.panelmatch.common.beam.kvOf
-import org.wfanet.panelmatch.common.beam.map
 import org.wfanet.panelmatch.common.beam.testing.BeamTestBase
 import org.wfanet.panelmatch.common.beam.testing.assertThat
 import org.wfanet.panelmatch.common.beam.values
-import org.wfanet.panelmatch.common.toByteString
 
 @RunWith(JUnit4::class)
 abstract class AbstractCreateQueriesTest : BeamTestBase() {
@@ -191,7 +189,7 @@ abstract class AbstractCreateQueriesTest : BeamTestBase() {
         .map {
           joinKeyAndId {
             joinKeyIdentifier = joinKeyIdentifierOf(it.first)
-            joinKey = joinKeyOf(it.second.toByteString())
+            joinKey = joinKeyOf(it.second.toByteStringUtf8())
           }
         }
         .toTypedArray()

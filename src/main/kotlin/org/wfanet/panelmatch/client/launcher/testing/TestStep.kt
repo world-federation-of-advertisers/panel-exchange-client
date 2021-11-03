@@ -14,15 +14,12 @@
 
 package org.wfanet.panelmatch.client.launcher.testing
 
-import org.wfanet.measurement.api.v2alpha.ExchangeStep
 import org.wfanet.measurement.api.v2alpha.ExchangeWorkflow
 import org.wfanet.measurement.api.v2alpha.ExchangeWorkflow.Step
 import org.wfanet.measurement.api.v2alpha.ExchangeWorkflowKt.StepKt.inputStep
 import org.wfanet.measurement.api.v2alpha.ExchangeWorkflowKt.exchangeIdentifiers
 import org.wfanet.measurement.api.v2alpha.ExchangeWorkflowKt.step
-import org.wfanet.measurement.api.v2alpha.exchangeStep
 import org.wfanet.measurement.api.v2alpha.exchangeWorkflow
-import org.wfanet.panelmatch.common.toByteString
 
 fun buildWorkflow(
   testedStep: Step,
@@ -37,21 +34,6 @@ fun buildWorkflow(
         dataProvider = dataProviderName
         modelProvider = modelProviderName
       }
-  }
-}
-
-fun buildExchangeStep(
-  name: String,
-  stepIndex: Int = 0,
-  dataProviderName: String,
-  modelProviderName: String,
-  testedStep: Step
-): ExchangeStep {
-  return exchangeStep {
-    this.stepIndex = stepIndex
-    this.name = name
-    serializedExchangeWorkflow =
-      buildWorkflow(testedStep, dataProviderName, modelProviderName).toByteString()
   }
 }
 

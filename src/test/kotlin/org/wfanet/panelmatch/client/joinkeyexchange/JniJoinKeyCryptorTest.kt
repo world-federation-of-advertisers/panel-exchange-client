@@ -15,15 +15,15 @@
 package org.wfanet.panelmatch.client.joinkeyexchange
 
 import com.google.protobuf.ByteString
+import com.google.protobuf.kotlin.toByteStringUtf8
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
 import org.wfanet.panelmatch.client.joinkeyexchange.testing.AbstractJoinKeyCryptorTest
-import org.wfanet.panelmatch.common.toByteString
 
 @RunWith(JUnit4::class)
 class JniJoinKeyCryptorTest : AbstractJoinKeyCryptorTest() {
   override val cipher: JoinKeyCryptor = JniJoinKeyCryptor()
-  override val invalidKey: ByteString = "this key is too large to be valid".toByteString()
+  override val invalidKey: ByteString = "this key is too large to be valid".toByteStringUtf8()
   override val privateKey1 = cipher.generateKey()
   override val privateKey2 = cipher.generateKey()
 }

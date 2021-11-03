@@ -32,7 +32,6 @@ import org.wfanet.panelmatch.client.joinkeyexchange.joinKeyAndIdCollection
 import org.wfanet.panelmatch.client.joinkeyexchange.testing.FakeJoinKeyCryptor
 import org.wfanet.panelmatch.client.joinkeyexchange.testing.PLAINTEXT_JOIN_KEYS
 import org.wfanet.panelmatch.common.storage.createBlob
-import org.wfanet.panelmatch.common.toByteString
 
 private const val ATTEMPT_KEY = "some-arbitrary-attempt-key"
 

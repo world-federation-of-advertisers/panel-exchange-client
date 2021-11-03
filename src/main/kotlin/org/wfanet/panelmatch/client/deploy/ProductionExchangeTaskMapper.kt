@@ -23,7 +23,6 @@ import org.wfanet.panelmatch.client.privatemembership.JniQueryResultsDecryptor
 import org.wfanet.panelmatch.client.storage.PrivateStorageSelector
 import org.wfanet.panelmatch.client.storage.SharedStorageSelector
 import org.wfanet.panelmatch.common.certificates.CertificateManager
-import org.wfanet.panelmatch.common.compression.BrotliCompressorFactory
 
 class ProductionExchangeTaskMapper(
   override val inputTaskThrottler: Throttler,
@@ -31,8 +30,7 @@ class ProductionExchangeTaskMapper(
   override val sharedStorageSelector: SharedStorageSelector,
   override val certificateManager: CertificateManager,
 ) : ExchangeTaskMapperForJoinKeyExchange() {
-  override val compressorFactory by lazy { BrotliCompressorFactory() }
-  override val deterministicCommutativeCryptor by lazy { JniJoinKeyCryptor() }
+  override val joinKeyCryptor by lazy { JniJoinKeyCryptor() }
   override val getPrivateMembershipCryptor = ::JniPrivateMembershipCryptor
   override val getQueryResultsEvaluator = ::JniQueryEvaluator
   override val queryResultsDecryptor by lazy { JniQueryResultsDecryptor() }
