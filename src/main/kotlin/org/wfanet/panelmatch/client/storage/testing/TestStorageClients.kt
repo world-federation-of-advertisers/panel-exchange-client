@@ -28,6 +28,7 @@ import org.wfanet.panelmatch.client.storage.SharedStorageSelector
 import org.wfanet.panelmatch.client.storage.StorageDetails
 import org.wfanet.panelmatch.client.storage.StorageFactory
 import org.wfanet.panelmatch.client.storage.VerifiedStorageClient
+import org.wfanet.panelmatch.common.ExchangeDateKey
 import org.wfanet.panelmatch.common.certificates.testing.TestCertificateManager
 import org.wfanet.panelmatch.common.secrets.SecretMap
 
@@ -37,7 +38,7 @@ fun makeTestPrivateStorageSelector(
 ): PrivateStorageSelector {
 
   val rootInMemoryStorageFactory = InMemoryStorageFactory(underlyingClient)
-  val builder = makeStorageFactoryBuilder(rootInMemoryStorageFactory)
+  val builder = makePrivateStorageFactoryBuilder(rootInMemoryStorageFactory)
 
   return PrivateStorageSelector(
     mapOf(
@@ -55,7 +56,7 @@ fun makeTestSharedStorageSelector(
 ): SharedStorageSelector {
 
   val rootInMemoryStorageFactory = InMemoryStorageFactory(underlyingClient)
-  val builder = makeStorageFactoryBuilder(rootInMemoryStorageFactory)
+  val builder = makeSharedStorageFactoryBuilder(rootInMemoryStorageFactory)
 
   return SharedStorageSelector(
     TestCertificateManager(),
@@ -103,7 +104,14 @@ fun makeTestVerifiedStorageClient(
 }
 
 // Yes, this is a factory-factory-factory.
-private fun makeStorageFactoryBuilder(
+private fun makePrivateStorageFactoryBuilder(
+  storageFactory: StorageFactory
+): ExchangeDateKey.(StorageDetails) -> StorageFactory {
+  return { storageFactory }
+}
+
+// Yes, this is a factory-factory-factory.
+private fun makeSharedStorageFactoryBuilder(
   storageFactory: StorageFactory
 ): ExchangeContext.(StorageDetails) -> StorageFactory {
   return { storageFactory }
