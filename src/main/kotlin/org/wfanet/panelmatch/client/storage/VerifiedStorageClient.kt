@@ -38,8 +38,6 @@ class VerifiedStorageClient(
   private val context: ExchangeContext,
   private val certificateManager: CertificateManager,
 ) {
-  /** A helper function to get the implicit path for a input's signature. */
-  private fun getSigPath(blobKey: String): String = "${blobKey}_signature"
 
   /**
    * Replacement for StorageClient.getBlob(). Intended to be used in combination with another
@@ -57,6 +55,7 @@ class VerifiedStorageClient(
 
     return VerifiedBlob(
       SignedBlob(sourceBlob, namedSignature.signature),
+      namedSignature.signature,
       certificateManager.getCertificate(
         context.exchangeDateKey,
         context.partnerName,
@@ -67,8 +66,8 @@ class VerifiedStorageClient(
 
   private suspend fun parseSignature(blobKey: String): NamedSignature {
     val signatureBlob: Blob =
-      storageClient.getBlob(getSigPath(blobKey))
-        ?: throw StorageNotFoundException(getSigPath(blobKey))
+      storageClient.getBlob(signatureBlobKeyFor(blobKey))
+        ?: throw StorageNotFoundException(signatureBlobKeyFor(blobKey))
     val serializedSignature = signatureBlob.toByteString()
 
     @Suppress("BlockingMethodInNonBlockingContext")
@@ -95,8 +94,8 @@ class VerifiedStorageClient(
       certificateName = certName
       signature = signedBlob.signature
     }
-    storageClient.createBlob(blobKey = getSigPath(blobKey), content = namedSignature.toByteString())
-    return VerifiedBlob(signedBlob, x509)
+    storageClient.createBlob(signatureBlobKeyFor(blobKey), namedSignature.toByteString())
+    return VerifiedBlob(signedBlob, signedBlob.signature, x509)
   }
 
   suspend fun createBlob(blobKey: String, content: ByteString): VerifiedBlob {
@@ -105,11 +104,15 @@ class VerifiedStorageClient(
 
   private fun deleteExistingBlobs(blobKey: String) {
     storageClient.getBlob(blobKey)?.delete()
-    storageClient.getBlob(getSigPath(blobKey))?.delete()
+    storageClient.getBlob(signatureBlobKeyFor(blobKey))?.delete()
   }
 
   /** [Blob] wrapper that ensures the blob's signature is verified when read. */
-  class VerifiedBlob(private val sourceBlob: SignedBlob, private val cert: X509Certificate) {
+  class VerifiedBlob(
+    private val sourceBlob: SignedBlob,
+    val signature: ByteString,
+    private val cert: X509Certificate
+  ) {
     val size: Long
       get() = sourceBlob.size
 
@@ -125,5 +128,11 @@ class VerifiedStorageClient(
 
     /** Reads the blob into a UTF8 String. */
     suspend fun toStringUtf8(): String = toByteString().toStringUtf8()
+  }
+
+  companion object {
+    private const val SIGNATURE_SUFFIX = ".signature"
+
+    fun signatureBlobKeyFor(blobKey: String): String = blobKey + SIGNATURE_SUFFIX
   }
 }
