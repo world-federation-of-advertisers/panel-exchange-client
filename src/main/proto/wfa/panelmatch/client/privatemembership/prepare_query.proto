@@ -24,17 +24,28 @@ option java_multiple_files = true;
 // Hashes a single blinded joinkey
 message PrepareQueryRequest {
   repeated wfa.panelmatch.client.joinkeyexchange.JoinKeyAndId
-      lookup_key_and_ids = 1;
+      decrypted_join_key_and_ids = 1;
   bytes identifier_hash_pepper = 2;
 }
 
-// A join key with key hashed to a 64bit space
-message LookupKeyAndIdAndHash {
-  wfa.panelmatch.client.joinkeyexchange.JoinKeyAndId lookup_key_and_id = 1;
-  fixed64 hash = 2;
+// Hashed from the decrypted join key and identifier hash pepper.
+message LookupKey {
+  fixed64 key = 1;
+}
+
+// A lookup key and its join key identifier.
+message LookupKeyAndId {
+  LookupKey lookup_key = 1;
+  wfa.panelmatch.client.joinkeyexchange.JoinKeyIdentifier join_key_identifier =
+      2;
+}
+
+// A collection of lookup key and ids.
+message LookupKeyAndIdCollection {
+  repeated LookupKeyAndId lookupKeyAndIds = 1;
 }
 
 // Response of the PrepareQueryRequest method
 message PrepareQueryResponse {
-  repeated LookupKeyAndIdAndHash lookup_key_and_id_and_hashes = 1;
+  repeated LookupKeyAndId lookup_key_and_ids = 1;
 }

@@ -8,8 +8,8 @@ package(default_visibility = [
 java_wrap_cc(
     name = "join_key_cryptor",
     src = "join_key_cryptor.swig",
-    module = "JoinKeyCryptorWrapper",
-    package = "org.wfanet.panelmatch.client.joinkeyexchange",
+    module = "JoinKeyCryptorSwig",
+    package = "org.wfanet.panelmatch.protocol.joinkeyexchange",
     deps = [
         "//src/main/cc/wfa/panelmatch/client/joinkeyexchange:join_key_cryptor_wrapper",
 

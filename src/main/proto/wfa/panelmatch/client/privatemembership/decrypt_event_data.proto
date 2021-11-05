@@ -41,8 +41,10 @@ message DecryptedEventDataSet {
   repeated Plaintext decrypted_event_data = 2;
 }
 
+// A decrypted event data set tied to its plaintext join key and id.
 message KeyedDecryptedEventDataSet {
-  wfa.panelmatch.client.joinkeyexchange.JoinKey hashed_join_key = 1;
+  wfa.panelmatch.client.joinkeyexchange.JoinKeyAndId plaintext_join_key_and_id =
+      1;
   repeated Plaintext decrypted_event_data = 2;
 }
 
@@ -53,7 +55,7 @@ message DecryptQueryResultsRequest {
   bytes serialized_public_key = 2;
   bytes serialized_private_key = 3;
   repeated EncryptedQueryResult encrypted_query_results = 4;
-  wfa.panelmatch.client.joinkeyexchange.JoinKey lookup_key = 5;
+  wfa.panelmatch.client.joinkeyexchange.JoinKey decrypted_join_key = 5;
   bytes hkdf_pepper = 6;
   CompressionParameters compression_parameters = 7;
 }

@@ -19,6 +19,7 @@ import org.wfanet.panelmatch.client.exchangetasks.ExchangeTaskMapperForJoinKeyEx
 import org.wfanet.panelmatch.client.joinkeyexchange.JniJoinKeyCryptor
 import org.wfanet.panelmatch.client.privatemembership.JniPrivateMembershipCryptor
 import org.wfanet.panelmatch.client.privatemembership.JniQueryEvaluator
+import org.wfanet.panelmatch.client.privatemembership.JniQueryPreparer
 import org.wfanet.panelmatch.client.privatemembership.JniQueryResultsDecryptor
 import org.wfanet.panelmatch.client.storage.PrivateStorageSelector
 import org.wfanet.panelmatch.client.storage.SharedStorageSelector
@@ -31,6 +32,7 @@ class ProductionExchangeTaskMapper(
   override val certificateManager: CertificateManager,
 ) : ExchangeTaskMapperForJoinKeyExchange() {
   override val joinKeyCryptor by lazy { JniJoinKeyCryptor() }
+  override val queryPreparer by lazy { JniQueryPreparer() }
   override val getPrivateMembershipCryptor = ::JniPrivateMembershipCryptor
   override val getQueryResultsEvaluator = ::JniQueryEvaluator
   override val queryResultsDecryptor by lazy { JniQueryResultsDecryptor() }

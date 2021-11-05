@@ -44,9 +44,8 @@ import org.apache.beam.sdk.transforms.Create
 import org.apache.beam.sdk.values.PCollection
 import org.wfanet.panelmatch.client.common.databaseEntryOf
 import org.wfanet.panelmatch.client.common.databaseKeyOf
-import org.wfanet.panelmatch.client.common.joinKeyAndIdOf
+import org.wfanet.panelmatch.client.common.lookupKeyAndIdOf
 import org.wfanet.panelmatch.client.common.plaintextOf
-import org.wfanet.panelmatch.client.joinkeyexchange.JoinKeyAndId
 import org.wfanet.panelmatch.client.privatemembership.CreateQueriesParameters
 import org.wfanet.panelmatch.client.privatemembership.DatabaseEntry
 import org.wfanet.panelmatch.client.privatemembership.EncryptedQueryBundle
@@ -55,6 +54,7 @@ import org.wfanet.panelmatch.client.privatemembership.EvaluateQueriesParameters
 import org.wfanet.panelmatch.client.privatemembership.JniPrivateMembership
 import org.wfanet.panelmatch.client.privatemembership.JniPrivateMembershipCryptor
 import org.wfanet.panelmatch.client.privatemembership.JniQueryEvaluator
+import org.wfanet.panelmatch.client.privatemembership.LookupKeyAndId
 import org.wfanet.panelmatch.client.privatemembership.createQueries
 import org.wfanet.panelmatch.client.privatemembership.evaluateQueries
 import org.wfanet.panelmatch.common.beam.flatMap
@@ -125,29 +125,15 @@ fun main(args: Array<String>) {
   val privateMembershipCryptor =
     JniPrivateMembershipCryptor(PRIVATE_MEMBERSHIP_PARAMETERS.toByteString())
 
-  val rawQueries: PCollection<JoinKeyAndId> =
+  val rawQueries: PCollection<LookupKeyAndId> =
     pipeline.apply("Create Queries", Create.of(0 until SHARD_COUNT)).parDo("Populate Queries") { i
       ->
       for (j in 0 until QUERIES_PER_SHARD_COUNT / 4) {
         val joinkeyIndex = Random.nextInt(JOINKEY_UNIVERSE_SIZE)
         yield(
-          joinKeyAndIdOf(
-            "joinKeyId of ${i + j * SHARD_COUNT}".toByteStringUtf8(),
-            "LookupKey-$joinkeyIndex".toByteStringUtf8()
-          )
-        )
-      }
-    }
-  // TODO think about making this a separate type
-  val hashedJoinKeys: PCollection<JoinKeyAndId> =
-    pipeline.apply("Create Queries", Create.of(0 until SHARD_COUNT)).parDo("Populate Queries") { i
-      ->
-      for (j in 0 until QUERIES_PER_SHARD_COUNT / 4) {
-        val joinkeyIndex = Random.nextInt(JOINKEY_UNIVERSE_SIZE)
-        yield(
-          joinKeyAndIdOf(
-            "joinKeyId of ${i + j * SHARD_COUNT}".toByteStringUtf8(),
-            "HashedJoinKey-$joinkeyIndex".toByteStringUtf8()
+          lookupKeyAndIdOf(
+            joinkeyIndex.toLong(),
+            "joinKeyId of ${i + j * SHARD_COUNT}".toByteStringUtf8()
           )
         )
       }
@@ -156,7 +142,6 @@ fun main(args: Array<String>) {
   val encryptedQueryBundles: PCollection<EncryptedQueryBundle> =
     createQueries(
         rawQueries,
-        hashedJoinKeys,
         privateMembershipKeys.toSingletonView(),
         createQueriesParameters,
         privateMembershipCryptor

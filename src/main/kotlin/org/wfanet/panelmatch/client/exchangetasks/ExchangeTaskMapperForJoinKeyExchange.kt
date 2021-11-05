@@ -24,6 +24,7 @@ import org.wfanet.panelmatch.client.privatemembership.CreateQueriesParameters
 import org.wfanet.panelmatch.client.privatemembership.EvaluateQueriesParameters
 import org.wfanet.panelmatch.client.privatemembership.PrivateMembershipCryptor
 import org.wfanet.panelmatch.client.privatemembership.QueryEvaluator
+import org.wfanet.panelmatch.client.privatemembership.QueryPreparer
 import org.wfanet.panelmatch.client.privatemembership.QueryResultsDecryptor
 import org.wfanet.panelmatch.client.storage.PrivateStorageSelector
 import org.wfanet.panelmatch.client.storage.SharedStorageSelector
@@ -33,6 +34,7 @@ import org.wfanet.panelmatch.common.certificates.CertificateManager
 abstract class ExchangeTaskMapperForJoinKeyExchange : ExchangeTaskMapper {
   abstract val joinKeyCryptor: JoinKeyCryptor
   abstract val getPrivateMembershipCryptor: (ByteString) -> PrivateMembershipCryptor
+  abstract val queryPreparer: QueryPreparer
   abstract val queryResultsDecryptor: QueryResultsDecryptor
   abstract val getQueryResultsEvaluator: (ByteString) -> QueryEvaluator
   abstract val privateStorageSelector: PrivateStorageSelector
@@ -47,9 +49,10 @@ abstract class ExchangeTaskMapperForJoinKeyExchange : ExchangeTaskMapper {
   private suspend fun ExchangeContext.getExchangeTask(): ExchangeTask {
     @Suppress("WHEN_ENUM_CAN_BE_NULL_IN_JAVA")
     return when (step.stepCase) {
-      StepCase.ENCRYPT_STEP -> CryptorExchangeTask.forEncryption(joinKeyCryptor)
-      StepCase.REENCRYPT_STEP -> CryptorExchangeTask.forReEncryption(joinKeyCryptor)
-      StepCase.DECRYPT_STEP -> CryptorExchangeTask.forDecryption(joinKeyCryptor)
+      StepCase.ENCRYPT_STEP -> JoinKeyCryptorExchangeTask.forEncryption(joinKeyCryptor)
+      StepCase.REENCRYPT_STEP -> JoinKeyCryptorExchangeTask.forReEncryption(joinKeyCryptor)
+      StepCase.DECRYPT_STEP -> JoinKeyCryptorExchangeTask.forDecryption(joinKeyCryptor)
+      StepCase.GENERATE_LOOKUP_KEYS -> JoinKeyHashingExchangeTask.forHashing(queryPreparer)
       StepCase.INPUT_STEP -> getInputStepTask()
       StepCase.INTERSECT_AND_VALIDATE_STEP -> getIntersectAndValidateStepTask()
       StepCase.GENERATE_COMMUTATIVE_DETERMINISTIC_KEY_STEP ->
@@ -105,8 +108,8 @@ abstract class ExchangeTaskMapperForJoinKeyExchange : ExchangeTaskMapper {
       BuildPrivateMembershipQueriesTask.Outputs(
         encryptedQueryBundlesFileCount = stepDetails.encryptedQueryBundleFileCount,
         encryptedQueryBundlesFileName = step.outputLabelsMap.getValue("encrypted-queries"),
-        queryIdAndJoinKeysFileCount = stepDetails.queryIdAndPanelistKeyFileCount,
-        queryIdAndJoinKeysFileName = step.outputLabelsMap.getValue("query-decryption-keys"),
+        queryIdAndIdsFileCount = stepDetails.queryIdAndPanelistKeyFileCount,
+        queryIdAndIdsFileName = step.outputLabelsMap.getValue("query-decryption-keys"),
       )
     return BuildPrivateMembershipQueriesTask(
       storageFactory = privateStorageSelector.getStorageFactory(this),

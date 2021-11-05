@@ -16,6 +16,7 @@ package org.wfanet.panelmatch.client.privatemembership
 
 import org.wfanet.panelmatch.common.loadLibraryFromResource
 import org.wfanet.panelmatch.common.wrapJniException
+import org.wfanet.panelmatch.protocol.decryptqueryresults.DecryptQueryResultsSwig
 
 /**
  * A [QueryResultsDecryptor] implementation using the JNI [DecryptQueryResultsWrapper]. Keys should
@@ -28,7 +29,7 @@ class JniQueryResultsDecryptor : QueryResultsDecryptor {
   ): DecryptQueryResultsResponse {
     return wrapJniException {
       DecryptQueryResultsResponse.parseFrom(
-        DecryptQueryResultsWrapper.decryptQueryResultsWrapper(request.toByteArray())
+        DecryptQueryResultsSwig.decryptQueryResultsWrapper(request.toByteArray())
       )
     }
   }

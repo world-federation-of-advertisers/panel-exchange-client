@@ -44,10 +44,11 @@ class JoinKeyCryptorExchangeTaskTest {
   private val deterministicCommutativeCryptor = FakeJoinKeyCryptor
   private val mpSecretKey = FakeJoinKeyCryptor.generateKey()
   private val dpSecretKey = FakeJoinKeyCryptor.generateKey()
-  private val singleBlindedKeysAndIds = FakeJoinKeyCryptor.encrypt(mpSecretKey, PLAINTEXT_JOIN_KEYS)
-  private val doubleBlindedKeysAndIds =
-    FakeJoinKeyCryptor.reEncrypt(dpSecretKey, singleBlindedKeysAndIds)
-  private val lookupKeysAndIds = FakeJoinKeyCryptor.decrypt(mpSecretKey, doubleBlindedKeysAndIds)
+  private val singleBlindedKeyAndIds = FakeJoinKeyCryptor.encrypt(mpSecretKey, PLAINTEXT_JOIN_KEYS)
+  private val doubleBlindedKeyAndIds =
+    FakeJoinKeyCryptor.reEncrypt(dpSecretKey, singleBlindedKeyAndIds)
+  private val decryptedJoinKeyAndIds =
+    FakeJoinKeyCryptor.decrypt(mpSecretKey, doubleBlindedKeyAndIds)
   private val invalidKey = FakeJoinKeyCryptor.INVALID_KEY
 
   private val blobOfMpSecretKey = runBlocking {
@@ -68,31 +69,31 @@ class JoinKeyCryptorExchangeTaskTest {
   private val blobOfSingleBlindedKeys = runBlocking {
     mockStorage.createBlob(
       "single-blinded-keys",
-      joinKeyAndIdCollection { joinKeysAndIds += singleBlindedKeysAndIds }.toByteString()
+      joinKeyAndIdCollection { joinKeysAndIds += singleBlindedKeyAndIds }.toByteString()
     )
   }
   private val blobOfDoubleBlindedKeys = runBlocking {
     mockStorage.createBlob(
       "double-blinded-keys",
-      joinKeyAndIdCollection { joinKeysAndIds += doubleBlindedKeysAndIds }.toByteString()
+      joinKeyAndIdCollection { joinKeysAndIds += doubleBlindedKeyAndIds }.toByteString()
     )
   }
   @Test
   fun `decrypt with valid inputs`() = withTestContext {
     val result =
-      CryptorExchangeTask.forDecryption(deterministicCommutativeCryptor)
+      JoinKeyCryptorExchangeTask.forDecryption(deterministicCommutativeCryptor)
         .execute(
           mapOf("encryption-key" to blobOfMpSecretKey, "encrypted-data" to blobOfDoubleBlindedKeys)
         )
     assertThat(parseResults(result.getValue("decrypted-data").flatten()))
-      .containsExactlyElementsIn(lookupKeysAndIds)
+      .containsExactlyElementsIn(decryptedJoinKeyAndIds)
   }
 
   @Test
   fun `decrypt with crypto error`() = withTestContext {
     val exception =
       assertFailsWith(IllegalArgumentException::class) {
-        CryptorExchangeTask.forDecryption(deterministicCommutativeCryptor)
+        JoinKeyCryptorExchangeTask.forDecryption(deterministicCommutativeCryptor)
           .execute(
             mapOf("encryption-key" to blobOfInvalidKey, "encrypted-data" to blobOfSingleBlindedKeys)
           )
@@ -103,11 +104,11 @@ class JoinKeyCryptorExchangeTaskTest {
   @Test
   fun `decrypt with missing inputs`() = withTestContext {
     assertFailsWith(NoSuchElementException::class) {
-      CryptorExchangeTask.forDecryption(deterministicCommutativeCryptor)
+      JoinKeyCryptorExchangeTask.forDecryption(deterministicCommutativeCryptor)
         .execute(mapOf("encrypted-data" to blobOfDoubleBlindedKeys))
     }
     assertFailsWith(NoSuchElementException::class) {
-      CryptorExchangeTask.forDecryption(deterministicCommutativeCryptor)
+      JoinKeyCryptorExchangeTask.forDecryption(deterministicCommutativeCryptor)
         .execute(mapOf("encryption-key" to blobOfMpSecretKey))
     }
   }
@@ -115,17 +116,17 @@ class JoinKeyCryptorExchangeTaskTest {
   @Test
   fun `encrypt with valid inputs`() = withTestContext {
     val result =
-      CryptorExchangeTask.forEncryption(deterministicCommutativeCryptor)
+      JoinKeyCryptorExchangeTask.forEncryption(deterministicCommutativeCryptor)
         .execute(mapOf("encryption-key" to blobOfMpSecretKey, "unencrypted-data" to blobOfJoinKeys))
     assertThat(parseResults(result.getValue("encrypted-data").flatten()))
-      .containsExactlyElementsIn(singleBlindedKeysAndIds)
+      .containsExactlyElementsIn(singleBlindedKeyAndIds)
   }
 
   @Test
   fun `encrypt with crypto error`() = withTestContext {
     val exception =
       assertFailsWith(IllegalArgumentException::class) {
-        CryptorExchangeTask.forEncryption(deterministicCommutativeCryptor)
+        JoinKeyCryptorExchangeTask.forEncryption(deterministicCommutativeCryptor)
           .execute(
             mapOf("encryption-key" to blobOfInvalidKey, "unencrypted-data" to blobOfJoinKeys)
           )
@@ -136,11 +137,11 @@ class JoinKeyCryptorExchangeTaskTest {
   @Test
   fun `encrypt with missing inputs`() = withTestContext {
     assertFailsWith(NoSuchElementException::class) {
-      CryptorExchangeTask.forEncryption(deterministicCommutativeCryptor)
+      JoinKeyCryptorExchangeTask.forEncryption(deterministicCommutativeCryptor)
         .execute(mapOf("unencrypted-data" to blobOfJoinKeys))
     }
     assertFailsWith(NoSuchElementException::class) {
-      CryptorExchangeTask.forEncryption(deterministicCommutativeCryptor)
+      JoinKeyCryptorExchangeTask.forEncryption(deterministicCommutativeCryptor)
         .execute(mapOf("encryption-key" to blobOfMpSecretKey))
     }
   }
@@ -148,19 +149,19 @@ class JoinKeyCryptorExchangeTaskTest {
   @Test
   fun `reEncryptTask with valid inputs`() = withTestContext {
     val result =
-      CryptorExchangeTask.forReEncryption(deterministicCommutativeCryptor)
+      JoinKeyCryptorExchangeTask.forReEncryption(deterministicCommutativeCryptor)
         .execute(
           mapOf("encryption-key" to blobOfDpSecretKey, "encrypted-data" to blobOfSingleBlindedKeys)
         )
     assertThat(parseResults(result.getValue("reencrypted-data").flatten()))
-      .containsExactlyElementsIn(doubleBlindedKeysAndIds)
+      .containsExactlyElementsIn(doubleBlindedKeyAndIds)
   }
 
   @Test
   fun `reEncryptTask with crypto error`() = withTestContext {
     val exception =
       assertFailsWith(IllegalArgumentException::class) {
-        CryptorExchangeTask.forReEncryption(deterministicCommutativeCryptor)
+        JoinKeyCryptorExchangeTask.forReEncryption(deterministicCommutativeCryptor)
           .execute(
             mapOf("encryption-key" to blobOfInvalidKey, "encrypted-data" to blobOfSingleBlindedKeys)
           )
@@ -171,11 +172,11 @@ class JoinKeyCryptorExchangeTaskTest {
   @Test
   fun `reEncryptTask with missing inputs`() = withTestContext {
     assertFailsWith(NoSuchElementException::class) {
-      CryptorExchangeTask.forReEncryption(deterministicCommutativeCryptor)
+      JoinKeyCryptorExchangeTask.forReEncryption(deterministicCommutativeCryptor)
         .execute(mapOf("encrypted-data" to blobOfSingleBlindedKeys))
     }
     assertFailsWith(NoSuchElementException::class) {
-      CryptorExchangeTask.forReEncryption(deterministicCommutativeCryptor)
+      JoinKeyCryptorExchangeTask.forReEncryption(deterministicCommutativeCryptor)
         .execute(mapOf("encryption-key" to blobOfMpSecretKey))
     }
   }

@@ -22,14 +22,14 @@ import org.apache.beam.sdk.Pipeline
 import org.apache.beam.sdk.values.PCollection
 import org.apache.beam.sdk.values.PCollectionView
 import org.wfanet.measurement.storage.StorageClient
-import org.wfanet.panelmatch.client.joinkeyexchange.joinKeyAndId
 import org.wfanet.panelmatch.client.logger.addToTaskLog
 import org.wfanet.panelmatch.client.logger.loggerFor
 import org.wfanet.panelmatch.client.privatemembership.CreateQueriesParameters
 import org.wfanet.panelmatch.client.privatemembership.EncryptedQueryBundle
 import org.wfanet.panelmatch.client.privatemembership.PrivateMembershipCryptor
-import org.wfanet.panelmatch.client.privatemembership.QueryIdAndJoinKeys
+import org.wfanet.panelmatch.client.privatemembership.QueryIdAndId
 import org.wfanet.panelmatch.client.privatemembership.createQueries
+import org.wfanet.panelmatch.client.privatemembership.lookupKeyAndId
 import org.wfanet.panelmatch.client.storage.StorageFactory
 import org.wfanet.panelmatch.common.ShardedFileName
 import org.wfanet.panelmatch.common.beam.mapWithSideInput
@@ -47,8 +47,8 @@ class BuildPrivateMembershipQueriesTask(
   data class Outputs(
     val encryptedQueryBundlesFileName: String,
     val encryptedQueryBundlesFileCount: Int,
-    val queryIdAndJoinKeysFileName: String,
-    val queryIdAndJoinKeysFileCount: Int
+    val queryIdAndIdsFileName: String,
+    val queryIdAndIdsFileCount: Int
   )
 
   override suspend fun execute(
@@ -58,10 +58,7 @@ class BuildPrivateMembershipQueriesTask(
     val pipeline = Pipeline.create()
 
     val lookupKeyAndIdsManifest = input.getValue("lookup-keys")
-    val lookupKeyAndIds = readFromManifest(lookupKeyAndIdsManifest, joinKeyAndId {})
-
-    val hashedJoinKeyAndIdsManifest = input.getValue("hashed-join-keys")
-    val hashedJoinKeyAndIds = readFromManifest(hashedJoinKeyAndIdsManifest, joinKeyAndId {})
+    val lookupKeyAndIds = readFromManifest(lookupKeyAndIdsManifest, lookupKeyAndId {})
 
     val privateKeys =
       readSingleBlobAsPCollection(input.getValue("rlwe-serialized-private-key").toStringUtf8())
@@ -76,19 +73,13 @@ class BuildPrivateMembershipQueriesTask(
         .toSingletonView()
 
     val (
-      queryIdAndJoinKeys: PCollection<QueryIdAndJoinKeys>,
+      queryIdAndIds: PCollection<QueryIdAndId>,
       encryptedQueryBundles: PCollection<EncryptedQueryBundle>) =
-      createQueries(
-        lookupKeyAndIds,
-        hashedJoinKeyAndIds,
-        privateMembershipKeys,
-        parameters,
-        privateMembershipCryptor
-      )
+      createQueries(lookupKeyAndIds, privateMembershipKeys, parameters, privateMembershipCryptor)
 
-    val queryIdAndJoinKeysFileSpec =
-      ShardedFileName(outputs.queryIdAndJoinKeysFileName, outputs.queryIdAndJoinKeysFileCount)
-    queryIdAndJoinKeys.write(queryIdAndJoinKeysFileSpec)
+    val queryIdAndIdsFileSpec =
+      ShardedFileName(outputs.queryIdAndIdsFileName, outputs.queryIdAndIdsFileCount)
+    queryIdAndIds.write(queryIdAndIdsFileSpec)
 
     val encryptedQueryBundlesFileSpec =
       ShardedFileName(outputs.encryptedQueryBundlesFileName, outputs.encryptedQueryBundlesFileCount)
@@ -97,7 +88,7 @@ class BuildPrivateMembershipQueriesTask(
     pipeline.run()
 
     return mapOf(
-      "query-to-join-keys-map" to flowOf(queryIdAndJoinKeysFileSpec.spec.toByteStringUtf8()),
+      "query-to-id-map" to flowOf(queryIdAndIdsFileSpec.spec.toByteStringUtf8()),
       "encrypted-queries" to flowOf(encryptedQueryBundlesFileSpec.spec.toByteStringUtf8())
     )
   }

@@ -28,7 +28,7 @@ import org.wfanet.panelmatch.common.storage.toByteString
 
 private const val INPUT_CRYPTO_KEY_LABEL = "encryption-key"
 
-class CryptorExchangeTask
+class JoinKeyCryptorExchangeTask
 internal constructor(
   private val operation: (ByteString, List<JoinKeyAndId>) -> List<JoinKeyAndId>,
   private val inputDataLabel: String,
@@ -60,7 +60,7 @@ internal constructor(
     /** Returns an [ExchangeTask] that removes encryption from data. */
     @JvmStatic
     fun forDecryption(JoinKeyCryptor: JoinKeyCryptor): ExchangeTask {
-      return CryptorExchangeTask(
+      return JoinKeyCryptorExchangeTask(
         operation = JoinKeyCryptor::decrypt,
         inputDataLabel = "encrypted-data",
         outputDataLabel = "decrypted-data"
@@ -70,7 +70,7 @@ internal constructor(
     /** Returns an [ExchangeTask] that adds encryption to plaintext. */
     @JvmStatic
     fun forEncryption(JoinKeyCryptor: JoinKeyCryptor): ExchangeTask {
-      return CryptorExchangeTask(
+      return JoinKeyCryptorExchangeTask(
         operation = JoinKeyCryptor::encrypt,
         inputDataLabel = "unencrypted-data",
         outputDataLabel = "encrypted-data"
@@ -80,7 +80,7 @@ internal constructor(
     /** Returns an [ExchangeTask] that adds another layer of encryption to data. */
     @JvmStatic
     fun forReEncryption(JoinKeyCryptor: JoinKeyCryptor): ExchangeTask {
-      return CryptorExchangeTask(
+      return JoinKeyCryptorExchangeTask(
         operation = JoinKeyCryptor::reEncrypt,
         inputDataLabel = "encrypted-data",
         outputDataLabel = "reencrypted-data"

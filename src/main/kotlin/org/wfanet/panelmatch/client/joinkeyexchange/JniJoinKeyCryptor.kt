@@ -17,10 +17,11 @@ package org.wfanet.panelmatch.client.joinkeyexchange
 import com.google.protobuf.ByteString
 import org.wfanet.panelmatch.common.loadLibraryFromResource
 import org.wfanet.panelmatch.common.wrapJniException
+import org.wfanet.panelmatch.protocol.joinkeyexchange.JoinKeyCryptorSwig
 
 private const val SWIG_PREFIX: String = "/main/swig/wfanet/panelmatch/client/joinkeyexchange"
 
-/** A [JoinKeyCryptor] implementation using the JNI [JoinKeyCryptorWrapper]. */
+/** A [JoinKeyCryptor] implementation using the JNI [JoinKeyCryptorSwig]. */
 class JniJoinKeyCryptor : JoinKeyCryptor {
 
   init {
@@ -31,7 +32,7 @@ class JniJoinKeyCryptor : JoinKeyCryptor {
     val request = joinKeyCryptorGenerateCipherKeyRequest {}
     val response = wrapJniException {
       JoinKeyCryptorGenerateCipherKeyResponse.parseFrom(
-        JoinKeyCryptorWrapper.joinKeyCryptorGenerateCipherKeyWrapper(request.toByteArray())
+        JoinKeyCryptorSwig.joinKeyCryptorGenerateCipherKeyWrapper(request.toByteArray())
       )
     }
     return response.key
@@ -44,7 +45,7 @@ class JniJoinKeyCryptor : JoinKeyCryptor {
     }
     val response = wrapJniException {
       JoinKeyCryptorEncryptResponse.parseFrom(
-        JoinKeyCryptorWrapper.joinKeyCryptorEncryptWrapper(request.toByteArray())
+        JoinKeyCryptorSwig.joinKeyCryptorEncryptWrapper(request.toByteArray())
       )
     }
     return response.encryptedJoinKeyAndIdsList
@@ -60,7 +61,7 @@ class JniJoinKeyCryptor : JoinKeyCryptor {
     }
     val response = wrapJniException {
       JoinKeyCryptorReEncryptResponse.parseFrom(
-        JoinKeyCryptorWrapper.joinKeyCryptorReEncryptWrapper(request.toByteArray())
+        JoinKeyCryptorSwig.joinKeyCryptorReEncryptWrapper(request.toByteArray())
       )
     }
     return response.encryptedJoinKeyAndIdsList
@@ -76,7 +77,7 @@ class JniJoinKeyCryptor : JoinKeyCryptor {
     }
     val response = wrapJniException {
       JoinKeyCryptorDecryptResponse.parseFrom(
-        JoinKeyCryptorWrapper.joinKeyCryptorDecryptWrapper(request.toByteArray())
+        JoinKeyCryptorSwig.joinKeyCryptorDecryptWrapper(request.toByteArray())
       )
     }
     return response.decryptedJoinKeyAndIdsList

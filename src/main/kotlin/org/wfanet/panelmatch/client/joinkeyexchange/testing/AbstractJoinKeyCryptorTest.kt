@@ -49,6 +49,7 @@ abstract class AbstractJoinKeyCryptorTest {
 
     val encryptedTexts1 = cipher.encrypt(privateKey1, PLAINTEXT_JOIN_KEYS)
     val encryptedTexts2 = cipher.encrypt(privateKey2, PLAINTEXT_JOIN_KEYS)
+    assertThat(encryptedTexts1).isNotEqualTo(PLAINTEXT_JOIN_KEYS)
     assertThat(encryptedTexts1).isNotEqualTo(encryptedTexts2)
 
     val reEncryptedTexts1 = cipher.reEncrypt(privateKey1, encryptedTexts2)
@@ -80,5 +81,12 @@ abstract class AbstractJoinKeyCryptorTest {
     val key: ByteString = cipher.generateKey()
     assertFails { cipher.decrypt(key, INVALID_ENCRYPTED_JOIN_KEYS) }
     assertFails { cipher.reEncrypt(key, INVALID_ENCRYPTED_JOIN_KEYS) }
+  }
+
+  @Test
+  fun joinKeyIdentifiersAreEqual() {
+    val encryptedTexts = cipher.encrypt(privateKey1, PLAINTEXT_JOIN_KEYS)
+    assertThat(encryptedTexts.map { it.joinKeyIdentifier })
+      .isEqualTo(PLAINTEXT_JOIN_KEYS.map { it.joinKeyIdentifier })
   }
 }

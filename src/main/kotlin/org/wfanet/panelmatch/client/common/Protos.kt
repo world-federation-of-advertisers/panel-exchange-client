@@ -30,6 +30,8 @@ import org.wfanet.panelmatch.client.privatemembership.DecryptedQueryResult
 import org.wfanet.panelmatch.client.privatemembership.EncryptedEventData
 import org.wfanet.panelmatch.client.privatemembership.EncryptedQueryBundle
 import org.wfanet.panelmatch.client.privatemembership.EncryptedQueryResult
+import org.wfanet.panelmatch.client.privatemembership.LookupKey
+import org.wfanet.panelmatch.client.privatemembership.LookupKeyAndId
 import org.wfanet.panelmatch.client.privatemembership.Plaintext
 import org.wfanet.panelmatch.client.privatemembership.QueryId
 import org.wfanet.panelmatch.client.privatemembership.ShardId
@@ -44,6 +46,8 @@ import org.wfanet.panelmatch.client.privatemembership.decryptedQueryResult
 import org.wfanet.panelmatch.client.privatemembership.encryptedEventData
 import org.wfanet.panelmatch.client.privatemembership.encryptedQueryBundle
 import org.wfanet.panelmatch.client.privatemembership.encryptedQueryResult
+import org.wfanet.panelmatch.client.privatemembership.lookupKey
+import org.wfanet.panelmatch.client.privatemembership.lookupKeyAndId
 import org.wfanet.panelmatch.client.privatemembership.plaintext
 import org.wfanet.panelmatch.client.privatemembership.queryId
 import org.wfanet.panelmatch.client.privatemembership.shardId
@@ -130,4 +134,13 @@ fun joinKeyAndIdOf(key: ByteString, id: ByteString): JoinKeyAndId = joinKeyAndId
 fun databaseEntryOf(databaseKey: DatabaseKey, plaintext: Plaintext): DatabaseEntry = databaseEntry {
   this.databaseKey = databaseKey
   this.plaintext = plaintext
+}
+
+/** Constructs a [LookupKey]. */
+fun lookupKeyOf(key: Long): LookupKey = lookupKey { this.key = key }
+
+/** Constructs a [LookupKeyAndId]. */
+fun lookupKeyAndIdOf(key: Long, id: ByteString): LookupKeyAndId = lookupKeyAndId {
+  lookupKey = lookupKeyOf(key)
+  joinKeyIdentifier = joinKeyIdentifierOf(id)
 }

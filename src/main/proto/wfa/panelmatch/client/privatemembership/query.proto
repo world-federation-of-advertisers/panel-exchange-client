@@ -53,12 +53,12 @@ message EncryptedQueryBundle {
   bytes serialized_encrypted_queries = 3;
 }
 
-// QueryId and Hashed Join Key and Lookup Key. Used to decrypt a query by lookup
-// key and then tie it back to its original hashed join key.
-message QueryIdAndJoinKeys {
+// Query id of an encrypted query/encrypted query bundle. The id is used
+// to tie it later to its decrypted and plaintext values.
+message QueryIdAndId {
   QueryId query_id = 1;
-  wfa.panelmatch.client.joinkeyexchange.JoinKey hashed_join_key = 2;
-  wfa.panelmatch.client.joinkeyexchange.JoinKey lookup_key = 3;
+  wfa.panelmatch.client.joinkeyexchange.JoinKeyIdentifier join_key_identifier =
+      2;
 }
 
 // Generic message type holding an encrypted query result

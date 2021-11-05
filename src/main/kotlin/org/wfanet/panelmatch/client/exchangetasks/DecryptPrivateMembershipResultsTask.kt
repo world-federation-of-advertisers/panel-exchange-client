@@ -22,12 +22,13 @@ import org.apache.beam.sdk.Pipeline
 import org.apache.beam.sdk.values.PCollection
 import org.apache.beam.sdk.values.PCollectionView
 import org.wfanet.measurement.storage.StorageClient
+import org.wfanet.panelmatch.client.joinkeyexchange.joinKeyAndId
 import org.wfanet.panelmatch.client.privatemembership.EncryptedQueryResult
 import org.wfanet.panelmatch.client.privatemembership.KeyedDecryptedEventDataSet
 import org.wfanet.panelmatch.client.privatemembership.QueryResultsDecryptor
 import org.wfanet.panelmatch.client.privatemembership.decryptQueryResults
 import org.wfanet.panelmatch.client.privatemembership.encryptedQueryResult
-import org.wfanet.panelmatch.client.privatemembership.queryIdAndJoinKeys
+import org.wfanet.panelmatch.client.privatemembership.queryIdAndId
 import org.wfanet.panelmatch.client.storage.StorageFactory
 import org.wfanet.panelmatch.common.ShardedFileName
 import org.wfanet.panelmatch.common.beam.map
@@ -59,8 +60,14 @@ class DecryptPrivateMembershipResultsTask(
     val encryptedQueryResults: PCollection<EncryptedQueryResult> =
       readFromManifest(encryptedQueryResultsFileSpec, encryptedQueryResult {})
 
-    val queryAndJoinKeysFileSpec = input.getValue("query-to-join-keys-map")
-    val queryAndJoinKeys = readFromManifest(queryAndJoinKeysFileSpec, queryIdAndJoinKeys {})
+    val queryIdAndIdsFileSpec = input.getValue("query-to-join-keys-map")
+    val queryIdAndIds = readFromManifest(queryIdAndIdsFileSpec, queryIdAndId {})
+
+    val plaintextJoinKeyAndIdsFileSpec = input.getValue("plaintext-join-keys-to-id-map")
+    val plaintextJoinKeyAndIds = readFromManifest(plaintextJoinKeyAndIdsFileSpec, joinKeyAndId {})
+
+    val decryptedJoinKeyAndIdsFileSpec = input.getValue("decrypted-join-keys-to-id-map")
+    val decryptedJoinKeyAndIds = readFromManifest(decryptedJoinKeyAndIdsFileSpec, joinKeyAndId {})
 
     val compressionParameters =
       readSingleBlobAsPCollection(input.getValue("compression-parameters").toStringUtf8())
@@ -84,7 +91,9 @@ class DecryptPrivateMembershipResultsTask(
     val keyedDecryptedEventDataSet: PCollection<KeyedDecryptedEventDataSet> =
       decryptQueryResults(
         encryptedQueryResults,
-        queryAndJoinKeys,
+        plaintextJoinKeyAndIds,
+        decryptedJoinKeyAndIds,
+        queryIdAndIds,
         compressionParameters,
         privateMembershipKeys,
         serializedParameters,

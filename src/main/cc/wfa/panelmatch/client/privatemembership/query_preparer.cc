@@ -43,14 +43,15 @@ absl::StatusOr<PrepareQueryResponse> PrepareQuery(
           &fingerprinter,
           SecretDataFromStringView(request.identifier_hash_pepper()));
   PrepareQueryResponse prepared_query;
-  for (const JoinKeyAndId& lookup_key_and_id : request.lookup_key_and_ids()) {
-    LookupKeyAndIdAndHash lookup_key_and_id_and_hash;
-    lookup_key_and_id_and_hash.set_hash(peppered_fingerprinter->Fingerprint(
-        lookup_key_and_id.join_key().key()));
-    lookup_key_and_id_and_hash.mutable_lookup_key_and_id()->CopyFrom(
-        lookup_key_and_id);
-    *prepared_query.add_lookup_key_and_id_and_hashes() =
-        lookup_key_and_id_and_hash;
+  for (const JoinKeyAndId& decrypted_join_key_and_id :
+       request.decrypted_join_key_and_ids()) {
+    LookupKeyAndId lookup_key_and_id;
+    lookup_key_and_id.mutable_lookup_key()->set_key(
+        peppered_fingerprinter->Fingerprint(
+            decrypted_join_key_and_id.join_key().key()));
+    lookup_key_and_id.mutable_join_key_identifier()->CopyFrom(
+        decrypted_join_key_and_id.join_key_identifier());
+    *prepared_query.add_lookup_key_and_ids() = lookup_key_and_id;
   }
   return prepared_query;
 }
