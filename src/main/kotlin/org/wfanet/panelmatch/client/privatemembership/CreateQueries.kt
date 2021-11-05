@@ -80,7 +80,6 @@ private class CreateQueries(
     val paddedQueriesByShard = addPaddedQueries(queriesByShard)
     val unencryptedQueriesByShard = buildUnencryptedQueries(paddedQueriesByShard)
     val queryIdToIdsMapping = extractRealQueryIdAndId(unencryptedQueriesByShard)
-    print(queryIdToIdsMapping)
     val encryptedQueryBundles = encryptQueries(unencryptedQueriesByShard, privateMembershipKeys)
     return PCollectionTuple.of(QueryIdAndIdTag, queryIdToIdsMapping)
       .and(encryptedQueryBundlesTag, encryptedQueryBundles)
