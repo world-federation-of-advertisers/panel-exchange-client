@@ -1,0 +1,5 @@
+filegroup(
+    name = "brotli_dictionary",
+    srcs = ["brotli-dictionary"],
+    visibility = ["//visibility:public"],
+)
