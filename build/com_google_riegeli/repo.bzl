@@ -24,14 +24,14 @@ def com_google_riegeli_repo():
 
     http_archive(
         name = "com_google_riegeli",
-        sha256 = "68adc2958d1dd54807e01155f256e79dbe0f870b2d36eed42f103aad92c59d4d",
-        strip_prefix = "riegeli-7ee32d3768a6d2a86ec58a1cb1c4f08dc6744e25",
-        url = "https://github.com/google/riegeli/archive/7ee32d3768a6d2a86ec58a1cb1c4f08dc6744e25.tar.gz",
+        sha256 = "3f45985164c7f782ffca2feb2e15d06ee96d4687ffdc6bad7adea2a17d087629",
+        strip_prefix = "riegeli-63eec0727969205d01dacfd4468ba203d7c8559b",
+        url = "https://github.com/google/riegeli/archive/63eec0727969205d01dacfd4468ba203d7c8559b.tar.gz",
     )
 
     http_archive(
         name = "org_brotli",
-        sha256 = "fec5a1d26f3dd102c542548aaa704f655fecec3622a24ec6e97768dcb3c235ff",
-        strip_prefix = "brotli-68f1b90ad0d204907beb58304d0bd06391001a4d",
-        url = "https://github.com/google/brotli/archive/68f1b90ad0d204907beb58304d0bd06391001a4d.zip",  # 2021-08-18
+        sha256 = "d9f020d178fa45b9c20290334543032c8446d6d86077937db23efcb0d2fd8715",
+        strip_prefix = "brotli-8376f72ed6a8ca01548aad1a4f4f1df33094d3e0",
+        url = "https://github.com/google/brotli/archive/8376f72ed6a8ca01548aad1a4f4f1df33094d3e0.zip",  # 2021-11-09
     )
