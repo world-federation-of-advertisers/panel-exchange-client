@@ -1,8 +1,12 @@
-load("@io_bazel_rules_kotlin//kotlin:jvm.bzl", "kt_jvm_library")
-
 package(
     default_testonly = True,
 )
+
+"""
+This is a convenience testing binary in case adopters want to import a testing
+library. It is a java_binary instead of a java_library since it should be a fat
+jar of all the testing dependencies.
+"""
 
 java_binary(
     name = "testing",
