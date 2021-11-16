@@ -15,11 +15,12 @@
 package org.wfanet.panelmatch.client.exchangetasks
 
 import com.google.protobuf.ByteString
+import java.io.Serializable
 import kotlinx.coroutines.flow.Flow
 import org.wfanet.measurement.storage.StorageClient
 
 /** Interface for ExchangeTask. */
-interface ExchangeTask {
+interface ExchangeTask : Serializable {
   /**
    * Executes subclass on input map and returns the output.
    *
