@@ -22,10 +22,9 @@ import org.wfanet.panelmatch.client.PreprocessEventsResponse
  * Takes in a PreprocessEventsRequest, preprocesses it using JniEventPreprocessor and returns a
  * PreprocessEventsResponse
  */
-class JniEventPreprocessorFn :
+class EventPreprocessorFn(private val eventPreprocessor: EventPreprocessor) :
   SerializableFunction<PreprocessEventsRequest, PreprocessEventsResponse> {
   override fun apply(request: PreprocessEventsRequest): PreprocessEventsResponse {
-    val eventPreprocessor: EventPreprocessor = JniEventPreprocessor()
     return eventPreprocessor.preprocess(request)
   }
 }
