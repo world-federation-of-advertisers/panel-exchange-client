@@ -93,6 +93,22 @@ class ExchangeWorkflowFlags {
   lateinit var exchangeApiCertHost: String
     private set
 
+  @CommandLine.Option(
+    names = ["--data-provider-max-byte-size"],
+    description = ["Max batch size for processing"],
+    required = true
+  )
+  lateinit var dataProviderMaxByteSize: String
+    private set
+
+  @CommandLine.Option(
+    names = ["--data-provider-event-preprocessing-file-count"],
+    description = ["Number of output files from event preprocessing step"],
+    required = true
+  )
+  lateinit var dataProviderPreprocessedEventsFileCount: String
+    private set
+
   private inner class InetSocketAddressConverter : ITypeConverter<InetSocketAddress> {
     override fun convert(value: String): InetSocketAddress {
       val pos = value.lastIndexOf(':')

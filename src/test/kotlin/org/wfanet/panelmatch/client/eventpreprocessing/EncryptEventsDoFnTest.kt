@@ -27,10 +27,7 @@ import org.apache.beam.sdk.values.KV
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
-import org.wfanet.panelmatch.client.PreprocessEventsRequest
-import org.wfanet.panelmatch.client.PreprocessEventsResponse
-import org.wfanet.panelmatch.client.PreprocessEventsResponseKt.processedEvent
-import org.wfanet.panelmatch.client.preprocessEventsResponse
+import org.wfanet.panelmatch.client.eventpreprocessing.PreprocessEventsResponseKt.processedEvent
 import org.wfanet.panelmatch.common.beam.kvOf
 import org.wfanet.panelmatch.common.beam.testing.BeamTestBase
 import org.wfanet.panelmatch.common.beam.testing.assertThat

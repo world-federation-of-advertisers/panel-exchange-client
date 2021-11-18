@@ -20,8 +20,13 @@ import org.apache.beam.sdk.transforms.ParDo
 import org.apache.beam.sdk.values.KV
 import org.apache.beam.sdk.values.PCollection
 import org.apache.beam.sdk.values.PCollectionView
-import org.wfanet.panelmatch.client.combinedEvents
+import org.wfanet.panelmatch.client.privatemembership.DatabaseEntry
+import org.wfanet.panelmatch.client.privatemembership.databaseEntry
+import org.wfanet.panelmatch.client.privatemembership.databaseKey
+import org.wfanet.panelmatch.client.privatemembership.plaintext
 import org.wfanet.panelmatch.common.beam.groupByKey
+import org.wfanet.panelmatch.common.beam.kvOf
+import org.wfanet.panelmatch.common.beam.map
 import org.wfanet.panelmatch.common.beam.mapValues
 import org.wfanet.panelmatch.common.beam.parDo
 import org.wfanet.panelmatch.common.compression.CompressionParameters
@@ -37,17 +42,16 @@ import org.wfanet.panelmatch.common.compression.CompressionParameters
  * This is a [PTransform] so it can fit in easily with existing Apache Beam pipelines.
  */
 class PreprocessEvents(
-  private val maxByteSize: Int,
+  private val maxByteSize: Long,
   private val identifierHashPepperProvider: IdentifierHashPepperProvider,
   private val hkdfPepperProvider: HkdfPepperProvider,
   private val cryptoKeyProvider: DeterministicCommutativeCipherKeyProvider,
   private val compressionParametersView: PCollectionView<CompressionParameters>
-) : PTransform<PCollection<KV<ByteString, ByteString>>, PCollection<KV<Long, ByteString>>>() {
+) : PTransform<PCollection<UnprocessedEvent>, PCollection<DatabaseEntry>>() {
 
-  override fun expand(
-    events: PCollection<KV<ByteString, ByteString>>
-  ): PCollection<KV<Long, ByteString>> {
+  override fun expand(events: PCollection<UnprocessedEvent>): PCollection<DatabaseEntry> {
     return events
+      .map<UnprocessedEvent, KV<ByteString, ByteString>>("Map to KV") { kvOf(it.id, it.data) }
       .groupByKey()
       .mapValues("Make CombinedEvents") { combinedEvents { serializedEvents += it }.toByteString() }
       .parDo(BatchingDoFn(maxByteSize, EventSize), name = "Batch by $maxByteSize bytes")
@@ -64,5 +68,11 @@ class PreprocessEvents(
           )
           .withSideInputs(compressionParametersView)
       )
+      .map("Map to ProcessedEvent") {
+        databaseEntry {
+          this.databaseKey = databaseKey { id = it.key }
+          this.plaintext = plaintext { payload = it.value }
+        }
+      }
   }
 }

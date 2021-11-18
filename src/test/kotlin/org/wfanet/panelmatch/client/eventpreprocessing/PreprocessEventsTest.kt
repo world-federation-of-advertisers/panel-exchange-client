@@ -18,16 +18,19 @@ import com.google.common.truth.Truth.assertThat
 import com.google.protobuf.ByteString
 import com.google.protobuf.kotlin.toByteStringUtf8
 import org.apache.beam.sdk.values.KV
+import org.apache.beam.sdk.values.PCollectionView
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
 import org.wfanet.panelmatch.client.common.testing.eventsOf
+import org.wfanet.panelmatch.common.beam.map
 import org.wfanet.panelmatch.common.beam.testing.BeamTestBase
 import org.wfanet.panelmatch.common.beam.testing.assertThat
+import org.wfanet.panelmatch.common.compression.CompressionParameters
 import org.wfanet.panelmatch.common.compression.CompressionParametersKt.noCompression
 import org.wfanet.panelmatch.common.compression.compressionParameters
 
-private const val MAX_BYTE_SIZE = 8
+private const val MAX_BYTE_SIZE = 8L
 private val IDENTIFIER_HASH_PEPPER_PROVIDER =
   HardCodedIdentifierHashPepperProvider("identifier-hash-pepper".toByteStringUtf8())
 private val HKDF_PEPPER_PROVIDER = HardCodedHkdfPepperProvider("hkdf-pepper".toByteStringUtf8())
@@ -40,23 +43,30 @@ class PreprocessEventsTest : BeamTestBase() {
 
   @Test
   fun hardCodedProviders() {
-    val events = eventsOf("A" to "B", "C" to "D")
-
+    val events =
+      eventsOf("A" to "B", "C" to "D").map { event: KV<ByteString, ByteString> ->
+        unprocessedEvent {
+          id = event.key
+          data = event.value
+        }
+      }
+    val compressionParametersView: PCollectionView<CompressionParameters> =
+      pcollectionViewOf("Create Compression Parameters", COMPRESSION_PARAMETERS)
     val encryptedEvents =
       events.apply(
         PreprocessEvents(
-          MAX_BYTE_SIZE,
-          IDENTIFIER_HASH_PEPPER_PROVIDER,
-          HKDF_PEPPER_PROVIDER,
-          CRYPTO_KEY_PROVIDER,
-          pcollectionViewOf("Create Compression Parameters", COMPRESSION_PARAMETERS)
+          maxByteSize = MAX_BYTE_SIZE,
+          identifierHashPepperProvider = IDENTIFIER_HASH_PEPPER_PROVIDER,
+          hkdfPepperProvider = HKDF_PEPPER_PROVIDER,
+          cryptoKeyProvider = CRYPTO_KEY_PROVIDER,
+          compressionParametersView = compressionParametersView
         )
       )
 
     assertThat(encryptedEvents).satisfies {
-      val results: List<KV<Long, ByteString>> = it.toList()
+      val results = it.toList()
       assertThat(results).hasSize(2)
-      assertThat(results.map { kv -> kv.value })
+      assertThat(results.map { databaseEntry -> databaseEntry.plaintext.payload })
         .containsNoneOf("B".toByteStringUtf8(), "D".toByteStringUtf8())
       null
     }

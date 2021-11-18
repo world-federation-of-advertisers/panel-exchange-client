@@ -50,7 +50,7 @@ class ExecutePrivateMembershipQueriesTask(
   ): Map<String, Flow<ByteString>> {
     val pipeline = Pipeline.create()
 
-    val databaseManifest = input.getValue("event-data")
+    val databaseManifest = input.getValue("preprocessed-event-data")
     val database = readFromManifest(databaseManifest, databaseEntry {})
 
     val queriesManifest = input.getValue("encrypted-queries")

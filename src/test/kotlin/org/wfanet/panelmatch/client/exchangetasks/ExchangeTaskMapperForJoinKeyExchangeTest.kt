@@ -29,6 +29,9 @@ import org.wfanet.measurement.api.v2alpha.exchangeWorkflow
 import org.wfanet.measurement.storage.StorageClient
 import org.wfanet.measurement.storage.testing.InMemoryStorageClient
 import org.wfanet.panelmatch.client.common.ExchangeContext
+import org.wfanet.panelmatch.client.eventpreprocessing.HardCodedDeterministicCommutativeCipherKeyProvider
+import org.wfanet.panelmatch.client.eventpreprocessing.HardCodedHkdfPepperProvider
+import org.wfanet.panelmatch.client.eventpreprocessing.HardCodedIdentifierHashPepperProvider
 import org.wfanet.panelmatch.client.launcher.testing.inputStep
 import org.wfanet.panelmatch.client.privatemembership.testing.PlaintextPrivateMembershipCryptor
 import org.wfanet.panelmatch.client.privatemembership.testing.PlaintextQueryEvaluator
@@ -89,6 +92,12 @@ class ExchangeTaskMapperForJoinKeyExchangeTest {
       override val certificateManager = TestCertificateManager()
       override val inputTaskThrottler = AlwaysReadyThrottler
       override val getQueryResultsEvaluator = { _: ByteString -> PlaintextQueryEvaluator }
+      override val deterministicCommutativeCipherKeyProvider =
+        ::HardCodedDeterministicCommutativeCipherKeyProvider
+      override val identifierHashPepperProvider = ::HardCodedIdentifierHashPepperProvider
+      override val hkdfPepperProvider = ::HardCodedHkdfPepperProvider
+      override val dataProviderMaxByteSize = 8L
+      override val dataProviderPreprocessedEventsFileCount = 2
     }
 
   private val testStorageDetails = storageDetails {

@@ -15,8 +15,6 @@
 package org.wfanet.panelmatch.client.eventpreprocessing
 
 import org.apache.beam.sdk.transforms.SerializableFunction
-import org.wfanet.panelmatch.client.PreprocessEventsRequest
-import org.wfanet.panelmatch.client.PreprocessEventsResponse
 
 /**
  * Takes in a PreprocessEventsRequest, preprocesses it using JniEventPreprocessor and returns a

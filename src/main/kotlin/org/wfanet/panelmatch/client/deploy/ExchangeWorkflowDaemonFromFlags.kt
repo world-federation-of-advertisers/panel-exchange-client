@@ -79,7 +79,10 @@ abstract class ExchangeWorkflowDaemonFromFlags : ExchangeWorkflowDaemon() {
       inputTaskThrottler = throttler,
       privateStorageSelector = privateStorageSelector,
       sharedStorageSelector = sharedStorageSelector,
-      certificateManager = certificateManager
+      certificateManager = certificateManager,
+      dataProviderMaxByteSize = flags.dataProviderMaxByteSize.toLong(),
+      dataProviderPreprocessedEventsFileCount =
+        flags.dataProviderPreprocessedEventsFileCount.toInt()
     )
   }
 

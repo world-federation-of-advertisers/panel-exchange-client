@@ -15,6 +15,9 @@
 package org.wfanet.panelmatch.client.deploy
 
 import org.wfanet.measurement.common.throttler.Throttler
+import org.wfanet.panelmatch.client.eventpreprocessing.HardCodedDeterministicCommutativeCipherKeyProvider
+import org.wfanet.panelmatch.client.eventpreprocessing.HardCodedHkdfPepperProvider
+import org.wfanet.panelmatch.client.eventpreprocessing.HardCodedIdentifierHashPepperProvider
 import org.wfanet.panelmatch.client.exchangetasks.ExchangeTaskMapperForJoinKeyExchange
 import org.wfanet.panelmatch.client.privatemembership.JniPrivateMembershipCryptor
 import org.wfanet.panelmatch.client.privatemembership.JniQueryEvaluator
@@ -29,9 +32,15 @@ class ProductionExchangeTaskMapper(
   override val privateStorageSelector: PrivateStorageSelector,
   override val sharedStorageSelector: SharedStorageSelector,
   override val certificateManager: CertificateManager,
+  override val dataProviderMaxByteSize: Long,
+  override val dataProviderPreprocessedEventsFileCount: Int
 ) : ExchangeTaskMapperForJoinKeyExchange() {
   override val deterministicCommutativeCryptor by lazy { JniDeterministicCommutativeCipher() }
   override val getPrivateMembershipCryptor = ::JniPrivateMembershipCryptor
   override val getQueryResultsEvaluator = ::JniQueryEvaluator
   override val queryResultsDecryptor by lazy { JniQueryResultsDecryptor() }
+  override val deterministicCommutativeCipherKeyProvider =
+    ::HardCodedDeterministicCommutativeCipherKeyProvider
+  override val identifierHashPepperProvider = ::HardCodedIdentifierHashPepperProvider
+  override val hkdfPepperProvider = ::HardCodedHkdfPepperProvider
 }

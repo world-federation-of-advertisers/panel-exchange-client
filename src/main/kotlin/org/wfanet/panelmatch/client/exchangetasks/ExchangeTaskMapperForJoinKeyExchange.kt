@@ -19,6 +19,9 @@ import org.wfanet.measurement.api.v2alpha.ExchangeWorkflow.Step.StepCase
 import org.wfanet.measurement.common.throttler.Throttler
 import org.wfanet.measurement.common.toLocalDate
 import org.wfanet.panelmatch.client.common.ExchangeContext
+import org.wfanet.panelmatch.client.eventpreprocessing.DeterministicCommutativeCipherKeyProvider
+import org.wfanet.panelmatch.client.eventpreprocessing.HkdfPepperProvider
+import org.wfanet.panelmatch.client.eventpreprocessing.IdentifierHashPepperProvider
 import org.wfanet.panelmatch.client.privatemembership.CreateQueriesParameters
 import org.wfanet.panelmatch.client.privatemembership.EvaluateQueriesParameters
 import org.wfanet.panelmatch.client.privatemembership.PrivateMembershipCryptor
@@ -39,6 +42,12 @@ abstract class ExchangeTaskMapperForJoinKeyExchange : ExchangeTaskMapper {
   abstract val sharedStorageSelector: SharedStorageSelector
   abstract val certificateManager: CertificateManager
   abstract val inputTaskThrottler: Throttler
+  abstract val deterministicCommutativeCipherKeyProvider:
+    (ByteString) -> DeterministicCommutativeCipherKeyProvider
+  abstract val hkdfPepperProvider: (ByteString) -> HkdfPepperProvider
+  abstract val identifierHashPepperProvider: (ByteString) -> IdentifierHashPepperProvider
+  abstract val dataProviderMaxByteSize: Long
+  abstract val dataProviderPreprocessedEventsFileCount: Int
 
   override suspend fun getExchangeTaskForStep(context: ExchangeContext): ExchangeTask {
     return context.getExchangeTask()
@@ -58,6 +67,7 @@ abstract class ExchangeTaskMapperForJoinKeyExchange : ExchangeTaskMapper {
       StepCase.GENERATE_SERIALIZED_RLWE_KEYS_STEP -> getGenerateSerializedRlweKeysStepTask()
       StepCase.GENERATE_CERTIFICATE_STEP ->
         GenerateExchangeCertificateTask(certificateManager, exchangeDateKey)
+      StepCase.PREPROCESS_EVENTS_STEP -> getPreprocessEventsTask()
       StepCase.EXECUTE_PRIVATE_MEMBERSHIP_QUERIES_STEP -> getExecutePrivateMembershipQueriesTask()
       StepCase.BUILD_PRIVATE_MEMBERSHIP_QUERIES_STEP -> getBuildPrivateMembershipQueriesTask()
       StepCase.DECRYPT_PRIVATE_MEMBERSHIP_QUERY_RESULTS_STEP -> getDecryptMembershipResultsTask()
@@ -97,6 +107,23 @@ abstract class ExchangeTaskMapperForJoinKeyExchange : ExchangeTaskMapper {
     val privateMembershipCryptor =
       getPrivateMembershipCryptor(step.generateSerializedRlweKeysStep.serializedParameters)
     return GenerateAsymmetricKeysTask(generateKeys = privateMembershipCryptor::generateKeys)
+  }
+
+  private suspend fun ExchangeContext.getPreprocessEventsTask(): ExchangeTask {
+    check(step.stepCase == StepCase.PREPROCESS_EVENTS_STEP)
+    val outputs =
+      PreprocessEventsTask.Outputs(
+        preprocessedEventsFileCount = dataProviderPreprocessedEventsFileCount,
+        preprocessedEventsFileName = step.outputLabelsMap.getValue("processed-events"),
+      )
+    return PreprocessEventsTask(
+      storageFactory = privateStorageSelector.getStorageFactory(exchangeDateKey),
+      deterministicCommutativeCipherKeyProvider = deterministicCommutativeCipherKeyProvider,
+      identifierPepperProvider = identifierHashPepperProvider,
+      hkdfPepperProvider = hkdfPepperProvider,
+      maxByteSize = dataProviderMaxByteSize,
+      outputs = outputs,
+    )
   }
 
   private suspend fun ExchangeContext.getBuildPrivateMembershipQueriesTask(): ExchangeTask {

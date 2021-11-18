@@ -17,7 +17,6 @@ package org.wfanet.panelmatch.client.eventpreprocessing.deploy.gcloud
 import com.google.api.services.bigquery.model.TableFieldSchema
 import com.google.api.services.bigquery.model.TableRow
 import com.google.api.services.bigquery.model.TableSchema
-import com.google.protobuf.ByteString
 import com.google.protobuf.kotlin.toByteStringUtf8
 import java.util.Base64
 import java.util.logging.Logger
@@ -32,20 +31,21 @@ import org.apache.beam.sdk.options.Default
 import org.apache.beam.sdk.options.Description
 import org.apache.beam.sdk.options.PipelineOptionsFactory
 import org.apache.beam.sdk.options.Validation
-import org.apache.beam.sdk.values.KV
 import org.apache.beam.sdk.values.PCollection
 import org.wfanet.panelmatch.client.common.compression.CreateDefaultCompressionParameters
 import org.wfanet.panelmatch.client.eventpreprocessing.HardCodedDeterministicCommutativeCipherKeyProvider
 import org.wfanet.panelmatch.client.eventpreprocessing.HardCodedHkdfPepperProvider
 import org.wfanet.panelmatch.client.eventpreprocessing.HardCodedIdentifierHashPepperProvider
 import org.wfanet.panelmatch.client.eventpreprocessing.PreprocessEvents
-import org.wfanet.panelmatch.common.beam.kvOf
+import org.wfanet.panelmatch.client.eventpreprocessing.UnprocessedEvent
+import org.wfanet.panelmatch.client.eventpreprocessing.unprocessedEvent
+import org.wfanet.panelmatch.client.privatemembership.DatabaseEntry
 import org.wfanet.panelmatch.common.beam.map
 import org.wfanet.panelmatch.common.beam.toSingletonView
 import org.wfanet.panelmatch.common.compression.CompressionParameters
 
 interface Options : DataflowPipelineOptions {
-  @get:Description("Batch Size") @get:Validation.Required var batchSize: Int
+  @get:Description("Batch Size") @get:Validation.Required var batchSize: Long
 
   @get:Description("Cryptokey") @get:Validation.Required var cryptokey: String
 
@@ -132,7 +132,7 @@ fun main(args: Array<String>) {
 private fun readFromBigQuery(
   inputTable: String,
   pipeline: Pipeline
-): PCollection<KV<ByteString, ByteString>> {
+): PCollection<UnprocessedEvent> {
   // Build the read options proto for the read operation.
   val rowsFromBigQuery =
     pipeline.apply(
@@ -144,17 +144,14 @@ private fun readFromBigQuery(
     )
   // Convert TableRow to KV<Long,ByteString>
   return rowsFromBigQuery.map(name = "Map to ByteStrings") {
-    kvOf(
-      (it["UserId"] as String).toByteStringUtf8(),
-      (it["UserEvent"] as String).toByteStringUtf8()
-    )
+    unprocessedEvent {
+      id = (it["UserId"] as String).toByteStringUtf8()
+      data = (it["UserEvent"] as String).toByteStringUtf8()
+    }
   }
 }
 
-private fun writeToBigQuery(
-  encryptedEvents: PCollection<KV<Long, ByteString>>,
-  outputTable: String
-) {
+private fun writeToBigQuery(encryptedEvents: PCollection<DatabaseEntry>, outputTable: String) {
   // Build the table schema for the output table.
   val fields =
     listOf<TableFieldSchema>(
@@ -167,8 +164,8 @@ private fun writeToBigQuery(
   val encryptedTableRows =
     encryptedEvents.map(name = "Map to TableRows") {
       TableRow()
-        .set("EncryptedId", it.key)
-        .set("EncryptedData", Base64.getEncoder().encode(it.value.toByteArray()))
+        .set("EncryptedId", it.databaseKey.id)
+        .set("EncryptedData", Base64.getEncoder().encode(it.plaintext.payload.toByteArray()))
     }
 
   // Write to BigQueryIO

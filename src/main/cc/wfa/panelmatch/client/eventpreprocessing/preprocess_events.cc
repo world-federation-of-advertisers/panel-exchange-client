@@ -37,7 +37,7 @@
 #include "wfa/panelmatch/common/crypto/key_loader.h"
 #include "wfa/panelmatch/protocol/crypto/event_data_preprocessor.h"
 
-namespace wfa::panelmatch::client {
+namespace wfa::panelmatch::client::eventpreprocessing {
 using ::crypto::tink::util::SecretData;
 using ::crypto::tink::util::SecretDataAsStringView;
 using ::crypto::tink::util::SecretDataFromStringView;
@@ -82,8 +82,7 @@ absl::StatusOr<PreprocessEventsResponse> PreprocessEvents(
   EventDataPreprocessor preprocessor(std::move(cipher), identifier_hash_pepper,
                                      hkdf_pepper, &fingerprinter, &aes_hkdf);
   PreprocessEventsResponse processed;
-  for (const PreprocessEventsRequest::UnprocessedEvent& u :
-       request.unprocessed_events()) {
+  for (const UnprocessedEvent& u : request.unprocessed_events()) {
     ASSIGN_OR_RETURN(std::string compressed_data,
                      compressor->Compress(u.data()));
     ASSIGN_OR_RETURN(ProcessedData data,
@@ -95,4 +94,4 @@ absl::StatusOr<PreprocessEventsResponse> PreprocessEvents(
   }
   return processed;
 }
-}  // namespace wfa::panelmatch::client
+}  // namespace wfa::panelmatch::client::eventpreprocessing
