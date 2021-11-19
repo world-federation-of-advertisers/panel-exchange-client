@@ -14,82 +14,82 @@
 
 package org.wfanet.panelmatch.integration
 
+import com.google.protobuf.ByteString
 import io.grpc.Channel
-import io.grpc.Status
+import java.nio.file.Path
 import java.time.Clock
 import java.time.Duration
 import kotlinx.coroutines.CoroutineScope
-import org.wfanet.measurement.api.v2alpha.DataProviderKey
 import org.wfanet.measurement.api.v2alpha.ExchangeStepAttemptsGrpcKt.ExchangeStepAttemptsCoroutineStub
 import org.wfanet.measurement.api.v2alpha.ExchangeStepsGrpcKt.ExchangeStepsCoroutineStub
-import org.wfanet.measurement.api.v2alpha.ExchangeWorkflow
-import org.wfanet.measurement.api.v2alpha.ModelProviderKey
+import org.wfanet.measurement.api.v2alpha.RecurringExchangeKey
 import org.wfanet.measurement.api.v2alpha.ResourceKey
-import org.wfanet.measurement.common.grpc.failGrpc
 import org.wfanet.measurement.common.identity.withPrincipalName
 import org.wfanet.measurement.common.throttler.MinimumIntervalThrottler
 import org.wfanet.measurement.common.throttler.Throttler
+import org.wfanet.measurement.common.toByteString
 import org.wfanet.panelmatch.client.common.ExchangeContext
 import org.wfanet.panelmatch.client.common.Identity
 import org.wfanet.panelmatch.client.deploy.ExchangeWorkflowDaemon
 import org.wfanet.panelmatch.client.exchangetasks.ExchangeTaskMapper
 import org.wfanet.panelmatch.client.launcher.ApiClient
 import org.wfanet.panelmatch.client.launcher.GrpcApiClient
-import org.wfanet.panelmatch.client.storage.PrivateStorageSelector
-import org.wfanet.panelmatch.client.storage.SharedStorageSelector
+import org.wfanet.panelmatch.client.storage.FileSystemStorageFactory
 import org.wfanet.panelmatch.client.storage.StorageDetails
+import org.wfanet.panelmatch.client.storage.StorageDetails.PlatformCase
+import org.wfanet.panelmatch.client.storage.StorageDetailsKt.fileStorage
+import org.wfanet.panelmatch.client.storage.StorageDetailsProvider
 import org.wfanet.panelmatch.client.storage.StorageFactory
+import org.wfanet.panelmatch.client.storage.storageDetails
+import org.wfanet.panelmatch.common.ExchangeDateKey
 import org.wfanet.panelmatch.common.Timeout
 import org.wfanet.panelmatch.common.asTimeout
+import org.wfanet.panelmatch.common.certificates.CertificateAuthority
 import org.wfanet.panelmatch.common.certificates.CertificateManager
+import org.wfanet.panelmatch.common.certificates.testing.TestCertificateAuthority
 import org.wfanet.panelmatch.common.certificates.testing.TestCertificateManager
 import org.wfanet.panelmatch.common.secrets.SecretMap
+import org.wfanet.panelmatch.common.secrets.testing.TestSecretMap
 
 /** Executes ExchangeWorkflows for InProcess Integration testing. */
 class ExchangeWorkflowDaemonForTest(
-  override val privateStorageSelector: PrivateStorageSelector,
-  override val sharedStorageSelector: SharedStorageSelector,
-  override val clock: Clock,
+  v2alphaChannel: Channel,
+  provider: ResourceKey,
+  partnerProvider: ResourceKey,
+  recurringExchangeKey: RecurringExchangeKey,
+  serializedExchangeWorkflow: ByteString,
+  privateTemporaryDirectory: Path,
+  sharedTemporaryDirectory: Path,
   override val scope: CoroutineScope,
-  override val validExchangeWorkflows: SecretMap,
-  private val channel: Channel,
-  private val providerKey: ResourceKey,
-  private val taskTimeoutDuration: Duration,
-  private val pollingInterval: Duration,
-  override val rootCertificates: SecretMap,
-  override val privateKeys: SecretMap,
-  override val privateStorageFactories:
-    Map<StorageDetails.PlatformCase, ExchangeContext.(StorageDetails) -> StorageFactory>,
-  override val privateStorageInformation: SecretMap,
-  override val sharedStorageFactories:
-    Map<StorageDetails.PlatformCase, ExchangeContext.(StorageDetails) -> StorageFactory>,
-  override val sharedStorageInformation: SecretMap,
+  override val clock: Clock = Clock.systemUTC(),
+  pollingInterval: Duration = Duration.ofMillis(250),
+  taskTimeoutDuration: Duration = Duration.ofSeconds(30),
 ) : ExchangeWorkflowDaemon() {
+  private val recurringExchangeId = recurringExchangeKey.recurringExchangeId
 
-  override val certificateManager: CertificateManager by lazy { TestCertificateManager() }
+  override val certificateManager: CertificateManager = TestCertificateManager
 
-  override val identity: Identity =
-    when (providerKey) {
-      is ModelProviderKey ->
-        Identity(providerKey.modelProviderId, ExchangeWorkflow.Party.MODEL_PROVIDER)
-      is DataProviderKey ->
-        Identity(providerKey.dataProviderId, ExchangeWorkflow.Party.DATA_PROVIDER)
-      else ->
-        failGrpc(Status.UNAUTHENTICATED) {
-          "Caller identity is neither DataProvider nor ModelProvider"
-        }
-    }
+  override val identity: Identity = Identity.fromResourceKey(provider)
 
   override val apiClient: ApiClient by lazy {
+    val providerName = provider.toName()
     val exchangeStepsClient =
-      ExchangeStepsCoroutineStub(channel).withPrincipalName(providerKey.toName())
+      ExchangeStepsCoroutineStub(v2alphaChannel).withPrincipalName(providerName)
     val exchangeStepAttemptsClient =
-      ExchangeStepAttemptsCoroutineStub(channel).withPrincipalName(providerKey.toName())
+      ExchangeStepAttemptsCoroutineStub(v2alphaChannel).withPrincipalName(providerName)
 
     GrpcApiClient(identity, exchangeStepsClient, exchangeStepAttemptsClient, clock)
   }
 
-  override val throttler: Throttler by lazy { MinimumIntervalThrottler(clock, pollingInterval) }
+  override val rootCertificates: SecretMap =
+    TestSecretMap(
+      partnerProvider.toName() to TestCertificateManager.CERTIFICATE.encoded.toByteString()
+    )
+
+  override val validExchangeWorkflows: SecretMap =
+    TestSecretMap(recurringExchangeId to serializedExchangeWorkflow)
+
+  override val throttler: Throttler = MinimumIntervalThrottler(clock, pollingInterval)
 
   override val exchangeTaskMapper: ExchangeTaskMapper by lazy {
     InProcessExchangeTaskMapper(
@@ -100,5 +100,36 @@ class ExchangeWorkflowDaemonForTest(
     )
   }
 
-  override val taskTimeout: Timeout by lazy { taskTimeoutDuration.asTimeout() }
+  override val certificateAuthority: CertificateAuthority = TestCertificateAuthority
+
+  override val privateStorageFactories:
+    Map<PlatformCase, ExchangeDateKey.(StorageDetails) -> StorageFactory> =
+    mapOf(PlatformCase.FILE to { storageDetails -> FileSystemStorageFactory(storageDetails, this) })
+
+  private val privateStorageDetails = storageDetails {
+    file = fileStorage { path = privateTemporaryDirectory.resolve("private-storage").toString() }
+  }
+  override val privateStorageInfo: StorageDetailsProvider =
+    StorageDetailsProvider(
+      TestSecretMap(recurringExchangeId to privateStorageDetails.toByteString())
+    )
+
+  override val sharedStorageFactories:
+    Map<PlatformCase, ExchangeContext.(StorageDetails) -> StorageFactory> =
+    mapOf(
+      PlatformCase.FILE to
+        { storageDetails ->
+          FileSystemStorageFactory(storageDetails, this.exchangeDateKey)
+        }
+    )
+
+  private val sharedStorageDetails = storageDetails {
+    file = fileStorage { path = sharedTemporaryDirectory.toString() }
+  }
+  override val sharedStorageInfo: StorageDetailsProvider =
+    StorageDetailsProvider(
+      TestSecretMap(recurringExchangeId to sharedStorageDetails.toByteString())
+    )
+
+  override val taskTimeout: Timeout = taskTimeoutDuration.asTimeout()
 }
