@@ -26,6 +26,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.junit.Before
 import org.junit.Test
+import org.wfanet.panelmatch.common.loggerFor
 
 class JobTestClass1 {
   suspend fun logWithDelay() {

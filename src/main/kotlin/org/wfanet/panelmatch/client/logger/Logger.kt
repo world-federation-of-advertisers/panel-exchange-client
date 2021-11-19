@@ -22,10 +22,6 @@ import kotlinx.coroutines.CoroutineName
 
 private val taskLogs = ConcurrentHashMap<String, MutableList<String>>()
 
-fun <R : Any> R.loggerFor(): Lazy<Logger> {
-  return lazy { Logger.getLogger(this.javaClass.name) }
-}
-
 suspend fun Logger.addToTaskLog(logMessage: String) {
   val coroutineContextName: String = requireNotNull(coroutineContext[CoroutineName.Key]).toString()
   taskLogs.computeIfAbsent(coroutineContextName) { synchronizedList(mutableListOf<String>()) }
