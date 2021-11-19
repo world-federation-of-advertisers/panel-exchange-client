@@ -47,7 +47,7 @@ class ExchangeTaskExecutor(
 ) : ExchangeStepExecutor {
 
   override suspend fun execute(step: ValidatedExchangeStep, attemptKey: ExchangeStepAttemptKey) {
-    withContext(CoroutineName(attemptKey.exchangeStepAttemptId)) {
+    withContext(CoroutineName(attemptKey.toName())) {
       val context = ExchangeContext(attemptKey, step.date, step.workflow, step.step)
       try {
         context.tryExecute()
