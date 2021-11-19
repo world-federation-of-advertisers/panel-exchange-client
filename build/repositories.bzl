@@ -41,16 +41,16 @@ def panel_exchange_client_repositories():
     # TODO: remove dependencies on wfa_measurement_system
     http_archive(
         name = "wfa_measurement_system",
-        sha256 = "ff2a1e5d53b2ecba931dde11997894d5010a634877ec0c1d5e4d26902b08ecd3",
-        strip_prefix = "cross-media-measurement-f10ea76e72a3dfcb708d5e3849ae17f649fc143e",
-        url = "https://github.com/world-federation-of-advertisers/cross-media-measurement/archive/f10ea76e72a3dfcb708d5e3849ae17f649fc143e.tar.gz",
+        sha256 = "4c3d6c09106db10c5d8fe02539f2cfcbc1469531f4fed3456ebdcd7fa7becb1f",
+        strip_prefix = "cross-media-measurement-b988e54b8d15e65f93a90e5e248a9e06f5f87091",
+        url = "https://github.com/world-federation-of-advertisers/cross-media-measurement/archive/b988e54b8d15e65f93a90e5e248a9e06f5f87091.tar.gz",
     )
 
     http_archive(
         name = "wfa_measurement_proto",
-        sha256 = "a9d0f0421fa6461f9c756fcfcbb8ec7a9f725806a85dde2ba2a5fdf8f1472b84",
-        strip_prefix = "cross-media-measurement-api-0.11.0",
-        url = "https://github.com/world-federation-of-advertisers/cross-media-measurement-api/archive/v0.11.0.tar.gz",
+        sha256 = "611bbc8c653868c1dbc973a520a192d8ac1678375167181354fc9b1bc8e3a3ea",
+        strip_prefix = "cross-media-measurement-api-0.14.0",
+        url = "https://github.com/world-federation-of-advertisers/cross-media-measurement-api/archive/v0.14.0.tar.gz",
     )
 
     http_archive(
@@ -62,9 +62,9 @@ def panel_exchange_client_repositories():
 
     http_archive(
         name = "wfa_consent_signaling_client",
-        sha256 = "ff82af7bc1c659d726e64c57f3ff6a16f09b4d0ee231a70ea744f8d213412998",
-        strip_prefix = "consent-signaling-client-0.9.0",
-        url = "https://github.com/world-federation-of-advertisers/consent-signaling-client/archive/v0.9.0.tar.gz",
+        sha256 = "59079953c01f2f9e2f22c0c2e2e01cfbb5da0a7b9348980e18827bf1947b21f5",
+        strip_prefix = "consent-signaling-client-0.10.0",
+        url = "https://github.com/world-federation-of-advertisers/consent-signaling-client/archive/v0.10.0.tar.gz",
     )
 
     http_archive(
