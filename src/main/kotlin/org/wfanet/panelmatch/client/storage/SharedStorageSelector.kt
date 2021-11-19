@@ -64,7 +64,9 @@ class SharedStorageSelector(
       GOOGLE_CLOUD_STORAGE -> require(platform == PlatformCase.GCS)
       AMAZON_S3 -> require(platform == PlatformCase.AWS)
       StorageType.UNKNOWN_STORAGE_CLIENT, StorageType.UNRECOGNIZED ->
-        throw IllegalArgumentException("$storageType unsupported")
+        require(platform !in setOf(PlatformCase.GCS, PlatformCase.AWS))
+    // TODO(@efoxepstein): throw IllegalArgumentException("$storageType unsupported")
+    //   once StorageType.FILE and StorageType.CUSTOM are added.
     }
   }
 }
