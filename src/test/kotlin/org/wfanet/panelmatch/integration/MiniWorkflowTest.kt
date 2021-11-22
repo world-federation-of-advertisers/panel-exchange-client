@@ -17,7 +17,6 @@ package org.wfanet.panelmatch.integration
 import com.google.common.truth.Truth.assertThat
 import com.google.protobuf.ByteString
 import com.google.protobuf.kotlin.toByteStringUtf8
-import kotlinx.coroutines.runBlocking
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
 
@@ -37,10 +36,5 @@ class MiniWorkflowTest : AbstractInProcessPanelMatchIntegrationTest() {
     modelProviderDaemon: ExchangeWorkflowDaemonForTest
   ) {
     assertThat(modelProviderDaemon.readPrivateBlob("mp-hkdf-pepper")).isEqualTo(HKDF_PEPPER)
-    runBlocking {
-      for (step in getSteps()) {
-        assertThat(step.state).isEqualTo(EXCHANGE_STEP_SUCCEEDED)
-      }
-    }
   }
 }

@@ -14,12 +14,12 @@
 
 package org.wfanet.panelmatch.integration
 
+import com.google.common.truth.Truth
 import com.google.protobuf.ByteString
 import io.grpc.StatusException
 import java.nio.file.Path
 import java.time.Clock
 import java.time.LocalDate
-import java.util.logging.Logger
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -51,6 +51,7 @@ import org.wfanet.measurement.common.toProtoDate
 import org.wfanet.measurement.integration.deploy.gcloud.buildKingdomSpannerEmulatorDatabaseRule
 import org.wfanet.measurement.integration.deploy.gcloud.buildSpannerInProcessKingdom
 import org.wfanet.panelmatch.common.ExchangeDateKey
+import org.wfanet.panelmatch.common.loggerFor
 import org.wfanet.panelmatch.common.testing.runBlockingTest
 
 private const val API_VERSION = "v2alpha"
@@ -64,8 +65,6 @@ abstract class AbstractInProcessPanelMatchIntegrationTest {
   protected abstract val exchangeWorkflowResourcePath: String
   protected abstract val initialDataProviderInputs: Map<String, ByteString>
   protected abstract val initialModelProviderInputs: Map<String, ByteString>
-
-  protected val EXCHANGE_STEP_SUCCEEDED = ExchangeStep.State.SUCCEEDED
 
   /** This is responsible for making an assertions about the final state of the workflow. */
   protected abstract fun validateFinalState(
@@ -116,7 +115,7 @@ abstract class AbstractInProcessPanelMatchIntegrationTest {
       .withPrincipalName(principal)
   }
 
-  protected suspend fun getSteps(): List<ExchangeStep> {
+  private suspend fun getSteps(): List<ExchangeStep> {
     return exchangeStepsClient.listExchangeSteps(
         listExchangeStepsRequest {
           parent = exchangeKey.toName()
@@ -129,9 +128,11 @@ abstract class AbstractInProcessPanelMatchIntegrationTest {
   }
 
   private suspend fun logStepStates() {
-    for (step in getSteps()) {
-      logger.info("Step ${step.stepIndex} is in state: ${step.state}.")
-    }
+    logger.info(
+      getSteps().joinToString("\n") {
+        "ExchangeStep with index: ${it.stepIndex} is in state: ${it.state}."
+      }
+    )
   }
 
   private suspend fun isDone(): Boolean {
@@ -143,7 +144,7 @@ abstract class AbstractInProcessPanelMatchIntegrationTest {
     try {
       val exchange = exchangesClient.getExchange(request)
       logStepStates()
-      logger.info("Exchange state: ${exchange.state}")
+      logger.info("Exchange is in state: ${exchange.state}.")
       return exchange.state == Exchange.State.SUCCEEDED
     } catch (e: StatusException) {
       return false
@@ -229,9 +230,12 @@ abstract class AbstractInProcessPanelMatchIntegrationTest {
     modelProviderContext.scope.cancel()
 
     validateFinalState(dataProviderDaemon, modelProviderDaemon)
+    for (step in getSteps()) {
+      Truth.assertThat(step.state).isEqualTo(ExchangeStep.State.SUCCEEDED)
+    }
   }
 
   companion object {
-    private val logger: Logger = Logger.getLogger(this::class.java.name)
+    private val logger by loggerFor()
   }
 }
