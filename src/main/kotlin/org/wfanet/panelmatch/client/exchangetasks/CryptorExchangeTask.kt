@@ -42,8 +42,8 @@ internal constructor(
     //  efficiency. If the inputs turn out to be small enough this shouldn't be an issue.
     //  Another reason to process them in one entire batch is to minimize the cost of
     //  serialization.
-    val cryptoKey = input.getValue(INPUT_CRYPTO_KEY_LABEL).toByteString()
-    val serializedInputs = input.getValue(inputDataLabel).toByteString()
+    val cryptoKey = input.getRequired(INPUT_CRYPTO_KEY_LABEL).toByteString()
+    val serializedInputs = input.getRequired(inputDataLabel).toByteString()
     val inputList = JoinKeyAndIdCollection.parseFrom(serializedInputs).joinKeysAndIdsList
     val joinKeys = inputList.map { it.joinKey.key }
     val joinKeyIds = inputList.map { it.joinKeyIdentifier }
