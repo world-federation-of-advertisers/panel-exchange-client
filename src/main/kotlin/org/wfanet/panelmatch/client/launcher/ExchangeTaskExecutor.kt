@@ -75,7 +75,10 @@ class ExchangeTaskExecutor(
     privateStorage: StorageClient
   ) {
     for ((genericLabel, flow) in taskOutput) {
-      val blobKey = step.outputLabelsMap.getValue(genericLabel)
+      val blobKey =
+        requireNotNull(step.outputLabelsMap[genericLabel]) {
+          "Missing $genericLabel in outputLabels for step: $step"
+        }
       privateStorage.getBlob(blobKey)?.delete()
       privateStorage.createBlob(blobKey, flow)
     }

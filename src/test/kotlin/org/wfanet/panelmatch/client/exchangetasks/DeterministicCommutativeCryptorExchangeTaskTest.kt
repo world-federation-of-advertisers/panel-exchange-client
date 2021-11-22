@@ -104,11 +104,11 @@ class DeterministicCommutativeCryptorExchangeTaskTest {
 
   @Test
   fun `decrypt with missing inputs`() = withTestContext {
-    assertFailsWith(NoSuchElementException::class) {
+    assertFailsWith<IllegalArgumentException> {
       CryptorExchangeTask.forDecryption(deterministicCommutativeCryptor)
         .execute(mapOf("encrypted-data" to blobOfDoubleBlindedKeys))
     }
-    assertFailsWith(NoSuchElementException::class) {
+    assertFailsWith<IllegalArgumentException> {
       CryptorExchangeTask.forDecryption(deterministicCommutativeCryptor)
         .execute(mapOf("encryption-key" to blobOfMpSecretKey))
     }
@@ -137,11 +137,11 @@ class DeterministicCommutativeCryptorExchangeTaskTest {
 
   @Test
   fun `encrypt with missing inputs`() = withTestContext {
-    assertFailsWith(NoSuchElementException::class) {
+    assertFailsWith<IllegalArgumentException> {
       CryptorExchangeTask.forEncryption(deterministicCommutativeCryptor)
         .execute(mapOf("unencrypted-data" to blobOfJoinKeys))
     }
-    assertFailsWith(NoSuchElementException::class) {
+    assertFailsWith<IllegalArgumentException> {
       CryptorExchangeTask.forEncryption(deterministicCommutativeCryptor)
         .execute(mapOf("encryption-key" to blobOfMpSecretKey))
     }
@@ -172,11 +172,11 @@ class DeterministicCommutativeCryptorExchangeTaskTest {
 
   @Test
   fun `reEncryptTask with missing inputs`() = withTestContext {
-    assertFailsWith(NoSuchElementException::class) {
+    assertFailsWith<IllegalArgumentException> {
       CryptorExchangeTask.forReEncryption(deterministicCommutativeCryptor)
         .execute(mapOf("encrypted-data" to blobOfSingleBlindedKeys))
     }
-    assertFailsWith(NoSuchElementException::class) {
+    assertFailsWith<IllegalArgumentException> {
       CryptorExchangeTask.forReEncryption(deterministicCommutativeCryptor)
         .execute(mapOf("encryption-key" to blobOfMpSecretKey))
     }
