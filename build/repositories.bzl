@@ -41,9 +41,9 @@ def panel_exchange_client_repositories():
     # TODO: remove dependencies on wfa_measurement_system
     http_archive(
         name = "wfa_measurement_system",
-        sha256 = "4c3d6c09106db10c5d8fe02539f2cfcbc1469531f4fed3456ebdcd7fa7becb1f",
-        strip_prefix = "cross-media-measurement-b988e54b8d15e65f93a90e5e248a9e06f5f87091",
-        url = "https://github.com/world-federation-of-advertisers/cross-media-measurement/archive/b988e54b8d15e65f93a90e5e248a9e06f5f87091.tar.gz",
+        sha256 = "abefcbb7d89a64e9e36771bc97fa92e370bd88857c890af63368234520f4978e",
+        strip_prefix = "cross-media-measurement-1a79bef62d23dc545d2ff6c49ca9e20bb73f634f",
+        url = "https://github.com/world-federation-of-advertisers/cross-media-measurement/archive/1a79bef62d23dc545d2ff6c49ca9e20bb73f634f.tar.gz",
     )
 
     http_archive(

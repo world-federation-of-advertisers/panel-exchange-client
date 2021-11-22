@@ -16,18 +16,19 @@ package org.wfanet.panelmatch.client.logger
 
 import java.util.Collections.synchronizedList
 import java.util.concurrent.ConcurrentHashMap
+import java.util.logging.Level
 import java.util.logging.Logger
 import kotlin.coroutines.coroutineContext
 import kotlinx.coroutines.CoroutineName
 
-private val taskLogs = ConcurrentHashMap<String, MutableList<String>>()
+@PublishedApi internal val taskLogs = ConcurrentHashMap<String, MutableList<String>>()
 
-suspend fun Logger.addToTaskLog(logMessage: String) {
-  val coroutineContextName: String = requireNotNull(coroutineContext[CoroutineName.Key]).toString()
+suspend inline fun Logger.addToTaskLog(logMessage: String, level: Level = Level.INFO) {
+  val coroutineContextName: String = requireNotNull(coroutineContext[CoroutineName.Key]).name
   taskLogs.computeIfAbsent(coroutineContextName) { synchronizedList(mutableListOf<String>()) }
-  val message = "$coroutineContextName: $logMessage"
+  val message = "[$coroutineContextName] $logMessage"
   requireNotNull(taskLogs[coroutineContextName]).add(message)
-  info(message)
+  log(level, message)
 }
 
 suspend fun getAndClearTaskLog(): List<String> {
