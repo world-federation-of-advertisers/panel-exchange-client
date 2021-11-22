@@ -15,9 +15,11 @@
 package org.wfanet.panelmatch.integration
 
 import com.google.protobuf.ByteString
+import io.grpc.StatusException
 import java.nio.file.Path
 import java.time.Clock
 import java.time.LocalDate
+import java.util.logging.Logger
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -27,10 +29,19 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import org.junit.rules.TestRule
+import org.wfanet.measurement.api.v2alpha.Exchange
+import org.wfanet.measurement.api.v2alpha.ExchangeKey
+import org.wfanet.measurement.api.v2alpha.ExchangeStepsGrpcKt
 import org.wfanet.measurement.api.v2alpha.ExchangeWorkflow
+import org.wfanet.measurement.api.v2alpha.ExchangesGrpcKt.ExchangesCoroutineStub
+import org.wfanet.measurement.api.v2alpha.ListExchangeStepsRequestKt.filter
+import org.wfanet.measurement.api.v2alpha.ModelProviderKey
 import org.wfanet.measurement.api.v2alpha.ResourceKey
 import org.wfanet.measurement.api.v2alpha.copy
 import org.wfanet.measurement.api.v2alpha.exchangeWorkflow
+import org.wfanet.measurement.api.v2alpha.getExchangeRequest
+import org.wfanet.measurement.api.v2alpha.listExchangeStepsRequest
+import org.wfanet.measurement.common.identity.withPrincipalName
 import org.wfanet.measurement.common.parseTextProto
 import org.wfanet.measurement.common.testing.chainRulesSequentially
 import org.wfanet.measurement.common.toProtoDate
@@ -71,6 +82,12 @@ abstract class AbstractInProcessPanelMatchIntegrationTest {
   }
   private val resourceSetup by lazy { inProcessKingdom.panelMatchResourceSetup }
 
+  private lateinit var exchangesClient: ExchangesCoroutineStub
+  private lateinit var exchangeStepsClient: ExchangeStepsGrpcKt.ExchangeStepsCoroutineStub
+  private lateinit var exchangeKey: ExchangeKey
+
+  private val logger: Logger = Logger.getLogger(this::class.java.name)
+
   @get:Rule
   val ruleChain: TestRule by lazy { chainRulesSequentially(databaseRule, inProcessKingdom) }
 
@@ -84,10 +101,50 @@ abstract class AbstractInProcessPanelMatchIntegrationTest {
     val scope: CoroutineScope
   )
 
+  private fun makeExchangesServiceClient(principal: String): ExchangesCoroutineStub {
+    return ExchangesCoroutineStub(inProcessKingdom.publicApiChannel).withPrincipalName(principal)
+  }
+
+  private fun makeExchangeStepsServiceClient(
+    principal: String
+  ): ExchangeStepsGrpcKt.ExchangeStepsCoroutineStub {
+    return ExchangeStepsGrpcKt.ExchangeStepsCoroutineStub(inProcessKingdom.publicApiChannel)
+      .withPrincipalName(principal)
+  }
+
+  private suspend fun displaySteps() {
+    val steps =
+      exchangeStepsClient.listExchangeSteps(
+          listExchangeStepsRequest {
+            parent = exchangeKey.toName()
+            pageSize = 50
+            filter = filter { exchangeDates += EXCHANGE_DATE.toProtoDate() }
+          }
+        )
+        .exchangeStepList
+    for (step in steps) {
+      logger.info("Step ${step.stepIndex} is in state: ${step.state}.")
+    }
+  }
+
   private suspend fun isDone(): Boolean {
-    // TODO(@yunyeng): call /Exchanges.GetExchange to get Exchange status.
-    delay(5000)
-    return true
+    val modelProviderId = requireNotNull(exchangeKey.modelProviderId)
+    val request = getExchangeRequest {
+      name = exchangeKey.toName()
+      modelProvider = ModelProviderKey(modelProviderId).toName()
+    }
+    try {
+      val exchange = exchangesClient.getExchange(request)
+      displaySteps()
+      logger.info("Exchange State: ${exchange.state}")
+      return exchange.state == Exchange.State.SUCCEEDED
+    } catch (e: StatusException) {
+      return false
+    }
+  }
+
+  private fun LocalDate.format(): String {
+    return "$year-$monthValue-$dayOfMonth"
   }
 
   private fun createScope(name: String): CoroutineScope {
@@ -120,9 +177,18 @@ abstract class AbstractInProcessPanelMatchIntegrationTest {
         exchangeWorkflow,
         EXCHANGE_DATE.toProtoDate(),
       )
+    exchangesClient = makeExchangesServiceClient(keys.modelProviderKey.toName())
+    exchangeStepsClient = makeExchangeStepsServiceClient(keys.modelProviderKey.toName())
 
     val recurringExchangeId = keys.recurringExchangeKey.recurringExchangeId
     val exchangeDateKey = ExchangeDateKey(recurringExchangeId, EXCHANGE_DATE)
+    exchangeKey =
+      ExchangeKey(
+        null,
+        keys.modelProviderKey.modelProviderId,
+        recurringExchangeId = recurringExchangeId,
+        exchangeId = EXCHANGE_DATE.format()
+      )
     val dataProviderContext =
       ProviderContext(
         keys.dataProviderKey,
