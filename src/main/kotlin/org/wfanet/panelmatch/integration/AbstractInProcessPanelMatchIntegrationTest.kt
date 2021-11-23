@@ -14,6 +14,7 @@
 
 package org.wfanet.panelmatch.integration
 
+import com.google.common.truth.Truth.assertThat
 import com.google.common.truth.Truth.assertWithMessage
 import com.google.protobuf.ByteString
 import io.grpc.StatusException
@@ -129,12 +130,15 @@ abstract class AbstractInProcessPanelMatchIntegrationTest {
 
   private suspend fun logStepStates() {
     val stepsList = exchangeWorkflow.stepsList
-    logger.info(
-      getSteps().joinToString("\n") {
-        "ExchangeStep '${stepsList[it.stepIndex].stepId}' " +
-          "with index: ${it.stepIndex} is in state: ${it.state}."
-      }
-    )
+    val steps = getSteps().filter { step -> step.state != ExchangeStep.State.SUCCEEDED }
+    if (steps.isNotEmpty()) {
+      logger.info(
+        steps.joinToString("\n") {
+          "ExchangeStep '${stepsList[it.stepIndex].stepId}' " +
+            "with index: ${it.stepIndex} is in state: ${it.state}."
+        }
+      )
+    }
   }
 
   private suspend fun isDone(): Boolean {
@@ -232,7 +236,9 @@ abstract class AbstractInProcessPanelMatchIntegrationTest {
     modelProviderContext.scope.cancel()
 
     validateFinalState(dataProviderDaemon, modelProviderDaemon)
-    for (step in getSteps()) {
+    val steps = getSteps()
+    assertThat(steps.size).isEqualTo(exchangeWorkflow.stepsCount)
+    for (step in steps) {
       assertWithMessage("Step ${step.stepIndex}")
         .that(step.state)
         .isEqualTo(ExchangeStep.State.SUCCEEDED)
