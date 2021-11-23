@@ -14,7 +14,7 @@
 
 package org.wfanet.panelmatch.integration
 
-import com.google.common.truth.Truth
+import com.google.common.truth.Truth.assertThat
 import com.google.protobuf.ByteString
 import io.grpc.StatusException
 import java.nio.file.Path
@@ -231,7 +231,7 @@ abstract class AbstractInProcessPanelMatchIntegrationTest {
 
     validateFinalState(dataProviderDaemon, modelProviderDaemon)
     for (step in getSteps()) {
-      Truth.assertThat(step.state).isEqualTo(ExchangeStep.State.SUCCEEDED)
+      assertThat(step.state).isEqualTo(ExchangeStep.State.SUCCEEDED)
     }
   }
 
