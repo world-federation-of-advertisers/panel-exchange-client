@@ -14,6 +14,7 @@
 
 package org.wfanet.panelmatch.integration
 
+import com.google.common.truth.Truth.assertThat
 import com.google.common.truth.Truth.assertWithMessage
 import com.google.protobuf.ByteString
 import io.grpc.StatusException
@@ -129,12 +130,27 @@ abstract class AbstractInProcessPanelMatchIntegrationTest {
 
   private suspend fun logStepStates() {
     val stepsList = exchangeWorkflow.stepsList
+    val steps = getSteps()
+
     logger.info(
-      getSteps().joinToString("\n") {
+      steps.joinToString("\n") {
         "ExchangeStep '${stepsList[it.stepIndex].stepId}' " +
-          "with index: ${it.stepIndex} is in state: ${it.state}."
+          "with index ${it.stepIndex} is in state: ${it.state}."
       }
     )
+
+    // Assert that we are not deadlocked:
+    val terminalStates = setOf(ExchangeStep.State.SUCCEEDED, ExchangeStep.State.FAILED)
+    if (steps.any { it.state !in terminalStates }) {
+      val readyStates =
+        setOf(
+          ExchangeStep.State.IN_PROGRESS,
+          ExchangeStep.State.READY,
+          ExchangeStep.State.READY_FOR_RETRY
+        )
+
+      assertThat(steps.any { it.state in readyStates }).isTrue()
+    }
   }
 
   private suspend fun isDone(): Boolean {
@@ -143,13 +159,14 @@ abstract class AbstractInProcessPanelMatchIntegrationTest {
       name = exchangeKey.toName()
       modelProvider = ModelProviderKey(modelProviderId).toName()
     }
-    try {
+
+    return try {
       val exchange = exchangesClient.getExchange(request)
       logStepStates()
       logger.info("Exchange is in state: ${exchange.state}.")
-      return exchange.state == Exchange.State.SUCCEEDED
+      exchange.state in setOf(Exchange.State.SUCCEEDED, Exchange.State.FAILED)
     } catch (e: StatusException) {
-      return false
+      false
     }
   }
 
@@ -232,7 +249,11 @@ abstract class AbstractInProcessPanelMatchIntegrationTest {
     modelProviderContext.scope.cancel()
 
     validateFinalState(dataProviderDaemon, modelProviderDaemon)
-    for (step in getSteps()) {
+
+    val steps = getSteps()
+    assertThat(steps.size == exchangeWorkflow.stepsCount)
+
+    for (step in steps) {
       assertWithMessage("Step ${step.stepIndex}")
         .that(step.state)
         .isEqualTo(ExchangeStep.State.SUCCEEDED)
