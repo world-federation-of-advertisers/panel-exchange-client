@@ -99,7 +99,7 @@ private class WriteFilesFn<T : Message>(
       try {
         storageClient.getBlob(blobKey)?.delete()
         storageClient.createBlob(blobKey, messageFlow)
-      } catch (e: Exception) { }
+      } catch (e: Exception) {}
     }
 
     context.output(blobKey)
