@@ -21,6 +21,8 @@ import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
 import org.wfanet.panelmatch.client.common.joinKeyAndIdOf
 import org.wfanet.panelmatch.client.exchangetasks.joinKeyAndIdCollection
+import org.wfanet.panelmatch.common.compression.CompressionParametersKt.brotliCompressionParameters
+import org.wfanet.panelmatch.common.compression.compressionParameters
 
 private val PLAINTEXT_JOIN_KEYS = joinKeyAndIdCollection {
   joinKeysAndIds +=
@@ -32,7 +34,9 @@ private val PLAINTEXT_JOIN_KEYS = joinKeyAndIdCollection {
 private val EDP_COMMUTATIVE_DETERMINISTIC_KEY = "some-key".toByteStringUtf8()
 private val EDP_IDENTIFIER_HASH_PEPPER = "edp-identifier-hash-pepper".toByteStringUtf8()
 private val EDP_HKDF_PEPPER = "edp-hkdf-pepper".toByteStringUtf8()
-private val EDP_EVENT_DATA_DICTIONARY = "some-dictionary".toByteStringUtf8()
+private val EDP_EVENT_DATA_DICTIONARY =
+  compressionParameters { brotli = brotliCompressionParameters { dictionary = ByteString.EMPTY } }
+    .toByteString()
 
 @RunWith(JUnit4::class)
 class FullWorkflowTest : AbstractInProcessPanelMatchIntegrationTest() {
@@ -43,7 +47,7 @@ class FullWorkflowTest : AbstractInProcessPanelMatchIntegrationTest() {
       "edp-identifier-hash-pepper" to EDP_IDENTIFIER_HASH_PEPPER,
       "edp-commutative-deterministic-key" to EDP_COMMUTATIVE_DETERMINISTIC_KEY,
       "edp-encrypted-event-data" to ByteString.EMPTY, // TODO(@efoxepstein): populate this
-      "edp-event-data-dictionary" to EDP_EVENT_DATA_DICTIONARY,
+      "edp-compression-parameters" to EDP_EVENT_DATA_DICTIONARY,
       "edp-hkdf-pepper" to EDP_HKDF_PEPPER,
       "edp-previous-single-blinded-join-keys" to ByteString.EMPTY,
     )
