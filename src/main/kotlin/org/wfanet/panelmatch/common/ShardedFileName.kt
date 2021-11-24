@@ -35,14 +35,19 @@ data class ShardedFileName(val spec: String) {
     get() = (0 until shardCount).asSequence().map(this::fileNameForShard)
 
   init {
-    val matchResult = requireNotNull(SPEC_REGEX.matchEntire(spec)) { "Invalid spec: $spec" }
-    val matches = matchResult.groupValues
-    check(!matches[2].startsWith("?") || matches[2].length == matches[3].length) {
-      "Unexpected number of question marks: $spec"
-    }
+    if (spec.isEmpty()) {
+      baseName = "base"
+      shardCount = 1
+    } else {
+      val matchResult = requireNotNull(SPEC_REGEX.matchEntire(spec)) { "Invalid spec: $spec" }
+      val matches = matchResult.groupValues
+      check(!matches[2].startsWith("?") || matches[2].length == matches[3].length) {
+        "Unexpected number of question marks: $spec"
+      }
 
-    baseName = matches[1]
-    shardCount = matches[3].toInt()
+      baseName = matches[1]
+      shardCount = matches[3].toInt()
+    }
   }
 
   fun fileNameForShard(i: Int): String {

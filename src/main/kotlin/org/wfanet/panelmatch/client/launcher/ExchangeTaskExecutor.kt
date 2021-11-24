@@ -127,7 +127,9 @@ class ExchangeTaskExecutor(
   private suspend fun writeDoneBlob(step: Step, privateStorage: StorageClient) {
     // TODO: write the state into the blob.
     //   This will prevent re-execution of tasks that failed.
-    privateStorage.createBlob("$DONE_TASKS_PATH/${step.stepId}", ByteString.EMPTY)
+    try {
+      privateStorage.createBlob("$DONE_TASKS_PATH/${step.stepId}", ByteString.EMPTY)
+    } catch (e: Exception) {}
   }
 
   companion object {

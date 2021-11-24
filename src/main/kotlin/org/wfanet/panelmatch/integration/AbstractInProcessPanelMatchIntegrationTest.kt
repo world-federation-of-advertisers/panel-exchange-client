@@ -137,7 +137,7 @@ abstract class AbstractInProcessPanelMatchIntegrationTest {
       .sortedBy { step -> step.stepIndex }
   }
 
-  private suspend fun logStepStates(steps: Iterable<ExchangeStep>) {
+  private fun logStepStates(steps: Iterable<ExchangeStep>) {
     val stepsList = exchangeWorkflow.stepsList
     logger.info(
       steps.joinToString("\n") {
