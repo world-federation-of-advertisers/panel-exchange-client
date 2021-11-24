@@ -321,7 +321,7 @@ steps {
 
   input_step {}
 
-  output_labels { key: "input" value: "edp-event-data-dictionary" }
+  output_labels { key: "input" value: "edp-compression-parameters" }
 }
 
 # EDP exports its event data dictionary.
@@ -331,8 +331,8 @@ steps {
 
   copy_to_shared_storage_step { copy_options { label_type: BLOB } }
 
-  input_labels { key: "event-data-dictionary" value: "edp-event-data-dictionary" }
-  output_labels { key: "event-data-dictionary" value: "event-data-dictionary" }
+  input_labels { key: "compression-parameters" value: "edp-compression-parameters" }
+  output_labels { key: "compression-parameters" value: "compression-parameters" }
 }
 
 # MP imports EDP's event data dictionary.
@@ -342,8 +342,8 @@ steps {
 
   copy_from_shared_storage_step { copy_options { label_type: BLOB } }
 
-  input_labels { key: "event-data-dictionary" value: "event-data-dictionary" }
-  output_labels { key: "event-data-dictionary" value: "mp-event-data-dictionary" }
+  input_labels { key: "compression-parameters" value: "compression-parameters" }
+  output_labels { key: "compression-parameters" value: "mp-compression-parameters" }
 }
 
 # EDP executes encrypted queries
@@ -400,7 +400,7 @@ steps {
 
   input_labels { key: "serialized-rlwe-private-key" value: "mp-serialized-rlwe-private-key" }
   input_labels { key: "serialized-rlwe-public-key" value: "mp-serialized-rlwe-public-key" }
-  input_labels { key: "event-data-dictionary" value: "mp-event-data-dictionary" }
+  input_labels { key: "compression-parameters" value: "mp-compression-parameters" }
   input_labels { key: "query-to-join-keys-map" value: "mp-query-to-join-keys-map" }
   input_labels { key: "encrypted-results" value: "mp-encrypted-query-results" }
   input_labels { key: "pepper" value: "mp-hkdf-pepper" }
