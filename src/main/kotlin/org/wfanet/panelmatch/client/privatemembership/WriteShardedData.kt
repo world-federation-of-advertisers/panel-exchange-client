@@ -96,8 +96,10 @@ private class WriteFilesFn<T : Message>(
     }
 
     runBlocking(Dispatchers.IO) {
-      storageClient.getBlob(blobKey)?.delete()
-      storageClient.createBlob(blobKey, messageFlow)
+      try {
+        storageClient.getBlob(blobKey)?.delete()
+        storageClient.createBlob(blobKey, messageFlow)
+      } catch (e: Exception) { }
     }
 
     context.output(blobKey)
