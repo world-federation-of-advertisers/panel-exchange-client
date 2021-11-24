@@ -395,6 +395,7 @@ steps {
 
   decrypt_private_membership_query_results_step {
     serialized_parameters: "\n\006\b\001\020\n\030\001\022#\n\020\201\300\270\377\377\377\377\377\377\001\377\377\377\377\377\003\022\003\201\300}\030\f \001(\b0\0028\004@\n"
+    decrypt_event_data_set_file_count: 1
   }
 
   input_labels { key: "serialized-rlwe-private-key" value: "mp-serialized-rlwe-private-key" }
