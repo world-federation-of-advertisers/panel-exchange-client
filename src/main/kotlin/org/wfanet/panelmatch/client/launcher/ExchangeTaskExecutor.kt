@@ -81,7 +81,7 @@ class ExchangeTaskExecutor(
         requireNotNull(step.outputLabelsMap[genericLabel]) {
           "Missing $genericLabel in outputLabels for step: $step"
         }
-      privateStorage.getBlob(blobKey)?.delete()
+      privateStorage.deleteBlob(blobKey)
       privateStorage.createBlob(blobKey, flow)
     }
   }
@@ -100,7 +100,7 @@ class ExchangeTaskExecutor(
       privateStorageSelector.getStorageClient(exchangeDateKey)
     if (!isAlreadyComplete(step, privateStorageClient)) {
       runStep(privateStorageClient)
-      writeDoneBlob(step, privateStorageClient)
+      writeDoneBlob(step, attemptKey, privateStorageClient)
     }
     // The Kingdom will be able to detect if it's handing out duplicate tasks because it will
     // attempt to transition an ExchangeStep from some terminal state to `SUCCEEDED`.
@@ -124,15 +124,28 @@ class ExchangeTaskExecutor(
     return privateStorage.getBlob("$DONE_TASKS_PATH/${step.stepId}") != null
   }
 
-  private suspend fun writeDoneBlob(step: Step, privateStorage: StorageClient) {
+  private suspend fun writeDoneBlob(
+    step: Step,
+    attemptKey: ExchangeStepAttemptKey,
+    privateStorage: StorageClient
+  ) {
     // TODO: write the state into the blob.
     //   This will prevent re-execution of tasks that failed.
-    try {
-      privateStorage.createBlob("$DONE_TASKS_PATH/${step.stepId}", ByteString.EMPTY)
-    } catch (e: Exception) {}
+    privateStorage.createBlob(
+      "$DONE_TASKS_PATH/${step.stepId}/${attemptKey.exchangeStepAttemptId}",
+      ByteString.EMPTY
+    )
   }
 
   companion object {
     private val logger by loggerFor()
+  }
+}
+
+private fun StorageClient.deleteBlob(blobKey: String) {
+  var blob = getBlob(blobKey)
+  while (blob != null) {
+    blob.delete()
+    blob = getBlob(blobKey)
   }
 }
