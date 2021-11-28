@@ -97,7 +97,6 @@ class FullWorkflowTest : AbstractInProcessPanelMatchIntegrationTest() {
   override val initialModelProviderInputs: Map<String, ByteString> =
     mapOf(
       "mp-plaintext-join-keys" to PLAINTEXT_JOIN_KEYS.toByteString(),
-      "decrypted-event-data" to ByteString.EMPTY,
     )
 
   override fun validateFinalState(

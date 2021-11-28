@@ -31,6 +31,7 @@ import org.apache.beam.sdk.values.POutput
 import org.apache.beam.sdk.values.PValue
 import org.apache.beam.sdk.values.TupleTag
 import org.wfanet.measurement.common.toByteString
+import org.wfanet.measurement.storage.StorageClient
 import org.wfanet.panelmatch.client.storage.StorageFactory
 import org.wfanet.panelmatch.common.ShardedFileName
 import org.wfanet.panelmatch.common.beam.keyBy
@@ -96,12 +97,18 @@ private class WriteFilesFn<T : Message>(
     }
 
     runBlocking(Dispatchers.IO) {
-      try {
-        storageClient.getBlob(blobKey)?.delete()
-        storageClient.createBlob(blobKey, messageFlow)
-      } catch (e: Exception) {}
+      storageClient.deleteBlob(blobKey)
+      storageClient.createBlob(blobKey, messageFlow)
     }
 
     context.output(blobKey)
+  }
+}
+
+private fun StorageClient.deleteBlob(blobKey: String) {
+  var blob = getBlob(blobKey)
+  while (blob != null) {
+    blob.delete()
+    blob = getBlob(blobKey)
   }
 }
