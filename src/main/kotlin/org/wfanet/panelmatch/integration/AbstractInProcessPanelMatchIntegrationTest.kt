@@ -245,6 +245,8 @@ abstract class AbstractInProcessPanelMatchIntegrationTest {
       modelProviderDaemon.writePrivateBlob(blobKey, value)
     }
 
+    logger.info("Shared Folder path: ${sharedFolder.root.absolutePath}")
+
     dataProviderDaemon.run()
     modelProviderDaemon.run()
 
