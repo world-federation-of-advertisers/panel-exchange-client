@@ -32,6 +32,7 @@ import org.wfanet.panelmatch.client.logger.TaskLog
 import org.wfanet.panelmatch.client.logger.addToTaskLog
 import org.wfanet.panelmatch.client.logger.getAndClearTaskLog
 import org.wfanet.panelmatch.client.storage.PrivateStorageSelector
+import org.wfanet.panelmatch.client.storage.createOrReplaceBlob
 import org.wfanet.panelmatch.common.Timeout
 import org.wfanet.panelmatch.common.loggerFor
 import org.wfanet.panelmatch.common.storage.createBlob
@@ -81,8 +82,7 @@ class ExchangeTaskExecutor(
         requireNotNull(step.outputLabelsMap[genericLabel]) {
           "Missing $genericLabel in outputLabels for step: $step"
         }
-      privateStorage.deleteBlob(blobKey)
-      privateStorage.createBlob(blobKey, flow)
+      privateStorage.createOrReplaceBlob(blobKey, flow)
     }
   }
 
@@ -139,13 +139,5 @@ class ExchangeTaskExecutor(
 
   companion object {
     private val logger by loggerFor()
-  }
-}
-
-private fun StorageClient.deleteBlob(blobKey: String) {
-  var blob = getBlob(blobKey)
-  while (blob != null) {
-    blob.delete()
-    blob = getBlob(blobKey)
   }
 }
