@@ -81,7 +81,12 @@ class ExchangeTaskExecutor(
         requireNotNull(step.outputLabelsMap[genericLabel]) {
           "Missing $genericLabel in outputLabels for step: $step"
         }
-      privateStorage.getBlob(blobKey)?.delete()
+      var blob = privateStorage.getBlob(blobKey)
+      while(blob != null) {
+        blob.delete()
+        blob = privateStorage.getBlob(blobKey)
+      }
+//      privateStorage.getBlob(blobKey)?.delete()
       privateStorage.createBlob(blobKey, flow)
     }
   }
@@ -131,10 +136,7 @@ class ExchangeTaskExecutor(
   ) {
     // TODO: write the state into the blob.
     //   This will prevent re-execution of tasks that failed.
-    privateStorage.createBlob(
-      "$DONE_TASKS_PATH/${step.stepId}/${attemptKey.exchangeStepAttemptId}",
-      ByteString.EMPTY
-    )
+    privateStorage.createBlob("$DONE_TASKS_PATH/${step.stepId}", ByteString.EMPTY)
   }
 
   companion object {
