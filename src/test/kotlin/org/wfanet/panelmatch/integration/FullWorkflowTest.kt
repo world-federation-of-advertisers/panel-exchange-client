@@ -103,7 +103,7 @@ class FullWorkflowTest : AbstractInProcessPanelMatchIntegrationTest() {
     dataProviderDaemon: ExchangeWorkflowDaemonForTest,
     modelProviderDaemon: ExchangeWorkflowDaemonForTest
   ) {
-    val blob = modelProviderDaemon.readPrivateBlob("results")
+    val blob = modelProviderDaemon.readPrivateBlob("decrypted-event-data")
     assertThat(blob).isNotNull()
     // TODO(@efoxepstein): add more assertions that `blob` contains the right value.
   }
