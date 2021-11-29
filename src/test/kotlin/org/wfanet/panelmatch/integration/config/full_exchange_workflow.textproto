@@ -287,7 +287,7 @@ steps {
   step_id: "export-encrypted-queries"
   party: MODEL_PROVIDER
 
-  copy_to_shared_storage_step { copy_options { label_type: BLOB } }
+  copy_to_shared_storage_step { copy_options { label_type: MANIFEST } }
 
   input_labels { key: "encrypted-queries" value: "mp-encrypted-queries" }
   output_labels { key: "encrypted-queries" value: "encrypted-queries" }
@@ -298,7 +298,7 @@ steps {
   step_id: "import-encrypted-queries"
   party: DATA_PROVIDER
 
-  copy_from_shared_storage_step { copy_options { label_type: BLOB } }
+  copy_from_shared_storage_step { copy_options { label_type: MANIFEST } }
 
   input_labels { key: "encrypted-queries" value: "encrypted-queries" }
   output_labels { key: "encrypted-queries" value: "edp-encrypted-queries" }
@@ -316,7 +316,7 @@ steps {
 
 # EDP provides dictionary for compressed event data as input.
 steps {
-  step_id: "input-event-data-dictionary"
+  step_id: "input-compression-parameters"
   party: DATA_PROVIDER
 
   input_step {}
@@ -326,7 +326,7 @@ steps {
 
 # EDP exports its event data dictionary.
 steps {
-  step_id: "export-event-data-dictionary"
+  step_id: "export-compression-parameters"
   party: DATA_PROVIDER
 
   copy_to_shared_storage_step { copy_options { label_type: BLOB } }
@@ -337,7 +337,7 @@ steps {
 
 # MP imports EDP's event data dictionary.
 steps {
-  step_id: "import-event-data-dictionary"
+  step_id: "import-compression-parameters"
   party: MODEL_PROVIDER
 
   copy_from_shared_storage_step { copy_options { label_type: BLOB } }
@@ -371,7 +371,7 @@ steps {
   step_id: "export-encrypted-query-results"
   party: DATA_PROVIDER
 
-  copy_to_shared_storage_step { copy_options { label_type: BLOB } }
+  copy_to_shared_storage_step { copy_options { label_type: MANIFEST } }
 
   input_labels { key: "encrypted-results" value: "edp-encrypted-query-results" }
   output_labels { key: "encrypted-results" value: "encrypted-query-results" }
@@ -382,7 +382,7 @@ steps {
   step_id: "import-encrypted-query-results"
   party: MODEL_PROVIDER
 
-  copy_from_shared_storage_step { copy_options { label_type: BLOB } }
+  copy_from_shared_storage_step { copy_options { label_type: MANIFEST } }
 
   input_labels { key: "encrypted-results" value: "encrypted-query-results" }
   output_labels { key: "encrypted-results" value: "mp-encrypted-query-results" }
@@ -406,5 +406,4 @@ steps {
   input_labels { key: "pepper" value: "mp-hkdf-pepper" }
 
   output_labels { key: "decrypted-event-data" value: "decrypted-event-data" }
-  output_labels { key: "results" value: "results" }
 }

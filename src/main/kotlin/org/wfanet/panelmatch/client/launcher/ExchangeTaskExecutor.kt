@@ -81,12 +81,7 @@ class ExchangeTaskExecutor(
         requireNotNull(step.outputLabelsMap[genericLabel]) {
           "Missing $genericLabel in outputLabels for step: $step"
         }
-      var blob = privateStorage.getBlob(blobKey)
-      while(blob != null) {
-        blob.delete()
-        blob = privateStorage.getBlob(blobKey)
-      }
-//      privateStorage.getBlob(blobKey)?.delete()
+      privateStorage.getBlob(blobKey)?.delete()
       privateStorage.createBlob(blobKey, flow)
     }
   }
