@@ -32,6 +32,7 @@ import org.wfanet.panelmatch.client.logger.TaskLog
 import org.wfanet.panelmatch.client.logger.addToTaskLog
 import org.wfanet.panelmatch.client.logger.getAndClearTaskLog
 import org.wfanet.panelmatch.client.storage.PrivateStorageSelector
+import org.wfanet.panelmatch.client.storage.createOrReplaceBlob
 import org.wfanet.panelmatch.common.Timeout
 import org.wfanet.panelmatch.common.loggerFor
 import org.wfanet.panelmatch.common.storage.createBlob

@@ -139,12 +139,15 @@ abstract class AbstractInProcessPanelMatchIntegrationTest {
 
   private fun logStepStates(steps: Iterable<ExchangeStep>) {
     val stepsList = exchangeWorkflow.stepsList
-    logger.info(
-      steps.filter { step -> step.state != ExchangeStep.State.SUCCEEDED }.joinToString("\n") {
-        "ExchangeStep '${stepsList[it.stepIndex].stepId}' " +
-          "with index ${it.stepIndex} is in state: ${it.state}."
-      }
-    )
+    val message = StringBuilder("ExchangeStep states:")
+    for ((state, stepsForState) in steps.groupBy { it.state }) {
+      val stepsString =
+        stepsForState.sortedBy { it.stepIndex }.joinToString(", ") {
+          "${stepsList[it.stepIndex].stepId}#${it.stepIndex}"
+        }
+      message.appendLine("  $state: $stepsString")
+    }
+    logger.info(message.toString())
   }
 
   private fun assertNotDeadlocked(steps: Iterable<ExchangeStep>) {
