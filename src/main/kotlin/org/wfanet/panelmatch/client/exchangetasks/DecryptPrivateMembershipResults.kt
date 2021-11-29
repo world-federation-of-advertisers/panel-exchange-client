@@ -33,15 +33,9 @@ suspend fun ApacheBeamContext.decryptPrivateMembershipResults(
   queryResultsDecryptor: QueryResultsDecryptor,
 ) {
   val encryptedQueryResults: PCollection<EncryptedQueryResult> =
-    readShardedPCollection("encrypted-results", encryptedQueryResult {}).map {
-      println("**************")
-      println(it)
-      it }
+    readShardedPCollection("encrypted-results", encryptedQueryResult {})
 
-  val queryAndJoinKeys = readShardedPCollection("query-to-join-keys-map", queryIdAndJoinKeys {}).map {
-    println("&&&&&&&&&&&&&&")
-    println(it)
-    it }
+  val queryAndJoinKeys = readShardedPCollection("query-to-join-keys-map", queryIdAndJoinKeys {})
 
   val hkdfPepper = readBlob("pepper")
   val publicKeyView = readBlobAsView("serialized-rlwe-public-key")
