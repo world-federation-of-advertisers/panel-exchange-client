@@ -100,7 +100,7 @@ class ExchangeTaskExecutor(
       privateStorageSelector.getStorageClient(exchangeDateKey)
     if (!isAlreadyComplete(step, privateStorageClient)) {
       runStep(privateStorageClient)
-      writeDoneBlob(step, attemptKey, privateStorageClient)
+      writeDoneBlob(step, privateStorageClient)
     }
     // The Kingdom will be able to detect if it's handing out duplicate tasks because it will
     // attempt to transition an ExchangeStep from some terminal state to `SUCCEEDED`.
@@ -124,11 +124,7 @@ class ExchangeTaskExecutor(
     return privateStorage.getBlob("$DONE_TASKS_PATH/${step.stepId}") != null
   }
 
-  private suspend fun writeDoneBlob(
-    step: Step,
-    attemptKey: ExchangeStepAttemptKey,
-    privateStorage: StorageClient
-  ) {
+  private suspend fun writeDoneBlob(step: Step, privateStorage: StorageClient) {
     // TODO: write the state into the blob.
     //   This will prevent re-execution of tasks that failed.
     privateStorage.createBlob("$DONE_TASKS_PATH/${step.stepId}", ByteString.EMPTY)
