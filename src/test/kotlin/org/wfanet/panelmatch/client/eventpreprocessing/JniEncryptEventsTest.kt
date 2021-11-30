@@ -39,9 +39,7 @@ class JniEncryptEventsTest {
           data = "event-data".toByteStringUtf8()
         }
     }
-    val eventPreprocessor = JniEventPreprocessor()
-
     // TODO(@efoxepstein): once we have a JNIed way to decrypt, this should check roundtrips.
-    eventPreprocessor.preprocess(request) // Does not throw
+    JniEventPreprocessor().preprocess(request)
   }
 }
