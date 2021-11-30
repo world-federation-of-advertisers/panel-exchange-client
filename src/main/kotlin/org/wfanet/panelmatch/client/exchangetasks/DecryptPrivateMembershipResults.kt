@@ -41,7 +41,7 @@ suspend fun ApacheBeamContext.decryptPrivateMembershipResults(
     readBlobAsPCollection("compression-parameters")
       .map("Parse as CompressionParameters") { CompressionParameters.parseFrom(it) }
       .toSingletonView()
-  
+
   val hkdfPepper = readBlob("pepper")
   val publicKeyView = readBlobAsView("serialized-rlwe-public-key")
 
