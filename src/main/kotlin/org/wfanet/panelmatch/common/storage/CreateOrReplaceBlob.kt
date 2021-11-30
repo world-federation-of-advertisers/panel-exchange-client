@@ -12,21 +12,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package org.wfanet.panelmatch.client.exchangetasks
+package org.wfanet.panelmatch.common.storage
 
 import com.google.protobuf.ByteString
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOf
 import org.wfanet.measurement.storage.StorageClient
+import org.wfanet.measurement.storage.StorageClient.Blob
 
-/** [ExchangeTask] that reads its own inputs and writes its own outputs. */
-abstract class CustomIOExchangeTask : ExchangeTask {
-  final override suspend fun execute(
-    input: Map<String, StorageClient.Blob>
-  ): Map<String, Flow<ByteString>> {
-    require(input.isEmpty())
-    execute()
-    return emptyMap()
-  }
+/** Deletes the blob for [blobKey] if it exists, then writes a new blob to [blobKey]. */
+suspend fun StorageClient.createOrReplaceBlob(blobKey: String, contents: Flow<ByteString>): Blob {
+  getBlob(blobKey)?.delete()
+  return createBlob(blobKey, contents)
+}
 
-  abstract suspend fun execute()
+/** Deletes the blob for [blobKey] if it exists, then writes a new blob to [blobKey]. */
+suspend fun StorageClient.createOrReplaceBlob(blobKey: String, contents: ByteString): Blob {
+  return createOrReplaceBlob(blobKey, flowOf(contents))
 }

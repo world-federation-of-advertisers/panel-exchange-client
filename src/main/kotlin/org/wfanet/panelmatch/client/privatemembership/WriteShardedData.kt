@@ -14,7 +14,7 @@
 
 package org.wfanet.panelmatch.client.privatemembership
 
-import com.google.protobuf.MessageLite
+import com.google.protobuf.Message
 import java.io.ByteArrayOutputStream
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.flow
@@ -34,9 +34,10 @@ import org.wfanet.measurement.common.toByteString
 import org.wfanet.panelmatch.client.storage.StorageFactory
 import org.wfanet.panelmatch.common.ShardedFileName
 import org.wfanet.panelmatch.common.beam.keyBy
+import org.wfanet.panelmatch.common.storage.createOrReplaceBlob
 
 /** Writes input messages into blobs. */
-class WriteShardedData<T : MessageLite>(
+class WriteShardedData<T : Message>(
   private val fileSpec: String,
   private val storageFactory: StorageFactory
 ) : PTransform<PCollection<T>, WriteShardedData.WriteResult>() {
@@ -62,9 +63,10 @@ class WriteShardedData<T : MessageLite>(
 
   override fun expand(input: PCollection<T>): WriteResult {
     val shardedFileName = ShardedFileName(fileSpec)
+    val shardCount = shardedFileName.shardCount
     val filesWritten =
       input
-        .keyBy("Key by Blob") { it.hashCode() % shardedFileName.shardCount }
+        .keyBy("Key by Blob") { it.hashCode() % shardCount }
         .apply("Group by Blob", GroupByKey.create())
         .apply("Write $fileSpec", ParDo.of(WriteFilesFn(fileSpec, storageFactory)))
 
@@ -72,19 +74,20 @@ class WriteShardedData<T : MessageLite>(
   }
 }
 
-private class WriteFilesFn<T : MessageLite>(
+private class WriteFilesFn<T : Message>(
   private val fileSpec: String,
   private val storageFactory: StorageFactory
-) : DoFn<KV<Int, Iterable<T>>, String>() {
+) : DoFn<KV<Int, Iterable<@JvmWildcard T>>, String>() {
 
   @ProcessElement
   fun processElement(context: ProcessContext) {
-    val blobKey = ShardedFileName(fileSpec).fileNameForShard(context.element().key)
+    val kv = context.element()
+    val blobKey = ShardedFileName(fileSpec).fileNameForShard(kv.key)
     val storageClient = storageFactory.build()
 
     val outputStream = ByteArrayOutputStream()
     val messageFlow = flow {
-      for (message in context.element().value) {
+      for (message in kv.value) {
         @Suppress("BlockingMethodInNonBlockingContext") // This is in-memory.
         message.writeDelimitedTo(outputStream)
 
@@ -93,9 +96,8 @@ private class WriteFilesFn<T : MessageLite>(
       }
     }
 
-    runBlocking(Dispatchers.IO) {
-      storageClient.getBlob(blobKey)?.delete()
-      storageClient.createBlob(blobKey, messageFlow)
-    }
+    runBlocking(Dispatchers.IO) { storageClient.createOrReplaceBlob(blobKey, messageFlow) }
+
+    context.output(blobKey)
   }
 }

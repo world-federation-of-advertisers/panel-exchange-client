@@ -15,6 +15,7 @@
 package org.wfanet.panelmatch.client.exchangetasks
 
 import com.google.protobuf.ByteString
+import org.apache.beam.sdk.Pipeline
 import org.wfanet.measurement.api.v2alpha.ExchangeWorkflow.Step.StepCase
 import org.wfanet.measurement.common.throttler.Throttler
 import org.wfanet.measurement.common.toLocalDate
@@ -26,6 +27,7 @@ import org.wfanet.panelmatch.client.privatemembership.QueryEvaluator
 import org.wfanet.panelmatch.client.privatemembership.QueryResultsDecryptor
 import org.wfanet.panelmatch.client.storage.PrivateStorageSelector
 import org.wfanet.panelmatch.client.storage.SharedStorageSelector
+import org.wfanet.panelmatch.common.ShardedFileName
 import org.wfanet.panelmatch.common.certificates.CertificateManager
 import org.wfanet.panelmatch.common.crypto.DeterministicCommutativeCipher
 
@@ -39,6 +41,8 @@ abstract class ExchangeTaskMapperForJoinKeyExchange : ExchangeTaskMapper {
   abstract val sharedStorageSelector: SharedStorageSelector
   abstract val certificateManager: CertificateManager
   abstract val inputTaskThrottler: Throttler
+
+  abstract fun newPipeline(): Pipeline
 
   override suspend fun getExchangeTaskForStep(context: ExchangeContext): ExchangeTask {
     return context.getExchangeTask()
@@ -64,6 +68,7 @@ abstract class ExchangeTaskMapperForJoinKeyExchange : ExchangeTaskMapper {
       StepCase.COPY_FROM_SHARED_STORAGE_STEP -> getCopyFromSharedStorageTask()
       StepCase.COPY_TO_SHARED_STORAGE_STEP -> getCopyToSharedStorageTask()
       StepCase.COPY_FROM_PREVIOUS_EXCHANGE_STEP -> getCopyFromPreviousExchangeTask()
+      StepCase.GENERATE_LOOKUP_KEYS -> GenerateLookupKeysTask()
       else -> throw IllegalArgumentException("Unsupported step type: ${step.stepCase}")
     }
   }
@@ -103,64 +108,55 @@ abstract class ExchangeTaskMapperForJoinKeyExchange : ExchangeTaskMapper {
     check(step.stepCase == StepCase.BUILD_PRIVATE_MEMBERSHIP_QUERIES_STEP)
     val stepDetails = step.buildPrivateMembershipQueriesStep
     val privateMembershipCryptor = getPrivateMembershipCryptor(stepDetails.serializedParameters)
-    val outputs =
-      BuildPrivateMembershipQueriesTask.Outputs(
-        encryptedQueryBundlesFileCount = stepDetails.encryptedQueryBundleFileCount,
-        encryptedQueryBundlesFileName = step.outputLabelsMap.getValue("encrypted-queries"),
-        queryIdAndJoinKeysFileCount = stepDetails.queryIdAndPanelistKeyFileCount,
-        queryIdAndJoinKeysFileName = step.outputLabelsMap.getValue("query-decryption-keys"),
+
+    val outputManifests =
+      mapOf(
+        "encrypted-queries" to stepDetails.encryptedQueryBundleFileCount,
+        "query-to-join-keys-map" to stepDetails.queryIdAndPanelistKeyFileCount,
       )
-    return BuildPrivateMembershipQueriesTask(
-      storageFactory = privateStorageSelector.getStorageFactory(exchangeDateKey),
-      parameters =
-        CreateQueriesParameters(
-          numShards = stepDetails.numShards,
-          numBucketsPerShard = stepDetails.numBucketsPerShard,
-          maxQueriesPerShard = stepDetails.numQueriesPerShard,
-          padQueries = stepDetails.addPaddingQueries,
-        ),
-      privateMembershipCryptor = privateMembershipCryptor,
-      outputs = outputs,
-    )
+
+    val parameters =
+      CreateQueriesParameters(
+        numShards = stepDetails.numShards,
+        numBucketsPerShard = stepDetails.numBucketsPerShard,
+        maxQueriesPerShard = stepDetails.numQueriesPerShard,
+        padQueries = stepDetails.addPaddingQueries,
+      )
+
+    return apacheBeamTaskFor(outputManifests) {
+      buildPrivateMembershipQueries(parameters, privateMembershipCryptor)
+    }
   }
 
   private suspend fun ExchangeContext.getDecryptMembershipResultsTask(): ExchangeTask {
     check(step.stepCase == StepCase.DECRYPT_PRIVATE_MEMBERSHIP_QUERY_RESULTS_STEP)
     val stepDetails = step.decryptPrivateMembershipQueryResultsStep
-    val outputs =
-      DecryptPrivateMembershipResultsTask.Outputs(
-        keyedDecryptedEventDataSetFileCount = stepDetails.decryptEventDataSetFileCount,
-        keyedDecryptedEventDataSetFileName = step.outputLabelsMap.getValue("decrypted-event-data"),
-      )
-    return DecryptPrivateMembershipResultsTask(
-      storageFactory = privateStorageSelector.getStorageFactory(exchangeDateKey),
-      serializedParameters = stepDetails.serializedParameters,
-      queryResultsDecryptor = queryResultsDecryptor,
-      outputs = outputs,
-    )
+
+    val outputManifests = mapOf("decrypted-event-data" to stepDetails.decryptEventDataSetFileCount)
+
+    return apacheBeamTaskFor(outputManifests) {
+      decryptPrivateMembershipResults(stepDetails.serializedParameters, queryResultsDecryptor)
+    }
   }
 
   private suspend fun ExchangeContext.getExecutePrivateMembershipQueriesTask(): ExchangeTask {
     check(step.stepCase == StepCase.EXECUTE_PRIVATE_MEMBERSHIP_QUERIES_STEP)
     val stepDetails = step.executePrivateMembershipQueriesStep
-    val outputs =
-      ExecutePrivateMembershipQueriesTask.Outputs(
-        encryptedQueryResultFileCount = stepDetails.encryptedQueryResultFileCount,
-        encryptedQueryResultFileName = step.outputLabelsMap.getValue("encrypted-results")
-      )
+
     val parameters =
       EvaluateQueriesParameters(
         numShards = stepDetails.numShards,
         numBucketsPerShard = stepDetails.numBucketsPerShard,
         maxQueriesPerShard = stepDetails.maxQueriesPerShard
       )
+
     val queryResultsEvaluator = getQueryResultsEvaluator(stepDetails.serializedParameters)
-    return ExecutePrivateMembershipQueriesTask(
-      storageFactory = privateStorageSelector.getStorageFactory(exchangeDateKey),
-      evaluateQueriesParameters = parameters,
-      queryEvaluator = queryResultsEvaluator,
-      outputs = outputs
-    )
+
+    val outputManifests = mapOf("encrypted-results" to stepDetails.encryptedQueryResultFileCount)
+
+    return apacheBeamTaskFor(outputManifests) {
+      executePrivateMembershipQueries(parameters, queryResultsEvaluator)
+    }
   }
 
   private suspend fun ExchangeContext.getCopyFromSharedStorageTask(): ExchangeTask {
@@ -208,6 +204,19 @@ abstract class ExchangeTaskMapperForJoinKeyExchange : ExchangeTaskMapper {
       workflow.repetitionSchedule,
       exchangeDateKey,
       previousBlobKey
+    )
+  }
+
+  private suspend fun ExchangeContext.apacheBeamTaskFor(
+    outputManifests: Map<String, Int>,
+    execute: suspend ApacheBeamContext.() -> Unit
+  ): ApacheBeamTask {
+    return ApacheBeamTask(
+      newPipeline(),
+      privateStorageSelector.getStorageFactory(exchangeDateKey),
+      step.inputLabelsMap,
+      outputManifests.mapValues { (k, v) -> ShardedFileName(step.outputLabelsMap.getValue(k), v) },
+      execute
     )
   }
 }
