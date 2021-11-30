@@ -27,7 +27,6 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
 import org.wfanet.panelmatch.client.eventpreprocessing.EncryptEventsDoFn
-import org.wfanet.panelmatch.client.eventpreprocessing.EventPreprocessor
 import org.wfanet.panelmatch.client.eventpreprocessing.HardCodedDeterministicCommutativeCipherKeyProvider
 import org.wfanet.panelmatch.client.eventpreprocessing.HardCodedHkdfPepperProvider
 import org.wfanet.panelmatch.client.eventpreprocessing.HardCodedIdentifierHashPepperProvider
