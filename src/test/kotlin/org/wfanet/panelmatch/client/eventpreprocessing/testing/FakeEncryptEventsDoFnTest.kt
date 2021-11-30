@@ -27,7 +27,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
 import org.wfanet.panelmatch.client.eventpreprocessing.EncryptEventsDoFn
-import org.wfanet.panelmatch.client.eventpreprocessing.EventPreprocessorFn
+import org.wfanet.panelmatch.client.eventpreprocessing.EventPreprocessor
 import org.wfanet.panelmatch.client.eventpreprocessing.HardCodedDeterministicCommutativeCipherKeyProvider
 import org.wfanet.panelmatch.client.eventpreprocessing.HardCodedHkdfPepperProvider
 import org.wfanet.panelmatch.client.eventpreprocessing.HardCodedIdentifierHashPepperProvider
@@ -59,7 +59,7 @@ class FakeEncryptEventsDoFnTest : BeamTestBase() {
 
     val doFn: DoFn<MutableList<KV<ByteString, ByteString>>, KV<Long, ByteString>> =
       EncryptEventsDoFn(
-        EventPreprocessorFn(FakeEventPreprocessor()),
+        FakeEventPreprocessor(),
         HardCodedIdentifierHashPepperProvider(IDENTIFIER_HASH_PEPPER.toByteStringUtf8()),
         HardCodedHkdfPepperProvider(HKDF_HASH_PEPPER.toByteStringUtf8()),
         HardCodedDeterministicCommutativeCipherKeyProvider(CRYPTO_KEY.toByteStringUtf8()),

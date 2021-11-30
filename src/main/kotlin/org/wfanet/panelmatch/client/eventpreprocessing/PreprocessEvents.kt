@@ -56,7 +56,7 @@ class PreprocessEvents(
         "Encrypt Batches",
         ParDo.of(
             EncryptEventsDoFn(
-              EventPreprocessorFn(eventPreprocessor),
+              eventPreprocessor,
               identifierHashPepperProvider,
               hkdfPepperProvider,
               cryptoKeyProvider,
