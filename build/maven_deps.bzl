@@ -19,23 +19,27 @@ Step 4 of configuring WORKSPACE: Maven.
 load("@wfa_common_jvm//build/maven:artifacts.bzl", "artifacts")
 load("@wfa_common_jvm//build:common_jvm_maven.bzl", "COMMON_JVM_MAVEN_OVERRIDE_TARGETS", "common_jvm_maven_artifacts")
 
-_BEAM_VERSION = "2.33.0"
+_BEAM_VERSION = "2.34.0"
 
 # TODO: this list can likely be minimized
 _ARTIFACTS = artifacts.dict_to_list({
     # Without this, we get java.lang.NoClassDefFoundError: com/google/api/gax/tracing/NoopApiTracer
-    "com.google.api:gax": "2.0.0",
-    "com.google.api:gax-grpc": "2.0.0",
-    "com.google.apis:google-api-services-bigquery": "v2-rev20210404-1.31.0",
-    "com.google.cloud:google-cloud-bigquery": "1.137.1",
-    "com.google.cloud:google-cloud-nio": "0.122.0",
-    "com.google.cloud:google-cloud-storage": "1.118.0",
-    "com.google.code.gson:gson": "2.8.6",
+    "com.google.api:gax": "2.7.0",
+    "com.google.api:gax-grpc": "2.7.0",
+    "com.google.cloud:google-cloud-bigquery": "2.4.1",
+    "com.google.cloud:google-cloud-bigquerystorage": "2.6.3",
+    "com.google.cloud:google-cloud-nio": "0.123.10",
+    "com.google.cloud:google-cloud-security-private-ca": "2.2.0",
+    "com.google.cloud:google-cloud-storage": "2.2.1",
+    "com.google.code.gson:gson": "2.8.9",
     "com.google.crypto.tink:tink": "1.6.0",
-    "com.google.guava:guava": "30.1.1-jre",
-    "com.google.http-client:google-http-client": "1.39.2",
-    "io.grpc:grpc-api": "1.37.0",
-    "joda-time:joda-time": "2.10.10",
+    "com.google.guava:guava": "31.0.1-jre",
+    "com.google.http-client:google-http-client": "1.40.1",
+    "io.grpc:grpc-api": "1.42.1",
+    "io.grpc:grpc-core": "1.42.1",
+    "io.grpc:grpc-netty": "1.42.1",
+    "io.grpc:grpc-netty-shaded": "1.42.1",
+    "joda-time:joda-time": "2.10.13",
     "org.apache.beam:beam-runners-direct-java": _BEAM_VERSION,
     "org.apache.beam:beam-runners-google-cloud-dataflow-java": _BEAM_VERSION,
     "org.apache.beam:beam-sdks-java-core": _BEAM_VERSION,
