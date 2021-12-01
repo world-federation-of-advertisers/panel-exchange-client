@@ -70,8 +70,7 @@ TEST(DecryptEventData, DecryptEventDataTest) {
       DecryptEventData(test_request);
   DecryptedEventDataSet expected_response;
   expected_response.mutable_query_id()->set_id(1);
-  Plaintext *expected_event_data = expected_response.add_decrypted_event_data();
-  expected_event_data->set_payload(plaintext);
+  expected_response.add_decrypted_event_data(plaintext);
   EXPECT_THAT(test_response, IsOkAndHolds(EqualsProto(expected_response)));
 
   std::string valid_serialized_request;

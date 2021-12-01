@@ -15,13 +15,11 @@
 package org.wfanet.panelmatch.client.eventpreprocessing
 
 import com.google.common.truth.Truth.assertThat
-import com.google.protobuf.ByteString
 import com.google.protobuf.kotlin.toByteStringUtf8
-import org.apache.beam.sdk.values.KV
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
-import org.wfanet.panelmatch.client.common.testing.eventsOf
+import org.wfanet.panelmatch.client.common.rawDatabaseEntryOf
 import org.wfanet.panelmatch.common.beam.testing.BeamTestBase
 import org.wfanet.panelmatch.common.beam.testing.assertThat
 import org.wfanet.panelmatch.common.compression.CompressionParametersKt.noCompression
@@ -40,7 +38,14 @@ class PreprocessEventsTest : BeamTestBase() {
 
   @Test
   fun hardCodedProviders() {
-    val events = eventsOf("A" to "B", "C" to "D")
+    val events =
+      pcollectionOf(
+        "Create Events",
+        listOf(
+          rawDatabaseEntryOf("A".toByteStringUtf8(), "B".toByteStringUtf8()),
+          rawDatabaseEntryOf("C".toByteStringUtf8(), "D".toByteStringUtf8()),
+        )
+      )
 
     val encryptedEvents =
       events.apply(
@@ -55,10 +60,9 @@ class PreprocessEventsTest : BeamTestBase() {
       )
 
     assertThat(encryptedEvents).satisfies {
-      val results: List<KV<Long, ByteString>> = it.toList()
-      assertThat(results).hasSize(2)
-      assertThat(results.map { kv -> kv.value })
-        .containsNoneOf("B".toByteStringUtf8(), "D".toByteStringUtf8())
+      val resultPayloads = it.map { result -> result.payload.toStringUtf8() }
+      assertThat(resultPayloads).hasSize(2)
+      assertThat(resultPayloads).containsNoneOf("B", "D")
       null
     }
   }

@@ -38,12 +38,12 @@ message DecryptEventDataRequest {
 // Response of DecryptEventDataRequest
 message DecryptedEventDataSet {
   QueryId query_id = 1;
-  repeated Plaintext decrypted_event_data = 2;
+  repeated bytes decrypted_event_data = 2;
 }
 
 message KeyedDecryptedEventDataSet {
   wfa.panelmatch.client.exchangetasks.JoinKey hashed_join_key = 1;
-  repeated Plaintext decrypted_event_data = 2;
+  repeated bytes decrypted_event_data = 2;
 }
 
 // Removes in one step both the private membership encryption as well as the

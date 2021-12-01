@@ -14,14 +14,16 @@
 
 package org.wfanet.panelmatch.client.eventpreprocessing
 
-import com.google.protobuf.ByteString
 import org.apache.beam.sdk.transforms.PTransform
 import org.apache.beam.sdk.transforms.ParDo
-import org.apache.beam.sdk.values.KV
 import org.apache.beam.sdk.values.PCollection
 import org.apache.beam.sdk.values.PCollectionView
 import org.wfanet.panelmatch.client.combinedEvents
+import org.wfanet.panelmatch.client.database.DatabaseEntry
+import org.wfanet.panelmatch.client.database.RawDatabaseEntry
 import org.wfanet.panelmatch.common.beam.groupByKey
+import org.wfanet.panelmatch.common.beam.kvOf
+import org.wfanet.panelmatch.common.beam.map
 import org.wfanet.panelmatch.common.beam.mapValues
 import org.wfanet.panelmatch.common.beam.parDo
 import org.wfanet.panelmatch.common.compression.CompressionParameters
@@ -43,12 +45,11 @@ class PreprocessEvents(
   private val cryptoKeyProvider: DeterministicCommutativeCipherKeyProvider,
   private val compressionParametersView: PCollectionView<CompressionParameters>,
   private val eventPreprocessor: EventPreprocessor
-) : PTransform<PCollection<KV<ByteString, ByteString>>, PCollection<KV<Long, ByteString>>>() {
+) : PTransform<PCollection<RawDatabaseEntry>, PCollection<DatabaseEntry>>() {
 
-  override fun expand(
-    events: PCollection<KV<ByteString, ByteString>>
-  ): PCollection<KV<Long, ByteString>> {
-    return events
+  override fun expand(input: PCollection<RawDatabaseEntry>): PCollection<DatabaseEntry> {
+    return input
+      .map { kvOf(it.key, it.value) }
       .groupByKey()
       .mapValues("Make CombinedEvents") { combinedEvents { serializedEvents += it }.toByteString() }
       .parDo(BatchingDoFn(maxByteSize, EventSize), name = "Batch by $maxByteSize bytes")

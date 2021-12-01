@@ -79,11 +79,6 @@ message DecryptedQueryResult {
   BucketContents query_result = 2;
 }
 
-// Generic message type holding an unencrypted query result
-message Plaintext {
-  bytes payload = 1;
-}
-
 message BucketContents {
   repeated bytes items = 1;
 }

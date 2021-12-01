@@ -14,21 +14,15 @@
 
 package org.wfanet.panelmatch.client.common.testing
 
-import com.google.protobuf.ByteString
 import com.google.protobuf.kotlin.toByteStringUtf8
-import org.apache.beam.sdk.values.KV
 import org.apache.beam.sdk.values.PCollection
-import org.wfanet.panelmatch.common.beam.byteStringKvCoder
-import org.wfanet.panelmatch.common.beam.kvOf
+import org.wfanet.panelmatch.client.common.rawDatabaseEntryOf
+import org.wfanet.panelmatch.client.database.RawDatabaseEntry
 import org.wfanet.panelmatch.common.beam.testing.BeamTestBase
 
-fun BeamTestBase.eventsOf(
-  vararg pairs: Pair<String, String>
-): PCollection<KV<ByteString, ByteString>> {
-  @Suppress("NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
+fun BeamTestBase.eventsOf(vararg pairs: Pair<String, String>): PCollection<RawDatabaseEntry> {
   return pcollectionOf(
     "Create Events",
-    pairs.map { kvOf(it.first.toByteStringUtf8(), it.second.toByteStringUtf8()) },
-    coder = byteStringKvCoder
+    pairs.map { rawDatabaseEntryOf(it.first.toByteStringUtf8(), it.second.toByteStringUtf8()) }
   )
 }

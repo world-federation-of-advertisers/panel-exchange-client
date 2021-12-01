@@ -21,17 +21,22 @@ import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
 import org.wfanet.panelmatch.client.common.queryIdOf
 import org.wfanet.panelmatch.client.privatemembership.DecryptEventDataRequest.EncryptedEventDataSet
-import org.wfanet.panelmatch.client.privatemembership.Plaintext
 import org.wfanet.panelmatch.client.privatemembership.decryptQueryResultsRequest
 import org.wfanet.panelmatch.client.privatemembership.decryptedEventDataSet
 
-private val PLAINTEXTS: List<Pair<Int, List<Plaintext>>> =
+private data class QueryAndPlaintexts(
+  val queryId: Int,
+  val joinKey: String,
+  val plaintexts: List<String>
+)
+
+private val QUERIES_AND_PLAINTEXTS: List<QueryAndPlaintexts> =
   listOf(
-    1 to listOf(plaintextOf("<some long data a>"), plaintextOf("<some long data b>")),
-    2 to listOf(plaintextOf("<some long data c>"), plaintextOf("<some long data d>")),
-    3 to listOf(plaintextOf("<some long data e>"))
+    QueryAndPlaintexts(1, "some-joinkey-1", listOf("<some-data-a>", "<some-data-b>")),
+    QueryAndPlaintexts(2, "some-joinkey-2", listOf("<some-data-c>", "<some-data-d>")),
+    QueryAndPlaintexts(3, "some-joinkey-3", listOf("<some-data-e>")),
   )
-private val JOINKEYS = listOf(1 to "some joinkey 1", 2 to "some joinkey 2", 3 to "some joinkey 3")
+
 private val HKDF_PEPPER = "some-pepper".toByteStringUtf8()
 private val SERIALIZED_PARAMETERS = "some-serialized-parameters".toByteStringUtf8()
 
@@ -46,13 +51,13 @@ class PlaintextQueryResultsDecryptorTest {
     val keys = privateMembershipCryptor.generateKeys()
 
     val encryptedEventData: List<EncryptedEventDataSet> =
-      (PLAINTEXTS zip JOINKEYS).map {
+      QUERIES_AND_PLAINTEXTS.map {
         privateMembershipCryptorHelper.makeEncryptedEventDataSet(
           decryptedEventDataSet {
-            queryId = queryIdOf(it.first.first)
-            decryptedEventData += it.first.second
+            queryId = queryIdOf(it.queryId)
+            decryptedEventData += it.plaintexts.map(String::toByteStringUtf8)
           },
-          queryIdOf(it.second.first) to joinKeyOf(it.second.second)
+          queryIdOf(it.queryId) to joinKeyOf(it.joinKey)
         )
       }
     val encryptedQueryResults =
@@ -60,29 +65,30 @@ class PlaintextQueryResultsDecryptorTest {
 
     val decryptedQueries =
       encryptedQueryResults
-        .zip(JOINKEYS)
-        .map { (encryptedQueryResult, joinkeyList) ->
+        .map { encryptedQueryResult ->
+          val joinKey =
+            QUERIES_AND_PLAINTEXTS.single { it.queryId == encryptedQueryResult.queryId.id }.joinKey
           val request = decryptQueryResultsRequest {
             serializedParameters = SERIALIZED_PARAMETERS
             serializedPublicKey = keys.serializedPublicKey
             serializedPrivateKey = keys.serializedPrivateKey
-            lookupKey = joinKeyOf(joinkeyList.second)
+            lookupKey = joinKeyOf(joinKey)
             this.encryptedQueryResults += encryptedQueryResult
             hkdfPepper = HKDF_PEPPER
           }
           queryResultsDecryptor.decryptQueryResults(request).eventDataSetsList.map { eventSet ->
-            eventSet.decryptedEventDataList.map { Pair(eventSet.queryId, it) }
+            eventSet.decryptedEventDataList.map { eventSet.queryId to it.toStringUtf8() }
           }
         }
         .flatten()
         .flatten()
     assertThat(decryptedQueries)
       .containsExactly(
-        Pair(queryIdOf(1), plaintextOf("<some long data a>")),
-        Pair(queryIdOf(1), plaintextOf("<some long data b>")),
-        Pair(queryIdOf(2), plaintextOf("<some long data c>")),
-        Pair(queryIdOf(2), plaintextOf("<some long data d>")),
-        Pair(queryIdOf(3), plaintextOf("<some long data e>")),
+        queryIdOf(1) to "<some-data-a>",
+        queryIdOf(1) to "<some-data-b>",
+        queryIdOf(2) to "<some-data-c>",
+        queryIdOf(2) to "<some-data-d>",
+        queryIdOf(3) to "<some-data-e>",
       )
   }
 }

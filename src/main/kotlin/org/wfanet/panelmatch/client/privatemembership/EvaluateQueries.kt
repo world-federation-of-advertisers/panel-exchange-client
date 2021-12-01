@@ -29,6 +29,7 @@ import org.apache.beam.sdk.values.PCollectionView
 import org.apache.beam.sdk.values.TupleTag
 import org.wfanet.panelmatch.client.common.bucketOf
 import org.wfanet.panelmatch.client.common.databaseShardOf
+import org.wfanet.panelmatch.client.database.DatabaseEntry
 import org.wfanet.panelmatch.common.beam.keyBy
 import org.wfanet.panelmatch.common.beam.kvOf
 import org.wfanet.panelmatch.common.beam.map
@@ -60,8 +61,8 @@ private class EvaluateQueries(
     val bucketing = Bucketing(parameters.numShards, parameters.numBucketsPerShard)
     val databaseByShard: PCollection<KV<ShardId, Bucket>> =
       database.map("Form Database Buckets by Shard") { databaseEntry ->
-        val (shardId, bucketId) = bucketing.apply(databaseEntry.databaseKey.id)
-        kvOf(shardId, bucketOf(bucketId, listOf(databaseEntry.plaintext.payload)))
+        val (shardId, bucketId) = bucketing.apply(databaseEntry.id)
+        kvOf(shardId, bucketOf(bucketId, listOf(databaseEntry.payload)))
       }
 
     val queryBundlesByShard = queryBundles.keyBy("Key Queries by Shard") { it.shardId }

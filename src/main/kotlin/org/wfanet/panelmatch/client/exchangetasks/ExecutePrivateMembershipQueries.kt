@@ -15,10 +15,10 @@
 package org.wfanet.panelmatch.client.exchangetasks
 
 import org.apache.beam.sdk.values.PCollection
+import org.wfanet.panelmatch.client.database.databaseEntry
 import org.wfanet.panelmatch.client.privatemembership.EncryptedQueryResult
 import org.wfanet.panelmatch.client.privatemembership.EvaluateQueriesParameters
 import org.wfanet.panelmatch.client.privatemembership.QueryEvaluator
-import org.wfanet.panelmatch.client.privatemembership.databaseEntry
 import org.wfanet.panelmatch.client.privatemembership.encryptedQueryBundle
 import org.wfanet.panelmatch.client.privatemembership.evaluateQueries
 

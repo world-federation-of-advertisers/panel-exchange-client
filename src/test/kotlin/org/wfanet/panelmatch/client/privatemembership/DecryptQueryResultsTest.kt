@@ -78,8 +78,7 @@ class DecryptQueryResultsTest : BeamTestBase() {
     assertThat(results).satisfies { keyedDecryptedEventDataSets ->
       val deserializedResults: List<Pair<String, List<ByteString>>> =
         keyedDecryptedEventDataSets.map {
-          it.hashedJoinKey.key.toStringUtf8() to
-            it.decryptedEventDataList.map { plaintext -> plaintext.payload }
+          it.hashedJoinKey.key.toStringUtf8() to it.decryptedEventDataList
         }
 
       assertThat(deserializedResults)
@@ -121,7 +120,7 @@ class DecryptQueryResultsTest : BeamTestBase() {
   }
 }
 
-object TestQueryResultsDecryptor : QueryResultsDecryptor {
+private object TestQueryResultsDecryptor : QueryResultsDecryptor {
   override fun decryptQueryResults(
     request: DecryptQueryResultsRequest
   ): DecryptQueryResultsResponse {
@@ -131,19 +130,19 @@ object TestQueryResultsDecryptor : QueryResultsDecryptor {
       // To ensure the request parameters are correct, we encode them in the first eventDataSet.
       eventDataSets +=
         decryptedEventDataSet {
-          decryptedEventData += plaintext { payload = request.lookupKey.key }
-          decryptedEventData += plaintext { payload = request.hkdfPepper }
-          decryptedEventData += plaintext { payload = request.serializedParameters }
-          decryptedEventData += plaintext { payload = request.compressionParameters.toByteString() }
-          decryptedEventData += plaintext { payload = request.serializedPublicKey }
-          decryptedEventData += plaintext { payload = request.serializedPrivateKey }
+          decryptedEventData += request.lookupKey.key
+          decryptedEventData += request.hkdfPepper
+          decryptedEventData += request.serializedParameters
+          decryptedEventData += request.compressionParameters.toByteString()
+          decryptedEventData += request.serializedPublicKey
+          decryptedEventData += request.serializedPrivateKey
         }
 
       // To ensure the request encryptedQueryResults are correct, we encode them in an eventDataSet.
       eventDataSets +=
         decryptedEventDataSet {
           for (result in request.encryptedQueryResultsList) {
-            decryptedEventData += plaintext { payload = result.serializedEncryptedQueryResult }
+            decryptedEventData += result.serializedEncryptedQueryResult
           }
         }
     }

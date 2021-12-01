@@ -103,9 +103,8 @@ absl::Status Decompress(const CompressionParameters& compression_parameters,
   ASSIGN_OR_RETURN(std::unique_ptr<Compressor> compressor,
                    MakeCompressor(compression_parameters));
   for (auto& data_set : *response.mutable_event_data_sets()) {
-    for (Plaintext& plaintext : *data_set.mutable_decrypted_event_data()) {
-      ASSIGN_OR_RETURN(*plaintext.mutable_payload(),
-                       compressor->Decompress(plaintext.payload()));
+    for (std::string& plaintext : *data_set.mutable_decrypted_event_data()) {
+      ASSIGN_OR_RETURN(plaintext, compressor->Decompress(plaintext));
     }
   }
   return absl::OkStatus();

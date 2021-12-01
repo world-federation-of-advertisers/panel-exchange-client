@@ -20,7 +20,6 @@ import org.wfanet.panelmatch.client.common.bucketIdOf
 import org.wfanet.panelmatch.client.common.decryptedQueryOf
 import org.wfanet.panelmatch.client.common.joinKeyIdentifierOf
 import org.wfanet.panelmatch.client.common.joinKeyOf
-import org.wfanet.panelmatch.client.common.plaintextOf
 import org.wfanet.panelmatch.client.common.queryIdOf
 import org.wfanet.panelmatch.client.common.shardIdOf
 import org.wfanet.panelmatch.client.common.unencryptedQueryOf
@@ -30,7 +29,6 @@ import org.wfanet.panelmatch.client.exchangetasks.joinKey
 import org.wfanet.panelmatch.client.privatemembership.DecryptEventDataRequest.EncryptedEventDataSet
 import org.wfanet.panelmatch.client.privatemembership.DecryptEventDataRequestKt.encryptedEventDataSet
 import org.wfanet.panelmatch.client.privatemembership.DecryptedQueryResult
-import org.wfanet.panelmatch.client.privatemembership.Plaintext
 import org.wfanet.panelmatch.client.privatemembership.QueryId
 import org.wfanet.panelmatch.client.privatemembership.QueryIdAndJoinKeys
 import org.wfanet.panelmatch.client.privatemembership.ShardId
@@ -59,8 +57,6 @@ fun encryptedEventDataSetOf(ciphertexts: List<String>, query: Int): EncryptedEve
 /** Constructs a [DecryptedQueryResult]. */
 fun decryptedQueryOf(query: Int, queryResult: ByteString): DecryptedQueryResult =
   decryptedQueryOf(queryIdOf(query), listOf(queryResult))
-
-fun plaintextOf(payload: String): Plaintext = plaintextOf(payload.toByteStringUtf8())
 
 fun joinKeyOf(key: String): JoinKey = joinKeyOf(key.toByteStringUtf8())
 

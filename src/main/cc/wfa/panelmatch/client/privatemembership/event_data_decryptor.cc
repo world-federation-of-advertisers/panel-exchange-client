@@ -53,8 +53,7 @@ absl::StatusOr<DecryptedEventDataSet> DecryptEventData(
         encrypted_event, SecretDataFromStringView(request.lookup_key().key()),
         SecretDataFromStringView(request.hkdf_pepper()));
     if (plaintext.ok()) {
-      Plaintext* decrypted_event_data = response.add_decrypted_event_data();
-      decrypted_event_data->set_payload(*std::move(plaintext));
+      response.add_decrypted_event_data(*std::move(plaintext));
     }
   }
   return response;

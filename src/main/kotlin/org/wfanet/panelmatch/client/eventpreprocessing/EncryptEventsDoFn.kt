@@ -23,8 +23,9 @@ import org.apache.beam.sdk.values.KV
 import org.apache.beam.sdk.values.PCollectionView
 import org.wfanet.panelmatch.client.PreprocessEventsRequestKt.unprocessedEvent
 import org.wfanet.panelmatch.client.PreprocessEventsResponse
+import org.wfanet.panelmatch.client.common.databaseEntryOf
+import org.wfanet.panelmatch.client.database.DatabaseEntry
 import org.wfanet.panelmatch.client.preprocessEventsRequest
-import org.wfanet.panelmatch.common.beam.kvOf
 import org.wfanet.panelmatch.common.compression.CompressionParameters
 
 /**
@@ -38,7 +39,7 @@ class EncryptEventsDoFn(
   private val hkdfPepperProvider: HkdfPepperProvider,
   private val deterministicCommutativeCipherKeyProvider: DeterministicCommutativeCipherKeyProvider,
   private val compressionParametersView: PCollectionView<CompressionParameters>
-) : DoFn<MutableList<KV<ByteString, ByteString>>, KV<Long, ByteString>>() {
+) : DoFn<MutableList<KV<ByteString, ByteString>>, DatabaseEntry>() {
   private val jniCallTimeDistribution =
     Metrics.distribution(BatchingDoFn::class.java, "jni-call-time-micros")
 
@@ -64,7 +65,7 @@ class EncryptEventsDoFn(
     jniCallTimeDistribution.update(stopWatch.elapsed(TimeUnit.MICROSECONDS))
 
     for (processedEvent in response.processedEventsList) {
-      c.output(kvOf(processedEvent.encryptedId, processedEvent.encryptedData))
+      c.output(databaseEntryOf(processedEvent.encryptedId, processedEvent.encryptedData))
     }
   }
 }

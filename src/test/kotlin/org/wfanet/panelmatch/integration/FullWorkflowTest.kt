@@ -24,13 +24,11 @@ import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
 import org.wfanet.panelmatch.client.PreprocessEventsRequestKt.unprocessedEvent
 import org.wfanet.panelmatch.client.common.databaseEntryOf
-import org.wfanet.panelmatch.client.common.databaseKeyOf
 import org.wfanet.panelmatch.client.common.joinKeyAndIdOf
-import org.wfanet.panelmatch.client.common.plaintextOf
+import org.wfanet.panelmatch.client.database.DatabaseEntry
 import org.wfanet.panelmatch.client.eventpreprocessing.JniEventPreprocessor
 import org.wfanet.panelmatch.client.exchangetasks.joinKeyAndIdCollection
 import org.wfanet.panelmatch.client.preprocessEventsRequest
-import org.wfanet.panelmatch.client.privatemembership.DatabaseEntry
 import org.wfanet.panelmatch.common.compression.CompressionParametersKt.brotliCompressionParameters
 import org.wfanet.panelmatch.common.compression.compressionParameters
 
@@ -63,10 +61,7 @@ private fun makeDatabaseEntry(): DatabaseEntry {
   }
   val response = JniEventPreprocessor().preprocess(request)
   val processedEvent = response.processedEventsList.single()
-  return databaseEntryOf(
-    databaseKeyOf(processedEvent.encryptedId),
-    plaintextOf(processedEvent.encryptedData)
-  )
+  return databaseEntryOf(processedEvent.encryptedId, processedEvent.encryptedData)
 }
 
 private val EDP_DATABASE_ENTRIES = (0 until 100).map { makeDatabaseEntry() }

@@ -21,7 +21,6 @@ import org.wfanet.panelmatch.client.privatemembership.EncryptedEventData
 import org.wfanet.panelmatch.client.privatemembership.QueryResultsDecryptor
 import org.wfanet.panelmatch.client.privatemembership.decryptQueryResultsResponse
 import org.wfanet.panelmatch.client.privatemembership.decryptedEventDataSet
-import org.wfanet.panelmatch.client.privatemembership.plaintext
 import org.wfanet.panelmatch.common.crypto.SymmetricCryptor
 import org.wfanet.panelmatch.common.crypto.testing.FakeSymmetricCryptor
 
@@ -56,10 +55,7 @@ class PlaintextQueryResultsDecryptor(
             queryId = decryptedResult.queryId
             decryptedEventData +=
               eventData.ciphertextsList.map { ciphertext ->
-                plaintext {
-                  payload =
-                    symmetricCryptor.decrypt(request.lookupKey.key, listOf(ciphertext)).single()
-                }
+                symmetricCryptor.decrypt(request.lookupKey.key, listOf(ciphertext)).single()
               }
           }
         }

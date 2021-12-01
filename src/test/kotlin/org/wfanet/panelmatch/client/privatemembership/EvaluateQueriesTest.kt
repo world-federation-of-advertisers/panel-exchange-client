@@ -25,10 +25,9 @@ import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
 import org.wfanet.panelmatch.client.common.bucketIdOf
 import org.wfanet.panelmatch.client.common.databaseEntryOf
-import org.wfanet.panelmatch.client.common.databaseKeyOf
-import org.wfanet.panelmatch.client.common.plaintextOf
 import org.wfanet.panelmatch.client.common.queryIdOf
 import org.wfanet.panelmatch.client.common.shardIdOf
+import org.wfanet.panelmatch.client.database.DatabaseEntry
 import org.wfanet.panelmatch.client.privatemembership.testing.PlaintextQueryEvaluator
 import org.wfanet.panelmatch.client.privatemembership.testing.PlaintextQueryEvaluatorTestHelper
 import org.wfanet.panelmatch.common.beam.testing.BeamTestBase
@@ -156,9 +155,7 @@ class EvaluateQueriesTest : BeamTestBase() {
   private fun databaseOf(vararg entries: Pair<Long, String>): PCollection<DatabaseEntry> {
     return pcollectionOf(
       "Create Database",
-      entries.map {
-        databaseEntryOf(databaseKeyOf(it.first), plaintextOf(it.second.toByteStringUtf8()))
-      }
+      entries.map { databaseEntryOf(it.first, it.second.toByteStringUtf8()) }
     )
   }
 }

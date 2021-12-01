@@ -125,21 +125,15 @@ TEST(DecryptQueryResults, DecryptQueryResultsTest) {
                        DecryptQueryResults(test_request));
 
   DecryptedEventDataSet expected_decrypted_event_data1;
-  Plaintext* expected_plaintext1 =
-      expected_decrypted_event_data1.add_decrypted_event_data();
-  expected_plaintext1->set_payload(plaintext1);
+  expected_decrypted_event_data1.add_decrypted_event_data(plaintext1);
   expected_decrypted_event_data1.mutable_query_id()->set_id(0);
 
   DecryptedEventDataSet expected_decrypted_event_data2;
-  Plaintext* expected_plaintext2 =
-      expected_decrypted_event_data2.add_decrypted_event_data();
-  expected_plaintext2->set_payload(plaintext2);
+  expected_decrypted_event_data2.add_decrypted_event_data(plaintext2);
   expected_decrypted_event_data2.mutable_query_id()->set_id(1);
 
   DecryptedEventDataSet expected_decrypted_event_data3;
-  Plaintext* expected_plaintext3 =
-      expected_decrypted_event_data3.add_decrypted_event_data();
-  expected_plaintext3->set_payload(plaintext3);
+  expected_decrypted_event_data3.add_decrypted_event_data(plaintext3);
   expected_decrypted_event_data3.mutable_query_id()->set_id(2);
 
   EXPECT_THAT(
@@ -224,18 +218,12 @@ TEST(DecryptQueryResults, ParseCiphertextsWithDifferentKeys) {
                        DecryptQueryResults(test_request));
 
   DecryptedEventDataSet expected_decrypted_event_data1;
-  Plaintext* expected_plaintext1 =
-      expected_decrypted_event_data1.add_decrypted_event_data();
-  expected_plaintext1->set_payload(plaintext1);
-  Plaintext* expected_plaintext2 =
-      expected_decrypted_event_data1.add_decrypted_event_data();
-  expected_plaintext2->set_payload(plaintext3);
+  expected_decrypted_event_data1.add_decrypted_event_data(plaintext1);
+  expected_decrypted_event_data1.add_decrypted_event_data(plaintext3);
   expected_decrypted_event_data1.mutable_query_id()->set_id(0);
 
   DecryptedEventDataSet expected_decrypted_event_data2;
-  Plaintext* expected_plaintext3 =
-      expected_decrypted_event_data2.add_decrypted_event_data();
-  expected_plaintext3->set_payload(plaintext5);
+  expected_decrypted_event_data2.add_decrypted_event_data(plaintext5);
   expected_decrypted_event_data2.mutable_query_id()->set_id(2);
 
   DecryptedEventDataSet expected_decrypted_event_data3;
