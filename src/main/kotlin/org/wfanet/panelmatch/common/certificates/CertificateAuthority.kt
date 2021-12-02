@@ -27,6 +27,8 @@ interface CertificateAuthority {
    * TODO(@efoxepstein): use SigningKeyHandle instead of a PrivateKey directly.
    */
   suspend fun generateX509CertificateAndPrivateKey(
-    rootPublicKey: PublicKey
+    rootPublicKey: PublicKey, projectId : String, caLocation: String,
+    poolId : String, certificateAuthorityName : String, certificateName : String,
+    commonName : String, orgName : String, domainName : String
   ): Pair<X509Certificate, PrivateKey>
 }

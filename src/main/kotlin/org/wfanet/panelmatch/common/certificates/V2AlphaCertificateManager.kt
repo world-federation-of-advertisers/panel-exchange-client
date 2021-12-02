@@ -90,7 +90,7 @@ class V2AlphaCertificateManager(
     }
 
     val rootKey = getRootCertificate(localName).publicKey
-    val (x509, privateKey) = certificateAuthority.generateX509CertificateAndPrivateKey(rootKey)
+    val (x509, privateKey) = certificateAuthority.generateX509CertificateAndPrivateKey(rootKey,"test","test", "test","test", "test", "test", "test", "test")
 
     val request = createCertificateRequest {
       parent = localName

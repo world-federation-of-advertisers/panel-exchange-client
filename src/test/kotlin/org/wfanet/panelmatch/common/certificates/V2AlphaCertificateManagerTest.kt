@@ -202,7 +202,9 @@ class V2AlphaCertificateManagerTest {
 
 private object TestCertificateAuthority : CertificateAuthority {
   override suspend fun generateX509CertificateAndPrivateKey(
-    rootPublicKey: PublicKey
+    rootPublicKey: PublicKey, projectId : String, caLocation: String,
+    poolId : String, certificateAuthorityName : String, certificateName : String
+    commonName : String, orgName : String, domainName : String
   ): Pair<X509Certificate, PrivateKey> {
     return CERTIFICATE to PRIVATE_KEY
   }
