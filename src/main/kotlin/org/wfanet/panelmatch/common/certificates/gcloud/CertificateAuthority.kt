@@ -14,96 +14,100 @@
 
 package org.wfanet.panelmatch.common.certificates.gcloud
 
-//import com.google.api.core.ApiFuture;
-import com.google.cloud.security.privateca.v1.CaPoolName;
-import com.google.cloud.security.privateca.v1.Certificate;
-import com.google.cloud.security.privateca.v1.CertificateAuthorityServiceClient;
-import com.google.cloud.security.privateca.v1.CertificateConfig;
-import com.google.cloud.security.privateca.v1.CertificateConfig.SubjectConfig;
-import com.google.cloud.security.privateca.v1.CreateCertificateRequest;
-import com.google.cloud.security.privateca.v1.KeyUsage;
-import com.google.cloud.security.privateca.v1.KeyUsage.ExtendedKeyUsageOptions;
-import com.google.cloud.security.privateca.v1.KeyUsage.KeyUsageOptions;
-import com.google.cloud.security.privateca.v1.PublicKey;
-import com.google.cloud.security.privateca.v1.PublicKey.KeyFormat;
-import com.google.cloud.security.privateca.v1.Subject;
-import com.google.cloud.security.privateca.v1.SubjectAltNames;
-import com.google.cloud.security.privateca.v1.X509Parameters;
-import com.google.cloud.security.privateca.v1.X509Parameters.CaOptions;
+import com.google.cloud.security.privateca.v1.CaPoolName
+import com.google.cloud.security.privateca.v1.Certificate
+import com.google.cloud.security.privateca.v1.CertificateAuthorityServiceClient
+import com.google.cloud.security.privateca.v1.CertificateConfig
+import com.google.cloud.security.privateca.v1.KeyUsage
+import com.google.cloud.security.privateca.v1.PublicKey as CloudPublicKey
+import com.google.cloud.security.privateca.v1.PublicKey.KeyFormat
+import com.google.cloud.security.privateca.v1.Subject
+import com.google.cloud.security.privateca.v1.SubjectAltNames
+import com.google.cloud.security.privateca.v1.X509Parameters
 import com.google.protobuf.Duration
-//import java.security.PrivateKey
-//import java.security.PublicKey
+import com.google.protobuf.kotlin.toByteString
+import java.security.PrivateKey
+import java.security.PublicKey
 import java.security.cert.X509Certificate
 import org.wfanet.panelmatch.common.certificates.CertificateAuthority
+import org.wfanet.panelmatch.common.loggerFor
 
-class CertificateAuthority (): CertificateAuthority {
+class CertificateAuthority(
+  projectId: String,
+  caLocation: String,
+  poolId: String,
+  private val certificateAuthorityName: String, // Why is this unused?
+  private val certificateName: String,
+  private val commonName: String,
+  private val orgName: String,
+  private val domainName: String
+) : CertificateAuthority {
+
+  private val certificateAuthorityServiceClient = CertificateAuthorityServiceClient.create()
+  private val caPoolName = CaPoolName.of(projectId, caLocation, poolId).toString()
 
   override suspend fun generateX509CertificateAndPrivateKey(
-    rootPublicKey: PublicKey, projectId : String, caLocation: String,
-    poolId : String, certificateAuthorityName : String, certificateName : String,
-    commonName : String, orgName : String, domainName : String
+    rootPublicKey: PublicKey,
   ): Pair<X509Certificate, PrivateKey> {
-    // https://github.com/googleapis/java-security-private-ca/blob/6650af45214f871041e3eb91214b50332ab6ce94/samples/snippets/cloud-client/src/main/java/privateca/CreateCertificate.java
-    // Is this what we are trying to return? line 148?
-    // Would the code be the exact same as this , can I do what the CreateCertificate is doing
-    // Where do we get the private key from? ?
+    val certificateLifetime = 1000L
 
-      val certificateLifetime = 1000L
+    // Set the Public Key and its format.
+    val publicKey: CloudPublicKey =
+      CloudPublicKey.newBuilder()
+        .setKey(rootPublicKey.encoded.toByteString())
+        .setFormat(KeyFormat.PEM)
+        .build()
 
-      // Set the Public Key and its format.
-      val publicKey: PublicKey = PublicKey.newBuilder().setKey(rootPublicKey.encoded).setFormat(KeyFormat.PEM).build()
-
-      val subjectConfig: SubjectConfig = SubjectConfig.newBuilder() // Set the common name and org name.
+    val subjectConfig: CertificateConfig.SubjectConfig =
+      CertificateConfig.SubjectConfig.newBuilder() // Set the common name and org name.
         .setSubject(
-          Subject.newBuilder().setCommonName(commonName).setOrganization(orgName).build()) // Set the fully qualified domain name.
+          Subject.newBuilder().setCommonName(commonName).setOrganization(orgName).build()
+        ) // Set the fully qualified domain name.
         .setSubjectAltName(SubjectAltNames.newBuilder().addDnsNames(domainName).build())
         .build()
 
-      // Set the X.509 fields required for the certificate.
-      val x509Parameters: X509Parameters = X509Parameters.newBuilder()
+    // Set the X.509 fields required for the certificate.
+    val x509Parameters: X509Parameters =
+      X509Parameters.newBuilder()
         .setKeyUsage(
           KeyUsage.newBuilder()
             .setBaseKeyUsage(
-              KeyUsageOptions.newBuilder()
+              KeyUsage.KeyUsageOptions.newBuilder()
                 .setDigitalSignature(true)
                 .setKeyEncipherment(true)
                 .setCertSign(true)
-                .build())
+                .build()
+            )
             .setExtendedKeyUsage(
-              ExtendedKeyUsageOptions.newBuilder().setServerAuth(true).build())
-            .build())
-        .setCaOptions(CaOptions.newBuilder().setIsCa(true).buildPartial())
+              KeyUsage.ExtendedKeyUsageOptions.newBuilder().setServerAuth(true).build()
+            )
+            .build()
+        )
+        .setCaOptions(X509Parameters.CaOptions.newBuilder().setIsCa(true).buildPartial())
         .build()
 
-      // Create certificate.
-      val certificate: Certificate = Certificate.newBuilder()
+    // Create certificate.
+    val certificate: Certificate =
+      Certificate.newBuilder()
         .setConfig(
           CertificateConfig.newBuilder()
             .setPublicKey(publicKey)
             .setSubjectConfig(subjectConfig)
             .setX509Config(x509Parameters)
-            .build())
+            .build()
+        )
         .setLifetime(Duration.newBuilder().setSeconds(certificateLifetime).build())
         .build()
 
-      // Create the Certificate Request.
-      val certificateRequest: CreateCertificateRequest = CreateCertificateRequest.newBuilder()
-        .setParent(CaPoolName.of(projectId, caLocation, poolId).toString())
-        .setCertificateId(certificateName)
-        .setCertificate(certificate)
-        .setIssuingCertificateAuthorityId(certificateAuthorityName)
-        .build()
+    val responseCertificate =
+      certificateAuthorityServiceClient.createCertificate(caPoolName, certificate, certificateName)
 
-      // Get the Certificate response.
-      val future: ApiFuture<Certificate> = certificateAuthorityServiceClient
-        .createCertificateCallable()
-        .futureCall(certificateRequest)
-      val response: Certificate = future.get()
-      // Get the PEM encoded, signed X.509 certificate.
-      System.out.println(response.getPemCertificate())
-      // To verify the obtained certificate, use this intermediate chain list.
-      System.out.println(response.getPemCertificateChainList())
-      TODO()
+    logger.info(responseCertificate.toString())
+
+    TODO()
   }
 
+  companion object {
+    private val logger by loggerFor()
+  }
 }
