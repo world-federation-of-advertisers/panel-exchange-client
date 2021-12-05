@@ -24,8 +24,10 @@ _BEAM_VERSION = "2.34.0"
 # TODO: this list can likely be minimized
 _ARTIFACTS = artifacts.dict_to_list({
     # Without this, we get java.lang.NoClassDefFoundError: com/google/api/gax/tracing/NoopApiTracer
+    "com.google.api:api-common": "2.1.1",
     "com.google.api:gax": "2.7.0",
     "com.google.api:gax-grpc": "2.7.0",
+    "com.google.api.grpc:proto-google-cloud-security-private-ca-v1": "2.2.0",
     "com.google.cloud:google-cloud-bigquery": "2.4.1",
     "com.google.cloud:google-cloud-bigquerystorage": "2.6.3",
     "com.google.cloud:google-cloud-nio": "0.123.10",
