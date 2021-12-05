@@ -23,7 +23,7 @@ import org.wfanet.panelmatch.common.beam.mapWithSideInput
 import org.wfanet.panelmatch.common.beam.toSingletonView
 import org.wfanet.panelmatch.common.crypto.AsymmetricKeys
 
-fun ApacheBeamContext.buildPrivateMembershipQueries(
+fun MapReduceContext.buildPrivateMembershipQueries(
   parameters: CreateQueriesParameters,
   privateMembershipCryptor: PrivateMembershipCryptor,
 ) {

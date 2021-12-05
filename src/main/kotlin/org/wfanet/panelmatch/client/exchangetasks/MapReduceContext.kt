@@ -29,7 +29,7 @@ import org.wfanet.panelmatch.common.beam.toSingletonView
 import org.wfanet.panelmatch.common.storage.toByteString
 import org.wfanet.panelmatch.common.storage.toStringUtf8
 
-class ApacheBeamContext(
+class MapReduceContext(
   private val pipeline: Pipeline,
   private val outputManifests: Map<String, ShardedFileName>,
   private val inputLabels: Map<String, String>,

@@ -23,7 +23,7 @@ import org.wfanet.panelmatch.client.privatemembership.encryptedQueryBundle
 import org.wfanet.panelmatch.client.privatemembership.evaluateQueries
 
 /** Evaluates Private Membership queries. */
-suspend fun ApacheBeamContext.executePrivateMembershipQueries(
+suspend fun MapReduceContext.executePrivateMembershipQueries(
   evaluateQueriesParameters: EvaluateQueriesParameters,
   queryEvaluator: QueryEvaluator,
 ) {

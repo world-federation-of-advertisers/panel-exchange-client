@@ -28,7 +28,7 @@ import org.wfanet.panelmatch.common.beam.toSingletonView
 import org.wfanet.panelmatch.common.compression.CompressionParameters
 import org.wfanet.panelmatch.common.crypto.AsymmetricKeys
 
-suspend fun ApacheBeamContext.decryptPrivateMembershipResults(
+suspend fun MapReduceContext.decryptPrivateMembershipResults(
   serializedParameters: ByteString,
   queryResultsDecryptor: QueryResultsDecryptor,
 ) {

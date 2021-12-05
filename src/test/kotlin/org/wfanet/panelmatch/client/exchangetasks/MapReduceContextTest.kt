@@ -46,7 +46,7 @@ private const val BLOB_KEY = "some-blob-key"
 private val BLOB_CONTENTS = "some-data".toByteStringUtf8()
 
 @RunWith(JUnit4::class)
-class ApacheBeamContextTest : BeamTestBase() {
+class MapReduceContextTest : BeamTestBase() {
   @get:Rule val temporaryFolder = TemporaryFolder()
 
   private lateinit var storageFactory: StorageFactory
@@ -66,7 +66,7 @@ class ApacheBeamContextTest : BeamTestBase() {
   fun readBlob() = runBlockingTest {
     val inputLabels = mapOf(LABEL to BLOB_KEY)
     val inputBlobs = mapOf(LABEL to storageClient.createBlob(BLOB_KEY, BLOB_CONTENTS))
-    val context = ApacheBeamContext(pipeline, mapOf(), inputLabels, inputBlobs, storageFactory)
+    val context = MapReduceContext(pipeline, mapOf(), inputLabels, inputBlobs, storageFactory)
 
     assertThat(context.readBlob(LABEL)).isEqualTo(BLOB_CONTENTS)
   }
@@ -75,7 +75,7 @@ class ApacheBeamContextTest : BeamTestBase() {
   fun readBlobAsPCollection() = runBlockingTest {
     val inputLabels = mapOf(LABEL to BLOB_KEY)
     val inputBlobs = mapOf(LABEL to storageClient.createBlob(BLOB_KEY, BLOB_CONTENTS))
-    val context = ApacheBeamContext(pipeline, mapOf(), inputLabels, inputBlobs, storageFactory)
+    val context = MapReduceContext(pipeline, mapOf(), inputLabels, inputBlobs, storageFactory)
 
     assertThat(context.readBlobAsPCollection(LABEL)).containsInAnyOrder(BLOB_CONTENTS)
     assertThat(context.readBlobAsView(LABEL)).containsInAnyOrder(BLOB_CONTENTS)
@@ -95,7 +95,7 @@ class ApacheBeamContextTest : BeamTestBase() {
     storageClient.createBlob("foo-1-of-3", shard1Contents)
     storageClient.createBlob("foo-2-of-3", shard2Contents)
 
-    val context = ApacheBeamContext(pipeline, mapOf(), inputLabels, inputBlobs, storageFactory)
+    val context = MapReduceContext(pipeline, mapOf(), inputLabels, inputBlobs, storageFactory)
 
     val stringValueProtos = context.readShardedPCollection(LABEL, stringValue {})
     assertThat(stringValueProtos.map { it.value }).containsInAnyOrder("a", "bc", "def", "xy", "z")
@@ -107,7 +107,7 @@ class ApacheBeamContextTest : BeamTestBase() {
   fun write() = runBlockingTest {
     val outputManifests = mapOf("some-output" to ShardedFileName("some-output-blobkey", 1))
 
-    val context = ApacheBeamContext(pipeline, outputManifests, mapOf(), mapOf(), storageFactory)
+    val context = MapReduceContext(pipeline, outputManifests, mapOf(), mapOf(), storageFactory)
 
     with(context) {
       pcollectionOf("Test Collection", stringValue { value = "some-item" }).write("some-output")

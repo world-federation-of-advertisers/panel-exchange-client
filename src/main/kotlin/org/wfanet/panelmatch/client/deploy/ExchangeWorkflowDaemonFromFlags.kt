@@ -51,7 +51,7 @@ abstract class ExchangeWorkflowDaemonFromFlags : ExchangeWorkflowDaemon() {
    */
   protected abstract val privateKeys: MutableSecretMap
 
-  /** Apache Beam options. */
+  /** MapReduce options. */
   protected abstract val pipelineOptions: PipelineOptions
 
   /** [CertificateAuthority] for use in [V2AlphaCertificateManager]. */

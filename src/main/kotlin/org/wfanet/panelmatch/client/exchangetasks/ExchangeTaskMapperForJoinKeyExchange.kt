@@ -123,7 +123,7 @@ abstract class ExchangeTaskMapperForJoinKeyExchange : ExchangeTaskMapper {
         padQueries = stepDetails.addPaddingQueries,
       )
 
-    return apacheBeamTaskFor(outputManifests) {
+    return mapReduceTaskFor(outputManifests) {
       buildPrivateMembershipQueries(parameters, privateMembershipCryptor)
     }
   }
@@ -134,7 +134,7 @@ abstract class ExchangeTaskMapperForJoinKeyExchange : ExchangeTaskMapper {
 
     val outputManifests = mapOf("decrypted-event-data" to stepDetails.decryptEventDataSetFileCount)
 
-    return apacheBeamTaskFor(outputManifests) {
+    return mapReduceTaskFor(outputManifests) {
       decryptPrivateMembershipResults(stepDetails.serializedParameters, queryResultsDecryptor)
     }
   }
@@ -154,7 +154,7 @@ abstract class ExchangeTaskMapperForJoinKeyExchange : ExchangeTaskMapper {
 
     val outputManifests = mapOf("encrypted-results" to stepDetails.encryptedQueryResultFileCount)
 
-    return apacheBeamTaskFor(outputManifests) {
+    return mapReduceTaskFor(outputManifests) {
       executePrivateMembershipQueries(parameters, queryResultsEvaluator)
     }
   }
@@ -207,11 +207,11 @@ abstract class ExchangeTaskMapperForJoinKeyExchange : ExchangeTaskMapper {
     )
   }
 
-  private suspend fun ExchangeContext.apacheBeamTaskFor(
+  private suspend fun ExchangeContext.mapReduceTaskFor(
     outputManifests: Map<String, Int>,
-    execute: suspend ApacheBeamContext.() -> Unit
-  ): ApacheBeamTask {
-    return ApacheBeamTask(
+    execute: suspend MapReduceContext.() -> Unit
+  ): MapReduceTask {
+    return MapReduceTask(
       newPipeline(),
       privateStorageSelector.getStorageFactory(exchangeDateKey),
       step.inputLabelsMap,

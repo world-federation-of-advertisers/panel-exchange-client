@@ -25,15 +25,15 @@ import org.wfanet.panelmatch.client.storage.StorageFactory
 import org.wfanet.panelmatch.common.ShardedFileName
 
 /** Executes Exchange Steps that rely on Apache Beam. */
-class ApacheBeamTask(
+class MapReduceTask(
   private val pipeline: Pipeline,
   private val storageFactory: StorageFactory,
   private val inputLabels: Map<String, String>,
   private val outputManifests: Map<String, ShardedFileName>,
-  private val executeOnPipeline: suspend ApacheBeamContext.() -> Unit
+  private val executeOnPipeline: suspend MapReduceContext.() -> Unit
 ) : ExchangeTask {
   override suspend fun execute(input: Map<String, Blob>): Map<String, Flow<ByteString>> {
-    val context = ApacheBeamContext(pipeline, outputManifests, inputLabels, input, storageFactory)
+    val context = MapReduceContext(pipeline, outputManifests, inputLabels, input, storageFactory)
     context.executeOnPipeline()
 
     val finalState = pipeline.run().waitUntilFinish()

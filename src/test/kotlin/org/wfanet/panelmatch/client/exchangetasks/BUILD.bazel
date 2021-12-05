@@ -234,10 +234,10 @@ kt_jvm_test(
 )
 
 kt_jvm_test(
-    name = "ApacheBeamContextTest",
+    name = "MapReduceContextTest",
     timeout = "short",
-    srcs = ["ApacheBeamContextTest.kt"],
-    test_class = "org.wfanet.panelmatch.client.exchangetasks.ApacheBeamContextTest",
+    srcs = ["MapReduceContextTest.kt"],
+    test_class = "org.wfanet.panelmatch.client.exchangetasks.MapReduceContextTest",
     deps = [
         "//src/main/kotlin/org/wfanet/panelmatch/client/exchangetasks",
         "//src/main/kotlin/org/wfanet/panelmatch/client/storage",
