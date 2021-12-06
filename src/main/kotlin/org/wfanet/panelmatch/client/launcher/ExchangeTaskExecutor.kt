@@ -90,12 +90,12 @@ class ExchangeTaskExecutor(
     attemptKey: ExchangeStepAttemptKey,
     state: ExchangeStepAttempt.State
   ) {
-    logger.addToTaskLog("Marking attempt state: $state")
+    //    logger.addToTaskLog("Marking attempt state: $state")
     apiClient.finishExchangeStepAttempt(attemptKey, state, getAndClearTaskLog())
   }
 
   private suspend fun ExchangeContext.tryExecute() {
-    logger.addToTaskLog("Executing ${step.stepId} with attempt $attemptKey for $this")
+    //    logger.addToTaskLog("Executing ${step.stepId} with attempt $attemptKey for $this")
     val privateStorageClient: StorageClient =
       privateStorageSelector.getStorageClient(exchangeDateKey)
     if (!isAlreadyComplete(step, privateStorageClient)) {

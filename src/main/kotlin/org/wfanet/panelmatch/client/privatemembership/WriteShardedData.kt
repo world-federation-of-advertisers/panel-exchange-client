@@ -15,8 +15,10 @@
 package org.wfanet.panelmatch.client.privatemembership
 
 import com.google.protobuf.Message
+import com.google.protobuf.kotlin.toByteStringUtf8
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.asFlow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.runBlocking
 import org.apache.beam.sdk.Pipeline
@@ -30,6 +32,7 @@ import org.apache.beam.sdk.values.PInput
 import org.apache.beam.sdk.values.POutput
 import org.apache.beam.sdk.values.PValue
 import org.apache.beam.sdk.values.TupleTag
+import org.wfanet.measurement.common.toJson
 import org.wfanet.panelmatch.client.storage.StorageFactory
 import org.wfanet.panelmatch.common.ShardedFileName
 import org.wfanet.panelmatch.common.beam.keyBy
@@ -84,9 +87,16 @@ private class WriteFilesFn<T : Message>(
     val kv = context.element()
     val blobKey = ShardedFileName(fileSpec).fileNameForShard(kv.key)
     val storageClient = storageFactory.build()
-    val messageFlow = kv.value.asFlow().map { it.toDelimitedByteString() }
 
-    runBlocking(Dispatchers.IO) { storageClient.createOrReplaceBlob(blobKey, messageFlow) }
+    val json = mutableListOf<String>()
+
+    val messageFlow = kv.value.onEach { json.add(it.toJson()) }
+      .asFlow().map { it.toDelimitedByteString() }
+
+    runBlocking(Dispatchers.IO) {
+      storageClient.createOrReplaceBlob(blobKey, messageFlow)
+      storageClient.createOrReplaceBlob("$blobKey.json", flowOf(json.joinToString(",\n", prefix = "[", postfix = "]").toByteStringUtf8()))
+    }
 
     context.output(blobKey)
   }

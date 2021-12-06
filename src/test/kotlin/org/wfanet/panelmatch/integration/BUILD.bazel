@@ -31,7 +31,7 @@ spanner_emulator_test(
 
 spanner_emulator_test(
     name = "FullWorkflowTest",
-    size = "medium",
+    size = "large",
     srcs = glob(["*.kt"]),
     resources = ["//src/test/kotlin/org/wfanet/panelmatch/integration/config"],
     test_class = "org.wfanet.panelmatch.integration.FullWorkflowTest",

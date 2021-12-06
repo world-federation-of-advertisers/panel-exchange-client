@@ -18,8 +18,11 @@ import com.google.common.truth.Truth.assertThat
 import com.google.common.truth.Truth.assertWithMessage
 import com.google.protobuf.ByteString
 import io.grpc.StatusException
+import java.io.File
 import java.nio.file.Path
 import java.time.Clock
+import java.time.Duration
+import java.time.Instant
 import java.time.LocalDate
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
@@ -106,9 +109,14 @@ abstract class AbstractInProcessPanelMatchIntegrationTest {
   @get:Rule
   val ruleChain: TestRule by lazy { chainRulesSequentially(databaseRule, inProcessKingdom) }
 
-  @get:Rule val dataProviderFolder = TemporaryFolder()
-  @get:Rule val modelProviderFolder = TemporaryFolder()
   @get:Rule val sharedFolder = TemporaryFolder()
+
+  private val root = File("/tmp/panel-match-demo").apply {
+    if (exists()) deleteRecursively()
+  }
+  private val edpDir = File(root, "edp").apply { check(mkdirs()) }
+  private val mpDir = File(root, "mp").apply { check(mkdirs()) }
+  private val sharedDir = File(root, "shared").apply { check(mkdirs()) }
 
   private data class ProviderContext(
     val key: ResourceKey,
@@ -139,15 +147,18 @@ abstract class AbstractInProcessPanelMatchIntegrationTest {
 
   private fun logStepStates(steps: Iterable<ExchangeStep>) {
     val stepsList = exchangeWorkflow.stepsList
-    val message = StringBuilder("ExchangeStep states:")
-    for ((state, stepsForState) in steps.groupBy { it.state }) {
-      val stepsString =
-        stepsForState.sortedBy { it.stepIndex }.joinToString(", ") {
-          "${stepsList[it.stepIndex].stepId}#${it.stepIndex}"
-        }
-      message.appendLine("  $state: $stepsString")
+    val message = StringBuilder("===== ExchangeStep states =====\n")
+    val maxStepIdSize = stepsList.map { it.stepId.length }.maxOrNull() ?: 0
+    for (exchangeStep in steps) {
+      val step = stepsList[exchangeStep.stepIndex]
+      val indexStr = "%2d".format(exchangeStep.stepIndex)
+      val stepIdStr = step.stepId.padStart(maxStepIdSize, ' ')
+      message.appendLine("$indexStr  $stepIdStr  ${step.party}\t${exchangeStep.state}")
     }
-    logger.info(message.toString())
+    val logMessage = message.toString()
+    print("\u001B[H\u001B[2J")
+    System.out.flush()
+    logger.info(logMessage)
   }
 
   private fun assertNotDeadlocked(steps: Iterable<ExchangeStep>) {
@@ -170,7 +181,6 @@ abstract class AbstractInProcessPanelMatchIntegrationTest {
       logStepStates(steps)
       assertNotDeadlocked(steps)
 
-      logger.info("Exchange is in state: ${exchange.state}.")
       exchange.state in TERMINAL_EXCHANGE_STATES
     } catch (e: StatusException) {
       false
@@ -193,8 +203,9 @@ abstract class AbstractInProcessPanelMatchIntegrationTest {
       exchangeDateKey = exchangeDateKey,
       serializedExchangeWorkflow = serializedExchangeWorkflow,
       privateDirectory = owner.privateStoragePath,
-      sharedDirectory = sharedFolder.root.toPath(),
-      scope = owner.scope
+      sharedDirectory = sharedDir.toPath(),
+      scope = owner.scope,
+      pollingInterval = Duration.ofSeconds(2)
     )
   }
 
@@ -218,17 +229,9 @@ abstract class AbstractInProcessPanelMatchIntegrationTest {
         exchangeId = EXCHANGE_DATE.toString()
       )
     dataProviderContext =
-      ProviderContext(
-        keys.dataProviderKey,
-        dataProviderFolder.root.toPath(),
-        createScope("EDP_SCOPE")
-      )
+      ProviderContext(keys.dataProviderKey, edpDir.toPath(), createScope("EDP_SCOPE"))
     modelProviderContext =
-      ProviderContext(
-        keys.modelProviderKey,
-        modelProviderFolder.root.toPath(),
-        createScope("MP_SCOPE")
-      )
+      ProviderContext(keys.modelProviderKey, mpDir.toPath(), createScope("MP_SCOPE"))
   }
 
   @Test
@@ -244,8 +247,6 @@ abstract class AbstractInProcessPanelMatchIntegrationTest {
     for ((blobKey, value) in initialModelProviderInputs) {
       modelProviderDaemon.writePrivateBlob(blobKey, value)
     }
-
-    logger.info("Shared Folder path: ${sharedFolder.root.absolutePath}")
 
     dataProviderDaemon.run()
     modelProviderDaemon.run()
