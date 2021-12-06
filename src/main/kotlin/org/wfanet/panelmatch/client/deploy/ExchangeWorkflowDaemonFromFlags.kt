@@ -17,7 +17,6 @@ package org.wfanet.panelmatch.client.deploy
 import java.time.Clock
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import org.apache.beam.sdk.options.PipelineOptions
 import org.wfanet.measurement.api.v2alpha.CertificatesGrpcKt
 import org.wfanet.measurement.api.v2alpha.ExchangeStepAttemptsGrpcKt.ExchangeStepAttemptsCoroutineStub
 import org.wfanet.measurement.api.v2alpha.ExchangeStepsGrpcKt.ExchangeStepsCoroutineStub
@@ -28,6 +27,7 @@ import org.wfanet.measurement.common.throttler.MinimumIntervalThrottler
 import org.wfanet.measurement.common.throttler.Throttler
 import org.wfanet.panelmatch.client.common.Identity
 import org.wfanet.panelmatch.client.exchangetasks.ExchangeTaskMapper
+import org.wfanet.panelmatch.client.exchangetasks.MapReduceRunner
 import org.wfanet.panelmatch.client.launcher.ApiClient
 import org.wfanet.panelmatch.client.launcher.GrpcApiClient
 import org.wfanet.panelmatch.common.Timeout
@@ -52,7 +52,9 @@ abstract class ExchangeWorkflowDaemonFromFlags : ExchangeWorkflowDaemon() {
   protected abstract val privateKeys: MutableSecretMap
 
   /** MapReduce options. */
-  protected abstract val pipelineOptions: PipelineOptions
+  //  protected abstract val pipelineOptions: PipelineOptions
+
+  protected abstract val mapReduceRunner: MapReduceRunner
 
   /** [CertificateAuthority] for use in [V2AlphaCertificateManager]. */
   protected abstract val certificateAuthority: CertificateAuthority
@@ -90,8 +92,7 @@ abstract class ExchangeWorkflowDaemonFromFlags : ExchangeWorkflowDaemon() {
       inputTaskThrottler = throttler,
       privateStorageSelector = privateStorageSelector,
       sharedStorageSelector = sharedStorageSelector,
-      certificateManager = certificateManager,
-      pipelineOptions = pipelineOptions
+      certificateManager = certificateManager
     )
   }
 

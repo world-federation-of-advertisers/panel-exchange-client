@@ -14,9 +14,8 @@
 
 package org.wfanet.panelmatch.client.deploy
 
-import org.apache.beam.sdk.options.PipelineOptions
-import org.apache.beam.sdk.options.PipelineOptionsFactory
 import org.wfanet.measurement.storage.StorageClient
+import org.wfanet.panelmatch.client.exchangetasks.MapReduceRunner
 import org.wfanet.panelmatch.client.storage.StorageDetailsProvider
 import org.wfanet.panelmatch.common.secrets.MutableSecretMap
 import org.wfanet.panelmatch.common.secrets.SecretMap
@@ -34,7 +33,7 @@ abstract class ExampleDaemon : ExchangeWorkflowDaemonFromFlags() {
   abstract val rootStorageClient: StorageClient
 
   /** This should be customized per deployment. */
-  override val pipelineOptions: PipelineOptions = PipelineOptionsFactory.create()
+  override val mapReduceRunner: MapReduceRunner = ApacheBeamRunner()
 
   /** This can be customized per deployment. */
   private val defaults by lazy { DaemonStorageClientDefaults(rootStorageClient, tinkKeyUri) }

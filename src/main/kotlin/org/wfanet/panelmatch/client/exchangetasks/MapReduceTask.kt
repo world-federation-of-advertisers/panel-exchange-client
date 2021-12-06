@@ -18,7 +18,6 @@ import com.google.protobuf.ByteString
 import com.google.protobuf.kotlin.toByteStringUtf8
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
-import org.apache.beam.sdk.Pipeline
 import org.apache.beam.sdk.PipelineResult
 import org.wfanet.measurement.storage.StorageClient.Blob
 import org.wfanet.panelmatch.client.storage.StorageFactory
@@ -26,18 +25,25 @@ import org.wfanet.panelmatch.common.ShardedFileName
 
 /** Executes Exchange Steps that rely on Apache Beam. */
 class MapReduceTask(
-  private val pipeline: Pipeline,
+  private val mapReduceRunner: MapReduceRunner,
   private val storageFactory: StorageFactory,
   private val inputLabels: Map<String, String>,
   private val outputManifests: Map<String, ShardedFileName>,
   private val executeOnPipeline: suspend MapReduceContext.() -> Unit
 ) : ExchangeTask {
   override suspend fun execute(input: Map<String, Blob>): Map<String, Flow<ByteString>> {
-    val context = MapReduceContext(pipeline, outputManifests, inputLabels, input, storageFactory)
+    val context =
+      MapReduceContext(
+        mapReduceRunner.pipeline,
+        outputManifests,
+        inputLabels,
+        input,
+        storageFactory
+      )
     context.executeOnPipeline()
 
-    val finalState = pipeline.run().waitUntilFinish()
-    check(finalState == PipelineResult.State.DONE) { "Pipeline is in state $finalState" }
+    val finalState = mapReduceRunner.run().waitUntilFinish()
+    check(finalState == PipelineResult.State.DONE) { "MapReduce is in state $finalState" }
 
     return outputManifests.mapValues { flowOf(it.value.spec.toByteStringUtf8()) }
   }

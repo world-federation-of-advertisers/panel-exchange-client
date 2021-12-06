@@ -15,7 +15,6 @@
 package org.wfanet.panelmatch.client.exchangetasks
 
 import com.google.protobuf.ByteString
-import org.apache.beam.sdk.Pipeline
 import org.wfanet.measurement.api.v2alpha.ExchangeWorkflow.Step.StepCase
 import org.wfanet.measurement.common.throttler.Throttler
 import org.wfanet.measurement.common.toLocalDate
@@ -41,8 +40,7 @@ abstract class ExchangeTaskMapperForJoinKeyExchange : ExchangeTaskMapper {
   abstract val sharedStorageSelector: SharedStorageSelector
   abstract val certificateManager: CertificateManager
   abstract val inputTaskThrottler: Throttler
-
-  abstract fun newPipeline(): Pipeline
+  abstract val mapReduceRunner: MapReduceRunner
 
   override suspend fun getExchangeTaskForStep(context: ExchangeContext): ExchangeTask {
     return context.getExchangeTask()
@@ -212,7 +210,7 @@ abstract class ExchangeTaskMapperForJoinKeyExchange : ExchangeTaskMapper {
     execute: suspend MapReduceContext.() -> Unit
   ): MapReduceTask {
     return MapReduceTask(
-      newPipeline(),
+      mapReduceRunner,
       privateStorageSelector.getStorageFactory(exchangeDateKey),
       step.inputLabelsMap,
       outputManifests.mapValues { (k, v) -> ShardedFileName(step.outputLabelsMap.getValue(k), v) },
