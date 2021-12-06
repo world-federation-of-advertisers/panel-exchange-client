@@ -16,25 +16,31 @@ package org.wfanet.panelmatch.integration
 
 import com.google.protobuf.ByteString
 import io.grpc.Channel
+import java.io.File
 import java.nio.file.Path
+import java.nio.file.Paths
 import java.time.Clock
 import java.time.Duration
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
 import org.wfanet.measurement.api.v2alpha.ExchangeStepAttemptsGrpcKt.ExchangeStepAttemptsCoroutineStub
 import org.wfanet.measurement.api.v2alpha.ExchangeStepsGrpcKt.ExchangeStepsCoroutineStub
 import org.wfanet.measurement.api.v2alpha.ResourceKey
+import org.wfanet.measurement.common.asFlow
 import org.wfanet.measurement.common.identity.withPrincipalName
 import org.wfanet.measurement.common.throttler.MinimumIntervalThrottler
 import org.wfanet.measurement.common.throttler.Throttler
 import org.wfanet.measurement.common.toByteString
+import org.wfanet.measurement.storage.StorageClient
 import org.wfanet.panelmatch.client.common.Identity
 import org.wfanet.panelmatch.client.deploy.ExchangeWorkflowDaemon
 import org.wfanet.panelmatch.client.exchangetasks.ExchangeTaskMapper
 import org.wfanet.panelmatch.client.launcher.ApiClient
 import org.wfanet.panelmatch.client.launcher.GrpcApiClient
-import org.wfanet.panelmatch.client.storage.FileSystemStorageFactory
 import org.wfanet.panelmatch.client.storage.StorageDetails
 import org.wfanet.panelmatch.client.storage.StorageDetails.PlatformCase
 import org.wfanet.panelmatch.client.storage.StorageDetailsKt.fileStorage
@@ -46,6 +52,7 @@ import org.wfanet.panelmatch.common.Timeout
 import org.wfanet.panelmatch.common.asTimeout
 import org.wfanet.panelmatch.common.certificates.CertificateManager
 import org.wfanet.panelmatch.common.certificates.testing.TestCertificateManager
+import org.wfanet.panelmatch.common.loggerFor
 import org.wfanet.panelmatch.common.secrets.SecretMap
 import org.wfanet.panelmatch.common.secrets.testing.TestSecretMap
 import org.wfanet.panelmatch.common.storage.createBlob
@@ -102,7 +109,7 @@ class ExchangeWorkflowDaemonForTest(
 
   override val privateStorageFactories:
     Map<PlatformCase, (StorageDetails, ExchangeDateKey) -> StorageFactory> =
-    mapOf(PlatformCase.FILE to ::FileSystemStorageFactory)
+    mapOf(PlatformCase.FILE to ::DemoFileSystemStorageFactory)
 
   private val privateStorageDetails = storageDetails {
     file = fileStorage { path = privateDirectory.toString() }
@@ -126,7 +133,7 @@ class ExchangeWorkflowDaemonForTest(
 
   override val sharedStorageFactories:
     Map<PlatformCase, (StorageDetails, ExchangeDateKey) -> StorageFactory> =
-    mapOf(PlatformCase.FILE to ::FileSystemStorageFactory)
+    mapOf(PlatformCase.FILE to ::DemoFileSystemStorageFactory)
 
   private val sharedStorageDetails = storageDetails {
     file = fileStorage { path = sharedDirectory.toString() }
@@ -138,4 +145,79 @@ class ExchangeWorkflowDaemonForTest(
     )
 
   override val taskTimeout: Timeout = taskTimeoutDuration.asTimeout()
+}
+
+private const val DEFAULT_BUFFER_SIZE_BYTES = 1024 * 4 // 4 KiB
+
+private class DemoFileSystemStorageFactory(
+  private val storageDetails: StorageDetails,
+  private val exchangeDateKey: ExchangeDateKey
+) : StorageFactory {
+  override fun build(): StorageClient {
+    val directory = Paths.get(storageDetails.file.path, exchangeDateKey.path).toFile()
+    val absolutePath = directory.absolutePath
+    if (directory.exists()) {
+      logger.fine("Directory already exists: $absolutePath")
+    } else {
+      check(directory.mkdirs()) { "Unable to create recursively directory: $absolutePath" }
+      logger.fine("Created directory: $absolutePath")
+    }
+    return DemoFileSystemStorageClient(directory)
+  }
+
+  companion object {
+    private val logger by loggerFor()
+  }
+}
+
+/** [StorageClient] implementation that utilizes flat files in the specified directory as blobs. */
+private class DemoFileSystemStorageClient(private val directory: File) : StorageClient {
+  init {
+    require(directory.isDirectory) { "$directory is not a directory" }
+  }
+
+  override val defaultBufferSizeBytes: Int
+    get() = DEFAULT_BUFFER_SIZE_BYTES
+
+  override suspend fun createBlob(blobKey: String, content: Flow<ByteString>): StorageClient.Blob {
+    val file = File(directory, blobKey)
+    withContext(Dispatchers.IO) {
+      try {
+        File(file.parent).mkdirs()
+        require(file.createNewFile()) { "$blobKey already exists" }
+      } catch (e: Exception) {
+        println("BLOB KEY $blobKey")
+        throw e
+      }
+
+      file.outputStream().channel.use { byteChannel ->
+        content.collect { bytes ->
+          @Suppress("BlockingMethodInNonBlockingContext") // Flow context preservation.
+          byteChannel.write(bytes.asReadOnlyByteBuffer())
+        }
+      }
+    }
+
+    return Blob(file)
+  }
+
+  override fun getBlob(blobKey: String): StorageClient.Blob? {
+    val file = File(directory, blobKey)
+    return if (file.exists()) Blob(file) else null
+  }
+
+  private inner class Blob(private val file: File) : StorageClient.Blob {
+    override val storageClient: StorageClient
+      get() = this@DemoFileSystemStorageClient
+
+    override val size: Long
+      get() = file.length()
+
+    override fun read(bufferSizeBytes: Int): Flow<ByteString> =
+      file.inputStream().channel.asFlow(bufferSizeBytes)
+
+    override fun delete() {
+      file.delete()
+    }
+  }
 }
