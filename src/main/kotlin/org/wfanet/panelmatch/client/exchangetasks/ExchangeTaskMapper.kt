@@ -16,8 +16,6 @@ package org.wfanet.panelmatch.client.exchangetasks
 
 import org.wfanet.measurement.api.v2alpha.ExchangeWorkflow.Step.StepCase
 import org.wfanet.panelmatch.client.common.ExchangeContext
-import src.main.kotlin.org.wfanet.panelmatch.client.exchangetasks.CommutativeEncryptionTasks
-import src.main.kotlin.org.wfanet.panelmatch.client.exchangetasks.SharedStorageTasks
 
 /** Maps join key exchange steps to exchange tasks */
 class ExchangeTaskMapper(
