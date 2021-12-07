@@ -25,7 +25,6 @@ import org.wfanet.measurement.common.crypto.SigningCerts
 import org.wfanet.measurement.common.grpc.buildMutualTlsChannel
 import org.wfanet.measurement.common.grpc.withShutdownTimeout
 import org.wfanet.measurement.common.throttler.MinimumIntervalThrottler
-import org.wfanet.measurement.common.throttler.Throttler
 import org.wfanet.panelmatch.client.common.Identity
 import org.wfanet.panelmatch.client.exchangetasks.ExchangeTaskMapper
 import org.wfanet.panelmatch.client.launcher.ApiClient
@@ -85,14 +84,15 @@ abstract class ExchangeWorkflowDaemonFromFlags : ExchangeWorkflowDaemon() {
     )
   }
 
-  override val exchangeTaskMapper: ExchangeTaskMapper = ProductionExchangeTaskMapperTaskMapper(
+  override val exchangeTaskMapper: ExchangeTaskMapper by lazy {
+    makeProductionExchangeTaskMapper(
       inputTaskThrottler = MinimumIntervalThrottler(Clock.systemUTC(), flags.pollingInterval),
       privateStorageSelector = privateStorageSelector,
       sharedStorageSelector = sharedStorageSelector,
       certificateManager = certificateManager,
       pipelineOptions = pipelineOptions
     )
-
+  }
 
   override val apiClient: ApiClient by lazy {
     val clientCerts =

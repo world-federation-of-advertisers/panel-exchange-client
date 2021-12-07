@@ -18,10 +18,10 @@ import com.google.common.truth.Truth.assertThat
 import com.google.protobuf.ByteString
 import com.google.protobuf.kotlin.toByteStringUtf8
 import java.time.LocalDate
-import java.util.concurrent.ConcurrentHashMap
 import kotlin.test.assertFailsWith
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
+import org.apache.beam.sdk.options.PipelineOptionsFactory
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -33,28 +33,29 @@ import org.wfanet.measurement.api.v2alpha.ExchangeWorkflowKt.step
 import org.wfanet.measurement.api.v2alpha.exchangeWorkflow
 import org.wfanet.measurement.common.asBufferedFlow
 import org.wfanet.measurement.storage.StorageClient
-import org.wfanet.measurement.storage.testing.InMemoryStorageClient
-import org.wfanet.panelmatch.client.common.ExchangeContext
+import org.wfanet.panelmatch.client.exchangetasks.ApacheBeamTasks
 import org.wfanet.panelmatch.client.exchangetasks.ExchangeTask
 import org.wfanet.panelmatch.client.exchangetasks.ExchangeTaskMapper
+import org.wfanet.panelmatch.client.exchangetasks.GenerateKeysTasksImpl
+import org.wfanet.panelmatch.client.exchangetasks.JniCommutativeEncryptionTasks
+import org.wfanet.panelmatch.client.exchangetasks.PrivateStorageTasksImpl
+import org.wfanet.panelmatch.client.exchangetasks.SharedStorageTasksImpl
+import org.wfanet.panelmatch.client.exchangetasks.ValidationTasksImpl
 import org.wfanet.panelmatch.client.launcher.ExchangeStepValidator.ValidatedExchangeStep
 import org.wfanet.panelmatch.client.launcher.testing.FakeTimeout
+import org.wfanet.panelmatch.client.privatemembership.testing.PlaintextPrivateMembershipCryptor
+import org.wfanet.panelmatch.client.privatemembership.testing.PlaintextQueryEvaluator
+import org.wfanet.panelmatch.client.privatemembership.testing.PlaintextQueryResultsDecryptor
 import org.wfanet.panelmatch.client.storage.StorageDetails
 import org.wfanet.panelmatch.client.storage.StorageDetailsKt
 import org.wfanet.panelmatch.client.storage.storageDetails
-import org.wfanet.panelmatch.client.storage.testing.makeTestPrivateStorageSelector
-import org.wfanet.panelmatch.common.secrets.testing.TestSecretMap
+import org.wfanet.panelmatch.client.storage.testing.TestPrivateStorageSelector
+import org.wfanet.panelmatch.client.storage.testing.TestSharedStorageSelector
+import org.wfanet.panelmatch.common.certificates.testing.TestCertificateManager
+import org.wfanet.panelmatch.common.crypto.testing.FakeDeterministicCommutativeCipher
 import org.wfanet.panelmatch.common.storage.toStringUtf8
+import org.wfanet.panelmatch.common.testing.AlwaysReadyThrottler
 import org.wfanet.panelmatch.common.testing.runBlockingTest
-
-// TODO: move somewhere for reuse
-class TestPrivateStorageSelector {
-  private val blobs = ConcurrentHashMap<String, StorageClient.Blob>()
-
-  val storageClient = InMemoryStorageClient(blobs)
-  val storageDetails = TestSecretMap()
-  val selector = makeTestPrivateStorageSelector(storageDetails, storageClient)
-}
 
 private const val RECURRING_EXCHANGE_ID = "some-recurring-exchange-id"
 private val ATTEMPT_KEY = ExchangeStepAttemptKey(RECURRING_EXCHANGE_ID, "x", "y", "z")
@@ -75,6 +76,7 @@ private val VALIDATED_EXCHANGE_STEP = ValidatedExchangeStep(WORKFLOW, WORKFLOW.g
 @RunWith(JUnit4::class)
 class ExchangeTaskExecutorTest {
   private val testPrivateStorageSelector = TestPrivateStorageSelector()
+  private val testSharedStorageSelector = TestSharedStorageSelector()
   private val apiClient: ApiClient = mock()
   private val timeout = FakeTimeout()
 
@@ -96,11 +98,32 @@ class ExchangeTaskExecutorTest {
     }
 
   private val exchangeTaskMapper =
-    object : ExchangeTaskMapper {
-      override suspend fun getExchangeTaskForStep(context: ExchangeContext): ExchangeTask {
-        return exchangeTask
-      }
-    }
+    ExchangeTaskMapper(
+      validationTasks = ValidationTasksImpl(),
+      commutativeEncryptionTasks =
+        JniCommutativeEncryptionTasks(FakeDeterministicCommutativeCipher),
+      mapReduceTasks =
+        ApacheBeamTasks(
+          getPrivateMembershipCryptor = { _: ByteString -> PlaintextPrivateMembershipCryptor() },
+          getQueryResultsEvaluator = { _: ByteString -> PlaintextQueryEvaluator },
+          queryResultsDecryptor = PlaintextQueryResultsDecryptor(),
+          privateStorageSelector = testPrivateStorageSelector.selector,
+          pipelineOptions = PipelineOptionsFactory.create()
+        ),
+      generateKeysTasks =
+        GenerateKeysTasksImpl(
+          deterministicCommutativeCryptor = FakeDeterministicCommutativeCipher,
+          getPrivateMembershipCryptor = { _: ByteString -> PlaintextPrivateMembershipCryptor() },
+          certificateManager = TestCertificateManager
+        ),
+      privateStorageTasks =
+        PrivateStorageTasksImpl(testPrivateStorageSelector.selector, AlwaysReadyThrottler),
+      sharedStorageTasks =
+        SharedStorageTasksImpl(
+          testPrivateStorageSelector.selector,
+          testSharedStorageSelector.selector
+        )
+    )
 
   private val exchangeTaskExecutor =
     ExchangeTaskExecutor(

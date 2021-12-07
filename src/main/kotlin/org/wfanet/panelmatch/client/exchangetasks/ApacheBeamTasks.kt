@@ -15,13 +15,14 @@ import org.wfanet.panelmatch.client.storage.PrivateStorageSelector
 import org.wfanet.panelmatch.common.ShardedFileName
 
 class ApacheBeamTasks(
-  private val pipelineOptions: PipelineOptions = PipelineOptionsFactory.create(),
-  private val privateStorageSelector: PrivateStorageSelector
+  private val getPrivateMembershipCryptor: (ByteString) -> PrivateMembershipCryptor,
+  private val getQueryResultsEvaluator: (ByteString) -> QueryEvaluator,
+  private val queryResultsDecryptor: QueryResultsDecryptor,
+  private val privateStorageSelector: PrivateStorageSelector,
+  private val pipelineOptions: PipelineOptions = PipelineOptionsFactory.create()
 ) : MapReduceTasks {
 
-  override suspend fun ExchangeContext.getBuildPrivateMembershipQueriesTask(
-    getPrivateMembershipCryptor: (ByteString) -> PrivateMembershipCryptor
-  ): ExchangeTask {
+  override suspend fun ExchangeContext.getBuildPrivateMembershipQueriesTask(): ExchangeTask {
     check(step.stepCase == ExchangeWorkflow.Step.StepCase.BUILD_PRIVATE_MEMBERSHIP_QUERIES_STEP)
     val stepDetails = step.buildPrivateMembershipQueriesStep
     val privateMembershipCryptor = getPrivateMembershipCryptor(stepDetails.serializedParameters)
@@ -45,9 +46,7 @@ class ApacheBeamTasks(
     }
   }
 
-  override suspend fun ExchangeContext.getExecutePrivateMembershipQueriesTask(
-    getQueryResultsEvaluator: (ByteString) -> QueryEvaluator
-  ): ExchangeTask {
+  override suspend fun ExchangeContext.getExecutePrivateMembershipQueriesTask(): ExchangeTask {
     check(step.stepCase == ExchangeWorkflow.Step.StepCase.EXECUTE_PRIVATE_MEMBERSHIP_QUERIES_STEP)
     val stepDetails = step.executePrivateMembershipQueriesStep
 
@@ -67,9 +66,7 @@ class ApacheBeamTasks(
     }
   }
 
-  override suspend fun ExchangeContext.getDecryptMembershipResultsTask(
-    queryResultsDecryptor: QueryResultsDecryptor
-  ): ExchangeTask {
+  override suspend fun ExchangeContext.getDecryptMembershipResultsTask(): ExchangeTask {
     check(
       step.stepCase == ExchangeWorkflow.Step.StepCase.DECRYPT_PRIVATE_MEMBERSHIP_QUERY_RESULTS_STEP
     )
