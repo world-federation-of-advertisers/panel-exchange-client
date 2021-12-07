@@ -17,12 +17,12 @@ package org.wfanet.panelmatch.client.deploy
 import org.apache.beam.sdk.options.PipelineOptions
 import org.wfanet.measurement.common.throttler.Throttler
 import org.wfanet.panelmatch.client.exchangetasks.ApacheBeamTasks
-import org.wfanet.panelmatch.client.exchangetasks.BasicTasksImpl
 import org.wfanet.panelmatch.client.exchangetasks.ExchangeTaskMapper
 import org.wfanet.panelmatch.client.exchangetasks.GenerateKeysTasksImpl
 import org.wfanet.panelmatch.client.exchangetasks.JniCommutativeEncryptionTasks
 import org.wfanet.panelmatch.client.exchangetasks.PrivateStorageTasksImpl
 import org.wfanet.panelmatch.client.exchangetasks.SharedStorageTasksImpl
+import org.wfanet.panelmatch.client.exchangetasks.ValidationTasksImpl
 import org.wfanet.panelmatch.client.privatemembership.JniPrivateMembershipCryptor
 import org.wfanet.panelmatch.client.privatemembership.JniQueryEvaluator
 import org.wfanet.panelmatch.client.privatemembership.JniQueryResultsDecryptor
@@ -31,23 +31,31 @@ import org.wfanet.panelmatch.client.storage.SharedStorageSelector
 import org.wfanet.panelmatch.common.certificates.CertificateManager
 import org.wfanet.panelmatch.common.crypto.JniDeterministicCommutativeCipher
 
-class ProductionExchangeTaskMapperTaskMapper(
-  override val inputTaskThrottler: Throttler,
-  override val privateStorageSelector: PrivateStorageSelector,
-  override val sharedStorageSelector: SharedStorageSelector,
-  override val certificateManager: CertificateManager,
+fun makeProductionExchangeTaskMapper(
+  inputTaskThrottler: Throttler,
+  privateStorageSelector: PrivateStorageSelector,
+  sharedStorageSelector: SharedStorageSelector,
+  certificateManager: CertificateManager,
   pipelineOptions: PipelineOptions
-) :
-  ExchangeTaskMapper(
-    basicTasks = BasicTasksImpl(),
+): ExchangeTaskMapper {
+  return ExchangeTaskMapper(
+    validationTasks = ValidationTasksImpl(),
     commutativeEncryptionTasks = JniCommutativeEncryptionTasks(JniDeterministicCommutativeCipher()),
-    mapReduceTasks = ApacheBeamTasks(pipelineOptions, privateStorageSelector),
-    generateKeysTasks = GenerateKeysTasksImpl(),
+    mapReduceTasks =
+      ApacheBeamTasks(
+        getPrivateMembershipCryptor = ::JniPrivateMembershipCryptor,
+        getQueryResultsEvaluator = ::JniQueryEvaluator,
+        queryResultsDecryptor = JniQueryResultsDecryptor(),
+        privateStorageSelector = privateStorageSelector,
+        pipelineOptions = pipelineOptions
+      ),
+    generateKeysTasks =
+      GenerateKeysTasksImpl(
+        deterministicCommutativeCryptor = JniDeterministicCommutativeCipher(),
+        getPrivateMembershipCryptor = ::JniPrivateMembershipCryptor,
+        certificateManager = certificateManager
+      ),
     privateStorageTasks = PrivateStorageTasksImpl(privateStorageSelector, inputTaskThrottler),
     sharedStorageTasks = SharedStorageTasksImpl(privateStorageSelector, sharedStorageSelector)
-  ) {
-  override val deterministicCommutativeCryptor by lazy { JniDeterministicCommutativeCipher() }
-  override val getPrivateMembershipCryptor = ::JniPrivateMembershipCryptor
-  override val getQueryResultsEvaluator = ::JniQueryEvaluator
-  override val queryResultsDecryptor by lazy { JniQueryResultsDecryptor() }
+  )
 }

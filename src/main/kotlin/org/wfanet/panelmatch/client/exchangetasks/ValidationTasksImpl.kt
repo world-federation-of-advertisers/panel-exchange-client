@@ -4,7 +4,7 @@ import org.wfanet.measurement.api.v2alpha.ExchangeWorkflow
 import org.wfanet.measurement.common.toLocalDate
 import org.wfanet.panelmatch.client.common.ExchangeContext
 
-class BasicTasksImpl : BasicTasks {
+class ValidationTasksImpl : ValidationTasks {
   override fun ExchangeContext.getIntersectAndValidateStepTask(): ExchangeTask {
     check(step.stepCase == ExchangeWorkflow.Step.StepCase.INTERSECT_AND_VALIDATE_STEP)
 
