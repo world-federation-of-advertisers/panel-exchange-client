@@ -17,7 +17,7 @@ package org.wfanet.panelmatch.client.exchangetasks
 import com.google.common.truth.Truth.assertThat
 import com.google.protobuf.ByteString
 import java.time.LocalDate
-import java.util.concurrent.ConcurrentHashMap
+import org.apache.beam.sdk.options.PipelineOptionsFactory
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -26,8 +26,6 @@ import org.wfanet.measurement.api.v2alpha.ExchangeStepAttemptKey
 import org.wfanet.measurement.api.v2alpha.ExchangeWorkflowKt.StepKt.encryptStep
 import org.wfanet.measurement.api.v2alpha.ExchangeWorkflowKt.step
 import org.wfanet.measurement.api.v2alpha.exchangeWorkflow
-import org.wfanet.measurement.storage.StorageClient
-import org.wfanet.measurement.storage.testing.InMemoryStorageClient
 import org.wfanet.panelmatch.client.common.ExchangeContext
 import org.wfanet.panelmatch.client.launcher.testing.inputStep
 import org.wfanet.panelmatch.client.privatemembership.testing.PlaintextPrivateMembershipCryptor
@@ -36,31 +34,12 @@ import org.wfanet.panelmatch.client.privatemembership.testing.PlaintextQueryResu
 import org.wfanet.panelmatch.client.storage.StorageDetails
 import org.wfanet.panelmatch.client.storage.StorageDetailsKt.gcsStorage
 import org.wfanet.panelmatch.client.storage.storageDetails
-import org.wfanet.panelmatch.client.storage.testing.makeTestPrivateStorageSelector
-import org.wfanet.panelmatch.client.storage.testing.makeTestSharedStorageSelector
+import org.wfanet.panelmatch.client.storage.testing.TestPrivateStorageSelector
+import org.wfanet.panelmatch.client.storage.testing.TestSharedStorageSelector
 import org.wfanet.panelmatch.common.certificates.testing.TestCertificateManager
 import org.wfanet.panelmatch.common.crypto.testing.FakeDeterministicCommutativeCipher
-import org.wfanet.panelmatch.common.secrets.testing.TestSecretMap
 import org.wfanet.panelmatch.common.testing.AlwaysReadyThrottler
 import org.wfanet.panelmatch.common.testing.runBlockingTest
-
-// TODO: move elsewhere to enable reuse.
-class TestPrivateStorageSelector {
-  private val blobs = ConcurrentHashMap<String, StorageClient.Blob>()
-
-  val storageClient = InMemoryStorageClient(blobs)
-  val storageDetails = TestSecretMap()
-  val selector = makeTestPrivateStorageSelector(storageDetails, storageClient)
-}
-
-// TODO: move elsewhere to enable reuse.
-class TestSharedStorageSelector {
-  private val blobs = ConcurrentHashMap<String, StorageClient.Blob>()
-
-  val storageClient = InMemoryStorageClient(blobs)
-  val storageDetails = TestSecretMap()
-  val selector = makeTestSharedStorageSelector(storageDetails, storageClient)
-}
 
 private val WORKFLOW = exchangeWorkflow {
   steps += inputStep("a" to "b")
@@ -78,33 +57,32 @@ class ExchangeTaskMapperTest {
   private val testSharedStorageSelector = TestSharedStorageSelector()
   private val testPrivateStorageSelector = TestPrivateStorageSelector()
   private val exchangeTaskMapper =
-    object :
-      ExchangeTaskMapper(
-        basicTasks = BasicTasksImpl(),
-        commutativeEncryptionTasks =
-          JniCommutativeEncryptionTasks(FakeDeterministicCommutativeCipher),
-        mapReduceTasks =
-          ApacheBeamTasks(privateStorageSelector = testPrivateStorageSelector.selector),
-        generateKeysTasks = GenerateKeysTasksImpl(),
-        privateStorageTasks =
-          PrivateStorageTasksImpl(testPrivateStorageSelector.selector, AlwaysReadyThrottler),
-        sharedStorageTasks =
-          SharedStorageTasksImpl(
-            testPrivateStorageSelector.selector,
-            testSharedStorageSelector.selector
-          )
-      ) {
-      override val deterministicCommutativeCryptor = FakeDeterministicCommutativeCipher
-      override val getPrivateMembershipCryptor = { _: ByteString ->
-        PlaintextPrivateMembershipCryptor()
-      }
-      override val queryResultsDecryptor = PlaintextQueryResultsDecryptor()
-      override val privateStorageSelector = testPrivateStorageSelector.selector
-      override val sharedStorageSelector = testSharedStorageSelector.selector
-      override val certificateManager = TestCertificateManager
-      override val inputTaskThrottler = AlwaysReadyThrottler
-      override val getQueryResultsEvaluator = { _: ByteString -> PlaintextQueryEvaluator }
-    }
+    ExchangeTaskMapper(
+      validationTasks = ValidationTasksImpl(),
+      commutativeEncryptionTasks =
+        JniCommutativeEncryptionTasks(FakeDeterministicCommutativeCipher),
+      mapReduceTasks =
+        ApacheBeamTasks(
+          getPrivateMembershipCryptor = { _: ByteString -> PlaintextPrivateMembershipCryptor() },
+          getQueryResultsEvaluator = { _: ByteString -> PlaintextQueryEvaluator },
+          queryResultsDecryptor = PlaintextQueryResultsDecryptor(),
+          privateStorageSelector = testPrivateStorageSelector.selector,
+          pipelineOptions = PipelineOptionsFactory.create()
+        ),
+      generateKeysTasks =
+        GenerateKeysTasksImpl(
+          deterministicCommutativeCryptor = FakeDeterministicCommutativeCipher,
+          getPrivateMembershipCryptor = { _: ByteString -> PlaintextPrivateMembershipCryptor() },
+          certificateManager = TestCertificateManager
+        ),
+      privateStorageTasks =
+        PrivateStorageTasksImpl(testPrivateStorageSelector.selector, AlwaysReadyThrottler),
+      sharedStorageTasks =
+        SharedStorageTasksImpl(
+          testPrivateStorageSelector.selector,
+          testSharedStorageSelector.selector
+        )
+    )
 
   private val testStorageDetails = storageDetails {
     gcs = gcsStorage {}
