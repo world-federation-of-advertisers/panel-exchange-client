@@ -31,10 +31,10 @@ kt_jvm_test(
 )
 
 kt_jvm_test(
-    name = "ExchangeTaskMapperForJoinKeyExchangeTest",
+    name = "ExchangeTaskMapperTest",
     timeout = "short",
-    srcs = ["ExchangeTaskMapperForJoinKeyExchangeTest.kt"],
-    test_class = "org.wfanet.panelmatch.client.exchangetasks.ExchangeTaskMapperForJoinKeyExchangeTest",
+    srcs = ["ExchangeTaskMapperTest.kt"],
+    test_class = "org.wfanet.panelmatch.client.exchangetasks.ExchangeTaskMapperTest",
     deps = [
         "//src/main/kotlin/org/wfanet/panelmatch/client/exchangetasks",
         "//src/main/kotlin/org/wfanet/panelmatch/client/launcher",
