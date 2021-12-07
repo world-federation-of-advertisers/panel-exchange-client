@@ -28,18 +28,18 @@ import com.google.cloud.security.privateca.v1.CertificateConfig.SubjectConfig
 import com.google.cloud.security.privateca.v1.KeyUsage.ExtendedKeyUsageOptions
 import com.google.cloud.security.privateca.v1.KeyUsage.KeyUsageOptions
 import com.google.cloud.security.privateca.v1.X509Parameters.CaOptions
+import com.google.cloud.security.privateca.v1.PublicKey.KeyFormat
 import com.google.api.core.ApiFuture
+import com.google.protobuf.ByteString
 import com.google.protobuf.Duration
 import java.security.PrivateKey
 import java.security.PublicKey
 import java.security.cert.X509Certificate
 import org.wfanet.panelmatch.common.certificates.CertificateAuthority
 import org.wfanet.panelmatch.common.loggerFor
-//import org.wfanet.measurement.common.crypto.generateKeyPair
-
-// https://github.com/googleapis/java-security-private-ca/blob/6650af45214f871041e3eb91214b50332ab6ce94/samples/snippets/cloud-client/src/main/java/privateca/CreateCertificate.java
-// Would the code be the exact same as this , can I do what the CreateCertificate is doing
-// Where do we get the private key from?
+import java.security.KeyPair
+import org.wfanet.measurement.common.crypto.generateKeyPair
+import org.wfanet.measurement.common.crypto.readCertificate
 
 class CertificateAuthority(
   private val projectId: String,
@@ -50,8 +50,7 @@ class CertificateAuthority(
   private val commonName: String,
   private val orgName: String,
   private val domainName: String,
-  private val publicKey: PublicKey,
-  private val certificateLifetime: Long
+  private val certificateLifetime: Duration
 
 ) : CertificateAuthority {
 
@@ -63,12 +62,15 @@ class CertificateAuthority(
 
     CertificateAuthorityServiceClient.create().use { certificateAuthorityServiceClient ->
 
-      // Set the Public Key and its format.
-//      val cloudPublicKey: CloudPublicKey =
-//        CloudPublicKey.newBuilder().setKey(publicKey).setFormat(KeyFormat.PEM).build()
+      // ***  NOT SURE ON CORRECT IMPORT + INPUT TO CREATE PUBLIC/PRIVATE KEY ***
+      val keyPair: KeyPair = generateKeyPair("TODO")
 
-      //*** NOT SURE IF THIS IS THE CORRECT WAY TO CONVERT ***
-      val cloudPublicKey: CloudPublicKey = CloudPublicKey.parseFrom(publicKey.encoded)
+      val privateKey: PrivateKey = keyPair.private
+      val publicKey: PublicKey = keyPair.public
+
+      // Set the Public Key and its format.
+      val cloudPublicKey: CloudPublicKey =
+        CloudPublicKey.newBuilder().setKey(ByteString.copyFromUtf8(publicKey.toString())).setFormat(KeyFormat.PEM).build()
 
       val subjectConfig =
         SubjectConfig.newBuilder() // Set the common name and org name.
@@ -109,7 +111,7 @@ class CertificateAuthority(
               .build()
           )
           .setLifetime(
-            Duration.newBuilder().setSeconds(certificateLifetime).build()
+            certificateLifetime
           )
           .build()
 
@@ -129,20 +131,7 @@ class CertificateAuthority(
 
       val response: Certificate = future.get()
 
-      // Get the PEM encoded, signed X.509 certificate.
-      logger.info(response.pemCertificate.toString())
-
-      // To verify the obtained certificate, use this intermediate chain list.
-      logger.info(response.pemCertificateChainList.toString())
-
-      // ***  NOT SURE ON CORRECT INPUT TO CREATE PRIVATE KEY ***
-//      val privateKey = generateKeyPair("TODO")
-
-      //***  NOT SURE HOW CONVERT CERTIFICATE TO X509CERTIFICATE ***
-
-//      return response.pemCertificate to privateKey
-
-      TODO()
+      return readCertificate(response.pemCertificate.byteInputStream()) to privateKey
     }
   }
 

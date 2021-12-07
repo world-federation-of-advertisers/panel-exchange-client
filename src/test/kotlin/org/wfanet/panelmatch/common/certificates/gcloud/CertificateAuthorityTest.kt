@@ -15,6 +15,7 @@
 package org.wfanet.panelmatch.common.certificates.gcloud
 
 import com.google.common.truth.Truth.assertThat
+import com.google.protobuf.Duration
 import com.google.protobuf.kotlin.toByteStringUtf8
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -44,7 +45,7 @@ private val ROOT_X509 by lazy { readCertificate(FIXED_CA_CERT_PEM_FILE) }
 private val ROOT_PUBLIC_KEY by lazy { ROOT_X509.publicKey }
 //private val ROOT_PRIVATE_KEY_FILE by lazy { FIXED_CA_CERT_PEM_FILE.resolveSibling("ca.key") }
 
-val xyz = ROOT_PUBLIC_KEY.encoded
+val xyz = ROOT_PUBLIC_KEY
 
 @RunWith(JUnit4::class)
 class CertificateAuthorityTest {
@@ -72,8 +73,7 @@ class CertificateAuthorityTest {
         "wfa-mahi-test-ca-name",
         "wfa-mahi-test",
         "TODO - UNSURE",
-        ROOT_PUBLIC_KEY,
-        CONTEXT.validDays.toLong()
+        Duration.newBuilder().setSeconds(CONTEXT.validDays.toLong() * 86400).build()
       )
 
     val (x509, privateKey) =
