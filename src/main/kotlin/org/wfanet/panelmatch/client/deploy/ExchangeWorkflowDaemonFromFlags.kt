@@ -85,15 +85,14 @@ abstract class ExchangeWorkflowDaemonFromFlags : ExchangeWorkflowDaemon() {
     )
   }
 
-  override val exchangeTaskMapper: ExchangeTaskMapper by lazy {
-    ProductionExchangeTaskMapper(
-      inputTaskThrottler = throttler,
+  override val exchangeTaskMapper: ExchangeTaskMapper = ProductionExchangeTaskMapperTaskMapper(
+      inputTaskThrottler = MinimumIntervalThrottler(Clock.systemUTC(), flags.pollingInterval),
       privateStorageSelector = privateStorageSelector,
       sharedStorageSelector = sharedStorageSelector,
       certificateManager = certificateManager,
       pipelineOptions = pipelineOptions
     )
-  }
+
 
   override val apiClient: ApiClient by lazy {
     val clientCerts =
@@ -116,10 +115,6 @@ abstract class ExchangeWorkflowDaemonFromFlags : ExchangeWorkflowDaemon() {
     val exchangeStepAttemptsClient = ExchangeStepAttemptsCoroutineStub(channel)
 
     GrpcApiClient(identity, exchangeStepsClient, exchangeStepAttemptsClient, Clock.systemUTC())
-  }
-
-  override val throttler: Throttler by lazy {
-    MinimumIntervalThrottler(Clock.systemUTC(), flags.pollingInterval)
   }
 
   override val taskTimeout: Timeout by lazy { flags.taskTimeout.asTimeout() }
