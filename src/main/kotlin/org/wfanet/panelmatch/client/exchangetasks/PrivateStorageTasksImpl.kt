@@ -1,0 +1,44 @@
+package org.wfanet.panelmatch.client.exchangetasks
+
+import org.wfanet.measurement.api.v2alpha.ExchangeWorkflow
+import org.wfanet.measurement.common.throttler.Throttler
+import org.wfanet.measurement.common.toLocalDate
+import org.wfanet.panelmatch.client.common.ExchangeContext
+import org.wfanet.panelmatch.client.storage.PrivateStorageSelector
+
+class PrivateStorageTasksImpl(
+  private val privateStorageSelector: PrivateStorageSelector,
+  private val inputTaskThrottler: Throttler
+) : PrivateStorageTasks {
+  override suspend fun ExchangeContext.getInputStepTask(): ExchangeTask {
+    check(step.stepCase == ExchangeWorkflow.Step.StepCase.INPUT_STEP)
+    require(step.inputLabelsMap.isEmpty())
+    val blobKey = step.outputLabelsMap.values.single()
+    return InputTask(
+      storage = privateStorageSelector.getStorageClient(exchangeDateKey),
+      throttler = inputTaskThrottler,
+      blobKey = blobKey,
+    )
+  }
+
+  override suspend fun ExchangeContext.getCopyFromPreviousExchangeTask(): ExchangeTask {
+    check(step.stepCase == ExchangeWorkflow.Step.StepCase.COPY_FROM_PREVIOUS_EXCHANGE_STEP)
+
+    val previousBlobKey = step.inputLabelsMap.getValue("input")
+
+    if (exchangeDateKey.date == workflow.firstExchangeDate.toLocalDate()) {
+      return InputTask(
+        previousBlobKey,
+        inputTaskThrottler,
+        privateStorageSelector.getStorageClient(exchangeDateKey)
+      )
+    }
+
+    return CopyFromPreviousExchangeTask(
+      privateStorageSelector,
+      workflow.repetitionSchedule,
+      exchangeDateKey,
+      previousBlobKey
+    )
+  }
+}

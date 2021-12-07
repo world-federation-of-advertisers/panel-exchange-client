@@ -14,9 +14,14 @@
 
 package org.wfanet.panelmatch.integration
 
-import org.apache.beam.sdk.Pipeline
 import org.wfanet.measurement.common.throttler.Throttler
-import org.wfanet.panelmatch.client.exchangetasks.ExchangeTaskMapperForJoinKeyExchange
+import org.wfanet.panelmatch.client.exchangetasks.ApacheBeamTasks
+import org.wfanet.panelmatch.client.exchangetasks.BasicTasksImpl
+import org.wfanet.panelmatch.client.exchangetasks.ExchangeTaskMapper
+import org.wfanet.panelmatch.client.exchangetasks.GenerateKeysTasksImpl
+import org.wfanet.panelmatch.client.exchangetasks.JniCommutativeEncryptionTasks
+import org.wfanet.panelmatch.client.exchangetasks.PrivateStorageTasksImpl
+import org.wfanet.panelmatch.client.exchangetasks.SharedStorageTasksImpl
 import org.wfanet.panelmatch.client.privatemembership.JniPrivateMembershipCryptor
 import org.wfanet.panelmatch.client.privatemembership.JniQueryEvaluator
 import org.wfanet.panelmatch.client.privatemembership.JniQueryResultsDecryptor
@@ -25,16 +30,22 @@ import org.wfanet.panelmatch.client.storage.SharedStorageSelector
 import org.wfanet.panelmatch.common.certificates.CertificateManager
 import org.wfanet.panelmatch.common.crypto.JniDeterministicCommutativeCipher
 
-class InProcessExchangeTaskMapper(
+class InProcessExchangeTaskMapperTaskMapper(
   override val privateStorageSelector: PrivateStorageSelector,
   override val sharedStorageSelector: SharedStorageSelector,
   override val certificateManager: CertificateManager,
   override val inputTaskThrottler: Throttler
-) : ExchangeTaskMapperForJoinKeyExchange() {
+) :
+  ExchangeTaskMapper(
+    basicTasks = BasicTasksImpl(),
+    commutativeEncryptionTasks = JniCommutativeEncryptionTasks(JniDeterministicCommutativeCipher()),
+    mapReduceTasks = ApacheBeamTasks(privateStorageSelector = privateStorageSelector),
+    generateKeysTasks = GenerateKeysTasksImpl(),
+    privateStorageTasks = PrivateStorageTasksImpl(privateStorageSelector, inputTaskThrottler),
+    sharedStorageTasks = SharedStorageTasksImpl(privateStorageSelector, sharedStorageSelector)
+  ) {
   override val deterministicCommutativeCryptor by lazy { JniDeterministicCommutativeCipher() }
   override val getPrivateMembershipCryptor = ::JniPrivateMembershipCryptor
   override val getQueryResultsEvaluator = ::JniQueryEvaluator
   override val queryResultsDecryptor by lazy { JniQueryResultsDecryptor() }
-
-  override fun newPipeline(): Pipeline = Pipeline.create()
 }
