@@ -22,6 +22,7 @@ import java.time.Duration
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
+import org.apache.beam.sdk.options.PipelineOptionsFactory
 import org.wfanet.measurement.api.v2alpha.ExchangeStepAttemptsGrpcKt.ExchangeStepAttemptsCoroutineStub
 import org.wfanet.measurement.api.v2alpha.ExchangeStepsGrpcKt.ExchangeStepsCoroutineStub
 import org.wfanet.measurement.api.v2alpha.ResourceKey
@@ -92,11 +93,12 @@ class ExchangeWorkflowDaemonForTest(
   override val throttler: Throttler = MinimumIntervalThrottler(clock, pollingInterval)
 
   override val exchangeTaskMapper: ExchangeTaskMapper by lazy {
-    InProcessExchangeTaskMapperTaskMapper(
+    makeInProcessExchangeTaskMapper(
       privateStorageSelector = privateStorageSelector,
       sharedStorageSelector = sharedStorageSelector,
       certificateManager = certificateManager,
-      inputTaskThrottler = MinimumIntervalThrottler(clock, Duration.ofMillis(250))
+      inputTaskThrottler = MinimumIntervalThrottler(clock, Duration.ofMillis(250)),
+      pipelineOptions = PipelineOptionsFactory.create()
     )
   }
 
