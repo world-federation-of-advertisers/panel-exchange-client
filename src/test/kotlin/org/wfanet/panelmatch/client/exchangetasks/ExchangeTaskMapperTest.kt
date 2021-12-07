@@ -18,7 +18,6 @@ import com.google.common.truth.Truth.assertThat
 import com.google.protobuf.ByteString
 import java.time.LocalDate
 import java.util.concurrent.ConcurrentHashMap
-import org.apache.beam.sdk.Pipeline
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -75,11 +74,26 @@ private val ATTEMPT_KEY =
   ExchangeStepAttemptKey(RECURRING_EXCHANGE_ID, "some-exchange", "some-step", "some-attempt")
 
 @RunWith(JUnit4::class)
-class ExchangeTaskMapperForJoinKeyExchangeTest {
+class ExchangeTaskMapperTest {
   private val testSharedStorageSelector = TestSharedStorageSelector()
   private val testPrivateStorageSelector = TestPrivateStorageSelector()
   private val exchangeTaskMapper =
-    object : ExchangeTaskMapperForJoinKeyExchange() {
+    object :
+      ExchangeTaskMapper(
+        basicTasks = BasicTasksImpl(),
+        commutativeEncryptionTasks =
+          JniCommutativeEncryptionTasks(FakeDeterministicCommutativeCipher),
+        mapReduceTasks =
+          ApacheBeamTasks(privateStorageSelector = testPrivateStorageSelector.selector),
+        generateKeysTasks = GenerateKeysTasksImpl(),
+        privateStorageTasks =
+          PrivateStorageTasksImpl(testPrivateStorageSelector.selector, AlwaysReadyThrottler),
+        sharedStorageTasks =
+          SharedStorageTasksImpl(
+            testPrivateStorageSelector.selector,
+            testSharedStorageSelector.selector
+          )
+      ) {
       override val deterministicCommutativeCryptor = FakeDeterministicCommutativeCipher
       override val getPrivateMembershipCryptor = { _: ByteString ->
         PlaintextPrivateMembershipCryptor()
@@ -90,7 +104,6 @@ class ExchangeTaskMapperForJoinKeyExchangeTest {
       override val certificateManager = TestCertificateManager
       override val inputTaskThrottler = AlwaysReadyThrottler
       override val getQueryResultsEvaluator = { _: ByteString -> PlaintextQueryEvaluator }
-      override fun newPipeline(): Pipeline = throw NotImplementedError("Not needed for test")
     }
 
   private val testStorageDetails = storageDetails {
