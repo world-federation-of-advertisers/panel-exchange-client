@@ -7,29 +7,27 @@ import org.wfanet.panelmatch.client.privatemembership.PrivateMembershipCryptor
 import org.wfanet.panelmatch.common.certificates.CertificateManager
 import org.wfanet.panelmatch.common.crypto.DeterministicCommutativeCipher
 
-class GenerateKeysTasksImpl : GenerateKeysTasks {
+class GenerateKeysTasksImpl(
+  private val deterministicCommutativeCryptor: DeterministicCommutativeCipher,
+  private val getPrivateMembershipCryptor: (ByteString) -> PrivateMembershipCryptor,
+  private val certificateManager: CertificateManager
+) : GenerateKeysTasks {
   override fun getGenerateLookupKeysTask(): ExchangeTask {
     return GenerateLookupKeysTask()
   }
 
-  override fun getGenerateSymmetricKeyTask(
-    deterministicCommutativeCryptor: DeterministicCommutativeCipher
-  ): ExchangeTask {
+  override fun getGenerateSymmetricKeyTask(): ExchangeTask {
     return GenerateSymmetricKeyTask(generateKey = deterministicCommutativeCryptor::generateKey)
   }
 
-  override fun ExchangeContext.getGenerateSerializedRlweKeysStepTask(
-    getPrivateMembershipCryptor: (ByteString) -> PrivateMembershipCryptor
-  ): ExchangeTask {
+  override fun ExchangeContext.getGenerateSerializedRlweKeysStepTask(): ExchangeTask {
     check(step.stepCase == ExchangeWorkflow.Step.StepCase.GENERATE_SERIALIZED_RLWE_KEYS_STEP)
     val privateMembershipCryptor =
       getPrivateMembershipCryptor(step.generateSerializedRlweKeysStep.serializedParameters)
     return GenerateAsymmetricKeysTask(generateKeys = privateMembershipCryptor::generateKeys)
   }
 
-  override fun ExchangeContext.getGenerateExchangeCertificateTask(
-    certificateManager: CertificateManager
-  ): ExchangeTask {
+  override fun ExchangeContext.getGenerateExchangeCertificateTask(): ExchangeTask {
     return GenerateExchangeCertificateTask(certificateManager, exchangeDateKey)
   }
 }

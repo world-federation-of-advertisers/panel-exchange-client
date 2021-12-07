@@ -14,75 +14,49 @@
 
 package org.wfanet.panelmatch.client.exchangetasks
 
-import com.google.protobuf.ByteString
 import org.wfanet.measurement.api.v2alpha.ExchangeWorkflow.Step.StepCase
-import org.wfanet.measurement.common.throttler.Throttler
 import org.wfanet.panelmatch.client.common.ExchangeContext
-import org.wfanet.panelmatch.client.privatemembership.PrivateMembershipCryptor
-import org.wfanet.panelmatch.client.privatemembership.QueryEvaluator
-import org.wfanet.panelmatch.client.privatemembership.QueryResultsDecryptor
-import org.wfanet.panelmatch.client.storage.PrivateStorageSelector
-import org.wfanet.panelmatch.client.storage.SharedStorageSelector
-import org.wfanet.panelmatch.common.certificates.CertificateManager
-import org.wfanet.panelmatch.common.crypto.DeterministicCommutativeCipher
 import src.main.kotlin.org.wfanet.panelmatch.client.exchangetasks.CommutativeEncryptionTasks
 import src.main.kotlin.org.wfanet.panelmatch.client.exchangetasks.SharedStorageTasks
 
 /** Maps join key exchange steps to exchange tasks */
-abstract class ExchangeTaskMapper(
-  private val basicTasks: BasicTasks,
+class ExchangeTaskMapper(
+  private val validationTasks: ValidationTasks,
   private val commutativeEncryptionTasks: CommutativeEncryptionTasks,
   private val mapReduceTasks: MapReduceTasks,
   private val generateKeysTasks: GenerateKeysTasks,
   private val privateStorageTasks: PrivateStorageTasks,
   private val sharedStorageTasks: SharedStorageTasks
 ) :
-  BasicTasks by basicTasks,
+  ValidationTasks by validationTasks,
   CommutativeEncryptionTasks by commutativeEncryptionTasks,
   SharedStorageTasks by sharedStorageTasks,
   PrivateStorageTasks by privateStorageTasks,
   MapReduceTasks by mapReduceTasks,
   GenerateKeysTasks by generateKeysTasks {
 
-  abstract val deterministicCommutativeCryptor: DeterministicCommutativeCipher
-  abstract val getPrivateMembershipCryptor: (ByteString) -> PrivateMembershipCryptor
-  abstract val queryResultsDecryptor: QueryResultsDecryptor
-  abstract val getQueryResultsEvaluator: (ByteString) -> QueryEvaluator
-  abstract val privateStorageSelector: PrivateStorageSelector
-  abstract val sharedStorageSelector: SharedStorageSelector
-  abstract val certificateManager: CertificateManager
-  abstract val inputTaskThrottler: Throttler
-
   suspend fun getExchangeTaskForStep(context: ExchangeContext): ExchangeTask {
-    return context.getExchangeTask()
-  }
-
-  private suspend fun ExchangeContext.getExchangeTask(): ExchangeTask {
     @Suppress("WHEN_ENUM_CAN_BE_NULL_IN_JAVA")
-    return when (step.stepCase) {
-      StepCase.ENCRYPT_STEP -> CryptorExchangeTask.forEncryption(deterministicCommutativeCryptor)
-      StepCase.REENCRYPT_STEP ->
-        CryptorExchangeTask.forReEncryption(deterministicCommutativeCryptor)
-      StepCase.DECRYPT_STEP -> CryptorExchangeTask.forDecryption(deterministicCommutativeCryptor)
-      StepCase.INPUT_STEP -> getInputStepTask()
+    return when (context.step.stepCase) {
+      StepCase.ENCRYPT_STEP -> context.buildEncryptTask()
+      StepCase.REENCRYPT_STEP -> context.buildReEncryptTask()
+      StepCase.DECRYPT_STEP -> context.buildDecryptTask()
+      StepCase.INPUT_STEP -> context.getInputStepTask()
       StepCase.GENERATE_LOOKUP_KEYS -> getGenerateLookupKeysTask()
-      StepCase.INTERSECT_AND_VALIDATE_STEP -> getIntersectAndValidateStepTask()
-      StepCase.GENERATE_COMMUTATIVE_DETERMINISTIC_KEY_STEP ->
-        getGenerateSymmetricKeyTask(deterministicCommutativeCryptor)
-      StepCase.GENERATE_SERIALIZED_RLWE_KEYS_STEP ->
-        getGenerateSerializedRlweKeysStepTask(getPrivateMembershipCryptor)
-      StepCase.GENERATE_CERTIFICATE_STEP ->
-        GenerateExchangeCertificateTask(certificateManager, exchangeDateKey)
+      StepCase.INTERSECT_AND_VALIDATE_STEP -> context.getIntersectAndValidateStepTask()
+      StepCase.GENERATE_COMMUTATIVE_DETERMINISTIC_KEY_STEP -> getGenerateSymmetricKeyTask()
+      StepCase.GENERATE_SERIALIZED_RLWE_KEYS_STEP -> context.getGenerateSerializedRlweKeysStepTask()
+      StepCase.GENERATE_CERTIFICATE_STEP -> context.getGenerateExchangeCertificateTask()
       StepCase.EXECUTE_PRIVATE_MEMBERSHIP_QUERIES_STEP ->
-        getExecutePrivateMembershipQueriesTask(getQueryResultsEvaluator)
+        context.getExecutePrivateMembershipQueriesTask()
       StepCase.BUILD_PRIVATE_MEMBERSHIP_QUERIES_STEP ->
-        getBuildPrivateMembershipQueriesTask(getPrivateMembershipCryptor)
+        context.getBuildPrivateMembershipQueriesTask()
       StepCase.DECRYPT_PRIVATE_MEMBERSHIP_QUERY_RESULTS_STEP ->
-        getDecryptMembershipResultsTask(queryResultsDecryptor)
-      StepCase.COPY_FROM_SHARED_STORAGE_STEP -> buildCopyFromSharedStorageTask()
-      StepCase.COPY_TO_SHARED_STORAGE_STEP -> buildCopyToSharedStorageTask()
-      StepCase.COPY_FROM_PREVIOUS_EXCHANGE_STEP -> getCopyFromPreviousExchangeTask()
-      else -> throw IllegalArgumentException("Unsupported step type: ${step.stepCase}")
+        context.getDecryptMembershipResultsTask()
+      StepCase.COPY_FROM_SHARED_STORAGE_STEP -> context.buildCopyFromSharedStorageTask()
+      StepCase.COPY_TO_SHARED_STORAGE_STEP -> context.buildCopyToSharedStorageTask()
+      StepCase.COPY_FROM_PREVIOUS_EXCHANGE_STEP -> context.getCopyFromPreviousExchangeTask()
+      else -> throw IllegalArgumentException("Unsupported step type: ${context.step.stepCase}")
     }
   }
 }
