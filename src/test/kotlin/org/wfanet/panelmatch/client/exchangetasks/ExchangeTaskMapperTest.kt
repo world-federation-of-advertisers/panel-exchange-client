@@ -25,9 +25,8 @@ import org.wfanet.measurement.api.v2alpha.ExchangeWorkflowKt.StepKt.encryptStep
 import org.wfanet.measurement.api.v2alpha.ExchangeWorkflowKt.step
 import org.wfanet.measurement.api.v2alpha.exchangeWorkflow
 import org.wfanet.panelmatch.client.common.ExchangeContext
-import org.wfanet.panelmatch.client.exchangetasks.testing.FakeCryptorExchangeTask
-import org.wfanet.panelmatch.client.exchangetasks.testing.FakeInputTask
-import org.wfanet.panelmatch.client.exchangetasks.testing.makeExchangeTaskMapper
+import org.wfanet.panelmatch.client.exchangetasks.testing.FakeExchangeTask
+import org.wfanet.panelmatch.client.exchangetasks.testing.makeFakeExchangeTaskMapper
 import org.wfanet.panelmatch.client.launcher.testing.inputStep
 import org.wfanet.panelmatch.client.storage.StorageDetails
 import org.wfanet.panelmatch.client.storage.StorageDetailsKt.gcsStorage
@@ -49,7 +48,7 @@ private val ATTEMPT_KEY =
 @RunWith(JUnit4::class)
 class ExchangeTaskMapperTest {
   private val testPrivateStorageSelector = TestPrivateStorageSelector()
-  private val exchangeTaskMapper = makeExchangeTaskMapper()
+  private val exchangeTaskMapper = makeFakeExchangeTaskMapper()
 
   private val testStorageDetails = storageDetails {
     gcs = gcsStorage {}
@@ -66,13 +65,15 @@ class ExchangeTaskMapperTest {
   fun `map input task`() = runBlockingTest {
     val context = ExchangeContext(ATTEMPT_KEY, DATE, WORKFLOW, WORKFLOW.getSteps(0))
     val exchangeTask = exchangeTaskMapper.getExchangeTaskForStep(context)
-    assertThat(exchangeTask).isInstanceOf(FakeInputTask::class.java)
+    assertThat(exchangeTask).isInstanceOf(FakeExchangeTask::class.java)
+    assertThat((exchangeTask as FakeExchangeTask).taskName).isEqualTo("input")
   }
 
   @Test
   fun `map crypto task`() = runBlockingTest {
     val context = ExchangeContext(ATTEMPT_KEY, DATE, WORKFLOW, WORKFLOW.getSteps(1))
     val exchangeTask = exchangeTaskMapper.getExchangeTaskForStep(context)
-    assertThat(exchangeTask).isInstanceOf(FakeCryptorExchangeTask::class.java)
+    assertThat(exchangeTask).isInstanceOf(FakeExchangeTask::class.java)
+    assertThat((exchangeTask as FakeExchangeTask).taskName).isEqualTo("encrypt")
   }
 }
