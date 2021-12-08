@@ -16,7 +16,7 @@ package org.wfanet.panelmatch.client.exchangetasks.testing
 
 import org.wfanet.panelmatch.client.exchangetasks.ExchangeTaskMapper
 
-fun makeExchangeTaskMapper(): ExchangeTaskMapper {
+fun makeFakeExchangeTaskMapper(): ExchangeTaskMapper {
   return ExchangeTaskMapper(
     validationTasks = FakeValidationTasks(),
     commutativeEncryptionTasks = FakeCommutativeEncryptionTasks(),
