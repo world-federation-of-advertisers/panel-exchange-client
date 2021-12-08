@@ -15,9 +15,7 @@
 package org.wfanet.panelmatch.client.exchangetasks
 
 import com.google.common.truth.Truth.assertThat
-import com.google.protobuf.ByteString
 import java.time.LocalDate
-import org.apache.beam.sdk.options.PipelineOptionsFactory
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -27,18 +25,14 @@ import org.wfanet.measurement.api.v2alpha.ExchangeWorkflowKt.StepKt.encryptStep
 import org.wfanet.measurement.api.v2alpha.ExchangeWorkflowKt.step
 import org.wfanet.measurement.api.v2alpha.exchangeWorkflow
 import org.wfanet.panelmatch.client.common.ExchangeContext
+import org.wfanet.panelmatch.client.exchangetasks.testing.FakeCryptorExchangeTask
+import org.wfanet.panelmatch.client.exchangetasks.testing.FakeInputTask
+import org.wfanet.panelmatch.client.exchangetasks.testing.makeExchangeTaskMapper
 import org.wfanet.panelmatch.client.launcher.testing.inputStep
-import org.wfanet.panelmatch.client.privatemembership.testing.PlaintextPrivateMembershipCryptor
-import org.wfanet.panelmatch.client.privatemembership.testing.PlaintextQueryEvaluator
-import org.wfanet.panelmatch.client.privatemembership.testing.PlaintextQueryResultsDecryptor
 import org.wfanet.panelmatch.client.storage.StorageDetails
 import org.wfanet.panelmatch.client.storage.StorageDetailsKt.gcsStorage
 import org.wfanet.panelmatch.client.storage.storageDetails
 import org.wfanet.panelmatch.client.storage.testing.TestPrivateStorageSelector
-import org.wfanet.panelmatch.client.storage.testing.TestSharedStorageSelector
-import org.wfanet.panelmatch.common.certificates.testing.TestCertificateManager
-import org.wfanet.panelmatch.common.crypto.testing.FakeDeterministicCommutativeCipher
-import org.wfanet.panelmatch.common.testing.AlwaysReadyThrottler
 import org.wfanet.panelmatch.common.testing.runBlockingTest
 
 private val WORKFLOW = exchangeWorkflow {
@@ -54,35 +48,8 @@ private val ATTEMPT_KEY =
 
 @RunWith(JUnit4::class)
 class ExchangeTaskMapperTest {
-  private val testSharedStorageSelector = TestSharedStorageSelector()
   private val testPrivateStorageSelector = TestPrivateStorageSelector()
-  private val exchangeTaskMapper =
-    ExchangeTaskMapper(
-      validationTasks = ValidationTasksImpl(),
-      commutativeEncryptionTasks =
-        JniCommutativeEncryptionTasks(FakeDeterministicCommutativeCipher),
-      mapReduceTasks =
-        ApacheBeamTasks(
-          getPrivateMembershipCryptor = { _: ByteString -> PlaintextPrivateMembershipCryptor() },
-          getQueryResultsEvaluator = { _: ByteString -> PlaintextQueryEvaluator },
-          queryResultsDecryptor = PlaintextQueryResultsDecryptor(),
-          privateStorageSelector = testPrivateStorageSelector.selector,
-          pipelineOptions = PipelineOptionsFactory.create()
-        ),
-      generateKeysTasks =
-        GenerateKeysTasksImpl(
-          deterministicCommutativeCryptor = FakeDeterministicCommutativeCipher,
-          getPrivateMembershipCryptor = { _: ByteString -> PlaintextPrivateMembershipCryptor() },
-          certificateManager = TestCertificateManager
-        ),
-      privateStorageTasks =
-        PrivateStorageTasksImpl(testPrivateStorageSelector.selector, AlwaysReadyThrottler),
-      sharedStorageTasks =
-        SharedStorageTasksImpl(
-          testPrivateStorageSelector.selector,
-          testSharedStorageSelector.selector
-        )
-    )
+  private val exchangeTaskMapper = makeExchangeTaskMapper()
 
   private val testStorageDetails = storageDetails {
     gcs = gcsStorage {}
@@ -99,13 +66,13 @@ class ExchangeTaskMapperTest {
   fun `map input task`() = runBlockingTest {
     val context = ExchangeContext(ATTEMPT_KEY, DATE, WORKFLOW, WORKFLOW.getSteps(0))
     val exchangeTask = exchangeTaskMapper.getExchangeTaskForStep(context)
-    assertThat(exchangeTask).isInstanceOf(InputTask::class.java)
+    assertThat(exchangeTask).isInstanceOf(FakeInputTask::class.java)
   }
 
   @Test
   fun `map crypto task`() = runBlockingTest {
     val context = ExchangeContext(ATTEMPT_KEY, DATE, WORKFLOW, WORKFLOW.getSteps(1))
     val exchangeTask = exchangeTaskMapper.getExchangeTaskForStep(context)
-    assertThat(exchangeTask).isInstanceOf(CryptorExchangeTask::class.java)
+    assertThat(exchangeTask).isInstanceOf(FakeCryptorExchangeTask::class.java)
   }
 }

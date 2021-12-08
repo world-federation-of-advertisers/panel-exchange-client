@@ -33,7 +33,7 @@ class ExchangeTaskMapper(
       StepCase.ENCRYPT_STEP -> commutativeEncryptionTasks.encrypt()
       StepCase.REENCRYPT_STEP -> commutativeEncryptionTasks.reEncrypt()
       StepCase.DECRYPT_STEP -> commutativeEncryptionTasks.decrypt()
-      StepCase.INPUT_STEP -> privateStorageTasks.getInput(context)
+      StepCase.INPUT_STEP -> privateStorageTasks.input(context)
       StepCase.COPY_FROM_PREVIOUS_EXCHANGE_STEP ->
         privateStorageTasks.copyFromPreviousExchange(context)
       StepCase.INTERSECT_AND_VALIDATE_STEP -> validationTasks.intersectAndValidate(context)
