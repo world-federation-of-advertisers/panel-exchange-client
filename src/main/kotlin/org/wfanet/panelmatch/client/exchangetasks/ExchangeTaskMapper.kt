@@ -25,35 +25,32 @@ class ExchangeTaskMapper(
   private val generateKeysTasks: GenerateKeysTasks,
   private val privateStorageTasks: PrivateStorageTasks,
   private val sharedStorageTasks: SharedStorageTasks
-) :
-  ValidationTasks by validationTasks,
-  CommutativeEncryptionTasks by commutativeEncryptionTasks,
-  SharedStorageTasks by sharedStorageTasks,
-  PrivateStorageTasks by privateStorageTasks,
-  MapReduceTasks by mapReduceTasks,
-  GenerateKeysTasks by generateKeysTasks {
+) {
 
   suspend fun getExchangeTaskForStep(context: ExchangeContext): ExchangeTask {
     @Suppress("WHEN_ENUM_CAN_BE_NULL_IN_JAVA")
     return when (context.step.stepCase) {
-      StepCase.ENCRYPT_STEP -> context.buildEncryptTask()
-      StepCase.REENCRYPT_STEP -> context.buildReEncryptTask()
-      StepCase.DECRYPT_STEP -> context.buildDecryptTask()
-      StepCase.INPUT_STEP -> context.getInputStepTask()
-      StepCase.GENERATE_LOOKUP_KEYS -> getGenerateLookupKeysTask()
-      StepCase.INTERSECT_AND_VALIDATE_STEP -> context.getIntersectAndValidateStepTask()
-      StepCase.GENERATE_COMMUTATIVE_DETERMINISTIC_KEY_STEP -> getGenerateSymmetricKeyTask()
-      StepCase.GENERATE_SERIALIZED_RLWE_KEYS_STEP -> context.getGenerateSerializedRlweKeysStepTask()
-      StepCase.GENERATE_CERTIFICATE_STEP -> context.getGenerateExchangeCertificateTask()
+      StepCase.ENCRYPT_STEP -> commutativeEncryptionTasks.encrypt()
+      StepCase.REENCRYPT_STEP -> commutativeEncryptionTasks.reEncrypt()
+      StepCase.DECRYPT_STEP -> commutativeEncryptionTasks.decrypt()
+      StepCase.INPUT_STEP -> privateStorageTasks.getInput(context)
+      StepCase.COPY_FROM_PREVIOUS_EXCHANGE_STEP ->
+        privateStorageTasks.copyFromPreviousExchange(context)
+      StepCase.INTERSECT_AND_VALIDATE_STEP -> validationTasks.intersectAndValidate(context)
+      StepCase.GENERATE_COMMUTATIVE_DETERMINISTIC_KEY_STEP ->
+        generateKeysTasks.generateSymmetricKey()
+      StepCase.GENERATE_SERIALIZED_RLWE_KEYS_STEP ->
+        generateKeysTasks.generateSerializedRlweKeys(context)
+      StepCase.GENERATE_CERTIFICATE_STEP -> generateKeysTasks.generateExchangeCertificate(context)
+      StepCase.GENERATE_LOOKUP_KEYS -> generateKeysTasks.generateLookupKeys()
       StepCase.EXECUTE_PRIVATE_MEMBERSHIP_QUERIES_STEP ->
-        context.getExecutePrivateMembershipQueriesTask()
+        mapReduceTasks.executePrivateMembershipQueries(context)
       StepCase.BUILD_PRIVATE_MEMBERSHIP_QUERIES_STEP ->
-        context.getBuildPrivateMembershipQueriesTask()
+        mapReduceTasks.buildPrivateMembershipQueries(context)
       StepCase.DECRYPT_PRIVATE_MEMBERSHIP_QUERY_RESULTS_STEP ->
-        context.getDecryptMembershipResultsTask()
-      StepCase.COPY_FROM_SHARED_STORAGE_STEP -> context.buildCopyFromSharedStorageTask()
-      StepCase.COPY_TO_SHARED_STORAGE_STEP -> context.buildCopyToSharedStorageTask()
-      StepCase.COPY_FROM_PREVIOUS_EXCHANGE_STEP -> context.getCopyFromPreviousExchangeTask()
+        mapReduceTasks.decryptMembershipResults(context)
+      StepCase.COPY_FROM_SHARED_STORAGE_STEP -> sharedStorageTasks.copyFromSharedStorage(context)
+      StepCase.COPY_TO_SHARED_STORAGE_STEP -> sharedStorageTasks.copyToSharedStorage(context)
       else -> throw IllegalArgumentException("Unsupported step type: ${context.step.stepCase}")
     }
   }
