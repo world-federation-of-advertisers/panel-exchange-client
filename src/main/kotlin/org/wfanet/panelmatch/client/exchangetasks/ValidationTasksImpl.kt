@@ -19,7 +19,8 @@ import org.wfanet.measurement.common.toLocalDate
 import org.wfanet.panelmatch.client.common.ExchangeContext
 
 class ValidationTasksImpl : ValidationTasks {
-  override fun ExchangeContext.getIntersectAndValidateStepTask(): ExchangeTask {
+  override fun intersectAndValidate(context: ExchangeContext): ExchangeTask {
+    val step = context.step
     check(step.stepCase == ExchangeWorkflow.Step.StepCase.INTERSECT_AND_VALIDATE_STEP)
 
     val maxSize = step.intersectAndValidateStep.maxSize
@@ -28,7 +29,7 @@ class ValidationTasksImpl : ValidationTasks {
     return IntersectValidateTask(
       maxSize = maxSize,
       maximumNewItemsAllowed = maximumNewItemsAllowed,
-      isFirstExchange = date == workflow.firstExchangeDate.toLocalDate()
+      isFirstExchange = context.date == context.workflow.firstExchangeDate.toLocalDate()
     )
   }
 }

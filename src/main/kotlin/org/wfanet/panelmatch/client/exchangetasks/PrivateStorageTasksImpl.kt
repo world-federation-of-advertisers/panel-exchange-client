@@ -24,22 +24,26 @@ class PrivateStorageTasksImpl(
   private val privateStorageSelector: PrivateStorageSelector,
   private val inputTaskThrottler: Throttler
 ) : PrivateStorageTasks {
-  override suspend fun ExchangeContext.getInputStepTask(): ExchangeTask {
+  override suspend fun getInput(context: ExchangeContext): ExchangeTask {
+    val step = context.step
     check(step.stepCase == ExchangeWorkflow.Step.StepCase.INPUT_STEP)
     require(step.inputLabelsMap.isEmpty())
     val blobKey = step.outputLabelsMap.values.single()
     return InputTask(
-      storage = privateStorageSelector.getStorageClient(exchangeDateKey),
+      storage = privateStorageSelector.getStorageClient(context.exchangeDateKey),
       throttler = inputTaskThrottler,
       blobKey = blobKey,
     )
   }
 
-  override suspend fun ExchangeContext.getCopyFromPreviousExchangeTask(): ExchangeTask {
+  override suspend fun copyFromPreviousExchange(context: ExchangeContext): ExchangeTask {
+    val step = context.step
     check(step.stepCase == ExchangeWorkflow.Step.StepCase.COPY_FROM_PREVIOUS_EXCHANGE_STEP)
 
     val previousBlobKey = step.inputLabelsMap.getValue("input")
 
+    val exchangeDateKey = context.exchangeDateKey
+    val workflow = context.workflow
     if (exchangeDateKey.date == workflow.firstExchangeDate.toLocalDate()) {
       return InputTask(
         previousBlobKey,
