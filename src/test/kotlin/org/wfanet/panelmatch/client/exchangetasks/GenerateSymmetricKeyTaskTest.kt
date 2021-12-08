@@ -15,37 +15,40 @@
 package org.wfanet.panelmatch.client.exchangetasks
 
 import com.google.common.truth.Truth.assertThat
-import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.withContext
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
 import org.wfanet.measurement.common.flatten
-import org.wfanet.panelmatch.client.joinkeyexchange.testing.FakeJoinKeyCryptor
+import org.wfanet.panelmatch.client.logger.TaskLog
+import org.wfanet.panelmatch.common.crypto.testing.FakeDeterministicCommutativeCipher
 
+private const val LABEL = "symmetric-key"
 private const val ATTEMPT_KEY = "some-arbitrary-attempt-key"
 
 @RunWith(JUnit4::class)
 class GenerateSymmetricKeyTaskTest {
-  private val joinKeyCryptor = FakeJoinKeyCryptor
+  private val deterministicCommutativeCryptor = FakeDeterministicCommutativeCipher
 
   @Test
   fun `generate key 2x yields different keys`() = withTestContext {
     val result1 =
-      GenerateSymmetricKeyTask(generateKey = joinKeyCryptor::generateKey)
+      GenerateSymmetricKeyTask(generateKey = deterministicCommutativeCryptor::generateKey)
         .execute(emptyMap())
         .mapValues { it.value.flatten() }
     val result2 =
-      GenerateSymmetricKeyTask(generateKey = joinKeyCryptor::generateKey)
+      GenerateSymmetricKeyTask(generateKey = deterministicCommutativeCryptor::generateKey)
         .execute(emptyMap())
         .mapValues { it.value.flatten() }
 
-    assertThat(result1.getValue("symmetric-key")).isNotEqualTo(result2.getValue("symmetric-key"))
+    assertThat(result1.keys).containsExactly(LABEL)
+    assertThat(result2.keys).containsExactly(LABEL)
+
+    assertThat(result1.getValue(LABEL)).isNotEqualTo(result2.getValue(LABEL))
   }
 }
 
 private fun withTestContext(block: suspend () -> Unit) {
-  runBlocking { withContext(CoroutineName(ATTEMPT_KEY) + Dispatchers.Default) { block() } }
+  runBlocking(TaskLog(ATTEMPT_KEY) + Dispatchers.Default) { block() }
 }

@@ -26,17 +26,22 @@ import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
 import org.wfanet.measurement.common.flatten
 import org.wfanet.measurement.storage.testing.InMemoryStorageClient
-import org.wfanet.panelmatch.client.joinkeyexchange.joinKeyAndIdCollection
-import org.wfanet.panelmatch.client.joinkeyexchange.testing.PLAINTEXT_JOIN_KEYS
+import org.wfanet.panelmatch.client.exchangetasks.joinKeyAndIdCollection
 import org.wfanet.panelmatch.client.privatemembership.JniQueryPreparer
 import org.wfanet.panelmatch.client.privatemembership.LookupKeyAndId
 import org.wfanet.panelmatch.client.privatemembership.LookupKeyAndIdCollection
 import org.wfanet.panelmatch.common.storage.createBlob
+import org.wfanet.panelmatch.client.common.joinKeyAndIdOf
 
 private const val ATTEMPT_KEY = "some-arbitrary-attempt-key"
-
-// TODO(@stevenwarejones): clean up these tests:
-//   1. Only use `withContext` when we actually care about testing the specific behavior of that
+val PLAINTEXT_JOIN_KEYS =
+  listOf(
+    joinKeyAndIdOf("some plaintext0".toByteStringUtf8(), "some identifier0".toByteStringUtf8()),
+    joinKeyAndIdOf("some plaintext1".toByteStringUtf8(), "some identifier1".toByteStringUtf8()),
+    joinKeyAndIdOf("some plaintext2".toByteStringUtf8(), "some identifier2".toByteStringUtf8()),
+    joinKeyAndIdOf("some plaintext3".toByteStringUtf8(), "some identifier3".toByteStringUtf8()),
+    joinKeyAndIdOf("some plaintext4".toByteStringUtf8(), "some identifier4".toByteStringUtf8()),
+  )
 
 @RunWith(JUnit4::class)
 class JoinKeyHashingExchangeTaskTest {
@@ -49,7 +54,7 @@ class JoinKeyHashingExchangeTaskTest {
   private val blobOfJoinKeys = runBlocking {
     mockStorage.createBlob(
       "hashed-join-keys",
-      joinKeyAndIdCollection { joinKeysAndIds += PLAINTEXT_JOIN_KEYS }.toByteString()
+      joinKeyAndIdCollection { joinKeyAndIds += PLAINTEXT_JOIN_KEYS }.toByteString()
     )
   }
 

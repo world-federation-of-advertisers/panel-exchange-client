@@ -20,9 +20,9 @@ import java.lang.Long.remainderUnsigned
 import java.lang.Long.toUnsignedString
 import org.wfanet.panelmatch.client.common.bucketIdOf
 import org.wfanet.panelmatch.client.common.shardIdOf
-import org.wfanet.panelmatch.client.joinkeyexchange.JoinKey
-import org.wfanet.panelmatch.client.joinkeyexchange.joinKey
-import org.wfanet.panelmatch.common.crypto.hashSha256ToSpace
+import org.wfanet.panelmatch.client.exchangetasks.JoinKey
+
+import org.wfanet.panelmatch.client.exchangetasks.joinKey
 
 /** Computes the appropriate bucket and shard for keys. */
 class Bucketing(private val numShards: Int, private val numBucketsPerShard: Int) : Serializable {
@@ -34,13 +34,6 @@ class Bucketing(private val numShards: Int, private val numBucketsPerShard: Int)
   /** Returns the [ShardId] and [BucketId] for [value]. */
   fun apply(value: Long): Pair<ShardId, BucketId> {
     return shard(value) to bucket(value)
-  }
-
-  /** Returns the hashed [ShardId] and [BucketId] for a [JoinKey]. */
-  fun hashAndApply(joinKey: JoinKey): Pair<ShardId, BucketId> {
-    val hashedValue: Long =
-      hashSha256ToSpace(joinKey.key, numShards.toLong() * numBucketsPerShard.toLong())
-    return apply(hashedValue)
   }
 
   /** Computes a [ShardId] based on a [Long] */

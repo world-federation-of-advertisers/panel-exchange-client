@@ -15,19 +15,18 @@
 package org.wfanet.panelmatch.client.common
 
 import com.google.protobuf.ByteString
-import org.wfanet.panelmatch.client.joinkeyexchange.JoinKey
-import org.wfanet.panelmatch.client.joinkeyexchange.JoinKeyAndId
-import org.wfanet.panelmatch.client.joinkeyexchange.JoinKeyIdentifier
-import org.wfanet.panelmatch.client.joinkeyexchange.joinKey
-import org.wfanet.panelmatch.client.joinkeyexchange.joinKeyAndId
-import org.wfanet.panelmatch.client.joinkeyexchange.joinKeyIdentifier
+import org.wfanet.panelmatch.client.exchangetasks.JoinKey
+import org.wfanet.panelmatch.client.exchangetasks.JoinKeyAndId
+import org.wfanet.panelmatch.client.exchangetasks.JoinKeyIdentifier
+import org.wfanet.panelmatch.client.exchangetasks.joinKey
+import org.wfanet.panelmatch.client.exchangetasks.joinKeyAndId
+import org.wfanet.panelmatch.client.exchangetasks.joinKeyIdentifier
 import org.wfanet.panelmatch.client.privatemembership.Bucket
 import org.wfanet.panelmatch.client.privatemembership.BucketId
 import org.wfanet.panelmatch.client.privatemembership.DatabaseEntry
 import org.wfanet.panelmatch.client.privatemembership.DatabaseKey
 import org.wfanet.panelmatch.client.privatemembership.DatabaseShard
 import org.wfanet.panelmatch.client.privatemembership.DecryptedQueryResult
-import org.wfanet.panelmatch.client.privatemembership.EncryptedEventData
 import org.wfanet.panelmatch.client.privatemembership.EncryptedQueryBundle
 import org.wfanet.panelmatch.client.privatemembership.EncryptedQueryResult
 import org.wfanet.panelmatch.client.privatemembership.LookupKey
@@ -43,7 +42,6 @@ import org.wfanet.panelmatch.client.privatemembership.databaseEntry
 import org.wfanet.panelmatch.client.privatemembership.databaseKey
 import org.wfanet.panelmatch.client.privatemembership.databaseShard
 import org.wfanet.panelmatch.client.privatemembership.decryptedQueryResult
-import org.wfanet.panelmatch.client.privatemembership.encryptedEventData
 import org.wfanet.panelmatch.client.privatemembership.encryptedQueryBundle
 import org.wfanet.panelmatch.client.privatemembership.encryptedQueryResult
 import org.wfanet.panelmatch.client.privatemembership.lookupKey
@@ -61,11 +59,6 @@ fun bucketIdOf(id: Int): BucketId = bucketId { this.id = id }
 
 /** Constructs a [QueryId]. */
 fun queryIdOf(id: Int): QueryId = queryId { this.id = id }
-
-/** Constructs a [EncryptedEventData]. */
-fun encryptedEventDataOf(ciphertexts: List<ByteString>): EncryptedEventData = encryptedEventData {
-  this.ciphertexts += ciphertexts
-}
 
 /** Constructs a [UnencryptedQuery]. */
 fun unencryptedQueryOf(shardId: ShardId, bucketId: BucketId, queryId: QueryId): UnencryptedQuery =

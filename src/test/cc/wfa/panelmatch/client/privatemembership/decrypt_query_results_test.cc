@@ -53,7 +53,7 @@ using ClientDecryptQueriesRequest =
     ::private_membership::batch::DecryptQueriesRequest;
 using ClientEncryptedQueryResult =
     ::private_membership::batch::EncryptedQueryResult;
-using ::wfa::panelmatch::client::joinkeyexchange::JoinKey;
+using ::wfa::panelmatch::client::exchangetasks::JoinKey;
 
 TEST(DecryptQueryResults, DecryptQueryResultsTest) {
   std::string hkdf_pepper = "some-pepper";

@@ -14,43 +14,41 @@
 
 package org.wfanet.panelmatch.client.storage
 
-import org.wfanet.measurement.api.v2alpha.ExchangeStepAttemptKey
-import org.wfanet.measurement.api.v2alpha.ExchangeWorkflow
+import org.wfanet.measurement.api.v2alpha.ExchangeWorkflow.StorageType
+import org.wfanet.measurement.api.v2alpha.ExchangeWorkflow.StorageType.AMAZON_S3
+import org.wfanet.measurement.api.v2alpha.ExchangeWorkflow.StorageType.GOOGLE_CLOUD_STORAGE
 import org.wfanet.panelmatch.client.common.ExchangeContext
 import org.wfanet.panelmatch.client.storage.StorageDetails.PlatformCase
+import org.wfanet.panelmatch.common.ExchangeDateKey
 import org.wfanet.panelmatch.common.certificates.CertificateManager
-import org.wfanet.panelmatch.common.secrets.SecretMap
+
+private val EXPLICITLY_SUPPORTED_STORAGE_TYPES = setOf(PlatformCase.AWS, PlatformCase.GCS)
 
 /**
- * Builds storage clients for the panel exchange workflow.
+ * Builds [VerifiedStorageClient]s for shared blobs within a particular Exchange.
  *
- * - [getSharedStorage] provides a [VerifiedStorageClient]
- *
- * The class takes in exchange-specific storage information ([sharedStorageInfo]) that is required
- * to build the appropriate storage clients for each exchange. We expect these values to be set when
- * an exchange is first created and are not shared with the Kingdom. These are currently keyed by
- * the [ExchangeStepAttemptKey.recurringExchangeId].
- *
- * @param[certificateManager]: An interface that both has access to the root trusted certificates
- * for each party as well as the certificate service API to be able to pull down and validate
- * secondary, per-exchange certificates that shared data will be signed with.
- * @param[ownerName]: The API resource name for the party running this binary.
- * @param[sharedStorageFactories] is a map of storage factory constructors supported by our daemon.
- * As not all types of StorageClients are expected to be supported by all EDPs and MPs, this gives
- * each party the option to not depend on a StorageFactory they choose not to support.
- * @param[sharedStorageInfo] provides access to all information required to build a shared storage
- * client for any active exchange. Shared storage is expected to be agrred-on and configured by both
- * parties as part of creating an exchange and credentials should be pre-exchanged and stored
- * securely by the time a recurring exchange starts. This SecretMap is the abstraction used to
- * retrieve those credentials.
+ * @param certificateManager passed into VerifiedStorageClient
+ * @param sharedStorageFactories provides [StorageFactories][StorageFactory] by storage type
+ * @param storageDetailsProvider securely holds [StorageDetails] used with [sharedStorageFactories]
  */
 class SharedStorageSelector(
   private val certificateManager: CertificateManager,
-  private val ownerName: String,
   private val sharedStorageFactories:
-    Map<PlatformCase, ExchangeContext.(StorageDetails) -> StorageFactory>,
-  private val sharedStorageInfo: SecretMap
+    Map<PlatformCase, (StorageDetails, ExchangeDateKey) -> StorageFactory>,
+  private val storageDetailsProvider: StorageDetailsProvider
 ) {
+
+  /** Builds a [VerifiedStorageClient] for the current Exchange. */
+  suspend fun getSharedStorage(
+    storageType: StorageType,
+    context: ExchangeContext
+  ): VerifiedStorageClient {
+    val storageDetails = storageDetailsProvider.get(context.recurringExchangeId)
+    require(storageDetails.visibility == StorageDetails.Visibility.SHARED)
+    validateStorageType(storageType, storageDetails.platformCase)
+    val storageClient = getStorageFactory(storageDetails, context).build()
+    return VerifiedStorageClient(storageClient, context, certificateManager)
+  }
 
   private fun getStorageFactory(
     storageDetails: StorageDetails,
@@ -61,60 +59,18 @@ class SharedStorageSelector(
       requireNotNull(sharedStorageFactories[platform]) {
         "Missing private StorageFactory for $platform"
       }
-    return context.buildStorageFactory(storageDetails)
+    return buildStorageFactory(storageDetails, context.exchangeDateKey)
   }
 
-  private suspend fun getStorageDetails(recurringExchangeId: String): StorageDetails {
-    val serializedStorageDetails =
-      sharedStorageInfo.get(recurringExchangeId)
-        ?: throw StorageNotFoundException("Shared storage for exchange $recurringExchangeId")
-
-    @Suppress("BlockingMethodInNonBlockingContext")
-    val storageDetails = StorageDetails.parseFrom(serializedStorageDetails)
-
-    require(storageDetails.visibility == StorageDetails.Visibility.SHARED)
-    return storageDetails
-  }
-
-  /**
-   * Makes an appropriate [VerifiedStorageClient] for the current exchange. Requires the exchange to
-   * be active with shared storage recorded in our [sharedStorageInfo] secret map. Since shared
-   * storage is the only storage that is verified, this is the only function that returns a Verified
-   * client.
-   *
-   * @param[storageType] is grabbed from the exchange workflow to validate that our local
-   * information is accurate.
-   * @param[ownerCertificateResourceName] Optional. The API resource name of the certificate that
-   * has been created for this exchange. Only required for CopyToSharedStorageTask tasks, it is
-   * expected to be passed through an input label for the tasks that need it. Tasks that do not
-   * write to shared shared storage are expected to leave this as null so they don't need to depend
-   * on the task that generates the certificate when they don't use it.
-   */
-  suspend fun getSharedStorage(
-    storageType: ExchangeWorkflow.StorageType,
-    context: ExchangeContext,
-    ownerCertificateResourceName: String?
-  ): VerifiedStorageClient {
-    val storageDetails = getStorageDetails(context.recurringExchangeId)
+  private fun validateStorageType(storageType: StorageType, platform: PlatformCase) {
     when (storageType) {
-      ExchangeWorkflow.StorageType.GOOGLE_CLOUD_STORAGE -> requireNotNull(storageDetails.gcs)
-      ExchangeWorkflow.StorageType.AMAZON_S3 -> requireNotNull(storageDetails.aws)
-      else -> throw IllegalArgumentException("No supported shared storage type specified.")
+      GOOGLE_CLOUD_STORAGE -> require(platform == PlatformCase.GCS)
+      AMAZON_S3 -> require(platform == PlatformCase.AWS)
+      StorageType.UNKNOWN_STORAGE_CLIENT, StorageType.UNRECOGNIZED ->
+        require(platform !in EXPLICITLY_SUPPORTED_STORAGE_TYPES)
+    // TODO(world-federation-of-advertisers/cross-media-measurement-api#73): throw
+    //   IllegalArgumentException("$storageType unsupported")
+    //   once StorageType.FILE and StorageType.CUSTOM are added.
     }
-
-    return getVerifiedStorageClient(storageDetails, context, ownerCertificateResourceName)
-  }
-
-  private fun getVerifiedStorageClient(
-    storageDetails: StorageDetails,
-    context: ExchangeContext,
-    ownerCertificateName: String?
-  ): VerifiedStorageClient {
-    return VerifiedStorageClient(
-      storageClient = getStorageFactory(storageDetails, context).build(),
-      context = context,
-      ownerCertificateName = ownerCertificateName,
-      certificateManager = certificateManager
-    )
   }
 }

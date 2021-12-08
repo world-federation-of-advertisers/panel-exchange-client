@@ -16,7 +16,7 @@ package org.wfanet.panelmatch.client.privatemembership
 
 import com.google.protobuf.ByteString
 import java.io.Serializable
-import org.wfanet.panelmatch.client.joinkeyexchange.JoinKeyAndId
+import org.wfanet.panelmatch.client.exchangetasks.JoinKeyAndId
 
 /** Prepares join keys for a query. */
 interface QueryPreparer : Serializable {

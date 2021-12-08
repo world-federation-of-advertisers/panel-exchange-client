@@ -34,7 +34,7 @@ import org.wfanet.panelmatch.client.common.bucketIdOf
 import org.wfanet.panelmatch.client.common.joinKeyIdentifierOf
 import org.wfanet.panelmatch.client.common.queryIdOf
 import org.wfanet.panelmatch.client.common.unencryptedQueryOf
-import org.wfanet.panelmatch.client.joinkeyexchange.JoinKeyIdentifier
+import org.wfanet.panelmatch.client.exchangetasks.JoinKeyIdentifier
 import org.wfanet.panelmatch.common.beam.filter
 import org.wfanet.panelmatch.common.beam.groupByKey
 import org.wfanet.panelmatch.common.beam.kvOf
@@ -88,12 +88,6 @@ private class CreateQueries(
     val encryptedQueryBundles = encryptQueries(unencryptedQueriesByShard, privateMembershipKeys)
     return PCollectionTuple.of(QueryIdAndIdTag, queryIdToIdsMapping)
       .and(encryptedQueryBundlesTag, encryptedQueryBundles)
-  }
-
-  companion object {
-    val lookupKeyAndIdsTag = TupleTag<LookupKeyAndId>()
-    val QueryIdAndIdTag = TupleTag<QueryIdAndId>()
-    val encryptedQueryBundlesTag = TupleTag<EncryptedQueryBundle>()
   }
 
   /** Determines shard and bucket for a [LookupKey]. */
@@ -190,6 +184,12 @@ private class CreateQueries(
       ParDo.of(EncryptQueriesFn(this.privateMembershipCryptor, privateMembershipKeys))
         .withSideInputs(privateMembershipKeys)
     )
+  }
+
+  companion object {
+    val lookupKeyAndIdsTag = TupleTag<LookupKeyAndId>()
+    val QueryIdAndIdTag = TupleTag<QueryIdAndId>()
+    val encryptedQueryBundlesTag = TupleTag<EncryptedQueryBundle>()
   }
 }
 

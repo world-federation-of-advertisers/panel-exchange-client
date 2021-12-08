@@ -17,7 +17,6 @@ package org.wfanet.panelmatch.client.exchangetasks
 import com.google.common.truth.Truth.assertThat
 import com.google.protobuf.ByteString
 import com.google.protobuf.kotlin.toByteStringUtf8
-import java.lang.IllegalArgumentException
 import kotlin.test.assertFailsWith
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.runBlocking
@@ -27,12 +26,12 @@ import org.junit.runners.JUnit4
 import org.wfanet.measurement.common.flatten
 import org.wfanet.measurement.storage.StorageClient.Blob
 import org.wfanet.measurement.storage.testing.InMemoryStorageClient
-import org.wfanet.panelmatch.client.joinkeyexchange.JoinKeyAndId
-import org.wfanet.panelmatch.client.joinkeyexchange.JoinKeyAndIdCollection
-import org.wfanet.panelmatch.client.joinkeyexchange.joinKey
-import org.wfanet.panelmatch.client.joinkeyexchange.joinKeyAndId
-import org.wfanet.panelmatch.client.joinkeyexchange.joinKeyAndIdCollection
-import org.wfanet.panelmatch.client.joinkeyexchange.joinKeyIdentifier
+import org.wfanet.panelmatch.client.exchangetasks.JoinKeyAndId
+import org.wfanet.panelmatch.client.exchangetasks.JoinKeyAndIdCollection
+import org.wfanet.panelmatch.client.exchangetasks.joinKey
+import org.wfanet.panelmatch.client.exchangetasks.joinKeyAndId
+import org.wfanet.panelmatch.client.exchangetasks.joinKeyAndIdCollection
+import org.wfanet.panelmatch.client.exchangetasks.joinKeyIdentifier
 import org.wfanet.panelmatch.common.storage.createBlob
 
 private val JOIN_KEYS: List<JoinKeyAndId> =
@@ -50,7 +49,7 @@ private const val MAXIMUM_NEW_ITEMS_ALLOWED = 2
 class IntersectValidateTaskTest {
 
   private suspend fun createBlob(items: List<JoinKeyAndId>): Blob {
-    val collection = joinKeyAndIdCollection { joinKeysAndIds += items }
+    val collection = joinKeyAndIdCollection { joinKeyAndIds += items }
     val storageClient = InMemoryStorageClient()
     return storageClient.createBlob("irrelevant-blob-key", collection.toByteString())
   }
@@ -83,7 +82,7 @@ class IntersectValidateTaskTest {
     val outputs = runIntersectAndValidate(previousData, currentData, maxSize, isFirstExchange)
     val outputJoinKeys =
       JoinKeyAndIdCollection.parseFrom(outputs.getValue("current-data").flatten())
-        .joinKeysAndIdsList
+        .joinKeyAndIdsList
     assertThat(outputJoinKeys).containsExactlyElementsIn(currentData)
   }
 
@@ -130,12 +129,5 @@ class IntersectValidateTaskTest {
   @Test
   fun firstExchange() {
     assertIntersectAndValidateHasCorrectOutput(previousData = null, isFirstExchange = true)
-  }
-
-  @Test
-  fun firstExchangeWithPreviousDataInputFails() {
-    assertFailsWith<IllegalArgumentException> {
-      runIntersectAndValidate(previousData = JOIN_KEYS, isFirstExchange = true)
-    }
   }
 }

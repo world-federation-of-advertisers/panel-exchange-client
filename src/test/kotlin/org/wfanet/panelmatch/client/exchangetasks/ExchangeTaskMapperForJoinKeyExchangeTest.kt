@@ -18,6 +18,7 @@ import com.google.common.truth.Truth.assertThat
 import com.google.protobuf.ByteString
 import java.time.LocalDate
 import java.util.concurrent.ConcurrentHashMap
+import org.apache.beam.sdk.Pipeline
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -29,7 +30,6 @@ import org.wfanet.measurement.api.v2alpha.exchangeWorkflow
 import org.wfanet.measurement.storage.StorageClient
 import org.wfanet.measurement.storage.testing.InMemoryStorageClient
 import org.wfanet.panelmatch.client.common.ExchangeContext
-import org.wfanet.panelmatch.client.joinkeyexchange.testing.FakeJoinKeyCryptor
 import org.wfanet.panelmatch.client.launcher.testing.inputStep
 import org.wfanet.panelmatch.client.privatemembership.JniQueryPreparer
 import org.wfanet.panelmatch.client.privatemembership.testing.PlaintextPrivateMembershipCryptor
@@ -44,6 +44,7 @@ import org.wfanet.panelmatch.common.certificates.testing.TestCertificateManager
 import org.wfanet.panelmatch.common.secrets.testing.TestSecretMap
 import org.wfanet.panelmatch.common.testing.AlwaysReadyThrottler
 import org.wfanet.panelmatch.common.testing.runBlockingTest
+import org.wfanet.panelmatch.common.crypto.testing.FakeDeterministicCommutativeCipher
 
 // TODO: move elsewhere to enable reuse.
 class TestPrivateStorageSelector {
@@ -80,15 +81,18 @@ class ExchangeTaskMapperForJoinKeyExchangeTest {
   private val testPrivateStorageSelector = TestPrivateStorageSelector()
   private val exchangeTaskMapper =
     object : ExchangeTaskMapperForJoinKeyExchange() {
-      override val joinKeyCryptor = FakeJoinKeyCryptor
-      override val getPrivateMembershipCryptor = ::PlaintextPrivateMembershipCryptor
+      override val deterministicCommutativeCryptor = FakeDeterministicCommutativeCipher
+      override val getPrivateMembershipCryptor = { _: ByteString ->
+        PlaintextPrivateMembershipCryptor()
+      }
       override val queryResultsDecryptor = PlaintextQueryResultsDecryptor()
       override val queryPreparer = JniQueryPreparer()
       override val privateStorageSelector = testPrivateStorageSelector.selector
       override val sharedStorageSelector = testSharedStorageSelector.selector
-      override val certificateManager = TestCertificateManager()
+      override val certificateManager = TestCertificateManager
       override val inputTaskThrottler = AlwaysReadyThrottler
       override val getQueryResultsEvaluator = { _: ByteString -> PlaintextQueryEvaluator }
+      override fun newPipeline(): Pipeline = throw NotImplementedError("Not needed for test")
     }
 
   private val testStorageDetails = storageDetails {
@@ -113,6 +117,6 @@ class ExchangeTaskMapperForJoinKeyExchangeTest {
   fun `map crypto task`() = runBlockingTest {
     val context = ExchangeContext(ATTEMPT_KEY, DATE, WORKFLOW, WORKFLOW.getSteps(1))
     val exchangeTask = exchangeTaskMapper.getExchangeTaskForStep(context)
-    assertThat(exchangeTask).isInstanceOf(JoinKeyCryptorExchangeTask::class.java)
+    assertThat(exchangeTask).isInstanceOf(CryptorExchangeTask::class.java)
   }
 }

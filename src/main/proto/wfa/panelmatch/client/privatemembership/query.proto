@@ -16,7 +16,7 @@ syntax = "proto3";
 
 package wfa.panelmatch.client.privatemembership;
 
-import "wfa/panelmatch/client/joinkeyexchange/join_key.proto";
+import "wfa/panelmatch/client/exchangetasks/join_key.proto";
 
 option java_package = "org.wfanet.panelmatch.client.privatemembership";
 option java_multiple_files = true;
@@ -57,7 +57,7 @@ message EncryptedQueryBundle {
 // to tie it later to its decrypted and plaintext values.
 message QueryIdAndId {
   QueryId query_id = 1;
-  wfa.panelmatch.client.joinkeyexchange.JoinKeyIdentifier join_key_identifier =
+  wfa.panelmatch.client.exchangetasks.JoinKeyIdentifier join_key_identifier =
       2;
 }
 

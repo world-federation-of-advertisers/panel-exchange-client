@@ -31,9 +31,9 @@ import org.wfanet.panelmatch.client.common.joinKeyIdentifierOf
 import org.wfanet.panelmatch.client.common.joinKeyOf
 import org.wfanet.panelmatch.client.common.lookupKeyOf
 import org.wfanet.panelmatch.client.common.shardIdOf
-import org.wfanet.panelmatch.client.joinkeyexchange.JoinKeyAndId
-import org.wfanet.panelmatch.client.joinkeyexchange.JoinKeyIdentifier
-import org.wfanet.panelmatch.client.joinkeyexchange.joinKeyAndId
+import org.wfanet.panelmatch.client.exchangetasks.JoinKeyAndId
+import org.wfanet.panelmatch.client.exchangetasks.JoinKeyIdentifier
+import org.wfanet.panelmatch.client.exchangetasks.joinKeyAndId
 import org.wfanet.panelmatch.client.privatemembership.BucketId
 import org.wfanet.panelmatch.client.privatemembership.CreateQueriesOutputs
 import org.wfanet.panelmatch.client.privatemembership.CreateQueriesParameters
@@ -231,11 +231,11 @@ abstract class AbstractCreateQueriesTest : BeamTestBase() {
   ): PCollection<KV<QueryId, PanelistQuery>> {
     return queryIdAndIds.keyBy { it.queryId }.join(decryptedQueries) {
       key: QueryId,
-      queryIdAndIds: Iterable<QueryIdAndId>,
+      queryIdAndIdsIterable: Iterable<QueryIdAndId>,
       shardedQueries: Iterable<ShardedQuery> ->
-      if (queryIdAndIds.count() > 0) {
+      if (queryIdAndIdsIterable.count() > 0) {
         val queriesList = shardedQueries.toList()
-        val queryIdAndIdsList = queryIdAndIds.toList()
+        val queryIdAndIdsList = queryIdAndIdsIterable.toList()
 
         val query =
           requireNotNull(queriesList.singleOrNull()) { "${queriesList.size} queries for $key" }

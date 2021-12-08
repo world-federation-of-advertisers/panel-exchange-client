@@ -29,9 +29,9 @@ import org.apache.beam.sdk.values.PCollection
 import org.apache.beam.sdk.values.PCollectionTuple
 import org.apache.beam.sdk.values.PCollectionView
 import org.apache.beam.sdk.values.TupleTag
-import org.wfanet.panelmatch.client.joinkeyexchange.JoinKey
-import org.wfanet.panelmatch.client.joinkeyexchange.JoinKeyAndId
-import org.wfanet.panelmatch.client.joinkeyexchange.JoinKeyIdentifier
+import org.wfanet.panelmatch.client.exchangetasks.JoinKey
+import org.wfanet.panelmatch.client.exchangetasks.JoinKeyAndId
+import org.wfanet.panelmatch.client.exchangetasks.JoinKeyIdentifier
 import org.wfanet.panelmatch.common.beam.groupByKey
 import org.wfanet.panelmatch.common.beam.keyBy
 import org.wfanet.panelmatch.common.beam.kvOf

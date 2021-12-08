@@ -16,7 +16,7 @@ syntax = "proto3";
 
 package wfa.panelmatch.client.privatemembership;
 
-import "wfa/panelmatch/client/joinkeyexchange/join_key.proto";
+import "wfa/panelmatch/client/exchangetasks/join_key.proto";
 import "wfa/panelmatch/client/privatemembership/query.proto";
 import "wfa/panelmatch/common/compression/compression.proto";
 
@@ -31,7 +31,7 @@ message DecryptEventDataRequest {
     EncryptedEventData encrypted_event_data = 2;
   }
   EncryptedEventDataSet encrypted_event_data_set = 1;
-  wfa.panelmatch.client.joinkeyexchange.JoinKey lookup_key = 2;
+  wfa.panelmatch.client.exchangetasks.JoinKey lookup_key = 2;
   bytes hkdf_pepper = 3;
 }
 
@@ -43,7 +43,7 @@ message DecryptedEventDataSet {
 
 // A decrypted event data set tied to its plaintext join key and id.
 message KeyedDecryptedEventDataSet {
-  wfa.panelmatch.client.joinkeyexchange.JoinKeyAndId plaintext_join_key_and_id =
+  wfa.panelmatch.client.exchangetasks.JoinKeyAndId plaintext_join_key_and_id =
       1;
   repeated Plaintext decrypted_event_data = 2;
 }
@@ -55,7 +55,7 @@ message DecryptQueryResultsRequest {
   bytes serialized_public_key = 2;
   bytes serialized_private_key = 3;
   repeated EncryptedQueryResult encrypted_query_results = 4;
-  wfa.panelmatch.client.joinkeyexchange.JoinKey decrypted_join_key = 5;
+  wfa.panelmatch.client.exchangetasks.JoinKey decrypted_join_key = 5;
   bytes hkdf_pepper = 6;
   CompressionParameters compression_parameters = 7;
 }

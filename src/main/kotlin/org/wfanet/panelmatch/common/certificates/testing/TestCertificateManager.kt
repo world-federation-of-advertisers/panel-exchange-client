@@ -23,31 +23,34 @@ import org.wfanet.measurement.common.crypto.testing.FIXED_SERVER_KEY_FILE
 import org.wfanet.measurement.common.crypto.testing.KEY_ALGORITHM
 import org.wfanet.panelmatch.common.ExchangeDateKey
 import org.wfanet.panelmatch.common.certificates.CertificateManager
+import org.wfanet.panelmatch.common.certificates.CertificateManager.KeyPair
 
-class TestCertificateManager : CertificateManager {
-
+object TestCertificateManager : CertificateManager {
   override suspend fun getCertificate(
     exchange: ExchangeDateKey,
     certOwnerName: String,
     certResourceName: String
   ): X509Certificate {
-    return readCertificate(FIXED_SERVER_CERT_PEM_FILE)
+    return CERTIFICATE
   }
 
   override suspend fun getPartnerRootCertificate(partnerName: String): X509Certificate {
-    return readCertificate(FIXED_SERVER_CERT_PEM_FILE)
+    return CERTIFICATE
   }
 
   override suspend fun getExchangePrivateKey(exchange: ExchangeDateKey): PrivateKey {
-    @Suppress("BlockingMethodInNonBlockingContext")
-    return readPrivateKey(FIXED_SERVER_KEY_FILE, KEY_ALGORITHM)
+    return PRIVATE_KEY
+  }
+
+  override suspend fun getExchangeKeyPair(exchange: ExchangeDateKey): KeyPair {
+    return KeyPair(CERTIFICATE, PRIVATE_KEY, RESOURCE_NAME)
   }
 
   override suspend fun createForExchange(exchange: ExchangeDateKey): String {
     return RESOURCE_NAME
   }
 
-  companion object {
-    const val RESOURCE_NAME = "some-resource-name"
-  }
+  const val RESOURCE_NAME = "some-resource-name"
+  val CERTIFICATE: X509Certificate by lazy { readCertificate(FIXED_SERVER_CERT_PEM_FILE) }
+  val PRIVATE_KEY: PrivateKey by lazy { readPrivateKey(FIXED_SERVER_KEY_FILE, KEY_ALGORITHM) }
 }

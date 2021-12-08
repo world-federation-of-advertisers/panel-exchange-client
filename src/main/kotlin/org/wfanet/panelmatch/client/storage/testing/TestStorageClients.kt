@@ -26,27 +26,32 @@ import org.wfanet.panelmatch.client.common.ExchangeContext
 import org.wfanet.panelmatch.client.storage.PrivateStorageSelector
 import org.wfanet.panelmatch.client.storage.SharedStorageSelector
 import org.wfanet.panelmatch.client.storage.StorageDetails
+import org.wfanet.panelmatch.client.storage.StorageDetails.PlatformCase
+import org.wfanet.panelmatch.client.storage.StorageDetailsProvider
 import org.wfanet.panelmatch.client.storage.StorageFactory
 import org.wfanet.panelmatch.client.storage.VerifiedStorageClient
 import org.wfanet.panelmatch.common.ExchangeDateKey
 import org.wfanet.panelmatch.common.certificates.testing.TestCertificateManager
 import org.wfanet.panelmatch.common.secrets.SecretMap
 
+private fun makeTestStorageFactoryMap(
+  underlyingStorage: StorageFactory
+): Map<PlatformCase, (StorageDetails, ExchangeDateKey) -> StorageFactory> {
+  val builder: (StorageDetails, ExchangeDateKey) -> StorageFactory = { _, _ -> underlyingStorage }
+  return mapOf(
+    PlatformCase.FILE to builder,
+    PlatformCase.AWS to builder,
+    PlatformCase.GCS to builder
+  )
+}
+
 fun makeTestPrivateStorageSelector(
   secretMap: SecretMap,
   underlyingClient: InMemoryStorageClient
 ): PrivateStorageSelector {
-
-  val rootInMemoryStorageFactory = InMemoryStorageFactory(underlyingClient)
-  val builder: ExchangeDateKey.(StorageDetails) -> StorageFactory = { rootInMemoryStorageFactory }
-
   return PrivateStorageSelector(
-    mapOf(
-      StorageDetails.PlatformCase.FILE to builder,
-      StorageDetails.PlatformCase.AWS to builder,
-      StorageDetails.PlatformCase.GCS to builder
-    ),
-    secretMap
+    makeTestStorageFactoryMap(InMemoryStorageFactory(underlyingClient)),
+    StorageDetailsProvider(secretMap)
   )
 }
 
@@ -54,19 +59,10 @@ fun makeTestSharedStorageSelector(
   secretMap: SecretMap,
   underlyingClient: InMemoryStorageClient
 ): SharedStorageSelector {
-
-  val rootInMemoryStorageFactory = InMemoryStorageFactory(underlyingClient)
-  val builder: ExchangeContext.(StorageDetails) -> StorageFactory = { rootInMemoryStorageFactory }
-
   return SharedStorageSelector(
-    TestCertificateManager(),
-    "owner",
-    mapOf(
-      StorageDetails.PlatformCase.FILE to builder,
-      StorageDetails.PlatformCase.AWS to builder,
-      StorageDetails.PlatformCase.GCS to builder
-    ),
-    secretMap
+    TestCertificateManager,
+    makeTestStorageFactoryMap(InMemoryStorageFactory(underlyingClient)),
+    StorageDetailsProvider(secretMap)
   )
 }
 
@@ -95,10 +91,5 @@ private val TEST_CONTEXT =
 fun makeTestVerifiedStorageClient(
   underlyingClient: StorageClient = InMemoryStorageClient()
 ): VerifiedStorageClient {
-  return VerifiedStorageClient(
-    underlyingClient,
-    TEST_CONTEXT,
-    "ownerCert",
-    TestCertificateManager()
-  )
+  return VerifiedStorageClient(underlyingClient, TEST_CONTEXT, TestCertificateManager)
 }

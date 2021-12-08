@@ -20,9 +20,9 @@
 #include "wfa/panelmatch/client/eventpreprocessing/preprocess_events.h"
 #include "wfa/panelmatch/client/eventpreprocessing/preprocess_events.pb.h"
 
-namespace wfa::panelmatch::client::eventpreprocessing {
+namespace wfa::panelmatch::client {
 absl::StatusOr<std::string> PreprocessEventsWrapper(
     const std::string& serialized_request) {
   return JniWrap(serialized_request, PreprocessEvents);
 }
-}  // namespace wfa::panelmatch::client::eventpreprocessing
+}  // namespace wfa::panelmatch::client

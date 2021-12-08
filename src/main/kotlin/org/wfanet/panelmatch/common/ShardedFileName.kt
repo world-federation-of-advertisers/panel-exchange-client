@@ -14,6 +14,8 @@
 
 package org.wfanet.panelmatch.common
 
+import java.io.Serializable
+
 private val SPEC_REGEX = """^([\w-.]+)-(\*|\?+)-of-(\d+)$""".toRegex()
 
 /**
@@ -25,16 +27,17 @@ private val SPEC_REGEX = """^([\w-.]+)-(\*|\?+)-of-(\d+)$""".toRegex()
  * 2. "baseName-????-of-X", where X is a number and the number of question marks is equal to the
  * number of base-10 digits in X.
  */
-data class ShardedFileName(val spec: String) {
+data class ShardedFileName(val spec: String) : Serializable {
   constructor(baseName: String, shardCount: Int) : this("$baseName-*-of-$shardCount")
 
-  val baseName: String
+  private val baseName: String
   val shardCount: Int
 
   val fileNames: Sequence<String>
     get() = (0 until shardCount).asSequence().map(this::fileNameForShard)
 
   init {
+    require(spec.isNotEmpty()) { "Empty spec" }
     val matchResult = requireNotNull(SPEC_REGEX.matchEntire(spec)) { "Invalid spec: $spec" }
     val matches = matchResult.groupValues
     check(!matches[2].startsWith("?") || matches[2].length == matches[3].length) {

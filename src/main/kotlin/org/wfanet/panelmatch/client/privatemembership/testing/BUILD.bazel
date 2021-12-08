@@ -14,7 +14,6 @@ kt_jvm_library(
     deps = [
         "//imports/java/org/apache/beam:core",
         "//src/main/kotlin/org/wfanet/panelmatch/client/eventpreprocessing",
-        "//src/main/kotlin/org/wfanet/panelmatch/client/joinkeyexchange",
         "//src/main/kotlin/org/wfanet/panelmatch/client/privatemembership",
         "//src/main/kotlin/org/wfanet/panelmatch/common",
         "//src/main/kotlin/org/wfanet/panelmatch/common/beam",
@@ -22,7 +21,7 @@ kt_jvm_library(
         "//src/main/kotlin/org/wfanet/panelmatch/common/crypto",
         "//src/main/kotlin/org/wfanet/panelmatch/common/crypto/testing",
         "//src/main/proto/private_membership/batch:shared_kt_jvm_proto",
-        "//src/main/proto/wfa/panelmatch/client/joinkeyexchange:join_key_exchange_kt_jvm_proto",
+        "//src/main/proto/wfa/panelmatch/client/exchangetasks:join_key_exchange_kt_jvm_proto",
         "//src/main/proto/wfa/panelmatch/client/privatemembership:database_kt_jvm_proto",
         "//src/main/proto/wfa/panelmatch/client/privatemembership:decrypt_event_data_kt_jvm_proto",
         "//src/main/proto/wfa/panelmatch/client/privatemembership:private_membership_kt_jvm_proto",

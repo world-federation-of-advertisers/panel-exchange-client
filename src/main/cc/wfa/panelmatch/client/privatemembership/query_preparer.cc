@@ -30,7 +30,7 @@
 namespace wfa::panelmatch::client::privatemembership {
 using ::crypto::tink::util::SecretData;
 using ::crypto::tink::util::SecretDataFromStringView;
-using ::wfa::panelmatch::client::joinkeyexchange::JoinKeyAndId;
+using ::wfa::panelmatch::client::exchangetasks::JoinKeyAndId;
 
 absl::StatusOr<PrepareQueryResponse> PrepareQuery(
     const PrepareQueryRequest& request) {

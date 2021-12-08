@@ -18,10 +18,10 @@ import com.google.protobuf.ByteString
 import kotlinx.coroutines.flow.Flow
 import org.wfanet.measurement.common.asBufferedFlow
 import org.wfanet.measurement.storage.StorageClient
-import org.wfanet.panelmatch.client.joinkeyexchange.JoinKeyAndId
-import org.wfanet.panelmatch.client.joinkeyexchange.JoinKeyAndIdCollection
+import org.wfanet.panelmatch.client.exchangetasks.JoinKeyAndId
+import org.wfanet.panelmatch.client.exchangetasks.JoinKeyAndIdCollection
 import org.wfanet.panelmatch.client.logger.addToTaskLog
-import org.wfanet.panelmatch.client.logger.loggerFor
+import org.wfanet.panelmatch.common.loggerFor
 import org.wfanet.panelmatch.client.privatemembership.LookupKeyAndId
 import org.wfanet.panelmatch.client.privatemembership.QueryPreparer
 import org.wfanet.panelmatch.client.privatemembership.lookupKeyAndIdCollection
@@ -39,12 +39,10 @@ internal constructor(
   override suspend fun execute(
     input: Map<String, StorageClient.Blob>
   ): Map<String, Flow<ByteString>> {
-    logger.addToTaskLog("Executing hashing operation")
-
     val cryptoKey = input.getValue(INPUT_PEPPER_KEY_LABEL).toByteString()
     val serializedInputs = input.getValue(inputDataLabel).toByteString()
     val results =
-      operation(cryptoKey, JoinKeyAndIdCollection.parseFrom(serializedInputs).joinKeysAndIdsList)
+      operation(cryptoKey, JoinKeyAndIdCollection.parseFrom(serializedInputs).joinKeyAndIdsList)
 
     val serializedOutput = lookupKeyAndIdCollection { lookupKeyAndIds += results }.toByteString()
     return mapOf(outputDataLabel to serializedOutput.asBufferedFlow(1024))

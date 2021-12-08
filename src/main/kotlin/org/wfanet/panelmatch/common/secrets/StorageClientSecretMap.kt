@@ -16,14 +16,13 @@ package org.wfanet.panelmatch.common.secrets
 
 import com.google.protobuf.ByteString
 import org.wfanet.measurement.storage.StorageClient
-import org.wfanet.panelmatch.common.storage.createBlob
+import org.wfanet.panelmatch.common.storage.createOrReplaceBlob
 import org.wfanet.panelmatch.common.storage.toByteString
 
 /** [MutableSecretMap] implementation that stores each item in a separate blob. */
 class StorageClientSecretMap(private val storageClient: StorageClient) : MutableSecretMap {
   override suspend fun put(key: String, value: ByteString) {
-    storageClient.getBlob(key)?.delete()
-    storageClient.createBlob(key, value)
+    storageClient.createOrReplaceBlob(key, value)
   }
 
   override suspend fun get(key: String): ByteString? {

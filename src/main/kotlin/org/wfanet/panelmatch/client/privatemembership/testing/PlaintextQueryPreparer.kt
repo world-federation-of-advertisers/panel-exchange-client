@@ -15,7 +15,7 @@
 package org.wfanet.panelmatch.client.privatemembership.testing
 
 import com.google.protobuf.ByteString
-import org.wfanet.panelmatch.client.joinkeyexchange.JoinKeyAndId
+import org.wfanet.panelmatch.client.exchangetasks.JoinKeyAndId
 import org.wfanet.panelmatch.client.privatemembership.LookupKeyAndId
 import org.wfanet.panelmatch.client.privatemembership.QueryPreparer
 import org.wfanet.panelmatch.client.privatemembership.lookupKey

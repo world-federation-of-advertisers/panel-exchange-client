@@ -24,7 +24,7 @@
 namespace wfa::panelmatch::client::privatemembership {
 namespace {
 
-using wfa::panelmatch::client::joinkeyexchange::JoinKeyAndId;
+using wfa::panelmatch::client::exchangetasks::JoinKeyAndId;
 
 TEST(PrepareQuery, PrepareQueryTest) {
   PrepareQueryRequest test_request;

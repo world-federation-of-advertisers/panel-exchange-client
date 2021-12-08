@@ -14,25 +14,30 @@
 
 package org.wfanet.panelmatch.client.storage
 
-import com.google.type.Date
-import java.io.File
-import org.wfanet.measurement.common.toLocalDate
+import java.nio.file.Paths
 import org.wfanet.measurement.storage.StorageClient
 import org.wfanet.measurement.storage.filesystem.FileSystemStorageClient
+import org.wfanet.panelmatch.common.ExchangeDateKey
+import org.wfanet.panelmatch.common.loggerFor
 
 class FileSystemStorageFactory(
   private val storageDetails: StorageDetails,
-  private val recurringExchangeId: String,
-  private val exchangeDate: Date
+  private val exchangeDateKey: ExchangeDateKey
 ) : StorageFactory {
 
   override fun build(): StorageClient {
-    val exchangePath =
-      "recurringExchanges/$recurringExchangeId/exchanges/${exchangeDate.toLocalDate()}"
-    val directory = File("${storageDetails.file.path}/$exchangePath")
-    check(directory.exists() || directory.mkdirs()) {
-      "Unable to create recursively directory: ${directory.absolutePath}"
+    val directory = Paths.get(storageDetails.file.path, exchangeDateKey.path).toFile()
+    val absolutePath = directory.absolutePath
+    if (directory.exists()) {
+      logger.fine("Directory already exists: $absolutePath")
+    } else {
+      check(directory.mkdirs()) { "Unable to create recursively directory: $absolutePath" }
+      logger.fine("Created directory: $absolutePath")
     }
     return FileSystemStorageClient(directory)
+  }
+
+  companion object {
+    private val logger by loggerFor()
   }
 }

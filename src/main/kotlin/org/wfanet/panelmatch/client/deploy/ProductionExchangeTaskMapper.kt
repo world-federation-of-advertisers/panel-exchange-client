@@ -14,9 +14,11 @@
 
 package org.wfanet.panelmatch.client.deploy
 
+import org.apache.beam.sdk.Pipeline
+import org.apache.beam.sdk.options.PipelineOptions
 import org.wfanet.measurement.common.throttler.Throttler
 import org.wfanet.panelmatch.client.exchangetasks.ExchangeTaskMapperForJoinKeyExchange
-import org.wfanet.panelmatch.client.joinkeyexchange.JniJoinKeyCryptor
+import org.wfanet.panelmatch.common.crypto.JniDeterministicCommutativeCipher
 import org.wfanet.panelmatch.client.privatemembership.JniPrivateMembershipCryptor
 import org.wfanet.panelmatch.client.privatemembership.JniQueryEvaluator
 import org.wfanet.panelmatch.client.privatemembership.JniQueryPreparer
@@ -30,10 +32,12 @@ class ProductionExchangeTaskMapper(
   override val privateStorageSelector: PrivateStorageSelector,
   override val sharedStorageSelector: SharedStorageSelector,
   override val certificateManager: CertificateManager,
+  private val pipelineOptions: PipelineOptions
 ) : ExchangeTaskMapperForJoinKeyExchange() {
-  override val joinKeyCryptor by lazy { JniJoinKeyCryptor() }
+  override val deterministicCommutativeCryptor by lazy { JniDeterministicCommutativeCipher() }
   override val queryPreparer by lazy { JniQueryPreparer() }
   override val getPrivateMembershipCryptor = ::JniPrivateMembershipCryptor
   override val getQueryResultsEvaluator = ::JniQueryEvaluator
   override val queryResultsDecryptor by lazy { JniQueryResultsDecryptor() }
+  override fun newPipeline(): Pipeline = Pipeline.create(pipelineOptions)
 }

@@ -22,7 +22,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
 import org.wfanet.panelmatch.client.common.queryIdOf
-import org.wfanet.panelmatch.client.joinkeyexchange.JoinKeyAndId
+import org.wfanet.panelmatch.client.exchangetasks.JoinKeyAndId
 import org.wfanet.panelmatch.client.privatemembership.testing.joinKeyAndIdOf
 import org.wfanet.panelmatch.client.privatemembership.testing.queryIdAndIdOf
 import org.wfanet.panelmatch.common.beam.testing.BeamTestBase
