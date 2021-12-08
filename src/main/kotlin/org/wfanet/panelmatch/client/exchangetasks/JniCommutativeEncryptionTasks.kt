@@ -31,7 +31,7 @@ class JniCommutativeEncryptionTasks(
     return CryptorExchangeTask.forReEncryption(deterministicCommutativeCryptor)
   }
 
-  override fun generateCommutativeEncryptionKey(): ExchangeTask {
+  override fun generateEncryptionKey(): ExchangeTask {
     return GenerateSymmetricKeyTask(generateKey = deterministicCommutativeCryptor::generateKey)
   }
 }
