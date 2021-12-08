@@ -24,6 +24,20 @@ def panel_exchange_client_repositories():
 
     com_google_riegeli_repo()
 
+    # TODO: remove this dependency once downstream dependencies are fixed.
+    http_archive(
+        name = "io_bazel_rules_go",
+        sha256 = "2b1641428dff9018f9e85c0384f03ec6c10660d935b750e3fa1492a281a53b0f",
+        url = "https://github.com/bazelbuild/rules_go/releases/download/v0.29.0/rules_go-v0.29.0.zip",
+    )
+
+    # TODO: remove this dependency once downstream dependencies are fixed.
+    http_archive(
+        name = "bazel_gazelle",
+        sha256 = "de69a09dc70417580aabf20a28619bb3ef60d038470c7cf8442fafcf627c21cb",
+        url = "https://github.com/bazelbuild/bazel-gazelle/releases/download/v0.24.0/bazel-gazelle-v0.24.0.tar.gz",
+    )
+
     http_archive(
         name = "wfa_common_cpp",
         sha256 = "e8efc0c9f5950aff13a59f21f40ccc31c26fe40c800743f824f92df3a05588b2",
@@ -33,9 +47,9 @@ def panel_exchange_client_repositories():
 
     http_archive(
         name = "wfa_common_jvm",
-        sha256 = "12819b095363d8294bd01c0e9c2cf847b21f895e96923b8a8c07836c8cd2c042",
-        strip_prefix = "common-jvm-0.20.1",
-        url = "https://github.com/world-federation-of-advertisers/common-jvm/archive/v0.20.1.tar.gz",
+        sha256 = "051c101dac4ad2ad48cfe3e7fd7317cdbbdc5d53777083385df204aa360b6012",
+        strip_prefix = "common-jvm-0.22.0",
+        url = "https://github.com/world-federation-of-advertisers/common-jvm/archive/v0.22.0.tar.gz",
     )
 
     # TODO: remove dependencies on wfa_measurement_system
@@ -62,9 +76,9 @@ def panel_exchange_client_repositories():
 
     http_archive(
         name = "wfa_consent_signaling_client",
-        sha256 = "59079953c01f2f9e2f22c0c2e2e01cfbb5da0a7b9348980e18827bf1947b21f5",
-        strip_prefix = "consent-signaling-client-0.10.0",
-        url = "https://github.com/world-federation-of-advertisers/consent-signaling-client/archive/v0.10.0.tar.gz",
+        sha256 = "6f92694715ec6d03a9cb5288db2ad167cc69d1a9331ca18fd7b7cf584e34b12c",
+        strip_prefix = "consent-signaling-client-0.11.0",
+        url = "https://github.com/world-federation-of-advertisers/consent-signaling-client/archive/v0.11.0.tar.gz",
     )
 
     http_archive(
