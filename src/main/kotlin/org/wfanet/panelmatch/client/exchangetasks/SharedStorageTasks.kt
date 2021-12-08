@@ -17,6 +17,6 @@ package org.wfanet.panelmatch.client.exchangetasks
 import org.wfanet.panelmatch.client.common.ExchangeContext
 
 interface SharedStorageTasks {
-  suspend fun ExchangeContext.buildCopyToSharedStorageTask(): ExchangeTask
-  suspend fun ExchangeContext.buildCopyFromSharedStorageTask(): ExchangeTask
+  suspend fun copyToSharedStorage(context: ExchangeContext): ExchangeTask
+  suspend fun copyFromSharedStorage(context: ExchangeContext): ExchangeTask
 }
