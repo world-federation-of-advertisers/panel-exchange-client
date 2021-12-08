@@ -30,8 +30,8 @@ import com.google.cloud.security.privateca.v1.KeyUsage.KeyUsageOptions
 import com.google.cloud.security.privateca.v1.X509Parameters.CaOptions
 import com.google.cloud.security.privateca.v1.PublicKey.KeyFormat
 import com.google.api.core.ApiFuture
-import com.google.protobuf.ByteString
 import com.google.protobuf.Duration
+import com.google.protobuf.kotlin.toByteString
 import java.security.PrivateKey
 import java.security.PublicKey
 import java.security.cert.X509Certificate
@@ -70,7 +70,7 @@ class CertificateAuthority(
 
       // Set the Public Key and its format.
       val cloudPublicKey: CloudPublicKey =
-        CloudPublicKey.newBuilder().setKey(ByteString.copyFromUtf8(publicKey.toString())).setFormat(KeyFormat.PEM).build()
+        CloudPublicKey.newBuilder().setKey(publicKey.encoded.toByteString()).setFormat(KeyFormat.PEM).build()
 
       val subjectConfig =
         SubjectConfig.newBuilder() // Set the common name and org name.
