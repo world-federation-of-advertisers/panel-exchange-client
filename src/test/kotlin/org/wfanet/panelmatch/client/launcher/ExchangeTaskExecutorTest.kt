@@ -29,7 +29,7 @@ import org.wfanet.measurement.api.v2alpha.ExchangeWorkflowKt.StepKt.encryptStep
 import org.wfanet.measurement.api.v2alpha.ExchangeWorkflowKt.step
 import org.wfanet.measurement.api.v2alpha.exchangeWorkflow
 import org.wfanet.measurement.common.asBufferedFlow
-import org.wfanet.panelmatch.client.exchangetasks.testing.makeExchangeTaskMapper
+import org.wfanet.panelmatch.client.exchangetasks.testing.makeFakeExchangeTaskMapper
 import org.wfanet.panelmatch.client.launcher.ExchangeStepValidator.ValidatedExchangeStep
 import org.wfanet.panelmatch.client.launcher.testing.FakeTimeout
 import org.wfanet.panelmatch.client.storage.StorageDetails
@@ -66,7 +66,7 @@ class ExchangeTaskExecutorTest {
     visibility = StorageDetails.Visibility.PRIVATE
   }
 
-  private val exchangeTaskMapper = makeExchangeTaskMapper()
+  private val exchangeTaskMapper = makeFakeExchangeTaskMapper()
 
   private val exchangeTaskExecutor =
     ExchangeTaskExecutor(

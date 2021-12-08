@@ -18,5 +18,5 @@ interface CommutativeEncryptionTasks {
   fun encrypt(): ExchangeTask
   fun decrypt(): ExchangeTask
   fun reEncrypt(): ExchangeTask
-  fun generateCommutativeEncryptionKey(): ExchangeTask
+  fun generateEncryptionKey(): ExchangeTask
 }
