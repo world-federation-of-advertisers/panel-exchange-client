@@ -24,7 +24,7 @@ class PrivateStorageTasksImpl(
   private val privateStorageSelector: PrivateStorageSelector,
   private val inputTaskThrottler: Throttler
 ) : PrivateStorageTasks {
-  override suspend fun getInput(context: ExchangeContext): ExchangeTask {
+  override suspend fun input(context: ExchangeContext): ExchangeTask {
     val step = context.step
     check(step.stepCase == ExchangeWorkflow.Step.StepCase.INPUT_STEP)
     require(step.inputLabelsMap.isEmpty())
