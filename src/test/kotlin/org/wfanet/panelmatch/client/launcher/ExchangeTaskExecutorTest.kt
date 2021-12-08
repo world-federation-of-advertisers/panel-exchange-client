@@ -29,13 +29,7 @@ import org.wfanet.measurement.api.v2alpha.ExchangeWorkflowKt.StepKt.encryptStep
 import org.wfanet.measurement.api.v2alpha.ExchangeWorkflowKt.step
 import org.wfanet.measurement.api.v2alpha.exchangeWorkflow
 import org.wfanet.measurement.common.asBufferedFlow
-import org.wfanet.panelmatch.client.exchangetasks.ExchangeTaskMapper
-import org.wfanet.panelmatch.client.exchangetasks.testing.FakeCommutativeEncryptionTasks
-import org.wfanet.panelmatch.client.exchangetasks.testing.FakeGenerateKeyTasks
-import org.wfanet.panelmatch.client.exchangetasks.testing.FakeMapReduceTasks
-import org.wfanet.panelmatch.client.exchangetasks.testing.FakePrivateStorageTasks
-import org.wfanet.panelmatch.client.exchangetasks.testing.FakeSharedStorageTasks
-import org.wfanet.panelmatch.client.exchangetasks.testing.FakeValidationTasks
+import org.wfanet.panelmatch.client.exchangetasks.testing.makeExchangeTaskMapper
 import org.wfanet.panelmatch.client.launcher.ExchangeStepValidator.ValidatedExchangeStep
 import org.wfanet.panelmatch.client.launcher.testing.FakeTimeout
 import org.wfanet.panelmatch.client.storage.StorageDetails
@@ -72,15 +66,7 @@ class ExchangeTaskExecutorTest {
     visibility = StorageDetails.Visibility.PRIVATE
   }
 
-  private val exchangeTaskMapper =
-    ExchangeTaskMapper(
-      validationTasks = FakeValidationTasks(),
-      commutativeEncryptionTasks = FakeCommutativeEncryptionTasks(),
-      mapReduceTasks = FakeMapReduceTasks(),
-      generateKeysTasks = FakeGenerateKeyTasks(),
-      privateStorageTasks = FakePrivateStorageTasks(),
-      sharedStorageTasks = FakeSharedStorageTasks()
-    )
+  private val exchangeTaskMapper = makeExchangeTaskMapper()
 
   private val exchangeTaskExecutor =
     ExchangeTaskExecutor(
