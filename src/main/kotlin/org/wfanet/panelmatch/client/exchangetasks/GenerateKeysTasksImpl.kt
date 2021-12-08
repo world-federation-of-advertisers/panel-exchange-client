@@ -26,22 +26,23 @@ class GenerateKeysTasksImpl(
   private val getPrivateMembershipCryptor: (ByteString) -> PrivateMembershipCryptor,
   private val certificateManager: CertificateManager
 ) : GenerateKeysTasks {
-  override fun getGenerateLookupKeysTask(): ExchangeTask {
+  override fun generateLookupKeys(): ExchangeTask {
     return GenerateLookupKeysTask()
   }
 
-  override fun getGenerateSymmetricKeyTask(): ExchangeTask {
+  override fun generateSymmetricKey(): ExchangeTask {
     return GenerateSymmetricKeyTask(generateKey = deterministicCommutativeCryptor::generateKey)
   }
 
-  override fun ExchangeContext.getGenerateSerializedRlweKeysStepTask(): ExchangeTask {
+  override fun generateSerializedRlweKeys(context: ExchangeContext): ExchangeTask {
+    val step = context.step
     check(step.stepCase == ExchangeWorkflow.Step.StepCase.GENERATE_SERIALIZED_RLWE_KEYS_STEP)
     val privateMembershipCryptor =
       getPrivateMembershipCryptor(step.generateSerializedRlweKeysStep.serializedParameters)
     return GenerateAsymmetricKeysTask(generateKeys = privateMembershipCryptor::generateKeys)
   }
 
-  override fun ExchangeContext.getGenerateExchangeCertificateTask(): ExchangeTask {
-    return GenerateExchangeCertificateTask(certificateManager, exchangeDateKey)
+  override fun generateExchangeCertificate(context: ExchangeContext): ExchangeTask {
+    return GenerateExchangeCertificateTask(certificateManager, context.exchangeDateKey)
   }
 }

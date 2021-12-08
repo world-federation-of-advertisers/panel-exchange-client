@@ -18,11 +18,11 @@ import org.wfanet.panelmatch.client.common.ExchangeContext
 
 interface GenerateKeysTasks {
 
-  fun getGenerateSymmetricKeyTask(): ExchangeTask
+  fun generateSymmetricKey(): ExchangeTask
 
-  fun getGenerateLookupKeysTask(): ExchangeTask
+  fun generateLookupKeys(): ExchangeTask
 
-  fun ExchangeContext.getGenerateSerializedRlweKeysStepTask(): ExchangeTask
+  fun generateSerializedRlweKeys(context: ExchangeContext): ExchangeTask
 
-  fun ExchangeContext.getGenerateExchangeCertificateTask(): ExchangeTask
+  fun generateExchangeCertificate(context: ExchangeContext): ExchangeTask
 }

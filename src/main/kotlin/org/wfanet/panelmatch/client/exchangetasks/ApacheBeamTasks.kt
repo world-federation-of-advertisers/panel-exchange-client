@@ -36,7 +36,8 @@ class ApacheBeamTasks(
   private val pipelineOptions: PipelineOptions = PipelineOptionsFactory.create()
 ) : MapReduceTasks {
 
-  override suspend fun ExchangeContext.getBuildPrivateMembershipQueriesTask(): ExchangeTask {
+  override suspend fun buildPrivateMembershipQueries(context: ExchangeContext): ExchangeTask {
+    val step = context.step
     check(step.stepCase == ExchangeWorkflow.Step.StepCase.BUILD_PRIVATE_MEMBERSHIP_QUERIES_STEP)
     val stepDetails = step.buildPrivateMembershipQueriesStep
     val privateMembershipCryptor = getPrivateMembershipCryptor(stepDetails.serializedParameters)
@@ -55,12 +56,13 @@ class ApacheBeamTasks(
         padQueries = stepDetails.addPaddingQueries,
       )
 
-    return apacheBeamTaskFor(outputManifests) {
+    return context.apacheBeamTaskFor(outputManifests) {
       buildPrivateMembershipQueries(parameters, privateMembershipCryptor)
     }
   }
 
-  override suspend fun ExchangeContext.getExecutePrivateMembershipQueriesTask(): ExchangeTask {
+  override suspend fun executePrivateMembershipQueries(context: ExchangeContext): ExchangeTask {
+    val step = context.step
     check(step.stepCase == ExchangeWorkflow.Step.StepCase.EXECUTE_PRIVATE_MEMBERSHIP_QUERIES_STEP)
     val stepDetails = step.executePrivateMembershipQueriesStep
 
@@ -75,12 +77,13 @@ class ApacheBeamTasks(
 
     val outputManifests = mapOf("encrypted-results" to stepDetails.encryptedQueryResultFileCount)
 
-    return apacheBeamTaskFor(outputManifests) {
+    return context.apacheBeamTaskFor(outputManifests) {
       executePrivateMembershipQueries(parameters, queryResultsEvaluator)
     }
   }
 
-  override suspend fun ExchangeContext.getDecryptMembershipResultsTask(): ExchangeTask {
+  override suspend fun decryptMembershipResults(context: ExchangeContext): ExchangeTask {
+    val step = context.step
     check(
       step.stepCase == ExchangeWorkflow.Step.StepCase.DECRYPT_PRIVATE_MEMBERSHIP_QUERY_RESULTS_STEP
     )
@@ -88,7 +91,7 @@ class ApacheBeamTasks(
 
     val outputManifests = mapOf("decrypted-event-data" to stepDetails.decryptEventDataSetFileCount)
 
-    return apacheBeamTaskFor(outputManifests) {
+    return context.apacheBeamTaskFor(outputManifests) {
       decryptPrivateMembershipResults(stepDetails.serializedParameters, queryResultsDecryptor)
     }
   }

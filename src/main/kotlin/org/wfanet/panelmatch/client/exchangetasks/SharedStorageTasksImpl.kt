@@ -23,10 +23,12 @@ class SharedStorageTasksImpl(
   private val privateStorageSelector: PrivateStorageSelector,
   private val sharedStorageSelector: SharedStorageSelector
 ) : SharedStorageTasks {
-  override suspend fun ExchangeContext.buildCopyFromSharedStorageTask(): ExchangeTask {
+  override suspend fun copyFromSharedStorage(context: ExchangeContext): ExchangeTask {
+    val step = context.step
     check(step.stepCase == ExchangeWorkflow.Step.StepCase.COPY_FROM_SHARED_STORAGE_STEP)
-    val source = sharedStorageSelector.getSharedStorage(workflow.exchangeIdentifiers.storage, this)
-    val destination = privateStorageSelector.getStorageClient(exchangeDateKey)
+    val source =
+      sharedStorageSelector.getSharedStorage(context.workflow.exchangeIdentifiers.storage, context)
+    val destination = privateStorageSelector.getStorageClient(context.exchangeDateKey)
     return CopyFromSharedStorageTask(
       source,
       destination,
@@ -36,11 +38,12 @@ class SharedStorageTasksImpl(
     )
   }
 
-  override suspend fun ExchangeContext.buildCopyToSharedStorageTask(): ExchangeTask {
+  override suspend fun copyToSharedStorage(context: ExchangeContext): ExchangeTask {
+    val step = context.step
     check(step.stepCase == ExchangeWorkflow.Step.StepCase.COPY_TO_SHARED_STORAGE_STEP)
-    val source = privateStorageSelector.getStorageClient(exchangeDateKey)
+    val source = privateStorageSelector.getStorageClient(context.exchangeDateKey)
     val destination =
-      sharedStorageSelector.getSharedStorage(workflow.exchangeIdentifiers.storage, this)
+      sharedStorageSelector.getSharedStorage(context.workflow.exchangeIdentifiers.storage, context)
     return CopyToSharedStorageTask(
       source,
       destination,
