@@ -14,11 +14,9 @@
 
 package org.wfanet.panelmatch.client.exchangetasks
 
-import org.wfanet.panelmatch.client.common.ExchangeContext
-
 interface CommutativeEncryptionTasks {
-  fun ExchangeContext.buildDecryptTask(): ExchangeTask
-  fun ExchangeContext.buildEncryptTask(): ExchangeTask
-  fun ExchangeContext.buildReEncryptTask(): ExchangeTask
-  fun ExchangeContext.buildGenerateCommutativeEncryptionKeyTask(): ExchangeTask
+  fun encrypt(): ExchangeTask
+  fun decrypt(): ExchangeTask
+  fun reEncrypt(): ExchangeTask
+  fun generateCommutativeEncryptionKey(): ExchangeTask
 }

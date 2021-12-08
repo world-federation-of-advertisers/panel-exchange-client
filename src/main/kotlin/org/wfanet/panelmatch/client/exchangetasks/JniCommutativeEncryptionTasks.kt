@@ -14,25 +14,24 @@
 
 package org.wfanet.panelmatch.client.exchangetasks
 
-import org.wfanet.panelmatch.client.common.ExchangeContext
 import org.wfanet.panelmatch.common.crypto.DeterministicCommutativeCipher
 
 class JniCommutativeEncryptionTasks(
   private val deterministicCommutativeCryptor: DeterministicCommutativeCipher
 ) : CommutativeEncryptionTasks {
-  override fun ExchangeContext.buildEncryptTask(): ExchangeTask {
+  override fun encrypt(): ExchangeTask {
     return CryptorExchangeTask.forEncryption(deterministicCommutativeCryptor)
   }
 
-  override fun ExchangeContext.buildDecryptTask(): ExchangeTask {
+  override fun decrypt(): ExchangeTask {
     return CryptorExchangeTask.forDecryption(deterministicCommutativeCryptor)
   }
 
-  override fun ExchangeContext.buildReEncryptTask(): ExchangeTask {
+  override fun reEncrypt(): ExchangeTask {
     return CryptorExchangeTask.forReEncryption(deterministicCommutativeCryptor)
   }
 
-  override fun ExchangeContext.buildGenerateCommutativeEncryptionKeyTask(): ExchangeTask {
+  override fun generateCommutativeEncryptionKey(): ExchangeTask {
     return GenerateSymmetricKeyTask(generateKey = deterministicCommutativeCryptor::generateKey)
   }
 }
