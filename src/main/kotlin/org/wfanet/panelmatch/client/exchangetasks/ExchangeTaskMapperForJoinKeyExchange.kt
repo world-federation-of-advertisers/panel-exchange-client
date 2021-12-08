@@ -114,7 +114,7 @@ abstract class ExchangeTaskMapperForJoinKeyExchange : ExchangeTaskMapper {
     val outputManifests =
       mapOf(
         "encrypted-queries" to stepDetails.encryptedQueryBundleFileCount,
-        "query-decryption-keys" to stepDetails.queryIdAndPanelistKeyFileCount,
+        "query-to-ids-map" to stepDetails.queryIdAndPanelistKeyFileCount,
       )
 
     val parameters =

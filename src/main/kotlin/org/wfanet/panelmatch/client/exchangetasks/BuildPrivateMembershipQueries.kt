@@ -53,6 +53,6 @@ fun ApacheBeamContext.buildPrivateMembershipQueries(
       privateMembershipCryptor
     )
 
-  outputs.queryIdMap.write("query-to-id-map")
+  outputs.queryIdMap.write("query-to-ids-map")
   outputs.encryptedQueryBundles.write("encrypted-queries")
 }
