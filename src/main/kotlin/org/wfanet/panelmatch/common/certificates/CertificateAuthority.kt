@@ -27,6 +27,7 @@ interface CertificateAuthority {
   )
 
   /**
+
    * Creates a [PrivateKey] and corresponding [X509Certificate] signed by a root private key and
    * verifiable by the shared root public key.
    *
