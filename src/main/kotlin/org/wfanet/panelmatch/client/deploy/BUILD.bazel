@@ -1,4 +1,5 @@
 load("@io_bazel_rules_kotlin//kotlin:jvm.bzl", "kt_jvm_library")
+load("@rules_java//java:defs.bzl", "java_binary")
 
 package(default_visibility = [
     "//src/main/kotlin/org/wfanet/panelmatch:__subpackages__",
@@ -27,4 +28,61 @@ kt_jvm_library(
         "@wfa_common_jvm//src/main/kotlin/org/wfanet/measurement/common/throttler",
         "@wfa_common_jvm//src/main/kotlin/org/wfanet/measurement/storage:client",
     ],
+)
+
+java_binary(
+    name = "provided-deps",
+    create_executable = False,
+    runtime_deps = [
+        "//imports/java/com/google/common:guava",
+        "//imports/java/org/apache/beam:core",
+        "//imports/java/org/apache/beam/extensions:google_cloud_platform_core",
+        "//imports/java/org/apache/beam/extensions:protobuf",
+        "//imports/java/org/apache/beam/runners:core",
+        "//imports/java/org/apache/beam/runners:direct_runner",
+        "//imports/java/org/apache/beam/runners:google_cloud_dataflow",
+        "//imports/java/org/slf4j:simple",
+        "@bazel_tools//tools/java/runfiles",
+        "@com_google_protobuf//:protobuf_java",
+        "@maven//:com_google_code_gson_gson",
+        "@tink_java//src/main/java/com/google/crypto/tink:aead",
+        "@tink_java//src/main/java/com/google/crypto/tink:binary_keyset_reader",
+        "@tink_java//src/main/java/com/google/crypto/tink:binary_keyset_writer",
+        "@tink_java//src/main/java/com/google/crypto/tink:hybrid_decrypt",
+        "@tink_java//src/main/java/com/google/crypto/tink:hybrid_encrypt",
+        "@tink_java//src/main/java/com/google/crypto/tink:kms_clients",
+        "@tink_java//src/main/java/com/google/crypto/tink:registry_cluster",
+        "@wfa_common_jvm//imports/java/com/google/cloud:core",
+        "@wfa_common_jvm//imports/java/com/google/cloud/grpc",
+        "@wfa_common_jvm//imports/java/com/google/cloud/spanner",
+        "@wfa_common_jvm//imports/java/com/google/cloud/storage",
+        "@wfa_common_jvm//imports/java/com/google/code/gson",
+        "@wfa_common_jvm//imports/java/com/google/common/truth",
+        "@wfa_common_jvm//imports/java/com/google/protobuf",
+        "@wfa_common_jvm//imports/java/com/google/protobuf/util",
+        "@wfa_common_jvm//imports/java/io/grpc:api",
+        "@wfa_common_jvm//imports/java/io/grpc:context",
+        "@wfa_common_jvm//imports/java/io/grpc/core:util",
+        "@wfa_common_jvm//imports/java/io/grpc/inprocess",
+        "@wfa_common_jvm//imports/java/io/grpc/netty",
+        "@wfa_common_jvm//imports/java/io/grpc/services:health",
+        "@wfa_common_jvm//imports/java/io/grpc/stub",
+        "@wfa_common_jvm//imports/java/org/conscrypt",
+        "@wfa_common_jvm//imports/java/org/junit",
+        "@wfa_common_jvm//imports/java/picocli",
+        "@wfa_common_jvm//imports/kotlin/kotlin:stdlib_jdk7",
+        "@wfa_common_jvm//imports/kotlin/kotlin/reflect/jvm",
+        "@wfa_common_jvm//imports/kotlin/kotlin/test",
+        "@wfa_common_jvm//imports/kotlin/kotlinx/coroutines:core",
+        "@wfa_common_jvm//imports/kotlin/kotlinx/coroutines/test",
+        "@wfa_common_jvm//imports/kotlin/org/mockito/kotlin",
+    ],
+)
+
+java_binary(
+    name = "DeployJar",
+    deploy_env = [
+        ":provided-deps",
+    ],
+    runtime_deps = [":deploy"],
 )

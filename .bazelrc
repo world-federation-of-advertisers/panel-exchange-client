@@ -3,6 +3,11 @@ build --repo_env='CC=clang'
 
 # Use C++17 language features.
 build --cxxopt='-std=c++17'
+build --copt='-Winconsistent-missing-override'# --copt='-Wno-error=vla-parameter' --copt='-Wno-error=array-parameter'
+build --action_env=BAZEL_LINKOPTS=-Wl,-Bstatic
+build --action_env=BAZEL_LINKLIBS=-l%:libgcc.a
+build --action_env=BAZEL_LINKOPTS=-static-libgcc
+build --action_env=BAZEL_LINKLIBS=-l%:libstdc++.a
 
 # Use JDK 11. See https://github.com/bazelbuild/bazel/issues/6245.
 build --javabase=@bazel_tools//tools/jdk:remote_jdk11
