@@ -41,10 +41,10 @@ import org.wfanet.panelmatch.client.storage.storageDetails
 import org.wfanet.panelmatch.client.storage.testing.makeTestPrivateStorageSelector
 import org.wfanet.panelmatch.client.storage.testing.makeTestSharedStorageSelector
 import org.wfanet.panelmatch.common.certificates.testing.TestCertificateManager
+import org.wfanet.panelmatch.common.crypto.testing.FakeDeterministicCommutativeCipher
 import org.wfanet.panelmatch.common.secrets.testing.TestSecretMap
 import org.wfanet.panelmatch.common.testing.AlwaysReadyThrottler
 import org.wfanet.panelmatch.common.testing.runBlockingTest
-import org.wfanet.panelmatch.common.crypto.testing.FakeDeterministicCommutativeCipher
 
 // TODO: move elsewhere to enable reuse.
 class TestPrivateStorageSelector {

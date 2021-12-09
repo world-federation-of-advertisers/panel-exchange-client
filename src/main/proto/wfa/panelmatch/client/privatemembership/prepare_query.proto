@@ -36,8 +36,7 @@ message LookupKey {
 // A lookup key and its join key identifier.
 message LookupKeyAndId {
   LookupKey lookup_key = 1;
-  wfa.panelmatch.client.exchangetasks.JoinKeyIdentifier join_key_identifier =
-      2;
+  wfa.panelmatch.client.exchangetasks.JoinKeyIdentifier join_key_identifier = 2;
 }
 
 // A collection of lookup key and ids.

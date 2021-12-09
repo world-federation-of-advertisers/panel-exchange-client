@@ -14,13 +14,13 @@
 
 package org.wfanet.panelmatch.integration
 
+import com.google.common.truth.Truth.assertThat
 import com.google.protobuf.ByteString
 import com.google.protobuf.kotlin.toByteStringUtf8
 import kotlin.test.assertNotNull
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
 import org.wfanet.measurement.common.flatten
-import com.google.common.truth.Truth.assertThat
 import org.wfanet.panelmatch.client.PreprocessEventsRequestKt.unprocessedEvent
 import org.wfanet.panelmatch.client.common.databaseEntryOf
 import org.wfanet.panelmatch.client.common.databaseKeyOf
@@ -113,9 +113,9 @@ class FullWorkflowTest : AbstractInProcessPanelMatchIntegrationTest() {
       }
     print("FOUND:$decryptedEvents")
     assertThat(decryptedEvents)
-          .containsExactly(
-            "join-key-1" to "payload-for-join-key-1",
-            "join-key-2" to "payload-for-join-key-2",
-          )
+      .containsExactly(
+        "join-key-1" to "payload-for-join-key-1",
+        "join-key-2" to "payload-for-join-key-2",
+      )
   }
 }

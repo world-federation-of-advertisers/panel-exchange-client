@@ -16,16 +16,14 @@ package org.wfanet.panelmatch.client.exchangetasks
 
 import org.apache.beam.sdk.values.PCollection
 import org.wfanet.panelmatch.client.privatemembership.CreateQueriesParameters
+import org.wfanet.panelmatch.client.privatemembership.LookupKeyAndId
+import org.wfanet.panelmatch.client.privatemembership.LookupKeyAndIdCollection
 import org.wfanet.panelmatch.client.privatemembership.PrivateMembershipCryptor
 import org.wfanet.panelmatch.client.privatemembership.createQueries
 import org.wfanet.panelmatch.common.beam.flatMap
 import org.wfanet.panelmatch.common.beam.mapWithSideInput
 import org.wfanet.panelmatch.common.beam.toSingletonView
 import org.wfanet.panelmatch.common.crypto.AsymmetricKeys
-import org.wfanet.panelmatch.client.privatemembership.QueryIdAndId
-import org.wfanet.panelmatch.client.privatemembership.lookupKeyAndId
-import org.wfanet.panelmatch.client.privatemembership.LookupKeyAndId
-import org.wfanet.panelmatch.client.privatemembership.LookupKeyAndIdCollection
 
 fun ApacheBeamContext.buildPrivateMembershipQueries(
   parameters: CreateQueriesParameters,
@@ -46,12 +44,7 @@ fun ApacheBeamContext.buildPrivateMembershipQueries(
       .toSingletonView()
 
   val outputs =
-    createQueries(
-      lookupKeyAndIds,
-      privateKeysView,
-      parameters,
-      privateMembershipCryptor
-    )
+    createQueries(lookupKeyAndIds, privateKeysView, parameters, privateMembershipCryptor)
 
   outputs.queryIdMap.write("query-to-ids-map")
   outputs.encryptedQueryBundles.write("encrypted-queries")

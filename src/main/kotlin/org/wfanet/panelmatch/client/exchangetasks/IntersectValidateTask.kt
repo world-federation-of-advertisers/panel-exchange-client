@@ -18,8 +18,6 @@ import com.google.protobuf.ByteString
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
 import org.wfanet.measurement.storage.StorageClient
-import org.wfanet.panelmatch.client.exchangetasks.JoinKeyAndId
-import org.wfanet.panelmatch.client.exchangetasks.JoinKeyAndIdCollection
 import org.wfanet.panelmatch.common.storage.toByteString
 
 /**

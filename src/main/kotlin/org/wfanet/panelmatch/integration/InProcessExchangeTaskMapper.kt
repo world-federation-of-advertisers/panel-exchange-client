@@ -19,8 +19,8 @@ import org.wfanet.measurement.common.throttler.Throttler
 import org.wfanet.panelmatch.client.exchangetasks.ExchangeTaskMapperForJoinKeyExchange
 import org.wfanet.panelmatch.client.privatemembership.JniPrivateMembershipCryptor
 import org.wfanet.panelmatch.client.privatemembership.JniQueryEvaluator
-import org.wfanet.panelmatch.client.privatemembership.JniQueryResultsDecryptor
 import org.wfanet.panelmatch.client.privatemembership.JniQueryPreparer
+import org.wfanet.panelmatch.client.privatemembership.JniQueryResultsDecryptor
 import org.wfanet.panelmatch.client.storage.PrivateStorageSelector
 import org.wfanet.panelmatch.client.storage.SharedStorageSelector
 import org.wfanet.panelmatch.common.certificates.CertificateManager

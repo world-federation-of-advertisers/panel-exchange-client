@@ -14,9 +14,6 @@
 
 package org.wfanet.panelmatch.common.crypto
 
-import com.google.protobuf.ByteString
-import java.security.MessageDigest
-
 private const val HASH_ALGORITHM = "SHA-256"
 
 /**

@@ -26,12 +26,6 @@ import org.junit.runners.JUnit4
 import org.wfanet.measurement.common.flatten
 import org.wfanet.measurement.storage.StorageClient.Blob
 import org.wfanet.measurement.storage.testing.InMemoryStorageClient
-import org.wfanet.panelmatch.client.exchangetasks.JoinKeyAndId
-import org.wfanet.panelmatch.client.exchangetasks.JoinKeyAndIdCollection
-import org.wfanet.panelmatch.client.exchangetasks.joinKey
-import org.wfanet.panelmatch.client.exchangetasks.joinKeyAndId
-import org.wfanet.panelmatch.client.exchangetasks.joinKeyAndIdCollection
-import org.wfanet.panelmatch.client.exchangetasks.joinKeyIdentifier
 import org.wfanet.panelmatch.common.storage.createBlob
 
 private val JOIN_KEYS: List<JoinKeyAndId> =
@@ -81,8 +75,7 @@ class IntersectValidateTaskTest {
   ) = runBlocking {
     val outputs = runIntersectAndValidate(previousData, currentData, maxSize, isFirstExchange)
     val outputJoinKeys =
-      JoinKeyAndIdCollection.parseFrom(outputs.getValue("current-data").flatten())
-        .joinKeyAndIdsList
+      JoinKeyAndIdCollection.parseFrom(outputs.getValue("current-data").flatten()).joinKeyAndIdsList
     assertThat(outputJoinKeys).containsExactlyElementsIn(currentData)
   }
 

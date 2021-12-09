@@ -15,13 +15,11 @@
 package org.wfanet.panelmatch.client.privatemembership
 
 import com.google.common.truth.Truth.assertThat
-import com.google.protobuf.kotlin.toByteStringUtf8
 import kotlin.test.assertFails
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
 import org.wfanet.panelmatch.client.common.bucketIdOf
-import org.wfanet.panelmatch.client.common.joinKeyOf
 import org.wfanet.panelmatch.client.common.shardIdOf
 
 @RunWith(JUnit4::class)

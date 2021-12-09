@@ -20,9 +20,6 @@ import java.lang.Long.remainderUnsigned
 import java.lang.Long.toUnsignedString
 import org.wfanet.panelmatch.client.common.bucketIdOf
 import org.wfanet.panelmatch.client.common.shardIdOf
-import org.wfanet.panelmatch.client.exchangetasks.JoinKey
-
-import org.wfanet.panelmatch.client.exchangetasks.joinKey
 
 /** Computes the appropriate bucket and shard for keys. */
 class Bucketing(private val numShards: Int, private val numBucketsPerShard: Int) : Serializable {

@@ -71,7 +71,7 @@ abstract class ExchangeTaskMapperForJoinKeyExchange : ExchangeTaskMapper {
       StepCase.COPY_FROM_SHARED_STORAGE_STEP -> getCopyFromSharedStorageTask()
       StepCase.COPY_TO_SHARED_STORAGE_STEP -> getCopyToSharedStorageTask()
       StepCase.COPY_FROM_PREVIOUS_EXCHANGE_STEP -> getCopyFromPreviousExchangeTask()
-      //StepCase.GENERATE_LOOKUP_KEYS -> GenerateLookupKeysTask()
+      // StepCase.GENERATE_LOOKUP_KEYS -> GenerateLookupKeysTask()
       else -> throw IllegalArgumentException("Unsupported step type: ${step.stepCase}")
     }
   }

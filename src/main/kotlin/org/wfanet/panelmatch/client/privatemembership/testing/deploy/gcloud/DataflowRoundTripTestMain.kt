@@ -43,8 +43,6 @@ import org.wfanet.panelmatch.client.common.databaseEntryOf
 import org.wfanet.panelmatch.client.common.databaseKeyOf
 import org.wfanet.panelmatch.client.common.lookupKeyAndIdOf
 import org.wfanet.panelmatch.client.common.plaintextOf
-import org.wfanet.panelmatch.client.exchangetasks.JoinKeyAndId
-import org.wfanet.panelmatch.client.exchangetasks.copy
 import org.wfanet.panelmatch.client.privatemembership.BucketContents
 import org.wfanet.panelmatch.client.privatemembership.CreateQueriesParameters
 import org.wfanet.panelmatch.client.privatemembership.DatabaseEntry
