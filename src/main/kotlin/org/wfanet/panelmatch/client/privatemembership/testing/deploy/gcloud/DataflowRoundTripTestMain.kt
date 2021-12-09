@@ -41,7 +41,7 @@ import org.apache.beam.sdk.transforms.Create
 import org.apache.beam.sdk.values.PCollection
 import org.wfanet.panelmatch.client.common.databaseEntryOf
 import org.wfanet.panelmatch.client.common.databaseKeyOf
-import org.wfanet.panelmatch.client.common.joinKeyAndIdOf
+import org.wfanet.panelmatch.client.common.lookupKeyAndIdOf
 import org.wfanet.panelmatch.client.common.plaintextOf
 import org.wfanet.panelmatch.client.exchangetasks.JoinKeyAndId
 import org.wfanet.panelmatch.client.exchangetasks.copy
@@ -54,6 +54,7 @@ import org.wfanet.panelmatch.client.privatemembership.EvaluateQueriesParameters
 import org.wfanet.panelmatch.client.privatemembership.JniPrivateMembership
 import org.wfanet.panelmatch.client.privatemembership.JniPrivateMembershipCryptor
 import org.wfanet.panelmatch.client.privatemembership.JniQueryEvaluator
+import org.wfanet.panelmatch.client.privatemembership.LookupKeyAndId
 import org.wfanet.panelmatch.client.privatemembership.createQueries
 import org.wfanet.panelmatch.client.privatemembership.evaluateQueries
 import org.wfanet.panelmatch.client.privatemembership.testing.PRIVATE_MEMBERSHIP_CRYPTO_PARAMETERS
@@ -112,31 +113,23 @@ fun main(args: Array<String>) {
   val privateMembershipCryptor =
     JniPrivateMembershipCryptor(PRIVATE_MEMBERSHIP_PARAMETERS.toByteString())
 
-  val rawQueries: PCollection<JoinKeyAndId> =
+  val rawQueries: PCollection<LookupKeyAndId> =
     pipeline.apply("Create Queries", Create.of(0 until SHARD_COUNT)).parDo("Populate Queries") { i
       ->
       for (j in 0 until QUERIES_PER_SHARD_COUNT / 4) {
         val queryIndex = i + j * SHARD_COUNT
         yield(
-          joinKeyAndIdOf(
-            "LookupKey-$queryIndex".toByteStringUtf8(),
-            "JoinKeyIdentifier-$queryIndex".toByteStringUtf8()
+          lookupKeyAndIdOf(
+            i + j * SHARD_COUNT.toLong(),
+            "joinKeyId of ${i + j * SHARD_COUNT}".toByteStringUtf8()
           )
         )
-      }
-    }
-
-  val hashedJoinKeys: PCollection<JoinKeyAndId> =
-    rawQueries.map {
-      it.copy {
-        joinKey = joinKey.copy { key = "JoinKey-for-${key.toStringUtf8()}".toByteStringUtf8() }
       }
     }
 
   val encryptedQueryBundles: PCollection<EncryptedQueryBundle> =
     createQueries(
         rawQueries,
-        hashedJoinKeys,
         privateMembershipKeys.toSingletonView(),
         createQueriesParameters,
         privateMembershipCryptor

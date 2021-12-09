@@ -22,19 +22,18 @@ import org.wfanet.panelmatch.common.beam.flatMap
 import org.wfanet.panelmatch.common.beam.mapWithSideInput
 import org.wfanet.panelmatch.common.beam.toSingletonView
 import org.wfanet.panelmatch.common.crypto.AsymmetricKeys
+import org.wfanet.panelmatch.client.privatemembership.QueryIdAndId
+import org.wfanet.panelmatch.client.privatemembership.lookupKeyAndId
+import org.wfanet.panelmatch.client.privatemembership.LookupKeyAndId
+import org.wfanet.panelmatch.client.privatemembership.LookupKeyAndIdCollection
 
 fun ApacheBeamContext.buildPrivateMembershipQueries(
   parameters: CreateQueriesParameters,
   privateMembershipCryptor: PrivateMembershipCryptor,
 ) {
-  val lookupKeyAndIds: PCollection<JoinKeyAndId> =
+  val lookupKeyAndIds: PCollection<LookupKeyAndId> =
     readBlobAsPCollection("lookup-keys").flatMap {
-      JoinKeyAndIdCollection.parseFrom(it).joinKeysAndIdsList
-    }
-
-  val hashedJoinKeyAndIds: PCollection<JoinKeyAndId> =
-    readBlobAsPCollection("hashed-join-keys").flatMap {
-      JoinKeyAndIdCollection.parseFrom(it).joinKeysAndIdsList
+      LookupKeyAndIdCollection.parseFrom(it).lookupKeyAndIdsList
     }
 
   val publicKeyView = readBlobAsView("serialized-rlwe-public-key")
@@ -49,12 +48,11 @@ fun ApacheBeamContext.buildPrivateMembershipQueries(
   val outputs =
     createQueries(
       lookupKeyAndIds,
-      hashedJoinKeyAndIds,
       privateKeysView,
       parameters,
       privateMembershipCryptor
     )
 
-  outputs.queryIdMap.write("query-to-join-keys-map")
+  outputs.queryIdMap.write("query-to-ids-map")
   outputs.encryptedQueryBundles.write("encrypted-queries")
 }

@@ -217,10 +217,10 @@ steps {
 
   generate_lookup_keys {}
 
-  input_labels { key: "decrypted-join-keys" value: "mp-decrypted-join-keys" }
+  input_labels { key: "join-keys" value: "mp-decrypted-join-keys" }
   input_labels { key: "pepper" value: "mp-identifier-hash-pepper" }
 
-  output_labels { key: "lookup-keys" value: "mp-lookup-keys" }
+  output_labels { key: "hashed-join-keys" value: "mp-lookup-keys" }
 }
 
 # MP generates rlwe private and public keys.
@@ -269,11 +269,10 @@ steps {
   }
 
   input_labels { key: "lookup-keys" value: "mp-lookup-keys" }
-  input_labels { key: "hashed-join-keys" value: "mp-plaintext-join-keys" }
   input_labels { key: "serialized-rlwe-private-key" value: "mp-serialized-rlwe-private-key" }
   input_labels { key: "serialized-rlwe-public-key" value: "mp-serialized-rlwe-public-key" }
 
-  output_labels { key: "query-to-join-keys-map" value: "mp-query-to-join-keys-map" }
+  output_labels { key: "query-to-ids-map" value: "mp-query-to-ids-map" }
   output_labels { key: "encrypted-queries" value: "mp-encrypted-queries" }
 }
 
@@ -418,7 +417,9 @@ steps {
   input_labels { key: "serialized-rlwe-private-key" value: "mp-serialized-rlwe-private-key" }
   input_labels { key: "serialized-rlwe-public-key" value: "mp-serialized-rlwe-public-key" }
   input_labels { key: "compression-parameters" value: "mp-compression-parameters" }
-  input_labels { key: "query-to-join-keys-map" value: "mp-query-to-join-keys-map" }
+  input_labels { key: "query-to-ids-map" value: "mp-query-to-ids-map" }
+  input_labels { key: "plaintext-join-keys-to-id-map" value: "mp-plaintext-join-keys" }
+  input_labels { key: "decrypted-join-keys-to-id-map" value: "mp-decrypted-join-keys" }
   input_labels { key: "encrypted-results" value: "mp-encrypted-query-results" }
   input_labels { key: "pepper" value: "mp-hkdf-pepper" }
 

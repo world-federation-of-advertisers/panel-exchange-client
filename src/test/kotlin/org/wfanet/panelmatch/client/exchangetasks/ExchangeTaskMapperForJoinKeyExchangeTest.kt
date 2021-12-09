@@ -31,6 +31,7 @@ import org.wfanet.measurement.storage.StorageClient
 import org.wfanet.measurement.storage.testing.InMemoryStorageClient
 import org.wfanet.panelmatch.client.common.ExchangeContext
 import org.wfanet.panelmatch.client.launcher.testing.inputStep
+import org.wfanet.panelmatch.client.privatemembership.JniQueryPreparer
 import org.wfanet.panelmatch.client.privatemembership.testing.PlaintextPrivateMembershipCryptor
 import org.wfanet.panelmatch.client.privatemembership.testing.PlaintextQueryEvaluator
 import org.wfanet.panelmatch.client.privatemembership.testing.PlaintextQueryResultsDecryptor
@@ -40,10 +41,10 @@ import org.wfanet.panelmatch.client.storage.storageDetails
 import org.wfanet.panelmatch.client.storage.testing.makeTestPrivateStorageSelector
 import org.wfanet.panelmatch.client.storage.testing.makeTestSharedStorageSelector
 import org.wfanet.panelmatch.common.certificates.testing.TestCertificateManager
-import org.wfanet.panelmatch.common.crypto.testing.FakeDeterministicCommutativeCipher
 import org.wfanet.panelmatch.common.secrets.testing.TestSecretMap
 import org.wfanet.panelmatch.common.testing.AlwaysReadyThrottler
 import org.wfanet.panelmatch.common.testing.runBlockingTest
+import org.wfanet.panelmatch.common.crypto.testing.FakeDeterministicCommutativeCipher
 
 // TODO: move elsewhere to enable reuse.
 class TestPrivateStorageSelector {
@@ -85,6 +86,7 @@ class ExchangeTaskMapperForJoinKeyExchangeTest {
         PlaintextPrivateMembershipCryptor()
       }
       override val queryResultsDecryptor = PlaintextQueryResultsDecryptor()
+      override val queryPreparer = JniQueryPreparer()
       override val privateStorageSelector = testPrivateStorageSelector.selector
       override val sharedStorageSelector = testSharedStorageSelector.selector
       override val certificateManager = TestCertificateManager

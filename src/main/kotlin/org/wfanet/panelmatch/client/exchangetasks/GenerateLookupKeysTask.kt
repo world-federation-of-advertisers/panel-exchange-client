@@ -37,10 +37,10 @@ class GenerateLookupKeysTask : ExchangeTask {
     val joinkeys = JoinKeyAndIdCollection.parseFrom(serializedJoinKeys)
     val pepper = input.getValue("pepper").toByteString()
     val lookupKeys = joinKeyAndIdCollection {
-      for (joinKeyAndId in joinkeys.joinKeysAndIdsList) {
+      for (joinKeyAndId in joinkeys.joinKeyAndIdsList) {
         val joinKeyBytes = joinKeyAndId.joinKey.key
         val lookupKeyBytes = hashSha256(joinKeyBytes.concat(pepper)).substring(0, Long.SIZE_BYTES)
-        joinKeysAndIds +=
+        joinKeyAndIds +=
           joinKeyAndId {
             this.joinKey = joinKeyOf(lookupKeyBytes)
             this.joinKeyIdentifier = joinKeyAndId.joinKeyIdentifier

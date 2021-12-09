@@ -18,6 +18,8 @@ import com.google.protobuf.ByteString
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
 import org.wfanet.measurement.storage.StorageClient
+import org.wfanet.panelmatch.client.exchangetasks.JoinKeyAndId
+import org.wfanet.panelmatch.client.exchangetasks.JoinKeyAndIdCollection
 import org.wfanet.panelmatch.common.storage.toByteString
 
 /**
@@ -52,7 +54,7 @@ class IntersectValidateTask(
   }
 
   private fun parseJoinKeyAndIds(bytes: ByteString): Set<JoinKeyAndId> {
-    return JoinKeyAndIdCollection.parseFrom(bytes).joinKeysAndIdsList.toSet()
+    return JoinKeyAndIdCollection.parseFrom(bytes).joinKeyAndIdsList.toSet()
   }
 
   private fun validateIntersection(currentData: Set<JoinKeyAndId>, oldData: Set<JoinKeyAndId>) {

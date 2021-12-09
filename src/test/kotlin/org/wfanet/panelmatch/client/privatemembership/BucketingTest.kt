@@ -49,17 +49,6 @@ class BucketingTest {
   }
 
   @Test
-  fun `hash encrypted join keys`() {
-    val bucketing = Bucketing(numShards = 30000, numBucketsPerShard = 3)
-    assertThat(bucketing.hashAndApply(joinKeyOf("some-encrypted-joinkey".toByteStringUtf8())))
-      .isEqualTo(shardIdOf(18852) to bucketIdOf(0))
-    assertThat(bucketing.hashAndApply(joinKeyOf("some-other-encrypted-joinkey".toByteStringUtf8())))
-      .isEqualTo(shardIdOf(21603) to bucketIdOf(0))
-    assertThat(bucketing.hashAndApply(joinKeyOf("another-encrypted-joinkey-1".toByteStringUtf8())))
-      .isEqualTo(shardIdOf(29214) to bucketIdOf(2))
-  }
-
-  @Test
   fun `math is unsigned`() {
     // Note: we treat inputs to `Bucketing::apply` as unsigned. However, for parity with AnySketch,
     // we use primitives (i.e. long) instead of Guava's UnsignedLong. See:

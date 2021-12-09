@@ -1,14 +1,16 @@
 load("@io_bazel_rules_kotlin//kotlin:jvm.bzl", "kt_jvm_test")
 
 kt_jvm_test(
-    name = "DeterministicCommutativeCryptorExchangeTaskTest",
+    name = "JoinKeyHashingExchangeTaskTest",
     timeout = "short",
-    srcs = ["DeterministicCommutativeCryptorExchangeTaskTest.kt"],
+    srcs = ["JoinKeyHashingExchangeTaskTest.kt"],
     test_class =
-        "org.wfanet.panelmatch.client.exchangetasks.DeterministicCommutativeCryptorExchangeTaskTest",
+        "org.wfanet.panelmatch.client.exchangetasks.JoinKeyHashingExchangeTaskTest",
     deps = [
         "//src/main/kotlin/org/wfanet/panelmatch/client/exchangetasks",
         "//src/main/kotlin/org/wfanet/panelmatch/client/launcher/testing",
+        "//src/main/kotlin/org/wfanet/panelmatch/client/privatemembership",
+        "//src/main/kotlin/org/wfanet/panelmatch/client/privatemembership/testing",
         "//src/main/kotlin/org/wfanet/panelmatch/client/storage",
         "//src/main/kotlin/org/wfanet/panelmatch/client/storage/testing",
         "//src/main/kotlin/org/wfanet/panelmatch/common/crypto/testing",

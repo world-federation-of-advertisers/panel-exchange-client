@@ -50,7 +50,7 @@ class GenerateLookupKeysTaskTest {
 
     val joinKeyIdentifier = "id-1".toByteStringUtf8()
     val joinKeys = joinKeyAndIdCollection {
-      joinKeysAndIds += joinKeyAndIdOf(encryptedId, joinKeyIdentifier)
+      joinKeyAndIds += joinKeyAndIdOf(encryptedId, joinKeyIdentifier)
     }
     val storage = InMemoryStorageClient()
     val taskOutputs =
@@ -63,8 +63,8 @@ class GenerateLookupKeysTaskTest {
         )
     assertThat(taskOutputs.keys).containsExactly("lookup-keys")
     val lookupKeys = JoinKeyAndIdCollection.parseFrom(taskOutputs.getValue("lookup-keys").flatten())
-    assertThat(lookupKeys.joinKeysAndIdsList).hasSize(1)
-    val lookupKeyAndId = lookupKeys.joinKeysAndIdsList.single()
+    assertThat(lookupKeys.joinKeyAndIdsList).hasSize(1)
+    val lookupKeyAndId = lookupKeys.joinKeyAndIdsList.single()
     assertThat(lookupKeyAndId.joinKeyIdentifier.id).isEqualTo(joinKeyIdentifier)
     val lookupKey = lookupKeyAndId.joinKey.key
 

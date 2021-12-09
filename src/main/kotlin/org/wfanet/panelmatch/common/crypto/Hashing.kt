@@ -23,7 +23,7 @@ private const val HASH_ALGORITHM = "SHA-256"
  * Converts a [ByteArray] to a [Long]. A [Long] is 64 bits so the input [ByteArray] must be at least
  * 8 bytes long.
  */
-private fun ByteArray.toLong(): Long {
+/*private fun ByteArray.toLong(): Long {
   require(this.size >= 8)
   var result = 0L
   var bitCount = 0
@@ -49,3 +49,4 @@ fun hashSha256ToSpace(data: ByteString, maxValue: Long): Long {
   // TODO Batch hash and convert to long using the fingerprinter in this same repo
   return sha256MessageDigest.digest(data.toByteArray()).toLong() % maxValue
 }
+*/

@@ -44,14 +44,14 @@ internal constructor(
     //  serialization.
     val cryptoKey = input.getValue(INPUT_CRYPTO_KEY_LABEL).toByteString()
     val serializedInputs = input.getValue(inputDataLabel).toByteString()
-    val inputList = JoinKeyAndIdCollection.parseFrom(serializedInputs).joinKeysAndIdsList
+    val inputList = JoinKeyAndIdCollection.parseFrom(serializedInputs).joinKeyAndIdsList
     val joinKeys = inputList.map { it.joinKey.key }
     val joinKeyIds = inputList.map { it.joinKeyIdentifier }
     val results = operation(cryptoKey, joinKeys)
     /** For now, we assume the join keys return in the same order that they were input. */
     val serializedOutput =
       joinKeyAndIdCollection {
-          joinKeysAndIds +=
+          joinKeyAndIds +=
             results.zip(joinKeyIds) { result: ByteString, joinKeyId: JoinKeyIdentifier ->
               joinKeyAndId {
                 this.joinKey = joinKey { key = result }
