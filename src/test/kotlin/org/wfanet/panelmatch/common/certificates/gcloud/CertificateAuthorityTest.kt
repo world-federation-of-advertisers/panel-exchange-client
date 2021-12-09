@@ -14,8 +14,22 @@
 
 package org.wfanet.panelmatch.common.certificates.gcloud
 
-import java.security.PrivateKey
-import java.security.cert.X509Certificate
+import com.google.cloud.security.privateca.v1.PublicKey as CloudPublicKey
+import com.google.cloud.security.privateca.v1.Certificate
+import com.google.cloud.security.privateca.v1.Subject
+import com.google.cloud.security.privateca.v1.X509Parameters
+import com.google.cloud.security.privateca.v1.CertificateConfig
+import com.google.cloud.security.privateca.v1.CreateCertificateRequest
+import com.google.cloud.security.privateca.v1.CaPoolName
+import com.google.cloud.security.privateca.v1.SubjectAltNames
+import com.google.cloud.security.privateca.v1.PublicKey.KeyFormat
+import com.google.cloud.security.privateca.v1.KeyUsage.ExtendedKeyUsageOptions
+import com.google.cloud.security.privateca.v1.KeyUsage.KeyUsageOptions
+import com.google.cloud.security.privateca.v1.X509Parameters.CaOptions
+import com.google.cloud.security.privateca.v1.KeyUsage
+import com.google.protobuf.Duration
+import com.google.protobuf.kotlin.toByteString
+import java.security.PublicKey
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.ZoneId
@@ -24,25 +38,11 @@ import kotlinx.coroutines.runBlocking
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
-import org.mockito.kotlin.mock
+import org.mockito.Mockito
 import org.wfanet.measurement.common.crypto.readCertificate
-import org.wfanet.panelmatch.common.certificates.CertificateAuthority
-import com.google.cloud.security.privateca.v1.Certificate
-import com.google.cloud.security.privateca.v1.Subject
-import com.google.cloud.security.privateca.v1.X509Parameters
-import com.google.cloud.security.privateca.v1.CertificateConfig
-import com.google.cloud.security.privateca.v1.CreateCertificateRequest
-import com.google.cloud.security.privateca.v1.CaPoolName
-import com.google.cloud.security.privateca.v1.SubjectAltNames
-import com.google.cloud.security.privateca.v1.KeyUsage;
-import com.google.cloud.security.privateca.v1.KeyUsage.ExtendedKeyUsageOptions
-import com.google.cloud.security.privateca.v1.KeyUsage.KeyUsageOptions
-import com.google.cloud.security.privateca.v1.X509Parameters.CaOptions
-import com.google.common.base.Predicates.instanceOf
-import com.google.common.truth.Truth.assertThat
-import com.google.protobuf.Duration
-import com.google.protobuf.kotlin.toByteString
 import org.wfanet.measurement.common.crypto.testing.FIXED_CA_CERT_PEM_FILE
+import com.google.common.truth.Truth.assertThat
+import org.wfanet.panelmatch.common.certificates.CertificateAuthority
 
 private val CONTEXT =
   CertificateAuthority.Context(
@@ -77,13 +77,30 @@ private val X509PARAMETERS = X509Parameters.newBuilder()
 private val DURATION: Duration =
   Duration.newBuilder().setSeconds(CONTEXT.validDays.toLong() * 86400).build()
 
-private val CREATECERTIFICATECLIENT: CreateCertificateClient = mock<PrivateCaClient>()
+val MOCK_CREATE_CERTIFICATE_CLIENT: CreateCertificateClient =
+  Mockito.mock(CreateCertificateClient::class.java)
 
 @RunWith(JUnit4::class)
 class CertificateAuthorityTest {
 
   @Test
-  fun mockGenerateX509CertificateAndPrivateKeyTest() {
+  suspend fun mockGenerateX509CertificateAndPrivateKeyTest() {
+
+    val createCertificateRequest: CreateCertificateRequest =
+      generateCreateCertificateRequest(
+        "some-project-id",
+        "some-ca-location",
+        "some-pool-id",
+        "some-certificate-authority-name",
+        "some-certificate-name",
+        "some-common-name",
+        "some-org-name",
+        "some-domain-name",
+        DURATION,
+        ROOT_PUBLIC_KEY)
+
+    Mockito.`when`(MOCK_CREATE_CERTIFICATE_CLIENT.createCertificate(createCertificateRequest))
+      .thenReturn(Certificate.newBuilder().setPemCertificate(ROOT_PUBLIC_KEY.toString()).build())
 
     val certificateAuthority =
       CertificateAuthority(
@@ -91,51 +108,35 @@ class CertificateAuthorityTest {
         "some-ca-location",
         "some-pool-id",
         "some-certificate-authority-name",
-        "some-certificate-name" ,
+        "some-certificate-name",
         "some-common-name",
         "some-org-name",
         "some-domain-name",
         DURATION,
-        CREATECERTIFICATECLIENT,
-        X509PARAMETERS
+        MOCK_CREATE_CERTIFICATE_CLIENT,
+        X509PARAMETERS,
+        ROOT_PUBLIC_KEY
       )
 
     val (x509, privateKey) =
       runBlocking { certificateAuthority.generateX509CertificateAndPrivateKey() }
 
-    assertThat(instanceOf(privateKey::class.java)).isEqualTo(instanceOf(PrivateKey::class.java))
-    assertThat(instanceOf(x509::class.java)).isEqualTo(instanceOf(X509Certificate::class.java))
+    Mockito.verify(MOCK_CREATE_CERTIFICATE_CLIENT).createCertificate(createCertificateRequest)
+
+    assertThat(x509.publicKey).isEqualTo(ROOT_PUBLIC_KEY)
   }
 
-  @Test
-  suspend fun SpecificCertificateAuthorityRequestTest() {
-
-    val createCertificateRequest: CreateCertificateRequest =
-      generateCreateCertificateRequest("astute-smile-334323",
-        "us-east4",
-        "mahi-ca-test-1-common-name",
-        "20211205-asq-atj",
-        "220211205-ny6-r5m" ,
-        "wfa-mahi-test-ca-name",
-        "wfa-mahi-test",
-        "TODO - UNSURE", DURATION)
-
-    val response = CREATECERTIFICATECLIENT.createCertificate(createCertificateRequest)
-    val x509Certificate = readCertificate(response.pemCertificate.byteInputStream())
-
-    assertThat(instanceOf(x509Certificate::class.java)).isEqualTo(instanceOf(X509Certificate::class.java))
-  }
 }
 
-private fun generateCreateCertificateRequest(projectId: String, caLocation: String, poolId: String,
-                                             certificateAuthorityName: String, certificateName: String,
-                                             commonName: String, orgName: String, domainName: String,
-                                             certificateLifetime: Duration,) : CreateCertificateRequest{
+fun generateCreateCertificateRequest(
+  projectId: String, caLocation: String, poolId: String,
+  certificateAuthorityName: String, certificateName: String,
+  commonName: String, orgName: String, domainName: String,
+  certificateLifetime: Duration, root_public_key: PublicKey
+) : CreateCertificateRequest{
 
   // Set the Public Key and its format.
-  val cloudPublicKey: com.google.cloud.security.privateca.v1.PublicKey =
-    com.google.cloud.security.privateca.v1.PublicKey.newBuilder().setKey(ROOT_PUBLIC_KEY.encoded.toByteString()).setFormat(
-      com.google.cloud.security.privateca.v1.PublicKey.KeyFormat.PEM).build()
+  val cloudPublicKey: CloudPublicKey = CloudPublicKey.newBuilder().setKey(root_public_key.encoded.toByteString()).setFormat(KeyFormat.PEM).build()
 
   val subjectConfig =
     CertificateConfig.SubjectConfig.newBuilder() // Set the common name and org name.

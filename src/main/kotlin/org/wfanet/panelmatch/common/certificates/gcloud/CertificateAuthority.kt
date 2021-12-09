@@ -19,21 +19,21 @@ import com.google.cloud.security.privateca.v1.Certificate
 import com.google.cloud.security.privateca.v1.Subject
 import com.google.cloud.security.privateca.v1.X509Parameters
 import com.google.cloud.security.privateca.v1.CertificateConfig
+import com.google.cloud.security.privateca.v1.CertificateConfig.SubjectConfig
 import com.google.cloud.security.privateca.v1.CreateCertificateRequest
 import com.google.cloud.security.privateca.v1.CaPoolName
 import com.google.cloud.security.privateca.v1.SubjectAltNames
-import com.google.cloud.security.privateca.v1.CertificateConfig.SubjectConfig
 import com.google.cloud.security.privateca.v1.PublicKey.KeyFormat
 import com.google.protobuf.Duration
 import com.google.protobuf.kotlin.toByteString
+import java.security.KeyPair
 import java.security.PrivateKey
 import java.security.PublicKey
 import java.security.cert.X509Certificate
-import org.wfanet.panelmatch.common.certificates.CertificateAuthority
-import org.wfanet.panelmatch.common.loggerFor
-import java.security.KeyPair
 import org.wfanet.measurement.common.crypto.generateKeyPair
 import org.wfanet.measurement.common.crypto.readCertificate
+import org.wfanet.panelmatch.common.certificates.CertificateAuthority
+import org.wfanet.panelmatch.common.loggerFor
 
 class CertificateAuthority(
   private val projectId: String,
@@ -47,56 +47,59 @@ class CertificateAuthority(
   private val certificateLifetime: Duration,
   private val client: CreateCertificateClient,
   private val x509Parameters: X509Parameters,
+  private val cloudPublicKey: PublicKey
 
 ) : CertificateAuthority {
 
   override suspend fun generateX509CertificateAndPrivateKey(): Pair<X509Certificate, PrivateKey> {
 
-      val keyPair: KeyPair = generateKeyPair("EC")
+    val keyPair: KeyPair = generateKeyPair("EC")
+    val privateKey: PrivateKey = keyPair.private
+    var publicKey: PublicKey = keyPair.public
 
-      val privateKey: PrivateKey = keyPair.private
-      val publicKey: PublicKey = keyPair.public
+    if (cloudPublicKey != null) {
+      publicKey = cloudPublicKey
+    }
 
-      // Set the Public Key and its format.
-      val cloudPublicKey: CloudPublicKey =
-        CloudPublicKey.newBuilder().setKey(publicKey.encoded.toByteString()).setFormat(KeyFormat.PEM).build()
+    // Set the Public Key and its format.
+    val cloudPublicKeyInput = CloudPublicKey.newBuilder().setKey(publicKey.encoded.toByteString()).setFormat(KeyFormat.PEM).build()
 
-      val subjectConfig =
-        SubjectConfig.newBuilder() // Set the common name and org name.
-          .setSubject(
-            Subject.newBuilder().setCommonName(commonName)
-              .setOrganization(orgName).build()
-          ) // Set the fully qualified domain name.
-          .setSubjectAltName(SubjectAltNames.newBuilder().addDnsNames(domainName).build())
-          .build()
-
-      // Create certificate.
-      val certificate: Certificate =
-        Certificate.newBuilder()
-          .setConfig(
-            CertificateConfig.newBuilder()
-              .setPublicKey(cloudPublicKey)
-              .setSubjectConfig(subjectConfig)
-              .setX509Config(x509Parameters)
-              .build()
-          )
-          .setLifetime(
-            certificateLifetime
-          )
-          .build()
-
-      // Create the Certificate Request.
-      val certificateRequest: CreateCertificateRequest = CreateCertificateRequest.newBuilder()
-        .setParent(CaPoolName.of(projectId, caLocation, poolId).toString())
-        .setCertificateId(certificateName)
-        .setCertificate(certificate)
-        .setIssuingCertificateAuthorityId(certificateAuthorityName)
+    val subjectConfig =
+      SubjectConfig.newBuilder() // Set the common name and org name.
+        .setSubject(
+          Subject.newBuilder().setCommonName(commonName)
+            .setOrganization(orgName).build()
+        ) // Set the fully qualified domain name.
+        .setSubjectAltName(SubjectAltNames.newBuilder().addDnsNames(domainName).build())
         .build()
 
-      // Get the Certificate response.
-      val response = client.createCertificate(certificateRequest)
+    // Create certificate.
+    val certificate: Certificate =
+      Certificate.newBuilder()
+        .setConfig(
+          CertificateConfig.newBuilder()
+            .setPublicKey(cloudPublicKeyInput)
+            .setSubjectConfig(subjectConfig)
+            .setX509Config(x509Parameters)
+            .build()
+        )
+        .setLifetime(
+          certificateLifetime
+        )
+        .build()
 
-      return readCertificate(response.pemCertificate.byteInputStream()) to privateKey
+    // Create the Certificate Request.
+    val certificateRequest = CreateCertificateRequest.newBuilder()
+      .setParent(CaPoolName.of(projectId, caLocation, poolId).toString())
+      .setCertificateId(certificateName)
+      .setCertificate(certificate)
+      .setIssuingCertificateAuthorityId(certificateAuthorityName)
+      .build()
+
+      // Get the Certificate response.
+    val response = client.createCertificate(certificateRequest)
+
+    return readCertificate(response.pemCertificate.byteInputStream()) to privateKey
   }
 
   companion object {
