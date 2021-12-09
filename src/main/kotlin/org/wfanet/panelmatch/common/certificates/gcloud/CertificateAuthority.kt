@@ -15,21 +15,15 @@
 package org.wfanet.panelmatch.common.certificates.gcloud
 
 import com.google.cloud.security.privateca.v1.PublicKey as CloudPublicKey
-import com.google.cloud.security.privateca.v1.KeyUsage
 import com.google.cloud.security.privateca.v1.Certificate
 import com.google.cloud.security.privateca.v1.Subject
-import com.google.cloud.security.privateca.v1.CertificateAuthorityServiceClient
 import com.google.cloud.security.privateca.v1.X509Parameters
 import com.google.cloud.security.privateca.v1.CertificateConfig
 import com.google.cloud.security.privateca.v1.CreateCertificateRequest
 import com.google.cloud.security.privateca.v1.CaPoolName
 import com.google.cloud.security.privateca.v1.SubjectAltNames
 import com.google.cloud.security.privateca.v1.CertificateConfig.SubjectConfig
-import com.google.cloud.security.privateca.v1.KeyUsage.ExtendedKeyUsageOptions
-import com.google.cloud.security.privateca.v1.KeyUsage.KeyUsageOptions
-import com.google.cloud.security.privateca.v1.X509Parameters.CaOptions
 import com.google.cloud.security.privateca.v1.PublicKey.KeyFormat
-import com.google.api.core.ApiFuture
 import com.google.protobuf.Duration
 import com.google.protobuf.kotlin.toByteString
 import java.security.PrivateKey
@@ -50,20 +44,15 @@ class CertificateAuthority(
   private val commonName: String,
   private val orgName: String,
   private val domainName: String,
-  private val certificateLifetime: Duration
+  private val certificateLifetime: Duration,
+  private val client: CreateCertificateClient,
+  private val x509Parameters: X509Parameters,
 
 ) : CertificateAuthority {
 
   override suspend fun generateX509CertificateAndPrivateKey(): Pair<X509Certificate, PrivateKey> {
-    // Initialize client that will be used to send requests. This client only needs to be created
-    // once, and can be reused for multiple requests. After completing all of your requests, call
-    // the `certificateAuthorityServiceClient.close()` method on the client to safely
-    // clean up any remaining background resources.
 
-    CertificateAuthorityServiceClient.create().use { certificateAuthorityServiceClient ->
-
-      // ***  NOT SURE ON CORRECT IMPORT + INPUT TO CREATE PUBLIC/PRIVATE KEY ***
-      val keyPair: KeyPair = generateKeyPair("TODO")
+      val keyPair: KeyPair = generateKeyPair("EC")
 
       val privateKey: PrivateKey = keyPair.private
       val publicKey: PublicKey = keyPair.public
@@ -80,25 +69,6 @@ class CertificateAuthority(
           ) // Set the fully qualified domain name.
           .setSubjectAltName(SubjectAltNames.newBuilder().addDnsNames(domainName).build())
           .build()
-
-      // Set the X.509 fields required for the certificate.
-      val x509Parameters = X509Parameters.newBuilder()
-        .setKeyUsage(
-          KeyUsage.newBuilder()
-            .setBaseKeyUsage(
-              KeyUsageOptions.newBuilder()
-                .setDigitalSignature(true)
-                .setKeyEncipherment(true)
-                .setCertSign(true)
-                .build()
-            )
-            .setExtendedKeyUsage(
-              ExtendedKeyUsageOptions.newBuilder().setServerAuth(true).build()
-            )
-            .build()
-        )
-        .setCaOptions(CaOptions.newBuilder().setIsCa(true).buildPartial())
-        .build()
 
       // Create certificate.
       val certificate: Certificate =
@@ -124,15 +94,9 @@ class CertificateAuthority(
         .build()
 
       // Get the Certificate response.
-      val future: ApiFuture<Certificate> =
-        certificateAuthorityServiceClient
-          .createCertificateCallable()
-          .futureCall(certificateRequest)
-
-      val response: Certificate = future.get()
+      val response = client.createCertificate(certificateRequest)
 
       return readCertificate(response.pemCertificate.byteInputStream()) to privateKey
-    }
   }
 
   companion object {
