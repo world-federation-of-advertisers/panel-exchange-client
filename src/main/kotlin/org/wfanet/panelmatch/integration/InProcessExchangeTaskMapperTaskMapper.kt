@@ -17,9 +17,9 @@ package org.wfanet.panelmatch.integration
 import org.apache.beam.sdk.options.PipelineOptions
 import org.wfanet.measurement.common.throttler.Throttler
 import org.wfanet.panelmatch.client.exchangetasks.ApacheBeamTasks
+import org.wfanet.panelmatch.client.exchangetasks.CommutativeEncryptionTasksImpl
 import org.wfanet.panelmatch.client.exchangetasks.ExchangeTaskMapper
 import org.wfanet.panelmatch.client.exchangetasks.GenerateKeysTasksImpl
-import org.wfanet.panelmatch.client.exchangetasks.JniCommutativeEncryptionTasks
 import org.wfanet.panelmatch.client.exchangetasks.PrivateStorageTasksImpl
 import org.wfanet.panelmatch.client.exchangetasks.SharedStorageTasksImpl
 import org.wfanet.panelmatch.client.exchangetasks.ValidationTasksImpl
@@ -40,7 +40,8 @@ fun makeInProcessExchangeTaskMapper(
 ): ExchangeTaskMapper {
   return ExchangeTaskMapper(
     validationTasks = ValidationTasksImpl(),
-    commutativeEncryptionTasks = JniCommutativeEncryptionTasks(JniDeterministicCommutativeCipher()),
+    commutativeEncryptionTasks =
+      CommutativeEncryptionTasksImpl(JniDeterministicCommutativeCipher()),
     mapReduceTasks =
       ApacheBeamTasks(
         getPrivateMembershipCryptor = ::JniPrivateMembershipCryptor,

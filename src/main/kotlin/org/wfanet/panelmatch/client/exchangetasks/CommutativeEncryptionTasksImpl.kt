@@ -16,7 +16,7 @@ package org.wfanet.panelmatch.client.exchangetasks
 
 import org.wfanet.panelmatch.common.crypto.DeterministicCommutativeCipher
 
-class JniCommutativeEncryptionTasks(
+class CommutativeEncryptionTasksImpl(
   private val deterministicCommutativeCryptor: DeterministicCommutativeCipher
 ) : CommutativeEncryptionTasks {
   override fun encrypt(): ExchangeTask {
