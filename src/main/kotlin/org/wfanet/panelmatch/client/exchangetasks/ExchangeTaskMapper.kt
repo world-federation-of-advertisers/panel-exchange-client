@@ -29,18 +29,19 @@ class ExchangeTaskMapper(
   suspend fun getExchangeTaskForStep(context: ExchangeContext): ExchangeTask {
     @Suppress("WHEN_ENUM_CAN_BE_NULL_IN_JAVA")
     return when (context.step.stepCase) {
-      StepCase.ENCRYPT_STEP -> commutativeEncryptionTasks.encrypt()
-      StepCase.REENCRYPT_STEP -> commutativeEncryptionTasks.reEncrypt()
-      StepCase.DECRYPT_STEP -> commutativeEncryptionTasks.decrypt()
+      StepCase.ENCRYPT_STEP -> commutativeEncryptionTasks.encrypt(context)
+      StepCase.REENCRYPT_STEP -> commutativeEncryptionTasks.reEncrypt(context)
+      StepCase.DECRYPT_STEP -> commutativeEncryptionTasks.decrypt(context)
       StepCase.INPUT_STEP -> privateStorageTasks.input(context)
       StepCase.COPY_FROM_PREVIOUS_EXCHANGE_STEP ->
         privateStorageTasks.copyFromPreviousExchange(context)
       StepCase.INTERSECT_AND_VALIDATE_STEP -> joinKeyTasks.intersectAndValidate(context)
-      StepCase.GENERATE_COMMUTATIVE_DETERMINISTIC_KEY_STEP -> joinKeyTasks.generateSymmetricKey()
+      StepCase.GENERATE_COMMUTATIVE_DETERMINISTIC_KEY_STEP ->
+        joinKeyTasks.generateSymmetricKey(context)
       StepCase.GENERATE_SERIALIZED_RLWE_KEYS_STEP ->
         joinKeyTasks.generateSerializedRlweKeys(context)
       StepCase.GENERATE_CERTIFICATE_STEP -> joinKeyTasks.generateExchangeCertificate(context)
-      StepCase.GENERATE_LOOKUP_KEYS -> joinKeyTasks.generateLookupKeys()
+      StepCase.GENERATE_LOOKUP_KEYS -> joinKeyTasks.generateLookupKeys(context)
       StepCase.EXECUTE_PRIVATE_MEMBERSHIP_QUERIES_STEP ->
         mapReduceTasks.executePrivateMembershipQueries(context)
       StepCase.BUILD_PRIVATE_MEMBERSHIP_QUERIES_STEP ->

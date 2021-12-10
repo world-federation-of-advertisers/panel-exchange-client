@@ -16,7 +16,11 @@ package org.wfanet.panelmatch.client.exchangetasks
 
 import org.wfanet.panelmatch.client.common.ExchangeContext
 
+/** SharedStorage Tasks */
 interface SharedStorageTasks {
+  /** Returns the task that copies to a shared storage. */
   suspend fun copyToSharedStorage(context: ExchangeContext): ExchangeTask
+
+  /** Returns the task that copies from the shared storage. */
   suspend fun copyFromSharedStorage(context: ExchangeContext): ExchangeTask
 }

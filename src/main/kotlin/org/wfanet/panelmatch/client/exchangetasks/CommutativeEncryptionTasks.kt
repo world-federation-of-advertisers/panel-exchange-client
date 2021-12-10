@@ -14,9 +14,19 @@
 
 package org.wfanet.panelmatch.client.exchangetasks
 
+import org.wfanet.panelmatch.client.common.ExchangeContext
+
+/** CommutativeEncryption Tasks */
 interface CommutativeEncryptionTasks {
-  fun encrypt(): ExchangeTask
-  fun decrypt(): ExchangeTask
-  fun reEncrypt(): ExchangeTask
-  fun generateEncryptionKey(): ExchangeTask
+  /** Returns the task that encrypts. */
+  fun encrypt(context: ExchangeContext): ExchangeTask
+
+  /** Returns the task that decrypts. */
+  fun decrypt(context: ExchangeContext): ExchangeTask
+
+  /** Returns the task that re-encrypts. */
+  fun reEncrypt(context: ExchangeContext): ExchangeTask
+
+  /** Returns the task that generates an encryption key. */
+  fun generateEncryptionKey(context: ExchangeContext): ExchangeTask
 }
