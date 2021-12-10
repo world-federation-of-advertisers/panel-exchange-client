@@ -16,7 +16,7 @@ package org.wfanet.panelmatch.client.exchangetasks
 
 import org.wfanet.panelmatch.client.common.ExchangeContext
 
-/** SharedStorage Tasks */
+/** SharedStorage Tasks consists of tasks utilizing a storage that is shared between EDP and MPs. */
 interface SharedStorageTasks {
   /** Returns the task that copies to a shared storage. */
   suspend fun copyToSharedStorage(context: ExchangeContext): ExchangeTask
