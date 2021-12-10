@@ -24,6 +24,10 @@ import com.google.cloud.security.privateca.v1.CreateCertificateRequest
 import com.google.cloud.security.privateca.v1.CaPoolName
 import com.google.cloud.security.privateca.v1.SubjectAltNames
 import com.google.cloud.security.privateca.v1.PublicKey.KeyFormat
+import com.google.cloud.security.privateca.v1.KeyUsage.ExtendedKeyUsageOptions
+import com.google.cloud.security.privateca.v1.KeyUsage.KeyUsageOptions
+import com.google.cloud.security.privateca.v1.X509Parameters.CaOptions
+import com.google.cloud.security.privateca.v1.KeyUsage
 import com.google.protobuf.Duration
 import com.google.protobuf.kotlin.toByteString
 import java.security.KeyPair
@@ -35,31 +39,39 @@ import org.wfanet.measurement.common.crypto.readCertificate
 import org.wfanet.panelmatch.common.certificates.CertificateAuthority
 import org.wfanet.panelmatch.common.loggerFor
 
+// Set the X.509 fields required for the certificate.
+val X509PARAMETERS: X509Parameters = X509Parameters.newBuilder()
+  .setKeyUsage(
+    KeyUsage.newBuilder()
+      .setBaseKeyUsage(
+        KeyUsageOptions.newBuilder()
+          .setDigitalSignature(true)
+          .setKeyEncipherment(true)
+          .setCertSign(true)
+          .build()
+      )
+      .setExtendedKeyUsage(
+        ExtendedKeyUsageOptions.newBuilder().setServerAuth(true).build()
+      )
+      .build()
+  )
+  .setCaOptions(CaOptions.newBuilder().setIsCa(true).buildPartial())
+  .build()
+
 class CertificateAuthority(
-  private val projectId: String,
-  private val caLocation: String,
-  private val poolId: String,
-  private val certificateAuthorityName: String,
-  private val certificateName: String,
-  private val commonName: String,
-  private val orgName: String,
-  private val domainName: String,
-  private val certificateLifetime: Duration,
+  private val context: CertificateAuthority.Context,
   private val client: CreateCertificateClient,
-  private val x509Parameters: X509Parameters,
-  private val cloudPublicKey: PublicKey
 
 ) : CertificateAuthority {
 
   override suspend fun generateX509CertificateAndPrivateKey(): Pair<X509Certificate, PrivateKey> {
 
+    val certificateLifetime: Duration =
+      Duration.newBuilder().setSeconds(context.validDays.toLong() * 86400).build()
+
     val keyPair: KeyPair = generateKeyPair("EC")
     val privateKey: PrivateKey = keyPair.private
-    var publicKey: PublicKey = keyPair.public
-
-    if (cloudPublicKey != null) {
-      publicKey = cloudPublicKey
-    }
+    val publicKey: PublicKey = keyPair.public
 
     // Set the Public Key and its format.
     val cloudPublicKeyInput = CloudPublicKey.newBuilder().setKey(publicKey.encoded.toByteString()).setFormat(KeyFormat.PEM).build()
@@ -67,10 +79,10 @@ class CertificateAuthority(
     val subjectConfig =
       SubjectConfig.newBuilder() // Set the common name and org name.
         .setSubject(
-          Subject.newBuilder().setCommonName(commonName)
-            .setOrganization(orgName).build()
+          Subject.newBuilder().setCommonName(context.commonName)
+            .setOrganization(context.orgName).build()
         ) // Set the fully qualified domain name.
-        .setSubjectAltName(SubjectAltNames.newBuilder().addDnsNames(domainName).build())
+        .setSubjectAltName(SubjectAltNames.newBuilder().addDnsNames(context.domainName).build())
         .build()
 
     // Create certificate.
@@ -80,7 +92,7 @@ class CertificateAuthority(
           CertificateConfig.newBuilder()
             .setPublicKey(cloudPublicKeyInput)
             .setSubjectConfig(subjectConfig)
-            .setX509Config(x509Parameters)
+            .setX509Config(X509PARAMETERS)
             .build()
         )
         .setLifetime(
@@ -90,10 +102,10 @@ class CertificateAuthority(
 
     // Create the Certificate Request.
     val certificateRequest = CreateCertificateRequest.newBuilder()
-      .setParent(CaPoolName.of(projectId, caLocation, poolId).toString())
-      .setCertificateId(certificateName)
+      .setParent(CaPoolName.of(context.projectId, context.caLocation, context.poolId).toString())
+      .setCertificateId(context.certificateName)
       .setCertificate(certificate)
-      .setIssuingCertificateAuthorityId(certificateAuthorityName)
+      .setIssuingCertificateAuthorityId(context.certificateAuthorityName)
       .build()
 
       // Get the Certificate response.

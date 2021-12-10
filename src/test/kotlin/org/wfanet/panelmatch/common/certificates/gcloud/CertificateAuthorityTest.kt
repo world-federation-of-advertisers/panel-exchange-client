@@ -17,16 +17,11 @@ package org.wfanet.panelmatch.common.certificates.gcloud
 import com.google.cloud.security.privateca.v1.PublicKey as CloudPublicKey
 import com.google.cloud.security.privateca.v1.Certificate
 import com.google.cloud.security.privateca.v1.Subject
-import com.google.cloud.security.privateca.v1.X509Parameters
 import com.google.cloud.security.privateca.v1.CertificateConfig
 import com.google.cloud.security.privateca.v1.CreateCertificateRequest
 import com.google.cloud.security.privateca.v1.CaPoolName
 import com.google.cloud.security.privateca.v1.SubjectAltNames
 import com.google.cloud.security.privateca.v1.PublicKey.KeyFormat
-import com.google.cloud.security.privateca.v1.KeyUsage.ExtendedKeyUsageOptions
-import com.google.cloud.security.privateca.v1.KeyUsage.KeyUsageOptions
-import com.google.cloud.security.privateca.v1.X509Parameters.CaOptions
-import com.google.cloud.security.privateca.v1.KeyUsage
 import com.google.protobuf.Duration
 import com.google.protobuf.kotlin.toByteString
 import java.security.PublicKey
@@ -38,47 +33,32 @@ import kotlinx.coroutines.runBlocking
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
-import org.mockito.Mockito
 import org.wfanet.measurement.common.crypto.readCertificate
 import org.wfanet.measurement.common.crypto.testing.FIXED_CA_CERT_PEM_FILE
 import com.google.common.truth.Truth.assertThat
+import org.mockito.Mockito.mock
+import org.mockito.Mockito.verify
+import org.mockito.kotlin.any
+import org.mockito.kotlin.argumentCaptor
+import org.mockito.kotlin.whenever
 import org.wfanet.panelmatch.common.certificates.CertificateAuthority
 
 private val CONTEXT =
   CertificateAuthority.Context(
-    organization = "some-organization",
+    projectId = "some-project-id",
+    caLocation = "some-ca-location",
+    poolId = "some-pool-id",
+    certificateAuthorityName = "some-certificate-authority-name",
+    certificateName = "some-certificate-name",
     commonName = "some-common-name",
+    orgName = "some-org-name",
+    domainName ="some-domain-name",
     hostname = "example.com",
-    validDays = 5
+    validDays = 5,
   )
 
 private val ROOT_X509 by lazy { readCertificate(FIXED_CA_CERT_PEM_FILE) }
 private val ROOT_PUBLIC_KEY by lazy { ROOT_X509.publicKey }
-
-// Set the X.509 fields required for the certificate.
-private val X509PARAMETERS = X509Parameters.newBuilder()
-  .setKeyUsage(
-    KeyUsage.newBuilder()
-      .setBaseKeyUsage(
-        KeyUsageOptions.newBuilder()
-          .setDigitalSignature(true)
-          .setKeyEncipherment(true)
-          .setCertSign(true)
-          .build()
-      )
-      .setExtendedKeyUsage(
-        ExtendedKeyUsageOptions.newBuilder().setServerAuth(true).build()
-      )
-      .build()
-  )
-  .setCaOptions(CaOptions.newBuilder().setIsCa(true).buildPartial())
-  .build()
-
-private val DURATION: Duration =
-  Duration.newBuilder().setSeconds(CONTEXT.validDays.toLong() * 86400).build()
-
-val MOCK_CREATE_CERTIFICATE_CLIENT: CreateCertificateClient =
-  Mockito.mock(CreateCertificateClient::class.java)
 
 @RunWith(JUnit4::class)
 class CertificateAuthorityTest {
@@ -86,42 +66,30 @@ class CertificateAuthorityTest {
   @Test
   suspend fun mockGenerateX509CertificateAndPrivateKeyTest() {
 
-    val createCertificateRequest: CreateCertificateRequest =
-      generateCreateCertificateRequest(
-        "some-project-id",
-        "some-ca-location",
-        "some-pool-id",
-        "some-certificate-authority-name",
-        "some-certificate-name",
-        "some-common-name",
-        "some-org-name",
-        "some-domain-name",
-        DURATION,
-        ROOT_PUBLIC_KEY)
+    val mockCreateCertificateClient: CreateCertificateClient =
+      mock(CreateCertificateClient::class.java)
 
-    Mockito.`when`(MOCK_CREATE_CERTIFICATE_CLIENT.createCertificate(createCertificateRequest))
+    val createCertificateRequest: CreateCertificateRequest =
+      generateCreateCertificateRequest(CONTEXT, ROOT_PUBLIC_KEY)
+
+    whenever(mockCreateCertificateClient.createCertificate(any()))
       .thenReturn(Certificate.newBuilder().setPemCertificate(ROOT_PUBLIC_KEY.toString()).build())
 
     val certificateAuthority =
       CertificateAuthority(
-        "some-project-id",
-        "some-ca-location",
-        "some-pool-id",
-        "some-certificate-authority-name",
-        "some-certificate-name",
-        "some-common-name",
-        "some-org-name",
-        "some-domain-name",
-        DURATION,
-        MOCK_CREATE_CERTIFICATE_CLIENT,
-        X509PARAMETERS,
-        ROOT_PUBLIC_KEY
+        CONTEXT,
+        mockCreateCertificateClient,
       )
 
     val (x509, privateKey) =
       runBlocking { certificateAuthority.generateX509CertificateAndPrivateKey() }
 
-    Mockito.verify(MOCK_CREATE_CERTIFICATE_CLIENT).createCertificate(createCertificateRequest)
+    argumentCaptor<CreateCertificateRequest> {
+      verify(mockCreateCertificateClient).createCertificate(capture())
+      assertThat(firstValue).isEqualTo(
+        createCertificateRequest
+      )
+    }
 
     assertThat(x509.publicKey).isEqualTo(ROOT_PUBLIC_KEY)
   }
@@ -129,11 +97,12 @@ class CertificateAuthorityTest {
 }
 
 fun generateCreateCertificateRequest(
-  projectId: String, caLocation: String, poolId: String,
-  certificateAuthorityName: String, certificateName: String,
-  commonName: String, orgName: String, domainName: String,
-  certificateLifetime: Duration, root_public_key: PublicKey
+  context: CertificateAuthority.Context,
+  root_public_key: PublicKey
 ) : CreateCertificateRequest{
+
+  val certificateLifetime: Duration =
+    Duration.newBuilder().setSeconds(context.validDays.toLong() * 86400).build()
 
   // Set the Public Key and its format.
   val cloudPublicKey: CloudPublicKey = CloudPublicKey.newBuilder().setKey(root_public_key.encoded.toByteString()).setFormat(KeyFormat.PEM).build()
@@ -141,10 +110,10 @@ fun generateCreateCertificateRequest(
   val subjectConfig =
     CertificateConfig.SubjectConfig.newBuilder() // Set the common name and org name.
       .setSubject(
-        Subject.newBuilder().setCommonName(commonName)
-          .setOrganization(orgName).build()
+        Subject.newBuilder().setCommonName(context.commonName)
+          .setOrganization(context.orgName).build()
       ) // Set the fully qualified domain name.
-      .setSubjectAltName(SubjectAltNames.newBuilder().addDnsNames(domainName).build())
+      .setSubjectAltName(SubjectAltNames.newBuilder().addDnsNames(context.domainName).build())
       .build()
 
   // Create certificate.
@@ -164,10 +133,10 @@ fun generateCreateCertificateRequest(
 
   // Create the Certificate Request.
   return CreateCertificateRequest.newBuilder()
-    .setParent(CaPoolName.of(projectId, caLocation, poolId).toString())
-    .setCertificateId(certificateName)
+    .setParent(CaPoolName.of(context.projectId, context.caLocation, context.poolId).toString())
+    .setCertificateId(context.certificateName)
     .setCertificate(certificate)
-    .setIssuingCertificateAuthorityId(certificateAuthorityName)
+    .setIssuingCertificateAuthorityId(context.certificateAuthorityName)
     .build()
 }
 
