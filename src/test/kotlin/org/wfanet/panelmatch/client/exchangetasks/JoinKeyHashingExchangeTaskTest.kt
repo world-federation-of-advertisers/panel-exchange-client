@@ -52,7 +52,7 @@ class JoinKeyHashingExchangeTaskTest {
   private val blobOfPepper = runBlocking { mockStorage.createBlob("mp-pepper", pepper) }
   private val blobOfJoinKeys = runBlocking {
     mockStorage.createBlob(
-      "hashed-join-keys",
+      "join-keys",
       joinKeyAndIdCollection { joinKeyAndIds += PLAINTEXT_JOIN_KEYS }.toByteString()
     )
   }
@@ -62,7 +62,7 @@ class JoinKeyHashingExchangeTaskTest {
     val result =
       JoinKeyHashingExchangeTask.forHashing(queryPreparer)
         .execute(mapOf("pepper" to blobOfPepper, "join-keys" to blobOfJoinKeys))
-    assertThat(parseResults(result.getValue("hashed-join-keys").flatten()))
+    assertThat(parseResults(result.getValue("lookup-keys").flatten()))
       .containsExactlyElementsIn(saltedJoinKeys)
   }
 }

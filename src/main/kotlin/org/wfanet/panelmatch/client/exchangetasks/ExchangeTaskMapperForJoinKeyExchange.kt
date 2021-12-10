@@ -57,7 +57,7 @@ abstract class ExchangeTaskMapperForJoinKeyExchange : ExchangeTaskMapper {
       StepCase.REENCRYPT_STEP ->
         CryptorExchangeTask.forReEncryption(deterministicCommutativeCryptor)
       StepCase.DECRYPT_STEP -> CryptorExchangeTask.forDecryption(deterministicCommutativeCryptor)
-      StepCase.GENERATE_LOOKUP_KEYS -> JoinKeyHashingExchangeTask.forHashing(queryPreparer)
+      StepCase.GENERATE_LOOKUP_KEYS_STEP -> JoinKeyHashingExchangeTask.forHashing(queryPreparer)
       StepCase.INPUT_STEP -> getInputStepTask()
       StepCase.INTERSECT_AND_VALIDATE_STEP -> getIntersectAndValidateStepTask()
       StepCase.GENERATE_COMMUTATIVE_DETERMINISTIC_KEY_STEP ->
@@ -71,7 +71,6 @@ abstract class ExchangeTaskMapperForJoinKeyExchange : ExchangeTaskMapper {
       StepCase.COPY_FROM_SHARED_STORAGE_STEP -> getCopyFromSharedStorageTask()
       StepCase.COPY_TO_SHARED_STORAGE_STEP -> getCopyToSharedStorageTask()
       StepCase.COPY_FROM_PREVIOUS_EXCHANGE_STEP -> getCopyFromPreviousExchangeTask()
-      // StepCase.GENERATE_LOOKUP_KEYS -> GenerateLookupKeysTask()
       else -> throw IllegalArgumentException("Unsupported step type: ${step.stepCase}")
     }
   }
@@ -114,7 +113,7 @@ abstract class ExchangeTaskMapperForJoinKeyExchange : ExchangeTaskMapper {
     val outputManifests =
       mapOf(
         "encrypted-queries" to stepDetails.encryptedQueryBundleFileCount,
-        "query-to-ids-map" to stepDetails.queryIdAndPanelistKeyFileCount,
+        "query-to-ids-map" to stepDetails.queryIdToIdsFileCount,
       )
 
     val parameters =

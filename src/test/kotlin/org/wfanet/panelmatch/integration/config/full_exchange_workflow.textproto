@@ -215,12 +215,12 @@ steps {
   step_id: "generate-lookup-keys-step"
   party: MODEL_PROVIDER
 
-  generate_lookup_keys {}
+  generate_lookup_keys_step {}
 
   input_labels { key: "join-keys" value: "mp-decrypted-join-keys" }
   input_labels { key: "pepper" value: "mp-identifier-hash-pepper" }
 
-  output_labels { key: "hashed-join-keys" value: "mp-lookup-keys" }
+  output_labels { key: "lookup-keys" value: "mp-lookup-keys" }
 }
 
 # MP generates rlwe private and public keys.
@@ -261,7 +261,7 @@ steps {
   build_private_membership_queries_step {
     serialized_parameters: "\n\006\b\001\020\n\030\001\022#\n\020\201\300\270\377\377\377\377\377\377\001\377\377\377\377\377\003\022\003\201\300}\030\f \001(\b0\0028\004@\n"
     encrypted_query_bundle_file_count: 1
-    query_id_and_panelist_key_file_count: 1
+    query_id_to_ids_file_count: 1
     num_shards: 1
     num_buckets_per_shard: 10
     num_queries_per_shard: 10

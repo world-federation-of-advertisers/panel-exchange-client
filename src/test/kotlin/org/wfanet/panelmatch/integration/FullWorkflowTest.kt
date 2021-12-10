@@ -111,7 +111,6 @@ class FullWorkflowTest : AbstractInProcessPanelMatchIntegrationTest() {
           }
         it.plaintextJoinKeyAndId.joinKey.key.toStringUtf8() to payload
       }
-    print("FOUND:$decryptedEvents")
     assertThat(decryptedEvents)
       .containsExactly(
         "join-key-1" to "payload-for-join-key-1",

@@ -54,7 +54,7 @@ internal constructor(
       return JoinKeyHashingExchangeTask(
         operation = QueryPreparer::prepareLookupKeys,
         inputDataLabel = "join-keys",
-        outputDataLabel = "hashed-join-keys"
+        outputDataLabel = "lookup-keys"
       )
     }
   }

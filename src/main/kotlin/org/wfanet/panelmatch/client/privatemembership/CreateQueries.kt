@@ -63,7 +63,7 @@ fun createQueries(
         CreateQueries(privateMembershipKeys, parameters, privateMembershipCryptor)
       )
   return CreateQueriesOutputs(
-    queryIdMap = tuple[CreateQueries.QueryIdAndIdTag],
+    queryIdMap = tuple[CreateQueries.queryIdAndIdTag],
     encryptedQueryBundles = tuple[CreateQueries.encryptedQueryBundlesTag]
   )
 }
@@ -86,7 +86,7 @@ private class CreateQueries(
     val unencryptedQueriesByShard = buildUnencryptedQueries(paddedQueriesByShard)
     val queryIdToIdsMapping = extractRealQueryIdAndId(unencryptedQueriesByShard)
     val encryptedQueryBundles = encryptQueries(unencryptedQueriesByShard, privateMembershipKeys)
-    return PCollectionTuple.of(QueryIdAndIdTag, queryIdToIdsMapping)
+    return PCollectionTuple.of(queryIdAndIdTag, queryIdToIdsMapping)
       .and(encryptedQueryBundlesTag, encryptedQueryBundles)
   }
 
@@ -188,7 +188,7 @@ private class CreateQueries(
 
   companion object {
     val lookupKeyAndIdsTag = TupleTag<LookupKeyAndId>()
-    val QueryIdAndIdTag = TupleTag<QueryIdAndId>()
+    val queryIdAndIdTag = TupleTag<QueryIdAndId>()
     val encryptedQueryBundlesTag = TupleTag<EncryptedQueryBundle>()
   }
 }
