@@ -15,9 +15,15 @@
 package org.wfanet.panelmatch.client.exchangetasks.testing
 
 import org.wfanet.panelmatch.client.common.ExchangeContext
-import org.wfanet.panelmatch.client.exchangetasks.ValidationTasks
+import org.wfanet.panelmatch.client.exchangetasks.JoinKeyTasks
 
-class FakeValidationTasks : ValidationTasks {
+class FakeJoinKeyTasks : JoinKeyTasks {
+  override fun generateLookupKeys() = FakeExchangeTask("lookup-key")
+  override fun generateSymmetricKey() = FakeExchangeTask("symmetric-key")
+  override fun generateSerializedRlweKeys(context: ExchangeContext) =
+    FakeExchangeTask("serialized-rlwe-keys")
+  override fun generateExchangeCertificate(context: ExchangeContext) =
+    FakeExchangeTask("exchange-certificate")
   override fun intersectAndValidate(context: ExchangeContext) =
     FakeExchangeTask("intersect-and-validate")
 }

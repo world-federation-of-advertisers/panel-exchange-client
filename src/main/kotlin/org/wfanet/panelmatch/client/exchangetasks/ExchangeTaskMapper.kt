@@ -19,10 +19,9 @@ import org.wfanet.panelmatch.client.common.ExchangeContext
 
 /** Maps join key exchange steps to exchange tasks */
 class ExchangeTaskMapper(
-  private val validationTasks: ValidationTasks,
   private val commutativeEncryptionTasks: CommutativeEncryptionTasks,
   private val mapReduceTasks: MapReduceTasks,
-  private val generateKeysTasks: GenerateKeysTasks,
+  private val joinKeyTasks: JoinKeyTasks,
   private val privateStorageTasks: PrivateStorageTasks,
   private val sharedStorageTasks: SharedStorageTasks
 ) {
@@ -36,13 +35,12 @@ class ExchangeTaskMapper(
       StepCase.INPUT_STEP -> privateStorageTasks.input(context)
       StepCase.COPY_FROM_PREVIOUS_EXCHANGE_STEP ->
         privateStorageTasks.copyFromPreviousExchange(context)
-      StepCase.INTERSECT_AND_VALIDATE_STEP -> validationTasks.intersectAndValidate(context)
-      StepCase.GENERATE_COMMUTATIVE_DETERMINISTIC_KEY_STEP ->
-        generateKeysTasks.generateSymmetricKey()
+      StepCase.INTERSECT_AND_VALIDATE_STEP -> joinKeyTasks.intersectAndValidate(context)
+      StepCase.GENERATE_COMMUTATIVE_DETERMINISTIC_KEY_STEP -> joinKeyTasks.generateSymmetricKey()
       StepCase.GENERATE_SERIALIZED_RLWE_KEYS_STEP ->
-        generateKeysTasks.generateSerializedRlweKeys(context)
-      StepCase.GENERATE_CERTIFICATE_STEP -> generateKeysTasks.generateExchangeCertificate(context)
-      StepCase.GENERATE_LOOKUP_KEYS -> generateKeysTasks.generateLookupKeys()
+        joinKeyTasks.generateSerializedRlweKeys(context)
+      StepCase.GENERATE_CERTIFICATE_STEP -> joinKeyTasks.generateExchangeCertificate(context)
+      StepCase.GENERATE_LOOKUP_KEYS -> joinKeyTasks.generateLookupKeys()
       StepCase.EXECUTE_PRIVATE_MEMBERSHIP_QUERIES_STEP ->
         mapReduceTasks.executePrivateMembershipQueries(context)
       StepCase.BUILD_PRIVATE_MEMBERSHIP_QUERIES_STEP ->

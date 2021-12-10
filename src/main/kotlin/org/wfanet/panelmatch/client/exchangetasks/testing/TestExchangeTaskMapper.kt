@@ -18,10 +18,9 @@ import org.wfanet.panelmatch.client.exchangetasks.ExchangeTaskMapper
 
 fun makeFakeExchangeTaskMapper(): ExchangeTaskMapper {
   return ExchangeTaskMapper(
-    validationTasks = FakeValidationTasks(),
     commutativeEncryptionTasks = FakeCommutativeEncryptionTasks(),
     mapReduceTasks = FakeMapReduceTasks(),
-    generateKeysTasks = FakeGenerateKeyTasks(),
+    joinKeyTasks = FakeJoinKeyTasks(),
     privateStorageTasks = FakePrivateStorageTasks(),
     sharedStorageTasks = FakeSharedStorageTasks()
   )
