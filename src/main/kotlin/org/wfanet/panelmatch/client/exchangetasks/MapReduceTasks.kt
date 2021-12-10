@@ -16,10 +16,14 @@ package org.wfanet.panelmatch.client.exchangetasks
 
 import org.wfanet.panelmatch.client.common.ExchangeContext
 
+/** MapReduce Tasks */
 interface MapReduceTasks {
+  /** Returns the task that builds private membership queries. */
   suspend fun buildPrivateMembershipQueries(context: ExchangeContext): ExchangeTask
 
+  /** Returns the task that executes the private membership queries. */
   suspend fun executePrivateMembershipQueries(context: ExchangeContext): ExchangeTask
 
+  /** Returns the task that decrypts the private membership queries. */
   suspend fun decryptMembershipResults(context: ExchangeContext): ExchangeTask
 }

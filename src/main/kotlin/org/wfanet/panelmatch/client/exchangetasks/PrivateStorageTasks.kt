@@ -16,7 +16,11 @@ package org.wfanet.panelmatch.client.exchangetasks
 
 import org.wfanet.panelmatch.client.common.ExchangeContext
 
+/** PrivateStorage Tasks */
 interface PrivateStorageTasks {
+  /** Returns the task that gets the input. */
   suspend fun input(context: ExchangeContext): ExchangeTask
+
+  /** Returns the task that copies from previous [Exchange]. */
   suspend fun copyFromPreviousExchange(context: ExchangeContext): ExchangeTask
 }

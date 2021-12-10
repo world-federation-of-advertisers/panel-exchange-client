@@ -18,8 +18,8 @@ import org.wfanet.panelmatch.client.common.ExchangeContext
 import org.wfanet.panelmatch.client.exchangetasks.JoinKeyTasks
 
 class FakeJoinKeyTasks : JoinKeyTasks {
-  override fun generateLookupKeys() = FakeExchangeTask("lookup-key")
-  override fun generateSymmetricKey() = FakeExchangeTask("symmetric-key")
+  override fun generateLookupKeys(context: ExchangeContext) = FakeExchangeTask("lookup-key")
+  override fun generateSymmetricKey(context: ExchangeContext) = FakeExchangeTask("symmetric-key")
   override fun generateSerializedRlweKeys(context: ExchangeContext) =
     FakeExchangeTask("serialized-rlwe-keys")
   override fun generateExchangeCertificate(context: ExchangeContext) =
