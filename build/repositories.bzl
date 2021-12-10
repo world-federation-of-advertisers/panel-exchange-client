@@ -60,7 +60,6 @@ def panel_exchange_client_repositories():
         url = "https://github.com/world-federation-of-advertisers/cross-media-measurement/archive/b725633b16081a11294cbb63127081041173d0a9.tar.gz",
     )
 
-
     http_archive(
         name = "wfa_measurement_proto",
         sha256 = "52975e32b77d2b1d9d996d469eb1bb720dd09dfa14475f28b593ffec69eeb37c",
