@@ -16,7 +16,7 @@ package org.wfanet.panelmatch.client.exchangetasks
 
 import org.wfanet.panelmatch.client.common.ExchangeContext
 
-/** MapReduce Tasks */
+/** MapReduce Tasks consists of tasks utilizing MapReduce functionalities. */
 interface MapReduceTasks {
   /** Returns the task that builds private membership queries. */
   suspend fun buildPrivateMembershipQueries(context: ExchangeContext): ExchangeTask

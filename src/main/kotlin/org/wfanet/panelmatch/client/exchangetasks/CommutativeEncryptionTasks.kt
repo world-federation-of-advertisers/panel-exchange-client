@@ -16,7 +16,7 @@ package org.wfanet.panelmatch.client.exchangetasks
 
 import org.wfanet.panelmatch.client.common.ExchangeContext
 
-/** CommutativeEncryption Tasks */
+/** CommutativeEncryption Tasks that utilize deterministic encryption. */
 interface CommutativeEncryptionTasks {
   /** Returns the task that encrypts. */
   fun encrypt(context: ExchangeContext): ExchangeTask

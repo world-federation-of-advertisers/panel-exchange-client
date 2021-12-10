@@ -16,7 +16,7 @@ package org.wfanet.panelmatch.client.exchangetasks
 
 import org.wfanet.panelmatch.client.common.ExchangeContext
 
-/** PrivateStorage Tasks */
+/** PrivateStorage Tasks consists of tasks utilizing storage that is private to the party itself. */
 interface PrivateStorageTasks {
   /** Returns the task that gets the input. */
   suspend fun input(context: ExchangeContext): ExchangeTask

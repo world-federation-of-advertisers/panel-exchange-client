@@ -21,6 +21,7 @@ fun makeFakeExchangeTaskMapper(): ExchangeTaskMapper {
     commutativeEncryptionTasks = FakeCommutativeEncryptionTasks(),
     mapReduceTasks = FakeMapReduceTasks(),
     joinKeyTasks = FakeJoinKeyTasks(),
+    generateKeysTasks = FakeGenerateKeysTasks(),
     privateStorageTasks = FakePrivateStorageTasks(),
     sharedStorageTasks = FakeSharedStorageTasks()
   )
