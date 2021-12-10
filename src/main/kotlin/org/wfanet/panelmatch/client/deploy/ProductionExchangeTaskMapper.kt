@@ -19,10 +19,9 @@ import org.wfanet.measurement.common.throttler.Throttler
 import org.wfanet.panelmatch.client.exchangetasks.ApacheBeamTasks
 import org.wfanet.panelmatch.client.exchangetasks.CommutativeEncryptionTasksImpl
 import org.wfanet.panelmatch.client.exchangetasks.ExchangeTaskMapper
-import org.wfanet.panelmatch.client.exchangetasks.GenerateKeysTasksImpl
+import org.wfanet.panelmatch.client.exchangetasks.JoinKeyTasksImpl
 import org.wfanet.panelmatch.client.exchangetasks.PrivateStorageTasksImpl
 import org.wfanet.panelmatch.client.exchangetasks.SharedStorageTasksImpl
-import org.wfanet.panelmatch.client.exchangetasks.ValidationTasksImpl
 import org.wfanet.panelmatch.client.privatemembership.JniPrivateMembershipCryptor
 import org.wfanet.panelmatch.client.privatemembership.JniQueryEvaluator
 import org.wfanet.panelmatch.client.privatemembership.JniQueryResultsDecryptor
@@ -39,7 +38,6 @@ fun makeProductionExchangeTaskMapper(
   pipelineOptions: PipelineOptions
 ): ExchangeTaskMapper {
   return ExchangeTaskMapper(
-    validationTasks = ValidationTasksImpl(),
     commutativeEncryptionTasks =
       CommutativeEncryptionTasksImpl(JniDeterministicCommutativeCipher()),
     mapReduceTasks =
@@ -50,8 +48,8 @@ fun makeProductionExchangeTaskMapper(
         privateStorageSelector = privateStorageSelector,
         pipelineOptions = pipelineOptions
       ),
-    generateKeysTasks =
-      GenerateKeysTasksImpl(
+    joinKeyTasks =
+      JoinKeyTasksImpl(
         deterministicCommutativeCryptor = JniDeterministicCommutativeCipher(),
         getPrivateMembershipCryptor = ::JniPrivateMembershipCryptor,
         certificateManager = certificateManager

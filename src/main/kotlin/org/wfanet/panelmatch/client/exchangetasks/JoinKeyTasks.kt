@@ -12,16 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package org.wfanet.panelmatch.client.exchangetasks.testing
+package org.wfanet.panelmatch.client.exchangetasks
 
 import org.wfanet.panelmatch.client.common.ExchangeContext
-import org.wfanet.panelmatch.client.exchangetasks.GenerateKeysTasks
 
-class FakeGenerateKeyTasks : GenerateKeysTasks {
-  override fun generateLookupKeys() = FakeExchangeTask("lookup-key")
-  override fun generateSymmetricKey() = FakeExchangeTask("symmetric-key")
-  override fun generateSerializedRlweKeys(context: ExchangeContext) =
-    FakeExchangeTask("serialized-rlwe-keys")
-  override fun generateExchangeCertificate(context: ExchangeContext) =
-    FakeExchangeTask("exchange-certificate")
+interface JoinKeyTasks {
+
+  fun generateSymmetricKey(): ExchangeTask
+
+  fun generateLookupKeys(): ExchangeTask
+
+  fun generateSerializedRlweKeys(context: ExchangeContext): ExchangeTask
+
+  fun generateExchangeCertificate(context: ExchangeContext): ExchangeTask
+
+  fun intersectAndValidate(context: ExchangeContext): ExchangeTask
 }
