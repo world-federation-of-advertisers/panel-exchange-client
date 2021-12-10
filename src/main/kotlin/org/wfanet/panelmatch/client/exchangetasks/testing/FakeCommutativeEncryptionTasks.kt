@@ -14,11 +14,13 @@
 
 package org.wfanet.panelmatch.client.exchangetasks.testing
 
+import org.wfanet.panelmatch.client.common.ExchangeContext
 import org.wfanet.panelmatch.client.exchangetasks.CommutativeEncryptionTasks
 
 class FakeCommutativeEncryptionTasks : CommutativeEncryptionTasks {
-  override fun encrypt() = FakeExchangeTask("encrypt")
-  override fun reEncrypt() = FakeExchangeTask("re-encrypt")
-  override fun decrypt() = FakeExchangeTask("decrypt")
-  override fun generateEncryptionKey() = FakeExchangeTask("generate-encryption-key")
+  override fun encrypt(context: ExchangeContext) = FakeExchangeTask("encrypt")
+  override fun reEncrypt(context: ExchangeContext) = FakeExchangeTask("re-encrypt")
+  override fun decrypt(context: ExchangeContext) = FakeExchangeTask("decrypt")
+  override fun generateEncryptionKey(context: ExchangeContext) =
+    FakeExchangeTask("generate-encryption-key")
 }

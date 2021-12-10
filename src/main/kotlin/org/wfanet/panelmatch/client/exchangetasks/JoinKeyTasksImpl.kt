@@ -27,11 +27,11 @@ class JoinKeyTasksImpl(
   private val getPrivateMembershipCryptor: (ByteString) -> PrivateMembershipCryptor,
   private val certificateManager: CertificateManager
 ) : JoinKeyTasks {
-  override fun generateLookupKeys(): ExchangeTask {
+  override fun generateLookupKeys(context: ExchangeContext): ExchangeTask {
     return GenerateLookupKeysTask()
   }
 
-  override fun generateSymmetricKey(): ExchangeTask {
+  override fun generateSymmetricKey(context: ExchangeContext): ExchangeTask {
     return GenerateSymmetricKeyTask(generateKey = deterministicCommutativeCryptor::generateKey)
   }
 
