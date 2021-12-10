@@ -19,6 +19,7 @@ import org.wfanet.measurement.common.throttler.Throttler
 import org.wfanet.panelmatch.client.exchangetasks.ApacheBeamTasks
 import org.wfanet.panelmatch.client.exchangetasks.CommutativeEncryptionTasksImpl
 import org.wfanet.panelmatch.client.exchangetasks.ExchangeTaskMapper
+import org.wfanet.panelmatch.client.exchangetasks.GenerateKeysTasksImpl
 import org.wfanet.panelmatch.client.exchangetasks.JoinKeyTasksImpl
 import org.wfanet.panelmatch.client.exchangetasks.PrivateStorageTasksImpl
 import org.wfanet.panelmatch.client.exchangetasks.SharedStorageTasksImpl
@@ -48,8 +49,9 @@ fun makeProductionExchangeTaskMapper(
         privateStorageSelector = privateStorageSelector,
         pipelineOptions = pipelineOptions
       ),
-    joinKeyTasks =
-      JoinKeyTasksImpl(
+    joinKeyTasks = JoinKeyTasksImpl(),
+    generateKeysTasks =
+      GenerateKeysTasksImpl(
         deterministicCommutativeCryptor = JniDeterministicCommutativeCipher(),
         getPrivateMembershipCryptor = ::JniPrivateMembershipCryptor,
         certificateManager = certificateManager

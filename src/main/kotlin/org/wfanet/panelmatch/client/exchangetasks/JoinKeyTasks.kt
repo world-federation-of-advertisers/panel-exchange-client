@@ -18,17 +18,8 @@ import org.wfanet.panelmatch.client.common.ExchangeContext
 
 /** JoinKey Tasks */
 interface JoinKeyTasks {
-  /** Returns the task that generates a symmetric key. */
-  fun generateSymmetricKey(context: ExchangeContext): ExchangeTask
-
   /** Returns the task that generates lookup keys. */
   fun generateLookupKeys(context: ExchangeContext): ExchangeTask
-
-  /** Returns the task that generates serialized rlwe keys. */
-  fun generateSerializedRlweKeys(context: ExchangeContext): ExchangeTask
-
-  /** Returns the task that generates a certificate. */
-  fun generateExchangeCertificate(context: ExchangeContext): ExchangeTask
 
   /** Returns the task that validates the step. */
   fun intersectAndValidate(context: ExchangeContext): ExchangeTask
