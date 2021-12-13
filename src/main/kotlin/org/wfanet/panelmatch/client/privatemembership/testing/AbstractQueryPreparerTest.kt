@@ -26,24 +26,24 @@ import org.wfanet.panelmatch.client.privatemembership.QueryPreparer
 private val DECRYPTED_JOIN_KEYS: List<JoinKeyAndId> =
   listOf(
     joinKeyAndIdOf(
-      "some decrypted join key 0".toByteStringUtf8(),
-      "some identifier0".toByteStringUtf8()
+      "some-decrypted-join-key-0".toByteStringUtf8(),
+      "some-identifier0".toByteStringUtf8()
     ),
     joinKeyAndIdOf(
-      "some decrypted join key 11".toByteStringUtf8(),
-      "some identifier1".toByteStringUtf8()
+      "some-decrypted-join-key-11".toByteStringUtf8(),
+      "some-identifier1".toByteStringUtf8()
     ),
     joinKeyAndIdOf(
-      "some decrypted join key 222".toByteStringUtf8(),
-      "some identifier2".toByteStringUtf8()
+      "some-decrypted-join-key-222".toByteStringUtf8(),
+      "some-identifier2".toByteStringUtf8()
     ),
     joinKeyAndIdOf(
-      "some decrypted join key 3333".toByteStringUtf8(),
-      "some identifier3".toByteStringUtf8()
+      "some-decrypted-join-key-3333".toByteStringUtf8(),
+      "some-identifier3".toByteStringUtf8()
     ),
     joinKeyAndIdOf(
-      "some decrypted join key 44444".toByteStringUtf8(),
-      "some identifier4".toByteStringUtf8()
+      "some-decrypted-join-key-44444".toByteStringUtf8(),
+      "some-identifier4".toByteStringUtf8()
     ),
   )
 
@@ -54,7 +54,6 @@ abstract class AbstractQueryPreparerTest {
 
   @Test
   fun testCryptor() {
-
     val joinKeyAndIds: List<LookupKeyAndId> =
       queryPreparer.prepareLookupKeys(identifierHashPepper, DECRYPTED_JOIN_KEYS)
     assertThat(joinKeyAndIds.size).isEqualTo(DECRYPTED_JOIN_KEYS.size)
@@ -62,7 +61,6 @@ abstract class AbstractQueryPreparerTest {
 
   @Test
   fun hashesAreEqual() {
-
     val joinKeyAndIds1: List<LookupKeyAndId> =
       queryPreparer.prepareLookupKeys(identifierHashPepper, DECRYPTED_JOIN_KEYS)
     val joinKeyAndIds2: List<LookupKeyAndId> =
@@ -72,7 +70,6 @@ abstract class AbstractQueryPreparerTest {
 
   @Test
   fun hashesAreNotEqual() {
-
     val joinKeyAndIds1: List<LookupKeyAndId> =
       queryPreparer.prepareLookupKeys(identifierHashPepper, DECRYPTED_JOIN_KEYS)
     val joinKeyAndIds2: List<LookupKeyAndId> =
@@ -80,12 +77,11 @@ abstract class AbstractQueryPreparerTest {
         "some-other-other-pepper".toByteStringUtf8(),
         DECRYPTED_JOIN_KEYS
       )
-    assertThat(joinKeyAndIds1).isNotEqualTo(joinKeyAndIds2)
+    assertThat(joinKeyAndIds1).containsNoneIn(joinKeyAndIds2)
   }
 
   @Test
   fun joinKeyIdentifiersAreEqual() {
-
     val joinKeyAndIds: List<LookupKeyAndId> =
       queryPreparer.prepareLookupKeys(identifierHashPepper, DECRYPTED_JOIN_KEYS)
     assertThat(joinKeyAndIds.map { it.joinKeyIdentifier })

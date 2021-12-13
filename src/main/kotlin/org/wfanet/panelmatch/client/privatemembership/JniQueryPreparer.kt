@@ -22,9 +22,6 @@ import org.wfanet.panelmatch.protocol.querypreparer.QueryPreparerSwig
 
 /** [QueryPreparer] that calls into C++ via JNI. */
 class JniQueryPreparer : QueryPreparer {
-  init {
-    loadLibraryFromResource("query_preparer", "$SWIG_PREFIX/querypreparer")
-  }
 
   override fun prepareLookupKeys(
     identifierHashPepper: ByteString,
@@ -39,5 +36,11 @@ class JniQueryPreparer : QueryPreparer {
       PrepareQueryResponse.parseFrom(QueryPreparerSwig.prepareQueryWrapper(request.toByteArray()))
     }
     return response.lookupKeyAndIdsList
+  }
+
+  companion object {
+    init {
+      loadLibraryFromResource("query_preparer", "$SWIG_PREFIX/querypreparer")
+    }
   }
 }

@@ -18,7 +18,6 @@ import com.google.protobuf.ByteString
 import java.io.Serializable
 import org.apache.beam.sdk.coders.KvCoder
 import org.apache.beam.sdk.coders.ListCoder
-import org.apache.beam.sdk.coders.SerializableCoder
 import org.apache.beam.sdk.extensions.protobuf.ProtoCoder
 import org.apache.beam.sdk.metrics.Metrics
 import org.apache.beam.sdk.transforms.DoFn
@@ -106,7 +105,7 @@ private class DecryptQueryResults(
     val plaintextListCoder =
       KvCoder.of(
         ProtoCoder.of(JoinKeyIdentifier::class.java),
-        ListCoder.of(SerializableCoder.of(Plaintext::class.java))
+        ListCoder.of(ProtoCoder.of(Plaintext::class.java))
       )
     val encryptedQueryResults = input[encryptedQueryResultsTag]
     val queryIdAndIds = input[queryIdAndIdsTag]
@@ -124,7 +123,7 @@ private class DecryptQueryResults(
       encryptedQueryResults.keyBy("Key by QueryId") { requireNotNull(it.queryId) }
     val groupedEncryptedQueryResults =
       keyedEncryptedQueryResults.groupByKey("Group Encrypted Query Results")
-    val flattenedDecryptedResults:
+    val individualDecryptedResults:
       PCollection<KV<JoinKeyIdentifier, List<@JvmWildcard Plaintext>>> =
       decryptedJoinKeyKeyedByQueryId
         .strictOneToOneJoin(groupedEncryptedQueryResults, name = "Join JoinKeys+QueryResults")
@@ -142,12 +141,14 @@ private class DecryptQueryResults(
         )
         .parDo(DecryptResultsFn(queryResultsDecryptor), name = "Decrypt")
         .setCoder(plaintextListCoder)
+    val groupedDecryptedResults: PCollection<KV<JoinKeyIdentifier, List<@JvmWildcard Plaintext>>> =
+      individualDecryptedResults
         .groupByKey()
         .map { kvOf(it.key, it.value.flatten()) }
         .setCoder(plaintextListCoder)
 
     val keyedPlaintextJoinKeyAndIds = plaintextJoinKeyAndIds.keyBy { it.joinKeyIdentifier }
-    return flattenedDecryptedResults.strictOneToOneJoin(keyedPlaintextJoinKeyAndIds).map { it ->
+    return groupedDecryptedResults.strictOneToOneJoin(keyedPlaintextJoinKeyAndIds).map { it ->
       keyedDecryptedEventDataSet {
         plaintextJoinKeyAndId = it.value
         decryptedEventData += it.key
@@ -175,29 +176,29 @@ private class BuildDecryptQueryResultsRequestsFn(
   private val metricsNamespace = "DecryptQueryResults"
   private val noResults = Metrics.counter(metricsNamespace, "no-results")
   private val discardedResult = Metrics.counter(metricsNamespace, "skipped-queries")
+
   @ProcessElement
   fun processElement(context: ProcessContext) {
     val encryptedQueryResultsList = context.element().value.toList()
     val decryptedJoinKeyAndId = context.element().key
     if (encryptedQueryResultsList.isEmpty()) {
-      noResults.inc()
+      return noResults.inc()
     } else if (decryptedJoinKeyAndId == null) {
-      discardedResult.inc()
-    } else {
-      val keys = context.sideInput(keysView)
-      val compressionParameters = context.sideInput(compressionParametersView)
-      encryptedQueryResultsList.forEach {
-        val request = decryptQueryResultsRequest {
-          serializedParameters = this@BuildDecryptQueryResultsRequestsFn.serializedParameters
-          hkdfPepper = this@BuildDecryptQueryResultsRequestsFn.hkdfPepper
-          serializedPublicKey = keys.serializedPublicKey
-          serializedPrivateKey = keys.serializedPrivateKey
-          this.compressionParameters = compressionParameters
-          decryptedJoinKey = decryptedJoinKeyAndId.joinKey
-          encryptedQueryResults += it
-        }
-        context.output(kvOf(requireNotNull(context.element().key).joinKeyIdentifier, request))
+      return discardedResult.inc()
+    }
+    val keys = context.sideInput(keysView)
+    val compressionParameters = context.sideInput(compressionParametersView)
+    for (item in encryptedQueryResultsList) {
+      val request = decryptQueryResultsRequest {
+        serializedParameters = this@BuildDecryptQueryResultsRequestsFn.serializedParameters
+        hkdfPepper = this@BuildDecryptQueryResultsRequestsFn.hkdfPepper
+        serializedPublicKey = keys.serializedPublicKey
+        serializedPrivateKey = keys.serializedPrivateKey
+        this.compressionParameters = compressionParameters
+        decryptedJoinKey = decryptedJoinKeyAndId.joinKey
+        encryptedQueryResults += item
       }
+      context.output(kvOf(decryptedJoinKeyAndId.joinKeyIdentifier, request))
     }
   }
 }

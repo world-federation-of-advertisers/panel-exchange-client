@@ -30,28 +30,29 @@ import org.wfanet.panelmatch.client.common.joinKeyAndIdOf
 import org.wfanet.panelmatch.client.privatemembership.JniQueryPreparer
 import org.wfanet.panelmatch.client.privatemembership.LookupKeyAndId
 import org.wfanet.panelmatch.client.privatemembership.LookupKeyAndIdCollection
+import org.wfanet.panelmatch.client.privatemembership.testing.joinKeyAndIdOf
 import org.wfanet.panelmatch.common.storage.createBlob
 
 private const val ATTEMPT_KEY = "some-arbitrary-attempt-key"
 val PLAINTEXT_JOIN_KEYS =
   listOf(
-    joinKeyAndIdOf("some plaintext0".toByteStringUtf8(), "some identifier0".toByteStringUtf8()),
-    joinKeyAndIdOf("some plaintext1".toByteStringUtf8(), "some identifier1".toByteStringUtf8()),
-    joinKeyAndIdOf("some plaintext2".toByteStringUtf8(), "some identifier2".toByteStringUtf8()),
-    joinKeyAndIdOf("some plaintext3".toByteStringUtf8(), "some identifier3".toByteStringUtf8()),
-    joinKeyAndIdOf("some plaintext4".toByteStringUtf8(), "some identifier4".toByteStringUtf8()),
+    joinKeyAndIdOf("some plaintext0", "some identifier0"),
+    joinKeyAndIdOf("some plaintext1", "some identifier1"),
+    joinKeyAndIdOf("some plaintext2", "some identifier2"),
+    joinKeyAndIdOf("some plaintext3", "some identifier3"),
+    joinKeyAndIdOf("some plaintext4", "some identifier4"),
   )
 
 @RunWith(JUnit4::class)
 class JoinKeyHashingExchangeTaskTest {
-  private val mockStorage = InMemoryStorageClient()
+  private val storage = InMemoryStorageClient()
   private val queryPreparer = JniQueryPreparer()
   private val pepper = "some-secret-salt-1".toByteStringUtf8()
   private val saltedJoinKeys = queryPreparer.prepareLookupKeys(pepper, PLAINTEXT_JOIN_KEYS)
 
-  private val blobOfPepper = runBlocking { mockStorage.createBlob("mp-pepper", pepper) }
+  private val blobOfPepper = runBlocking { storage.createBlob("mp-pepper", pepper) }
   private val blobOfJoinKeys = runBlocking {
-    mockStorage.createBlob(
+    storage.createBlob(
       "join-keys",
       joinKeyAndIdCollection { joinKeyAndIds += PLAINTEXT_JOIN_KEYS }.toByteString()
     )

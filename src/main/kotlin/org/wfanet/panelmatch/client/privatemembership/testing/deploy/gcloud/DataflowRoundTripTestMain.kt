@@ -116,12 +116,7 @@ fun main(args: Array<String>) {
       ->
       for (j in 0 until QUERIES_PER_SHARD_COUNT / 4) {
         val queryIndex = i + j * SHARD_COUNT
-        yield(
-          lookupKeyAndIdOf(
-            i + j * SHARD_COUNT.toLong(),
-            "joinKeyId of ${i + j * SHARD_COUNT}".toByteStringUtf8()
-          )
-        )
+        yield(lookupKeyAndIdOf(queryIndex.toLong(), "joinKeyId of $queryIndex".toByteStringUtf8()))
       }
     }
 

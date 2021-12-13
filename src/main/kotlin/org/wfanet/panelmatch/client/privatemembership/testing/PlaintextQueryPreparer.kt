@@ -32,11 +32,7 @@ class PlaintextQueryPreparer : QueryPreparer {
     return decryptedJoinKeyAndIds.map {
       lookupKeyAndId {
         this.lookupKey =
-          lookupKey {
-            key =
-              (identifierHashPepper.toStringUtf8().length + it.joinKey.key.toStringUtf8().length)
-                .toLong()
-          }
+          lookupKey { key = (identifierHashPepper.size() + it.joinKey.key.size()).toLong() }
         joinKeyIdentifier = it.joinKeyIdentifier
       }
     }

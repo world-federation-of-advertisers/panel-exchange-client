@@ -16,7 +16,7 @@ package org.wfanet.panelmatch.client.exchangetasks
 
 import com.google.protobuf.ByteString
 import kotlinx.coroutines.flow.Flow
-import org.wfanet.measurement.common.asBufferedFlow
+import kotlinx.coroutines.flow.flowOf
 import org.wfanet.measurement.storage.StorageClient
 import org.wfanet.panelmatch.client.privatemembership.LookupKeyAndId
 import org.wfanet.panelmatch.client.privatemembership.QueryPreparer
@@ -42,7 +42,7 @@ internal constructor(
       operation(cryptoKey, JoinKeyAndIdCollection.parseFrom(serializedInputs).joinKeyAndIdsList)
 
     val serializedOutput = lookupKeyAndIdCollection { lookupKeyAndIds += results }.toByteString()
-    return mapOf(outputDataLabel to serializedOutput.asBufferedFlow(1024))
+    return mapOf(outputDataLabel to flowOf(serializedOutput))
   }
 
   companion object {

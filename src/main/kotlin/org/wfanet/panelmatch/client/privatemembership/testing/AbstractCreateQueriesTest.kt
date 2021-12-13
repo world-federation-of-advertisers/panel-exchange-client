@@ -104,12 +104,12 @@ abstract class AbstractCreateQueriesTest : BeamTestBase() {
     val panelistQueries = getPanelistQueries(decodedQueries, queryIdAndJoinKeys)
     assertThat(panelistQueries.values())
       .containsInAnyOrder(
-        PanelistQuery(1, 1, "abc"),
-        PanelistQuery(0, 4, "def"),
-        PanelistQuery(1, 0, "hij"),
-        PanelistQuery(1, 2, "klm"),
-        PanelistQuery(1, 2, "nop"),
-        PanelistQuery(1, 4, "qrs")
+        PanelistQuery(shard = 1, bucket = 1, joinKeyIdentifier = "abc"),
+        PanelistQuery(shard = 0, bucket = 4, joinKeyIdentifier = "def"),
+        PanelistQuery(shard = 1, bucket = 0, joinKeyIdentifier = "hij"),
+        PanelistQuery(shard = 1, bucket = 2, joinKeyIdentifier = "klm"),
+        PanelistQuery(shard = 1, bucket = 2, joinKeyIdentifier = "nop"),
+        PanelistQuery(shard = 1, bucket = 4, joinKeyIdentifier = "qrs")
       )
     assertFailsWith(NoSuchElementException::class) { runPipelineAndGetNumberOfDiscardedQueries() }
   }
@@ -132,12 +132,12 @@ abstract class AbstractCreateQueriesTest : BeamTestBase() {
     val panelistQueries = getPanelistQueries(decodedQueries, queryIdAndJoinKeys)
     assertThat(panelistQueries.values())
       .containsInAnyOrder(
-        PanelistQuery(1, 1, "abc"),
-        PanelistQuery(0, 4, "def"),
-        PanelistQuery(1, 0, "hij"),
-        PanelistQuery(1, 2, "klm"),
-        PanelistQuery(1, 2, "nop"),
-        PanelistQuery(1, 4, "qrs")
+        PanelistQuery(shard = 1, bucket = 1, joinKeyIdentifier = "abc"),
+        PanelistQuery(shard = 0, bucket = 4, joinKeyIdentifier = "def"),
+        PanelistQuery(shard = 1, bucket = 0, joinKeyIdentifier = "hij"),
+        PanelistQuery(shard = 1, bucket = 2, joinKeyIdentifier = "klm"),
+        PanelistQuery(shard = 1, bucket = 2, joinKeyIdentifier = "nop"),
+        PanelistQuery(shard = 1, bucket = 4, joinKeyIdentifier = "qrs")
       )
     assertThat(decodedQueries.values()).satisfies { shardedQueries ->
       for (i in 0 until numShards) {
@@ -189,28 +189,24 @@ abstract class AbstractCreateQueriesTest : BeamTestBase() {
   private fun getLookupKeyAndIds(vararg entries: Pair<Long, String>): PCollection<LookupKeyAndId> {
     return pcollectionOf(
       "Create LookupKeys+Ids",
-      *entries
-        .map {
-          lookupKeyAndId {
-            lookupKey = lookupKeyOf(it.first)
-            joinKeyIdentifier = joinKeyIdentifierOf(it.second.toByteStringUtf8())
-          }
+      entries.map {
+        lookupKeyAndId {
+          lookupKey = lookupKeyOf(it.first)
+          joinKeyIdentifier = joinKeyIdentifierOf(it.second.toByteStringUtf8())
         }
-        .toTypedArray()
+      }
     )
   }
 
   private fun getJoinKeysAndIds(vararg entries: Pair<Long, String>): PCollection<JoinKeyAndId> {
     return pcollectionOf(
       "Create LookupKeys+Ids",
-      *entries
-        .map {
-          joinKeyAndId {
-            joinKeyIdentifier = joinKeyIdentifierOf(it.first)
-            joinKey = joinKeyOf(it.second.toByteStringUtf8())
-          }
+      entries.map {
+        joinKeyAndId {
+          joinKeyIdentifier = joinKeyIdentifierOf(it.first)
+          joinKey = joinKeyOf(it.second.toByteStringUtf8())
         }
-        .toTypedArray()
+      }
     )
   }
 
