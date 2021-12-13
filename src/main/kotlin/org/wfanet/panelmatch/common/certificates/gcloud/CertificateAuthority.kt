@@ -28,16 +28,17 @@ import com.google.cloud.security.privateca.v1.Subject
 import com.google.cloud.security.privateca.v1.SubjectAltNames
 import com.google.cloud.security.privateca.v1.X509Parameters
 import com.google.cloud.security.privateca.v1.X509Parameters.CaOptions
-import com.google.protobuf.Duration
 import com.google.protobuf.kotlin.toByteString
 import java.security.KeyPair
 import java.security.PrivateKey
 import java.security.PublicKey
 import java.security.cert.X509Certificate
+import java.time.Duration
 import org.wfanet.measurement.common.crypto.generateKeyPair
 import org.wfanet.measurement.common.crypto.readCertificate
 import org.wfanet.panelmatch.common.certificates.CertificateAuthority
 import org.wfanet.panelmatch.common.loggerFor
+import org.wfanet.panelmatch.common.toProto
 
 // Set the X.509 fields required for the certificate.
 val X509_PARAMETERS: X509Parameters =
@@ -70,8 +71,7 @@ class CertificateAuthority(
 
   override suspend fun generateX509CertificateAndPrivateKey(): Pair<X509Certificate, PrivateKey> {
 
-    val certificateLifetime: Duration =
-      java.time.Duration.ofDays(context.validDays.toLong()).toProto()
+    val certificateLifetime = Duration.ofDays(context.validDays.toLong())
 
     val keyPair: KeyPair = generateKeyPair()
     val privateKey: PrivateKey = keyPair.private
@@ -105,7 +105,7 @@ class CertificateAuthority(
             .setX509Config(X509_PARAMETERS)
             .build()
         )
-        .setLifetime(certificateLifetime)
+        .setLifetime(certificateLifetime.toProto())
         .build()
 
     // Create the Certificate Request.
@@ -125,9 +125,5 @@ class CertificateAuthority(
 
   companion object {
     private val logger by loggerFor()
-
-    fun java.time.Duration.toProto(): com.google.protobuf.Duration {
-      return Duration.newBuilder().setSeconds(seconds).setNanos(nano).build()
-    }
   }
 }

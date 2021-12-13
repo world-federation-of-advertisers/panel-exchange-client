@@ -23,14 +23,10 @@ import com.google.cloud.security.privateca.v1.PublicKey.KeyFormat
 import com.google.cloud.security.privateca.v1.Subject
 import com.google.cloud.security.privateca.v1.SubjectAltNames
 import com.google.common.truth.Truth.assertThat
-import com.google.protobuf.Duration
 import com.google.protobuf.kotlin.toByteString
 import com.google.protobuf.kotlin.toByteStringUtf8
 import java.security.KeyPair
-import java.time.LocalDate
-import java.time.LocalDateTime
-import java.time.ZoneId
-import java.util.Date
+import java.time.Duration
 import kotlinx.coroutines.runBlocking
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -46,7 +42,7 @@ import org.wfanet.measurement.common.crypto.sign
 import org.wfanet.measurement.common.crypto.testing.FIXED_CA_CERT_PEM_FILE
 import org.wfanet.measurement.common.crypto.verifySignature
 import org.wfanet.panelmatch.common.certificates.CertificateAuthority
-import org.wfanet.panelmatch.common.certificates.gcloud.CertificateAuthority.Companion.toProto
+import org.wfanet.panelmatch.common.toProto
 
 private val CONTEXT =
   CertificateAuthority.Context(
@@ -69,8 +65,7 @@ class CertificateAuthorityTest {
 
     val mockCreateCertificateClient: CreateCertificateClient = mock<CreateCertificateClient>()
 
-    val certificateLifetime: Duration =
-      java.time.Duration.ofDays(CONTEXT.validDays.toLong()).toProto()
+    val certificateLifetime = Duration.ofDays(CONTEXT.validDays.toLong())
 
     // Set the Public Key and its format.
     val cloudPublicKey: CloudPublicKey =
@@ -100,7 +95,7 @@ class CertificateAuthorityTest {
             .setX509Config(X509_PARAMETERS)
             .build()
         )
-        .setLifetime(certificateLifetime)
+        .setLifetime(certificateLifetime.toProto())
         .build()
 
     val createCertificateRequest: CreateCertificateRequest =
@@ -142,8 +137,4 @@ class CertificateAuthorityTest {
 
     assertThat(x509.verifySignature(data, signature)).isTrue()
   }
-}
-
-private fun Date.toLocalDate(): LocalDate {
-  return LocalDateTime.ofInstant(toInstant(), ZoneId.systemDefault()).toLocalDate()
 }
