@@ -37,7 +37,6 @@ import java.security.cert.X509Certificate
 import org.wfanet.measurement.common.crypto.generateKeyPair
 import org.wfanet.measurement.common.crypto.readCertificate
 import org.wfanet.panelmatch.common.certificates.CertificateAuthority
-import org.wfanet.panelmatch.common.certificates.utilities.Utilities
 import org.wfanet.panelmatch.common.loggerFor
 
 // Set the X.509 fields required for the certificate.
@@ -67,20 +66,25 @@ class CertificateAuthority(
   private val certificateAuthorityName: String,
   private val certificateName: String,
   private val client: CreateCertificateClient,
-  private val generateKeyPair:() -> KeyPair = { generateKeyPair("EC") }
+  private val generateKeyPair: () -> KeyPair = { generateKeyPair("EC") }
 
 ) : CertificateAuthority {
 
   override suspend fun generateX509CertificateAndPrivateKey(): Pair<X509Certificate, PrivateKey> {
 
-    val certificateLifetime: Duration = Utilities().getDurationProto(context.validDays)
+    val certificateLifetime: Duration =
+      java.time.Duration.ofDays(context.validDays.toLong()).toProto()
 
     val keyPair: KeyPair = generateKeyPair()
     val privateKey: PrivateKey = keyPair.private
     val publicKey: PublicKey = keyPair.public
 
     // Set the Public Key and its format.
-    val cloudPublicKeyInput = CloudPublicKey.newBuilder().setKey(publicKey.encoded.toByteString()).setFormat(KeyFormat.PEM).build()
+    val cloudPublicKeyInput =
+      CloudPublicKey.newBuilder()
+        .setKey(publicKey.encoded.toByteString())
+        .setFormat(KeyFormat.PEM)
+        .build()
 
     val subjectConfig =
       SubjectConfig.newBuilder() // Set the common name and org name.
@@ -122,5 +126,9 @@ class CertificateAuthority(
 
   companion object {
     private val logger by loggerFor()
+
+    fun java.time.Duration.toProto(): com.google.protobuf.Duration {
+      return Duration.newBuilder().setSeconds(seconds).setNanos(nano).build()
+    }
   }
 }

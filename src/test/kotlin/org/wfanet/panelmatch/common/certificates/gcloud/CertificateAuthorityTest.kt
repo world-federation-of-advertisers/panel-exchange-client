@@ -38,7 +38,7 @@ import org.wfanet.measurement.common.crypto.readPrivateKey
 import org.wfanet.measurement.common.crypto.sign
 import org.wfanet.measurement.common.crypto.verifySignature
 import org.wfanet.panelmatch.common.certificates.CertificateAuthority
-import org.wfanet.panelmatch.common.certificates.utilities.Utilities
+import org.wfanet.panelmatch.common.certificates.gcloud.CertificateAuthority.Companion.toProto
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.any
 import org.mockito.kotlin.argumentCaptor
@@ -52,7 +52,7 @@ private val CONTEXT =
   CertificateAuthority.Context(
     commonName = "some-common-name",
     orgName = "some-org-name",
-    domainName ="some-domain-name",
+    domainName = "some-domain-name",
     hostname = "example.com",
     validDays = 5,
   )
@@ -70,10 +70,15 @@ class CertificateAuthorityTest {
     val mockCreateCertificateClient: CreateCertificateClient =
       mock<CreateCertificateClient>()
 
-    val certificateLifetime: Duration = Utilities().getDurationProto(CONTEXT.validDays)
+    val certificateLifetime: Duration =
+      java.time.Duration.ofDays(CONTEXT.validDays.toLong()).toProto()
 
     // Set the Public Key and its format.
-    val cloudPublicKey: CloudPublicKey = CloudPublicKey.newBuilder().setKey(ROOT_PUBLIC_KEY.encoded.toByteString()).setFormat(KeyFormat.PEM).build()
+    val cloudPublicKey: CloudPublicKey =
+      CloudPublicKey.newBuilder()
+        .setKey(ROOT_PUBLIC_KEY.encoded.toByteString())
+        .setFormat(KeyFormat.PEM)
+        .build()
 
     val subjectConfig =
       CertificateConfig.SubjectConfig.newBuilder() // Set the common name and org name.
@@ -124,7 +129,6 @@ class CertificateAuthorityTest {
     val (x509, privateKey) =
       runBlocking { certificateAuthority.generateX509CertificateAndPrivateKey() }
 
-
     argumentCaptor<CreateCertificateRequest> {
       verify(mockCreateCertificateClient).createCertificate(capture())
       assertThat(firstValue).isEqualTo(
@@ -140,7 +144,6 @@ class CertificateAuthorityTest {
 
     assertThat(x509.verifySignature(data, signature)).isTrue()
   }
-
 }
 
 private fun Date.toLocalDate(): LocalDate {

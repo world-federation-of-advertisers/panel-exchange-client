@@ -38,7 +38,7 @@ private val CONTEXT =
   CertificateAuthority.Context(
     commonName = "some-common-name",
     orgName = "some-org-name",
-    domainName ="some-domain-name",
+    domainName = "some-domain-name",
     hostname = "example.com",
     validDays = 5,
   )
