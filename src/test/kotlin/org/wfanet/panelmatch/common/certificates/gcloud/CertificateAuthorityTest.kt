@@ -14,17 +14,17 @@
 
 package org.wfanet.panelmatch.common.certificates.gcloud
 
-import com.google.cloud.security.privateca.v1.PublicKey as CloudPublicKey
+import com.google.cloud.security.privateca.v1.CaPoolName
 import com.google.cloud.security.privateca.v1.Certificate
-import com.google.cloud.security.privateca.v1.Subject
 import com.google.cloud.security.privateca.v1.CertificateConfig
 import com.google.cloud.security.privateca.v1.CreateCertificateRequest
-import com.google.cloud.security.privateca.v1.CaPoolName
-import com.google.cloud.security.privateca.v1.SubjectAltNames
+import com.google.cloud.security.privateca.v1.PublicKey as CloudPublicKey
 import com.google.cloud.security.privateca.v1.PublicKey.KeyFormat
+import com.google.cloud.security.privateca.v1.Subject
+import com.google.cloud.security.privateca.v1.SubjectAltNames
+import com.google.common.truth.Truth.assertThat
 import com.google.protobuf.Duration
 import com.google.protobuf.kotlin.toByteString
-import com.google.common.truth.Truth.assertThat
 import com.google.protobuf.kotlin.toByteStringUtf8
 import java.security.KeyPair
 import java.time.LocalDate
@@ -32,21 +32,21 @@ import java.time.LocalDateTime
 import java.time.ZoneId
 import java.util.Date
 import kotlinx.coroutines.runBlocking
-import org.wfanet.measurement.common.crypto.readCertificate
-import org.wfanet.measurement.common.crypto.testing.FIXED_CA_CERT_PEM_FILE
-import org.wfanet.measurement.common.crypto.readPrivateKey
-import org.wfanet.measurement.common.crypto.sign
-import org.wfanet.measurement.common.crypto.verifySignature
-import org.wfanet.panelmatch.common.certificates.CertificateAuthority
-import org.wfanet.panelmatch.common.certificates.gcloud.CertificateAuthority.Companion.toProto
-import org.mockito.kotlin.verify
-import org.mockito.kotlin.any
-import org.mockito.kotlin.argumentCaptor
-import org.mockito.kotlin.mock
-import org.mockito.kotlin.whenever
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
+import org.mockito.kotlin.any
+import org.mockito.kotlin.argumentCaptor
+import org.mockito.kotlin.mock
+import org.mockito.kotlin.verify
+import org.mockito.kotlin.whenever
+import org.wfanet.measurement.common.crypto.readCertificate
+import org.wfanet.measurement.common.crypto.readPrivateKey
+import org.wfanet.measurement.common.crypto.sign
+import org.wfanet.measurement.common.crypto.testing.FIXED_CA_CERT_PEM_FILE
+import org.wfanet.measurement.common.crypto.verifySignature
+import org.wfanet.panelmatch.common.certificates.CertificateAuthority
+import org.wfanet.panelmatch.common.certificates.gcloud.CertificateAuthority.Companion.toProto
 
 private val CONTEXT =
   CertificateAuthority.Context(
@@ -67,8 +67,7 @@ class CertificateAuthorityTest {
   @Test
   suspend fun mockGenerateX509CertificateAndPrivateKeyTest() {
 
-    val mockCreateCertificateClient: CreateCertificateClient =
-      mock<CreateCertificateClient>()
+    val mockCreateCertificateClient: CreateCertificateClient = mock<CreateCertificateClient>()
 
     val certificateLifetime: Duration =
       java.time.Duration.ofDays(CONTEXT.validDays.toLong()).toProto()
@@ -83,8 +82,10 @@ class CertificateAuthorityTest {
     val subjectConfig =
       CertificateConfig.SubjectConfig.newBuilder() // Set the common name and org name.
         .setSubject(
-          Subject.newBuilder().setCommonName(CONTEXT.commonName)
-            .setOrganization(CONTEXT.orgName).build()
+          Subject.newBuilder()
+            .setCommonName(CONTEXT.commonName)
+            .setOrganization(CONTEXT.orgName)
+            .build()
         ) // Set the fully qualified domain name.
         .setSubjectAltName(SubjectAltNames.newBuilder().addDnsNames(CONTEXT.domainName).build())
         .build()
@@ -99,17 +100,16 @@ class CertificateAuthorityTest {
             .setX509Config(X509_PARAMETERS)
             .build()
         )
-        .setLifetime(
-          certificateLifetime
-        )
+        .setLifetime(certificateLifetime)
         .build()
 
-    val createCertificateRequest: CreateCertificateRequest = CreateCertificateRequest.newBuilder()
-      .setParent(CaPoolName.of("some-project-id", "some-ca-location", "some-pool-id").toString())
-      .setCertificateId("some-certificate-name")
-      .setCertificate(certificate)
-      .setIssuingCertificateAuthorityId("some-certificate-authority-name")
-      .build()
+    val createCertificateRequest: CreateCertificateRequest =
+      CreateCertificateRequest.newBuilder()
+        .setParent(CaPoolName.of("some-project-id", "some-ca-location", "some-pool-id").toString())
+        .setCertificateId("some-certificate-name")
+        .setCertificate(certificate)
+        .setIssuingCertificateAuthorityId("some-certificate-authority-name")
+        .build()
 
     whenever(mockCreateCertificateClient.createCertificate(any()))
       .thenReturn(Certificate.newBuilder().setPemCertificate(ROOT_PUBLIC_KEY.toString()).build())
@@ -131,9 +131,7 @@ class CertificateAuthorityTest {
 
     argumentCaptor<CreateCertificateRequest> {
       verify(mockCreateCertificateClient).createCertificate(capture())
-      assertThat(firstValue).isEqualTo(
-        createCertificateRequest
-      )
+      assertThat(firstValue).isEqualTo(createCertificateRequest)
     }
 
     assertThat(x509.publicKey).isEqualTo(ROOT_PUBLIC_KEY)
