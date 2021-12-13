@@ -3,7 +3,6 @@ package org.wfanet.panelmatch.common.certificates.gcloud
 import com.google.cloud.security.privateca.v1.Certificate
 import com.google.cloud.security.privateca.v1.CertificateAuthorityServiceClient
 import com.google.cloud.security.privateca.v1.CreateCertificateRequest
-import org.wfanet.panelmatch.common.certificates.CreateCertificateClient
 
 class PrivateCaClient : CreateCertificateClient, AutoCloseable {
 

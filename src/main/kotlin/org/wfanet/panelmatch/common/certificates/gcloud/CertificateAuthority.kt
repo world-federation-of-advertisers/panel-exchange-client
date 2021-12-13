@@ -37,10 +37,11 @@ import java.security.cert.X509Certificate
 import org.wfanet.measurement.common.crypto.generateKeyPair
 import org.wfanet.measurement.common.crypto.readCertificate
 import org.wfanet.panelmatch.common.certificates.CertificateAuthority
+import org.wfanet.panelmatch.common.certificates.utilities.Utilities
 import org.wfanet.panelmatch.common.loggerFor
 
 // Set the X.509 fields required for the certificate.
-val X509PARAMETERS: X509Parameters = X509Parameters.newBuilder()
+val X509_PARAMETERS: X509Parameters = X509Parameters.newBuilder()
   .setKeyUsage(
     KeyUsage.newBuilder()
       .setBaseKeyUsage(
@@ -60,16 +61,21 @@ val X509PARAMETERS: X509Parameters = X509Parameters.newBuilder()
 
 class CertificateAuthority(
   private val context: CertificateAuthority.Context,
+  private val projectId: String,
+  private val caLocation: String,
+  private val poolId: String,
+  private val certificateAuthorityName: String,
+  private val certificateName: String,
   private val client: CreateCertificateClient,
+  private val generateKeyPair:() -> KeyPair = { generateKeyPair("EC") }
 
 ) : CertificateAuthority {
 
   override suspend fun generateX509CertificateAndPrivateKey(): Pair<X509Certificate, PrivateKey> {
 
-    val certificateLifetime: Duration =
-      Duration.newBuilder().setSeconds(context.validDays.toLong() * 86400).build()
+    val certificateLifetime: Duration = Utilities().getDurationProto(context.validDays)
 
-    val keyPair: KeyPair = generateKeyPair("EC")
+    val keyPair: KeyPair = generateKeyPair()
     val privateKey: PrivateKey = keyPair.private
     val publicKey: PublicKey = keyPair.public
 
@@ -92,7 +98,7 @@ class CertificateAuthority(
           CertificateConfig.newBuilder()
             .setPublicKey(cloudPublicKeyInput)
             .setSubjectConfig(subjectConfig)
-            .setX509Config(X509PARAMETERS)
+            .setX509Config(X509_PARAMETERS)
             .build()
         )
         .setLifetime(
@@ -102,10 +108,10 @@ class CertificateAuthority(
 
     // Create the Certificate Request.
     val certificateRequest = CreateCertificateRequest.newBuilder()
-      .setParent(CaPoolName.of(context.projectId, context.caLocation, context.poolId).toString())
-      .setCertificateId(context.certificateName)
+      .setParent(CaPoolName.of(projectId, caLocation, poolId).toString())
+      .setCertificateId(certificateName)
       .setCertificate(certificate)
-      .setIssuingCertificateAuthorityId(context.certificateAuthorityName)
+      .setIssuingCertificateAuthorityId(certificateAuthorityName)
       .build()
 
       // Get the Certificate response.

@@ -20,11 +20,6 @@ import java.security.cert.X509Certificate
 /** Creates X509Certificates signed by a protected root private key. */
 interface CertificateAuthority {
   data class Context(
-    val projectId: String,
-    val caLocation: String,
-    val poolId: String,
-    val certificateAuthorityName: String,
-    val certificateName: String,
     val commonName: String,
     val orgName: String,
     val domainName: String,
