@@ -17,7 +17,12 @@ Step 4 of configuring WORKSPACE: Maven.
 """
 
 load("@wfa_common_jvm//build/maven:artifacts.bzl", "artifacts")
-load("@wfa_common_jvm//build:common_jvm_maven.bzl", "COMMON_JVM_MAVEN_OVERRIDE_TARGETS", "common_jvm_maven_artifacts")
+load(
+    "@wfa_common_jvm//build:common_jvm_maven.bzl",
+    "COMMON_JVM_EXCLUDED_ARTIFACTS",
+    "COMMON_JVM_MAVEN_OVERRIDE_TARGETS",
+    "common_jvm_maven_artifacts",
+)
 
 _BEAM_VERSION = "2.34.0"
 
@@ -62,4 +67,4 @@ def panel_exchange_client_maven_override_targets():
     return COMMON_JVM_MAVEN_OVERRIDE_TARGETS
 
 def panel_exchange_client_maven_excluded_artifacts():
-    return _EXCLUDED_ARTIFACTS
+    return _EXCLUDED_ARTIFACTS + COMMON_JVM_EXCLUDED_ARTIFACTS
