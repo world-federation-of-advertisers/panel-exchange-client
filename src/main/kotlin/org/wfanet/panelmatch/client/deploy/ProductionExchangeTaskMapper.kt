@@ -55,19 +55,19 @@ class ProductionExchangeTaskMapper(
   private val certificateManager: CertificateManager,
   private val pipelineOptions: PipelineOptions
 ) : ExchangeTaskMapper() {
-  override fun ExchangeContext.encrypt(): ExchangeTask {
+  override suspend fun ExchangeContext.encrypt(): ExchangeTask {
     return CryptorExchangeTask.forEncryption(JniDeterministicCommutativeCipher())
   }
 
-  override fun ExchangeContext.decrypt(): ExchangeTask {
+  override suspend fun ExchangeContext.decrypt(): ExchangeTask {
     return CryptorExchangeTask.forDecryption(JniDeterministicCommutativeCipher())
   }
 
-  override fun ExchangeContext.reEncrypt(): ExchangeTask {
+  override suspend fun ExchangeContext.reEncrypt(): ExchangeTask {
     return CryptorExchangeTask.forReEncryption(JniDeterministicCommutativeCipher())
   }
 
-  override fun ExchangeContext.generateEncryptionKey(): ExchangeTask {
+  override suspend fun ExchangeContext.generateEncryptionKey(): ExchangeTask {
     return GenerateSymmetricKeyTask(JniDeterministicCommutativeCipher()::generateKey)
   }
 
@@ -128,26 +128,26 @@ class ProductionExchangeTaskMapper(
     }
   }
 
-  override fun ExchangeContext.generateSymmetricKey(): ExchangeTask {
+  override suspend fun ExchangeContext.generateSymmetricKey(): ExchangeTask {
     return GenerateSymmetricKeyTask(JniDeterministicCommutativeCipher()::generateKey)
   }
 
-  override fun ExchangeContext.generateSerializedRlweKeys(): ExchangeTask {
+  override suspend fun ExchangeContext.generateSerializedRlweKeys(): ExchangeTask {
     check(step.stepCase == ExchangeWorkflow.Step.StepCase.GENERATE_SERIALIZED_RLWE_KEYS_STEP)
     val privateMembershipCryptor =
       JniPrivateMembershipCryptor(step.generateSerializedRlweKeysStep.serializedParameters)
     return GenerateAsymmetricKeysTask(generateKeys = privateMembershipCryptor::generateKeys)
   }
 
-  override fun ExchangeContext.generateExchangeCertificate(): ExchangeTask {
+  override suspend fun ExchangeContext.generateExchangeCertificate(): ExchangeTask {
     return GenerateExchangeCertificateTask(certificateManager, exchangeDateKey)
   }
 
-  override fun ExchangeContext.generateLookupKeys(): ExchangeTask {
+  override suspend fun ExchangeContext.generateLookupKeys(): ExchangeTask {
     return GenerateLookupKeysTask()
   }
 
-  override fun ExchangeContext.intersectAndValidate(): ExchangeTask {
+  override suspend fun ExchangeContext.intersectAndValidate(): ExchangeTask {
     check(step.stepCase == ExchangeWorkflow.Step.StepCase.INTERSECT_AND_VALIDATE_STEP)
 
     val maxSize = step.intersectAndValidateStep.maxSize
