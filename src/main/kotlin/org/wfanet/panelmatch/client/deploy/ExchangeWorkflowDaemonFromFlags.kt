@@ -90,7 +90,7 @@ abstract class ExchangeWorkflowDaemonFromFlags : ExchangeWorkflowDaemon() {
   }
 
   override val exchangeTaskMapper: ExchangeTaskMapper by lazy {
-    makeProductionExchangeTaskMapper(
+    ProductionExchangeTaskMapper(
       inputTaskThrottler = throttler,
       privateStorageSelector = privateStorageSelector,
       sharedStorageSelector = sharedStorageSelector,

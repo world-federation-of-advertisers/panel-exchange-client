@@ -15,9 +15,7 @@
 package org.wfanet.panelmatch.client.exchangetasks
 
 import com.google.common.truth.Truth.assertThat
-import com.google.protobuf.ByteString
 import java.time.LocalDate
-import java.util.concurrent.ConcurrentHashMap
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -26,42 +24,15 @@ import org.wfanet.measurement.api.v2alpha.ExchangeStepAttemptKey
 import org.wfanet.measurement.api.v2alpha.ExchangeWorkflowKt.StepKt.encryptStep
 import org.wfanet.measurement.api.v2alpha.ExchangeWorkflowKt.step
 import org.wfanet.measurement.api.v2alpha.exchangeWorkflow
-import org.wfanet.measurement.storage.StorageClient
-import org.wfanet.measurement.storage.testing.InMemoryStorageClient
 import org.wfanet.panelmatch.client.common.ExchangeContext
+import org.wfanet.panelmatch.client.exchangetasks.testing.FakeExchangeTask
+import org.wfanet.panelmatch.client.exchangetasks.testing.FakeExchangeTaskMapper
 import org.wfanet.panelmatch.client.launcher.testing.inputStep
-import org.wfanet.panelmatch.client.privatemembership.JniQueryPreparer
-import org.wfanet.panelmatch.client.privatemembership.testing.PlaintextPrivateMembershipCryptor
-import org.wfanet.panelmatch.client.privatemembership.testing.PlaintextQueryEvaluator
-import org.wfanet.panelmatch.client.privatemembership.testing.PlaintextQueryResultsDecryptor
 import org.wfanet.panelmatch.client.storage.StorageDetails
 import org.wfanet.panelmatch.client.storage.StorageDetailsKt.gcsStorage
 import org.wfanet.panelmatch.client.storage.storageDetails
-import org.wfanet.panelmatch.client.storage.testing.makeTestPrivateStorageSelector
-import org.wfanet.panelmatch.client.storage.testing.makeTestSharedStorageSelector
-import org.wfanet.panelmatch.common.certificates.testing.TestCertificateManager
-import org.wfanet.panelmatch.common.crypto.testing.FakeDeterministicCommutativeCipher
-import org.wfanet.panelmatch.common.secrets.testing.TestSecretMap
-import org.wfanet.panelmatch.common.testing.AlwaysReadyThrottler
+import org.wfanet.panelmatch.client.storage.testing.TestPrivateStorageSelector
 import org.wfanet.panelmatch.common.testing.runBlockingTest
-
-// TODO: move elsewhere to enable reuse.
-class TestPrivateStorageSelector {
-  private val blobs = ConcurrentHashMap<String, StorageClient.Blob>()
-
-  val storageClient = InMemoryStorageClient(blobs)
-  val storageDetails = TestSecretMap()
-  val selector = makeTestPrivateStorageSelector(storageDetails, storageClient)
-}
-
-// TODO: move elsewhere to enable reuse.
-class TestSharedStorageSelector {
-  private val blobs = ConcurrentHashMap<String, StorageClient.Blob>()
-
-  val storageClient = InMemoryStorageClient(blobs)
-  val storageDetails = TestSecretMap()
-  val selector = makeTestSharedStorageSelector(storageDetails, storageClient)
-}
 
 private val WORKFLOW = exchangeWorkflow {
   steps += inputStep("a" to "b")
@@ -76,37 +47,8 @@ private val ATTEMPT_KEY =
 
 @RunWith(JUnit4::class)
 class ExchangeTaskMapperTest {
-  private val testSharedStorageSelector = TestSharedStorageSelector()
   private val testPrivateStorageSelector = TestPrivateStorageSelector()
-  private val exchangeTaskMapper =
-    object :
-      ExchangeTaskMapper(
-        basicTasks = BasicTasksImpl(),
-        commutativeEncryptionTasks =
-          JniCommutativeEncryptionTasks(FakeDeterministicCommutativeCipher),
-        mapReduceTasks =
-          ApacheBeamTasks(privateStorageSelector = testPrivateStorageSelector.selector),
-        generateKeysTasks = GenerateKeysTasksImpl(),
-        privateStorageTasks =
-          PrivateStorageTasksImpl(testPrivateStorageSelector.selector, AlwaysReadyThrottler),
-        sharedStorageTasks =
-          SharedStorageTasksImpl(
-            testPrivateStorageSelector.selector,
-            testSharedStorageSelector.selector
-          )
-      ) {
-      override val deterministicCommutativeCryptor = FakeDeterministicCommutativeCipher
-      override val getPrivateMembershipCryptor = { _: ByteString ->
-        PlaintextPrivateMembershipCryptor()
-      }
-      override val queryResultsDecryptor = PlaintextQueryResultsDecryptor()
-      override val queryPreparer = JniQueryPreparer()
-      override val privateStorageSelector = testPrivateStorageSelector.selector
-      override val sharedStorageSelector = testSharedStorageSelector.selector
-      override val certificateManager = TestCertificateManager
-      override val inputTaskThrottler = AlwaysReadyThrottler
-      override val getQueryResultsEvaluator = { _: ByteString -> PlaintextQueryEvaluator }
-    }
+  private val exchangeTaskMapper = FakeExchangeTaskMapper()
 
   private val testStorageDetails = storageDetails {
     gcs = gcsStorage {}
@@ -123,13 +65,15 @@ class ExchangeTaskMapperTest {
   fun `map input task`() = runBlockingTest {
     val context = ExchangeContext(ATTEMPT_KEY, DATE, WORKFLOW, WORKFLOW.getSteps(0))
     val exchangeTask = exchangeTaskMapper.getExchangeTaskForStep(context)
-    assertThat(exchangeTask).isInstanceOf(InputTask::class.java)
+    assertThat(exchangeTask).isInstanceOf(FakeExchangeTask::class.java)
+    assertThat((exchangeTask as FakeExchangeTask).taskName).isEqualTo("input")
   }
 
   @Test
   fun `map crypto task`() = runBlockingTest {
     val context = ExchangeContext(ATTEMPT_KEY, DATE, WORKFLOW, WORKFLOW.getSteps(1))
     val exchangeTask = exchangeTaskMapper.getExchangeTaskForStep(context)
-    assertThat(exchangeTask).isInstanceOf(CryptorExchangeTask::class.java)
+    assertThat(exchangeTask).isInstanceOf(FakeExchangeTask::class.java)
+    assertThat((exchangeTask as FakeExchangeTask).taskName).isEqualTo("encrypt")
   }
 }
