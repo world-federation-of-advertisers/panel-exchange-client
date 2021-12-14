@@ -24,7 +24,8 @@ class FakeExchangeTaskMapper : ExchangeTaskMapper() {
 
   override suspend fun ExchangeContext.reEncrypt() = FakeExchangeTask("re-encrypt")
 
-  override suspend fun ExchangeContext.generateEncryptionKey() = FakeExchangeTask("generate-encryption-key")
+  override suspend fun ExchangeContext.generateEncryptionKey() =
+    FakeExchangeTask("generate-encryption-key")
 
   override suspend fun ExchangeContext.buildPrivateMembershipQueries() =
     FakeExchangeTask("build-private-membership-queries")
@@ -35,7 +36,8 @@ class FakeExchangeTaskMapper : ExchangeTaskMapper() {
   override suspend fun ExchangeContext.decryptMembershipResults() =
     FakeExchangeTask("decrypt-membership-results")
 
-  override suspend fun ExchangeContext.generateSymmetricKey() = FakeExchangeTask("generate-symmetric-key")
+  override suspend fun ExchangeContext.generateSymmetricKey() =
+    FakeExchangeTask("generate-symmetric-key")
 
   override suspend fun ExchangeContext.generateSerializedRlweKeys() =
     FakeExchangeTask("generate-serialized-rlwe-keys")
@@ -43,9 +45,11 @@ class FakeExchangeTaskMapper : ExchangeTaskMapper() {
   override suspend fun ExchangeContext.generateExchangeCertificate() =
     FakeExchangeTask("generate-exchange-certificate")
 
-  override suspend fun ExchangeContext.generateLookupKeys() = FakeExchangeTask("generate-lookup-keys")
+  override suspend fun ExchangeContext.generateLookupKeys() =
+    FakeExchangeTask("generate-lookup-keys")
 
-  override suspend fun ExchangeContext.intersectAndValidate() = FakeExchangeTask("intersect-and-validate")
+  override suspend fun ExchangeContext.intersectAndValidate() =
+    FakeExchangeTask("intersect-and-validate")
 
   override suspend fun ExchangeContext.input() = FakeExchangeTask("input")
 
