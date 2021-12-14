@@ -27,7 +27,7 @@ object FakeDeterministicCommutativeCipher : DeterministicCommutativeCipher {
   val INVALID_KEY = "invalid key".toByteStringUtf8()
 
   override fun generateKey(): ByteString {
-    return "$FAKE_KEY_PREFIX.${UUID.randomUUID().toString()}".toByteStringUtf8()
+    return "$FAKE_KEY_PREFIX.${UUID.randomUUID()}".toByteStringUtf8()
   }
 
   override fun encrypt(privateKey: ByteString, plaintexts: List<ByteString>): List<ByteString> {

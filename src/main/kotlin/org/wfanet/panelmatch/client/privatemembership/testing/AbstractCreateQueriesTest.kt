@@ -229,22 +229,23 @@ abstract class AbstractCreateQueriesTest : BeamTestBase() {
       key: QueryId,
       queryIdAndIdsIterable: Iterable<QueryIdAndId>,
       shardedQueries: Iterable<ShardedQuery> ->
-      if (queryIdAndIdsIterable.count() > 0) {
-        val queriesList = shardedQueries.toList()
-        val queryIdAndIdsList = queryIdAndIdsIterable.toList()
-
-        val query =
-          requireNotNull(queriesList.singleOrNull()) { "${queriesList.size} queries for $key" }
-
-        val queryIdAndId =
-          requireNotNull(queryIdAndIdsList.singleOrNull()) {
-            "${queryIdAndIdsList.size} of queryIdAndIds for $key"
-          }
-
-        val panelistQuery =
-          PanelistQuery(query.shardId, query.bucketId, queryIdAndId.joinKeyIdentifier)
-        yield(kvOf(key, panelistQuery))
+      val queryIdAndIdsList = queryIdAndIdsIterable.toList()
+      if (queryIdAndIdsList.isEmpty()) {
+        return@join
       }
+      val queriesList = shardedQueries.toList()
+
+      val query =
+        requireNotNull(queriesList.singleOrNull()) { "${queriesList.size} queries for $key" }
+
+      val queryIdAndId =
+        requireNotNull(queryIdAndIdsList.singleOrNull()) {
+          "${queryIdAndIdsList.size} of queryIdAndIds for $key"
+        }
+
+      val panelistQuery =
+        PanelistQuery(query.shardId, query.bucketId, queryIdAndId.joinKeyIdentifier)
+      yield(kvOf(key, panelistQuery))
     }
   }
 }

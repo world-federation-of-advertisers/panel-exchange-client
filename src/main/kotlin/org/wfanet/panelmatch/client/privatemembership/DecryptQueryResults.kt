@@ -102,6 +102,8 @@ private class DecryptQueryResults(
 ) : PTransform<PCollectionTuple, PCollection<KeyedDecryptedEventDataSet>>() {
 
   override fun expand(input: PCollectionTuple): PCollection<KeyedDecryptedEventDataSet> {
+    // TODO: This function has an unncessary join. Instead, the two join keys pcollections should
+    // be joined before turning them into pCollections.
     val plaintextListCoder =
       KvCoder.of(
         ProtoCoder.of(JoinKeyIdentifier::class.java),
@@ -112,7 +114,7 @@ private class DecryptQueryResults(
     val decryptedJoinKeyAndIds = input[decryptedJoinKeyAndIdsTag]
     val plaintextJoinKeyAndIds = input[plaintextJoinKeyAndIdsTag]
 
-    val keyedQueryIdAndIds = queryIdAndIds.keyBy { it.joinKeyIdentifier }
+    val keyedQueryIdAndIds = queryIdAndIds.keyBy("Key QueryIdAndIds by Id") { it.joinKeyIdentifier }
     val keyedDecryptedJoinKeyAndIds = decryptedJoinKeyAndIds.keyBy { it.joinKeyIdentifier }
     val decryptedJoinKeyKeyedByQueryId =
       keyedQueryIdAndIds.strictOneToOneJoin(keyedDecryptedJoinKeyAndIds).map {
@@ -218,9 +220,9 @@ private class DecryptResultsFn(private val queryResultsDecryptor: QueryResultsDe
 
     decryptionTimes.update(time.toNanos())
     outputCounts.update(decryptedResults.eventDataSetsCount.toLong())
-
+    val key = context.element().key
     for (eventDataSet in decryptedResults.eventDataSetsList) {
-      val result = kvOf(context.element().key, eventDataSet.decryptedEventDataList)
+      val result = kvOf(key, eventDataSet.decryptedEventDataList)
       context.output(result)
     }
   }
