@@ -26,7 +26,7 @@ import org.wfanet.measurement.api.v2alpha.ExchangeWorkflowKt.step
 import org.wfanet.measurement.api.v2alpha.exchangeWorkflow
 import org.wfanet.panelmatch.client.common.ExchangeContext
 import org.wfanet.panelmatch.client.exchangetasks.testing.FakeExchangeTask
-import org.wfanet.panelmatch.client.exchangetasks.testing.makeFakeExchangeTaskMapper
+import org.wfanet.panelmatch.client.exchangetasks.testing.FakeExchangeTaskMapper
 import org.wfanet.panelmatch.client.launcher.testing.inputStep
 import org.wfanet.panelmatch.client.storage.StorageDetails
 import org.wfanet.panelmatch.client.storage.StorageDetailsKt.gcsStorage
@@ -48,7 +48,7 @@ private val ATTEMPT_KEY =
 @RunWith(JUnit4::class)
 class ExchangeTaskMapperTest {
   private val testPrivateStorageSelector = TestPrivateStorageSelector()
-  private val exchangeTaskMapper = makeFakeExchangeTaskMapper()
+  private val exchangeTaskMapper = FakeExchangeTaskMapper()
 
   private val testStorageDetails = storageDetails {
     gcs = gcsStorage {}

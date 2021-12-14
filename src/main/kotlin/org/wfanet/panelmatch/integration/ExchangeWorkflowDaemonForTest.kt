@@ -93,7 +93,7 @@ class ExchangeWorkflowDaemonForTest(
   override val throttler: Throttler = MinimumIntervalThrottler(clock, pollingInterval)
 
   override val exchangeTaskMapper: ExchangeTaskMapper by lazy {
-    makeInProcessExchangeTaskMapper(
+    InProcessExchangeTaskMapper(
       privateStorageSelector = privateStorageSelector,
       sharedStorageSelector = sharedStorageSelector,
       certificateManager = certificateManager,
