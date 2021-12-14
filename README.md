@@ -8,7 +8,7 @@ Panel exchange client
 Join keys are previously agreed upon fields used to identify panelist data. 
 There are a few kinds of join keys:
 
-1. Hashed Join Keys
+1. Plaintext Join Keys
 
    Keys that have been hashed previous to input to the system.
 
@@ -22,5 +22,6 @@ There are a few kinds of join keys:
 
 4. Lookup Keys
 
-   Double blinded keys that have had the original layer of commutative encryption removed.
-   These keys can be used to look up panelist data from a system.
+   Double blinded keys that have had the original layer of commutative encryption removed and then
+   hashed using an identifier pepper.
+   Lookup keys can be used to look up panelist data from a system.
