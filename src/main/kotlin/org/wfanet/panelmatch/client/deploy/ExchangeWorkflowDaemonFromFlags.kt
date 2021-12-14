@@ -17,6 +17,7 @@ package org.wfanet.panelmatch.client.deploy
 import java.time.Clock
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import org.apache.beam.sdk.options.PipelineOptions
 import org.wfanet.measurement.api.v2alpha.CertificatesGrpcKt
 import org.wfanet.measurement.api.v2alpha.ExchangeStepAttemptsGrpcKt.ExchangeStepAttemptsCoroutineStub
 import org.wfanet.measurement.api.v2alpha.ExchangeStepsGrpcKt.ExchangeStepsCoroutineStub
@@ -31,20 +32,30 @@ import org.wfanet.panelmatch.client.launcher.ApiClient
 import org.wfanet.panelmatch.client.launcher.GrpcApiClient
 import org.wfanet.panelmatch.common.Timeout
 import org.wfanet.panelmatch.common.asTimeout
+import org.wfanet.panelmatch.common.certificates.CertificateAuthority
 import org.wfanet.panelmatch.common.certificates.V2AlphaCertificateManager
-import picocli.CommandLine
+import org.wfanet.panelmatch.common.secrets.MutableSecretMap
+import picocli.CommandLine.Mixin
 
 /** Executes ExchangeWorkflows. */
 abstract class ExchangeWorkflowDaemonFromFlags : ExchangeWorkflowDaemon() {
-  @CommandLine.Mixin
+  @Mixin
   protected lateinit var flags: ExchangeWorkflowFlags
     private set
 
-  @CommandLine.Mixin
-  lateinit var blobSizeFlags: BlobSizeFlags
-    private set
-
   override val clock: Clock = Clock.systemUTC()
+
+  /**
+   * Maps Exchange paths (i.e. recurring_exchanges/{recurring_exchange_id}/exchanges/{date}) to
+   * serialized SigningKeys protos.
+   */
+  protected abstract val privateKeys: MutableSecretMap
+
+  /** Apache Beam options. */
+  protected abstract val pipelineOptions: PipelineOptions
+
+  /** [CertificateAuthority] for use in [V2AlphaCertificateManager]. */
+  protected abstract val certificateAuthority: CertificateAuthority
 
   override val certificateManager: V2AlphaCertificateManager by lazy {
     val clientCerts =
@@ -82,7 +93,8 @@ abstract class ExchangeWorkflowDaemonFromFlags : ExchangeWorkflowDaemon() {
       certificateManager = certificateManager,
       dataProviderMaxByteSize = flags.dataProviderMaxByteSize.toLong(),
       dataProviderPreprocessedEventsFileCount =
-        flags.dataProviderPreprocessedEventsFileCount.toInt()
+        flags.dataProviderPreprocessedEventsFileCount.toInt(),
+      pipelineOptions = pipelineOptions
     )
   }
 

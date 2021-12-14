@@ -20,7 +20,8 @@ import kotlin.test.assertFailsWith
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
-import org.wfanet.panelmatch.client.eventpreprocessing.testing.EventPreprocessorTest
+import org.wfanet.panelmatch.client.eventpreprocessing.testing.AbstractEventPreprocessorTest
+import org.wfanet.panelmatch.client.eventpreprocessing.preprocessEventsRequest
 import org.wfanet.panelmatch.common.JniException
 import org.wfanet.panelmatch.common.compression.CompressionParametersKt.noCompression
 import org.wfanet.panelmatch.common.compression.compressionParameters
@@ -38,7 +39,7 @@ private val REQUEST = preprocessEventsRequest {
 }
 
 @RunWith(JUnit4::class)
-class JniEventPreprocessorTest : EventPreprocessorTest() {
+class JniEventPreprocessorTest : AbstractEventPreprocessorTest() {
   override val eventPreprocessor: EventPreprocessor = JniEventPreprocessor()
 
   @Test

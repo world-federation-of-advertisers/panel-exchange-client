@@ -15,23 +15,27 @@
 package org.wfanet.panelmatch.client.launcher
 
 import com.google.protobuf.ByteString
-import kotlinx.coroutines.CoroutineName
+import java.util.logging.Level
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
 import org.wfanet.measurement.api.v2alpha.ExchangeStepAttempt
 import org.wfanet.measurement.api.v2alpha.ExchangeStepAttemptKey
 import org.wfanet.measurement.api.v2alpha.ExchangeWorkflow.Step
 import org.wfanet.measurement.storage.StorageClient
+import org.wfanet.measurement.storage.StorageClient.Blob
 import org.wfanet.panelmatch.client.common.ExchangeContext
+import org.wfanet.panelmatch.client.exchangetasks.CustomIOExchangeTask
 import org.wfanet.panelmatch.client.exchangetasks.ExchangeTask
 import org.wfanet.panelmatch.client.exchangetasks.ExchangeTaskMapper
 import org.wfanet.panelmatch.client.launcher.ExchangeStepValidator.ValidatedExchangeStep
+import org.wfanet.panelmatch.client.logger.TaskLog
 import org.wfanet.panelmatch.client.logger.addToTaskLog
 import org.wfanet.panelmatch.client.logger.getAndClearTaskLog
-import org.wfanet.panelmatch.client.logger.loggerFor
 import org.wfanet.panelmatch.client.storage.PrivateStorageSelector
 import org.wfanet.panelmatch.common.Timeout
+import org.wfanet.panelmatch.common.loggerFor
 import org.wfanet.panelmatch.common.storage.createBlob
+import org.wfanet.panelmatch.common.storage.createOrReplaceBlob
 
 private const val DONE_TASKS_PATH: String = "done-tasks"
 
@@ -47,26 +51,25 @@ class ExchangeTaskExecutor(
 ) : ExchangeStepExecutor {
 
   override suspend fun execute(step: ValidatedExchangeStep, attemptKey: ExchangeStepAttemptKey) {
-    withContext(CoroutineName(attemptKey.exchangeStepAttemptId)) {
+    val name = "${step.step.stepId}@${attemptKey.toName()}"
+    withContext(TaskLog(name)) {
       val context = ExchangeContext(attemptKey, step.date, step.workflow, step.step)
       try {
         context.tryExecute()
       } catch (e: Exception) {
-        logger.addToTaskLog(e.toString())
+        logger.addToTaskLog(e, Level.SEVERE)
         markAsFinished(attemptKey, ExchangeStepAttempt.State.FAILED)
         throw e
       }
     }
   }
 
-  private fun readInputs(
-    step: Step,
-    privateStorage: StorageClient
-  ): Map<String, StorageClient.Blob> {
-    return step
-      .inputLabelsMap
-      .mapNotNull { (k, v) -> privateStorage.getBlob(v)?.let { k to it } }
-      .toMap()
+  private fun readInputs(step: Step, privateStorage: StorageClient): Map<String, Blob> {
+    return step.inputLabelsMap.mapValues { (label, blobKey) ->
+      requireNotNull(privateStorage.getBlob(blobKey)) {
+        "Missing blob key '$blobKey' for input label '$label'"
+      }
+    }
   }
 
   private suspend fun writeOutputs(
@@ -75,9 +78,11 @@ class ExchangeTaskExecutor(
     privateStorage: StorageClient
   ) {
     for ((genericLabel, flow) in taskOutput) {
-      val blobKey = step.outputLabelsMap.getValue(genericLabel)
-      privateStorage.getBlob(blobKey)?.delete()
-      privateStorage.createBlob(blobKey, flow)
+      val blobKey =
+        requireNotNull(step.outputLabelsMap[genericLabel]) {
+          "Missing $genericLabel in outputLabels for step: $step"
+        }
+      privateStorage.createOrReplaceBlob(blobKey, flow)
     }
   }
 
@@ -85,6 +90,7 @@ class ExchangeTaskExecutor(
     attemptKey: ExchangeStepAttemptKey,
     state: ExchangeStepAttempt.State
   ) {
+    logger.addToTaskLog("Marking attempt state: $state")
     apiClient.finishExchangeStepAttempt(attemptKey, state, getAndClearTaskLog())
   }
 
@@ -104,7 +110,11 @@ class ExchangeTaskExecutor(
   private suspend fun ExchangeContext.runStep(privateStorage: StorageClient) {
     timeout.runWithTimeout {
       val exchangeTask: ExchangeTask = exchangeTaskMapper.getExchangeTaskForStep(this@runStep)
-      val taskInput: Map<String, StorageClient.Blob> = readInputs(step, privateStorage)
+      val taskInput: Map<String, Blob> =
+        when (exchangeTask) {
+          is CustomIOExchangeTask -> emptyMap()
+          else -> readInputs(step, privateStorage)
+        }
       val taskOutput: Map<String, Flow<ByteString>> = exchangeTask.execute(taskInput)
       writeOutputs(step, taskOutput, privateStorage)
     }

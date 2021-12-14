@@ -25,9 +25,10 @@ import org.wfanet.panelmatch.client.eventpreprocessing.DeterministicCommutativeC
 import org.wfanet.panelmatch.client.eventpreprocessing.HkdfPepperProvider
 import org.wfanet.panelmatch.client.eventpreprocessing.IdentifierHashPepperProvider
 import org.wfanet.panelmatch.client.eventpreprocessing.PreprocessEvents
+import org.wfanet.panelmatch.client.eventpreprocessing.EventPreprocessor
 import org.wfanet.panelmatch.client.eventpreprocessing.unprocessedEvent
+import org.wfanet.panelmatch.client.eventpreprocessing.UnprocessedEvent
 import org.wfanet.panelmatch.client.privatemembership.DatabaseEntry
-import org.wfanet.panelmatch.client.storage.StorageFactory
 import org.wfanet.panelmatch.common.ShardedFileName
 import org.wfanet.panelmatch.common.beam.map
 import org.wfanet.panelmatch.common.beam.toSingletonView
@@ -35,32 +36,24 @@ import org.wfanet.panelmatch.common.compression.CompressionParameters
 import org.wfanet.panelmatch.common.storage.toByteString
 import org.wfanet.panelmatch.common.storage.toStringUtf8
 
-class PreprocessEventsTask(
-  override val storageFactory: StorageFactory,
-  private val deterministicCommutativeCipherKeyProvider:
+suspend fun ApacheBeamContext.preprocessEventsTask(
+  eventPreprocessor: EventPreprocessor,
+  deterministicCommutativeCipherKeyProvider:
     (ByteString) -> DeterministicCommutativeCipherKeyProvider,
-  private val hkdfPepperProvider: (ByteString) -> HkdfPepperProvider,
-  private val identifierPepperProvider: (ByteString) -> IdentifierHashPepperProvider,
-  private val maxByteSize: Long,
-  private val outputs: Outputs
-) : ApacheBeamTask() {
+  hkdfPepperProvider: (ByteString) -> HkdfPepperProvider,
+  identifierPepperProvider: (ByteString) -> IdentifierHashPepperProvider,
+  maxByteSize: Long
+) {
 
-  data class Outputs(val preprocessedEventsFileName: String, val preprocessedEventsFileCount: Int)
+    val unprocessedEventData: PCollection<UnprocessedEvent> =
+      readShardedPCollection("unprocessed-event-data", unprocessedEvent {})
 
-  override suspend fun execute(
-    input: Map<String, StorageClient.Blob>
-  ): Map<String, Flow<ByteString>> {
-    val pipeline = Pipeline.create()
-
-    val unprocessedEventManifest = input.getValue("unprocessed-event-data")
-    val unprocessedEventData = readFromManifest(unprocessedEventManifest, unprocessedEvent {})
-
-    val hkdfPepper = input.getValue("hkdf-pepper").toByteString()
-    val identifierPepper = input.getValue("identifier-pepper").toByteString()
-    val encryptionKey = input.getValue("encryption-key").toByteString()
+    val hkdfPepper = readBlob("hkdf-pepper")
+    val identifierPepper = readBlob("identifier-pepper")
+    val encryptionKey = readBlob("encryption-key")
 
     val compressionParameters =
-      readSingleBlobAsPCollection(input.getValue("compression-parameters").toStringUtf8())
+      readBlobAsPCollection("compression-parameters")
         .map("Parse as CompressionParameters") { CompressionParameters.parseFrom(it) }
         .toSingletonView()
 
@@ -71,18 +64,10 @@ class PreprocessEventsTask(
           identifierPepperProvider(identifierPepper),
           hkdfPepperProvider(hkdfPepper),
           deterministicCommutativeCipherKeyProvider(encryptionKey),
-          compressionParameters
+          compressionParameters,
+          eventPreprocessor,
         )
       )
 
-    val preprocessedEventsFileSpec =
-      ShardedFileName(outputs.preprocessedEventsFileName, outputs.preprocessedEventsFileCount)
-    preprocessedEvents.write(preprocessedEventsFileSpec)
-
-    pipeline.run()
-
-    return mapOf(
-      "preprocessed-event-data" to flowOf(preprocessedEventsFileSpec.spec.toByteStringUtf8())
-    )
-  }
+    preprocessedEvents.write("preprocessed-event-data")
 }

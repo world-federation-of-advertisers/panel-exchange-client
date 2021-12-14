@@ -83,6 +83,9 @@ absl::StatusOr<PreprocessEventsResponse> PreprocessEvents(
                                      hkdf_pepper, &fingerprinter, &aes_hkdf);
   PreprocessEventsResponse processed;
   for (const UnprocessedEvent& u : request.unprocessed_events()) {
+    if (u.id().empty()) {
+      return absl::InvalidArgumentError("UnprocessedEvent.id is empty");
+    }
     ASSIGN_OR_RETURN(std::string compressed_data,
                      compressor->Compress(u.data()));
     ASSIGN_OR_RETURN(ProcessedData data,

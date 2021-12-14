@@ -19,7 +19,10 @@ import org.wfanet.measurement.api.v2alpha.ExchangeWorkflow.StorageType.AMAZON_S3
 import org.wfanet.measurement.api.v2alpha.ExchangeWorkflow.StorageType.GOOGLE_CLOUD_STORAGE
 import org.wfanet.panelmatch.client.common.ExchangeContext
 import org.wfanet.panelmatch.client.storage.StorageDetails.PlatformCase
+import org.wfanet.panelmatch.common.ExchangeDateKey
 import org.wfanet.panelmatch.common.certificates.CertificateManager
+
+private val EXPLICITLY_SUPPORTED_STORAGE_TYPES = setOf(PlatformCase.AWS, PlatformCase.GCS)
 
 /**
  * Builds [VerifiedStorageClient]s for shared blobs within a particular Exchange.
@@ -31,7 +34,7 @@ import org.wfanet.panelmatch.common.certificates.CertificateManager
 class SharedStorageSelector(
   private val certificateManager: CertificateManager,
   private val sharedStorageFactories:
-    Map<PlatformCase, ExchangeContext.(StorageDetails) -> StorageFactory>,
+    Map<PlatformCase, (StorageDetails, ExchangeDateKey) -> StorageFactory>,
   private val storageDetailsProvider: StorageDetailsProvider
 ) {
 
@@ -56,7 +59,7 @@ class SharedStorageSelector(
       requireNotNull(sharedStorageFactories[platform]) {
         "Missing private StorageFactory for $platform"
       }
-    return context.buildStorageFactory(storageDetails)
+    return buildStorageFactory(storageDetails, context.exchangeDateKey)
   }
 
   private fun validateStorageType(storageType: StorageType, platform: PlatformCase) {
@@ -64,7 +67,10 @@ class SharedStorageSelector(
       GOOGLE_CLOUD_STORAGE -> require(platform == PlatformCase.GCS)
       AMAZON_S3 -> require(platform == PlatformCase.AWS)
       StorageType.UNKNOWN_STORAGE_CLIENT, StorageType.UNRECOGNIZED ->
-        throw IllegalArgumentException("$storageType unsupported")
+        require(platform !in EXPLICITLY_SUPPORTED_STORAGE_TYPES)
+    // TODO(world-federation-of-advertisers/cross-media-measurement-api#73): throw
+    //   IllegalArgumentException("$storageType unsupported")
+    //   once StorageType.FILE and StorageType.CUSTOM are added.
     }
   }
 }

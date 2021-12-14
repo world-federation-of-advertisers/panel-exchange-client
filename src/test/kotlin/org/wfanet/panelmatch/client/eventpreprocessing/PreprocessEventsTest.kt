@@ -55,11 +55,12 @@ class PreprocessEventsTest : BeamTestBase() {
     val encryptedEvents =
       events.apply(
         PreprocessEvents(
-          maxByteSize = MAX_BYTE_SIZE,
-          identifierHashPepperProvider = IDENTIFIER_HASH_PEPPER_PROVIDER,
-          hkdfPepperProvider = HKDF_PEPPER_PROVIDER,
-          cryptoKeyProvider = CRYPTO_KEY_PROVIDER,
-          compressionParametersView = compressionParametersView
+          MAX_BYTE_SIZE,
+          IDENTIFIER_HASH_PEPPER_PROVIDER,
+          HKDF_PEPPER_PROVIDER,
+          CRYPTO_KEY_PROVIDER,
+          pcollectionViewOf("Create Compression Parameters", COMPRESSION_PARAMETERS),
+          JniEventPreprocessor()
         )
       )
 

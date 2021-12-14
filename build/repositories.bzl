@@ -24,6 +24,20 @@ def panel_exchange_client_repositories():
 
     com_google_riegeli_repo()
 
+    # TODO: remove this dependency once downstream dependencies are fixed.
+    http_archive(
+        name = "io_bazel_rules_go",
+        sha256 = "2b1641428dff9018f9e85c0384f03ec6c10660d935b750e3fa1492a281a53b0f",
+        url = "https://github.com/bazelbuild/rules_go/releases/download/v0.29.0/rules_go-v0.29.0.zip",
+    )
+
+    # TODO: remove this dependency once downstream dependencies are fixed.
+    http_archive(
+        name = "bazel_gazelle",
+        sha256 = "de69a09dc70417580aabf20a28619bb3ef60d038470c7cf8442fafcf627c21cb",
+        url = "https://github.com/bazelbuild/bazel-gazelle/releases/download/v0.24.0/bazel-gazelle-v0.24.0.tar.gz",
+    )
+
     http_archive(
         name = "wfa_common_cpp",
         sha256 = "e8efc0c9f5950aff13a59f21f40ccc31c26fe40c800743f824f92df3a05588b2",
@@ -33,24 +47,24 @@ def panel_exchange_client_repositories():
 
     http_archive(
         name = "wfa_common_jvm",
-        sha256 = "12819b095363d8294bd01c0e9c2cf847b21f895e96923b8a8c07836c8cd2c042",
-        strip_prefix = "common-jvm-0.20.1",
-        url = "https://github.com/world-federation-of-advertisers/common-jvm/archive/v0.20.1.tar.gz",
+        sha256 = "051c101dac4ad2ad48cfe3e7fd7317cdbbdc5d53777083385df204aa360b6012",
+        strip_prefix = "common-jvm-0.22.0",
+        url = "https://github.com/world-federation-of-advertisers/common-jvm/archive/v0.22.0.tar.gz",
     )
 
     # TODO: remove dependencies on wfa_measurement_system
     http_archive(
         name = "wfa_measurement_system",
-        sha256 = "ff2a1e5d53b2ecba931dde11997894d5010a634877ec0c1d5e4d26902b08ecd3",
-        strip_prefix = "cross-media-measurement-f10ea76e72a3dfcb708d5e3849ae17f649fc143e",
-        url = "https://github.com/world-federation-of-advertisers/cross-media-measurement/archive/f10ea76e72a3dfcb708d5e3849ae17f649fc143e.tar.gz",
+        sha256 = "46345624a7095ed0af2c194e0ea61ba53832484bc38e963081b72b1c123eda39",
+        strip_prefix = "cross-media-measurement-b725633b16081a11294cbb63127081041173d0a9",
+        url = "https://github.com/world-federation-of-advertisers/cross-media-measurement/archive/b725633b16081a11294cbb63127081041173d0a9.tar.gz",
     )
 
     http_archive(
         name = "wfa_measurement_proto",
-        sha256 = "a9d0f0421fa6461f9c756fcfcbb8ec7a9f725806a85dde2ba2a5fdf8f1472b84",
-        strip_prefix = "cross-media-measurement-api-0.11.0",
-        url = "https://github.com/world-federation-of-advertisers/cross-media-measurement-api/archive/v0.11.0.tar.gz",
+        sha256 = "611bbc8c653868c1dbc973a520a192d8ac1678375167181354fc9b1bc8e3a3ea",
+        strip_prefix = "cross-media-measurement-api-0.14.0",
+        url = "https://github.com/world-federation-of-advertisers/cross-media-measurement-api/archive/v0.14.0.tar.gz",
     )
 
     http_archive(
@@ -62,9 +76,9 @@ def panel_exchange_client_repositories():
 
     http_archive(
         name = "wfa_consent_signaling_client",
-        sha256 = "ff82af7bc1c659d726e64c57f3ff6a16f09b4d0ee231a70ea744f8d213412998",
-        strip_prefix = "consent-signaling-client-0.9.0",
-        url = "https://github.com/world-federation-of-advertisers/consent-signaling-client/archive/v0.9.0.tar.gz",
+        sha256 = "6f92694715ec6d03a9cb5288db2ad167cc69d1a9331ca18fd7b7cf584e34b12c",
+        strip_prefix = "consent-signaling-client-0.11.0",
+        url = "https://github.com/world-federation-of-advertisers/consent-signaling-client/archive/v0.11.0.tar.gz",
     )
 
     http_archive(

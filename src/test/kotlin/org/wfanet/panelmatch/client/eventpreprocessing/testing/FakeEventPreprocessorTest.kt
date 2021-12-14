@@ -12,17 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package org.wfanet.panelmatch.client.storage
+package org.wfanet.panelmatch.client.eventpreprocessing.testing
 
-import com.google.cloud.storage.contrib.nio.testing.LocalStorageHelper
-import org.wfanet.measurement.gcloud.gcs.GcsStorageClient
-import org.wfanet.panelmatch.client.storage.testing.VerifiedStorageClientTest
-import org.wfanet.panelmatch.client.storage.testing.makeTestVerifiedStorageClient
+import org.junit.runner.RunWith
+import org.junit.runners.JUnit4
+import org.wfanet.panelmatch.client.eventpreprocessing.EventPreprocessor
 
-private const val BUCKET = "some-test-bucket"
-
-class GcsVerifiedStorageClientTest : VerifiedStorageClientTest() {
-  override val storage by lazy {
-    makeTestVerifiedStorageClient(GcsStorageClient(LocalStorageHelper.getOptions().service, BUCKET))
-  }
+@RunWith(JUnit4::class)
+class FakeEventPreprocessorTest : AbstractEventPreprocessorTest() {
+  override val eventPreprocessor: EventPreprocessor = FakeEventPreprocessor()
 }

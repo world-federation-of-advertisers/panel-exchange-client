@@ -12,18 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package org.wfanet.panelmatch.client.eventpreprocessing
+package org.wfanet.panelmatch.client.storage.gcloud
 
-import org.apache.beam.sdk.transforms.SerializableFunction
+import com.google.cloud.storage.contrib.nio.testing.LocalStorageHelper
+import org.wfanet.measurement.gcloud.gcs.GcsStorageClient
+import org.wfanet.panelmatch.client.storage.testing.VerifiedStorageClientTest
+import org.wfanet.panelmatch.client.storage.testing.makeTestVerifiedStorageClient
 
-/**
- * Takes in a PreprocessEventsRequest, preprocesses it using JniEventPreprocessor and returns a
- * PreprocessEventsResponse
- */
-class JniEventPreprocessorFn :
-  SerializableFunction<PreprocessEventsRequest, PreprocessEventsResponse> {
-  override fun apply(request: PreprocessEventsRequest): PreprocessEventsResponse {
-    val eventPreprocessor: EventPreprocessor = JniEventPreprocessor()
-    return eventPreprocessor.preprocess(request)
+private const val BUCKET = "some-test-bucket"
+
+class GcsVerifiedStorageClientTest : VerifiedStorageClientTest() {
+  override val storage by lazy {
+    makeTestVerifiedStorageClient(GcsStorageClient(LocalStorageHelper.getOptions().service, BUCKET))
   }
 }

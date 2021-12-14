@@ -14,6 +14,8 @@
 
 package org.wfanet.panelmatch.client.deploy
 
+import org.apache.beam.sdk.Pipeline
+import org.apache.beam.sdk.options.PipelineOptions
 import org.wfanet.measurement.common.throttler.Throttler
 import org.wfanet.panelmatch.client.eventpreprocessing.HardCodedDeterministicCommutativeCipherKeyProvider
 import org.wfanet.panelmatch.client.eventpreprocessing.HardCodedHkdfPepperProvider
@@ -34,6 +36,7 @@ class ProductionExchangeTaskMapper(
   override val certificateManager: CertificateManager,
   override val dataProviderMaxByteSize: Long,
   override val dataProviderPreprocessedEventsFileCount: Int
+  private val pipelineOptions: PipelineOptions
 ) : ExchangeTaskMapperForJoinKeyExchange() {
   override val deterministicCommutativeCryptor by lazy { JniDeterministicCommutativeCipher() }
   override val getPrivateMembershipCryptor = ::JniPrivateMembershipCryptor
@@ -43,4 +46,5 @@ class ProductionExchangeTaskMapper(
     ::HardCodedDeterministicCommutativeCipherKeyProvider
   override val identifierHashPepperProvider = ::HardCodedIdentifierHashPepperProvider
   override val hkdfPepperProvider = ::HardCodedHkdfPepperProvider
+  override fun newPipeline(): Pipeline = Pipeline.create(pipelineOptions)
 }
