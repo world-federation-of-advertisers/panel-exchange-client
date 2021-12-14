@@ -32,6 +32,7 @@ import org.wfanet.measurement.common.throttler.Throttler
 import org.wfanet.measurement.common.toByteString
 import org.wfanet.panelmatch.client.common.Identity
 import org.wfanet.panelmatch.client.deploy.ExchangeWorkflowDaemon
+import org.wfanet.panelmatch.client.deploy.ProductionExchangeTaskMapper
 import org.wfanet.panelmatch.client.exchangetasks.ExchangeTaskMapper
 import org.wfanet.panelmatch.client.launcher.ApiClient
 import org.wfanet.panelmatch.client.launcher.GrpcApiClient
@@ -93,7 +94,7 @@ class ExchangeWorkflowDaemonForTest(
   override val throttler: Throttler = MinimumIntervalThrottler(clock, pollingInterval)
 
   override val exchangeTaskMapper: ExchangeTaskMapper by lazy {
-    InProcessExchangeTaskMapper(
+    ProductionExchangeTaskMapper(
       privateStorageSelector = privateStorageSelector,
       sharedStorageSelector = sharedStorageSelector,
       certificateManager = certificateManager,

@@ -21,38 +21,40 @@ import org.wfanet.panelmatch.client.common.ExchangeContext
 abstract class ExchangeTaskMapper {
 
   suspend fun getExchangeTaskForStep(context: ExchangeContext): ExchangeTask {
-    @Suppress("WHEN_ENUM_CAN_BE_NULL_IN_JAVA")
-    return when (context.step.stepCase) {
-      StepCase.ENCRYPT_STEP -> context.encrypt()
-      StepCase.REENCRYPT_STEP -> context.reEncrypt()
-      StepCase.DECRYPT_STEP -> context.decrypt()
-      StepCase.INPUT_STEP -> context.input()
-      StepCase.COPY_FROM_PREVIOUS_EXCHANGE_STEP -> context.copyFromPreviousExchange()
-      StepCase.GENERATE_COMMUTATIVE_DETERMINISTIC_KEY_STEP -> context.generateSymmetricKey()
-      StepCase.GENERATE_SERIALIZED_RLWE_KEYS_STEP -> context.generateSerializedRlweKeys()
-      StepCase.GENERATE_CERTIFICATE_STEP -> context.generateExchangeCertificate()
-      StepCase.GENERATE_LOOKUP_KEYS -> context.generateLookupKeys()
-      StepCase.INTERSECT_AND_VALIDATE_STEP -> context.intersectAndValidate()
-      StepCase.EXECUTE_PRIVATE_MEMBERSHIP_QUERIES_STEP -> context.executePrivateMembershipQueries()
-      StepCase.BUILD_PRIVATE_MEMBERSHIP_QUERIES_STEP -> context.buildPrivateMembershipQueries()
-      StepCase.DECRYPT_PRIVATE_MEMBERSHIP_QUERY_RESULTS_STEP -> context.decryptMembershipResults()
-      StepCase.COPY_FROM_SHARED_STORAGE_STEP -> context.copyFromSharedStorage()
-      StepCase.COPY_TO_SHARED_STORAGE_STEP -> context.copyToSharedStorage()
-      else -> throw IllegalArgumentException("Unsupported step type: ${context.step.stepCase}")
+    return with(context) {
+      @Suppress("WHEN_ENUM_CAN_BE_NULL_IN_JAVA")
+      when (step.stepCase) {
+        StepCase.ENCRYPT_STEP -> encrypt()
+        StepCase.REENCRYPT_STEP -> reEncrypt()
+        StepCase.DECRYPT_STEP -> decrypt()
+        StepCase.INPUT_STEP -> input()
+        StepCase.COPY_FROM_PREVIOUS_EXCHANGE_STEP -> copyFromPreviousExchange()
+        StepCase.GENERATE_COMMUTATIVE_DETERMINISTIC_KEY_STEP -> generateSymmetricKey()
+        StepCase.GENERATE_SERIALIZED_RLWE_KEYS_STEP -> generateSerializedRlweKeys()
+        StepCase.GENERATE_CERTIFICATE_STEP -> generateExchangeCertificate()
+        StepCase.GENERATE_LOOKUP_KEYS -> generateLookupKeys()
+        StepCase.INTERSECT_AND_VALIDATE_STEP -> intersectAndValidate()
+        StepCase.EXECUTE_PRIVATE_MEMBERSHIP_QUERIES_STEP -> executePrivateMembershipQueries()
+        StepCase.BUILD_PRIVATE_MEMBERSHIP_QUERIES_STEP -> buildPrivateMembershipQueries()
+        StepCase.DECRYPT_PRIVATE_MEMBERSHIP_QUERY_RESULTS_STEP -> decryptMembershipResults()
+        StepCase.COPY_FROM_SHARED_STORAGE_STEP -> copyFromSharedStorage()
+        StepCase.COPY_TO_SHARED_STORAGE_STEP -> copyToSharedStorage()
+        else -> throw IllegalArgumentException("Unsupported step type: ${step.stepCase}")
+      }
     }
   }
 
   /** Returns the task that encrypts. */
-  abstract fun ExchangeContext.encrypt(): ExchangeTask
+  abstract suspend fun ExchangeContext.encrypt(): ExchangeTask
 
   /** Returns the task that decrypts. */
-  abstract fun ExchangeContext.decrypt(): ExchangeTask
+  abstract suspend fun ExchangeContext.decrypt(): ExchangeTask
 
   /** Returns the task that re-encrypts. */
-  abstract fun ExchangeContext.reEncrypt(): ExchangeTask
+  abstract suspend fun ExchangeContext.reEncrypt(): ExchangeTask
 
   /** Returns the task that generates an encryption key. */
-  abstract fun ExchangeContext.generateEncryptionKey(): ExchangeTask
+  abstract suspend fun ExchangeContext.generateEncryptionKey(): ExchangeTask
 
   /** Returns the task that builds private membership queries. */
   abstract suspend fun ExchangeContext.buildPrivateMembershipQueries(): ExchangeTask
@@ -64,19 +66,19 @@ abstract class ExchangeTaskMapper {
   abstract suspend fun ExchangeContext.decryptMembershipResults(): ExchangeTask
 
   /** Returns the task that generates a symmetric key. */
-  abstract fun ExchangeContext.generateSymmetricKey(): ExchangeTask
+  abstract suspend fun ExchangeContext.generateSymmetricKey(): ExchangeTask
 
   /** Returns the task that generates serialized rlwe keys. */
-  abstract fun ExchangeContext.generateSerializedRlweKeys(): ExchangeTask
+  abstract suspend fun ExchangeContext.generateSerializedRlweKeys(): ExchangeTask
 
   /** Returns the task that generates a certificate. */
-  abstract fun ExchangeContext.generateExchangeCertificate(): ExchangeTask
+  abstract suspend fun ExchangeContext.generateExchangeCertificate(): ExchangeTask
 
   /** Returns the task that generates lookup keys. */
-  abstract fun ExchangeContext.generateLookupKeys(): ExchangeTask
+  abstract suspend fun ExchangeContext.generateLookupKeys(): ExchangeTask
 
   /** Returns the task that validates the step. */
-  abstract fun ExchangeContext.intersectAndValidate(): ExchangeTask
+  abstract suspend fun ExchangeContext.intersectAndValidate(): ExchangeTask
 
   /** Returns the task that gets the input. */
   abstract suspend fun ExchangeContext.input(): ExchangeTask

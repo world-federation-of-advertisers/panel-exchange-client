@@ -18,13 +18,13 @@ import org.wfanet.panelmatch.client.common.ExchangeContext
 import org.wfanet.panelmatch.client.exchangetasks.ExchangeTaskMapper
 
 class FakeExchangeTaskMapper : ExchangeTaskMapper() {
-  override fun ExchangeContext.encrypt() = FakeExchangeTask("encrypt")
+  override suspend fun ExchangeContext.encrypt() = FakeExchangeTask("encrypt")
 
-  override fun ExchangeContext.decrypt() = FakeExchangeTask("decrypt")
+  override suspend fun ExchangeContext.decrypt() = FakeExchangeTask("decrypt")
 
-  override fun ExchangeContext.reEncrypt() = FakeExchangeTask("re-encrypt")
+  override suspend fun ExchangeContext.reEncrypt() = FakeExchangeTask("re-encrypt")
 
-  override fun ExchangeContext.generateEncryptionKey() = FakeExchangeTask("generate-encryption-key")
+  override suspend fun ExchangeContext.generateEncryptionKey() = FakeExchangeTask("generate-encryption-key")
 
   override suspend fun ExchangeContext.buildPrivateMembershipQueries() =
     FakeExchangeTask("build-private-membership-queries")
@@ -35,17 +35,17 @@ class FakeExchangeTaskMapper : ExchangeTaskMapper() {
   override suspend fun ExchangeContext.decryptMembershipResults() =
     FakeExchangeTask("decrypt-membership-results")
 
-  override fun ExchangeContext.generateSymmetricKey() = FakeExchangeTask("generate-symmetric-key")
+  override suspend fun ExchangeContext.generateSymmetricKey() = FakeExchangeTask("generate-symmetric-key")
 
-  override fun ExchangeContext.generateSerializedRlweKeys() =
+  override suspend fun ExchangeContext.generateSerializedRlweKeys() =
     FakeExchangeTask("generate-serialized-rlwe-keys")
 
-  override fun ExchangeContext.generateExchangeCertificate() =
+  override suspend fun ExchangeContext.generateExchangeCertificate() =
     FakeExchangeTask("generate-exchange-certificate")
 
-  override fun ExchangeContext.generateLookupKeys() = FakeExchangeTask("generate-lookup-keys")
+  override suspend fun ExchangeContext.generateLookupKeys() = FakeExchangeTask("generate-lookup-keys")
 
-  override fun ExchangeContext.intersectAndValidate() = FakeExchangeTask("intersect-and-validate")
+  override suspend fun ExchangeContext.intersectAndValidate() = FakeExchangeTask("intersect-and-validate")
 
   override suspend fun ExchangeContext.input() = FakeExchangeTask("input")
 
