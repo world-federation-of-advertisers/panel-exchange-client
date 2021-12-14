@@ -102,7 +102,7 @@ private class DecryptQueryResults(
 ) : PTransform<PCollectionTuple, PCollection<KeyedDecryptedEventDataSet>>() {
 
   override fun expand(input: PCollectionTuple): PCollection<KeyedDecryptedEventDataSet> {
-    // TODO: This function has an unncessary join. Instead, the two join keys pcollections should
+    // TODO: This function has an unnecessary join. Instead, the two join key pCollections should
     // be joined before turning them into pCollections.
     val plaintextListCoder =
       KvCoder.of(
