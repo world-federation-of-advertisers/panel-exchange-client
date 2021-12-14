@@ -30,10 +30,10 @@ import org.wfanet.panelmatch.client.exchangetasks.ExchangeTask
 import org.wfanet.panelmatch.client.exchangetasks.ExchangeTaskMapper
 import org.wfanet.panelmatch.client.exchangetasks.GenerateAsymmetricKeysTask
 import org.wfanet.panelmatch.client.exchangetasks.GenerateExchangeCertificateTask
-import org.wfanet.panelmatch.client.exchangetasks.GenerateLookupKeysTask
 import org.wfanet.panelmatch.client.exchangetasks.GenerateSymmetricKeyTask
 import org.wfanet.panelmatch.client.exchangetasks.InputTask
 import org.wfanet.panelmatch.client.exchangetasks.IntersectValidateTask
+import org.wfanet.panelmatch.client.exchangetasks.JoinKeyHashingExchangeTask
 import org.wfanet.panelmatch.client.exchangetasks.buildPrivateMembershipQueries
 import org.wfanet.panelmatch.client.exchangetasks.decryptPrivateMembershipResults
 import org.wfanet.panelmatch.client.exchangetasks.executePrivateMembershipQueries
@@ -41,6 +41,7 @@ import org.wfanet.panelmatch.client.privatemembership.CreateQueriesParameters
 import org.wfanet.panelmatch.client.privatemembership.EvaluateQueriesParameters
 import org.wfanet.panelmatch.client.privatemembership.JniPrivateMembershipCryptor
 import org.wfanet.panelmatch.client.privatemembership.JniQueryEvaluator
+import org.wfanet.panelmatch.client.privatemembership.JniQueryPreparer
 import org.wfanet.panelmatch.client.privatemembership.JniQueryResultsDecryptor
 import org.wfanet.panelmatch.client.storage.PrivateStorageSelector
 import org.wfanet.panelmatch.client.storage.SharedStorageSelector
@@ -79,7 +80,7 @@ class ProductionExchangeTaskMapper(
     val outputManifests =
       mapOf(
         "encrypted-queries" to stepDetails.encryptedQueryBundleFileCount,
-        "query-to-join-keys-map" to stepDetails.queryIdAndPanelistKeyFileCount,
+        "query-to-ids-map" to stepDetails.queryIdToIdsFileCount,
       )
 
     val parameters =
@@ -144,7 +145,7 @@ class ProductionExchangeTaskMapper(
   }
 
   override suspend fun ExchangeContext.generateLookupKeys(): ExchangeTask {
-    return GenerateLookupKeysTask()
+    return JoinKeyHashingExchangeTask.forHashing(JniQueryPreparer())
   }
 
   override suspend fun ExchangeContext.intersectAndValidate(): ExchangeTask {
