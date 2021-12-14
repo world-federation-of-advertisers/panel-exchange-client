@@ -33,6 +33,7 @@ import org.wfanet.panelmatch.client.common.ExchangeContext
 import org.wfanet.panelmatch.client.eventpreprocessing.HardCodedDeterministicCommutativeCipherKeyProvider
 import org.wfanet.panelmatch.client.eventpreprocessing.HardCodedHkdfPepperProvider
 import org.wfanet.panelmatch.client.eventpreprocessing.HardCodedIdentifierHashPepperProvider
+import org.wfanet.panelmatch.client.eventpreprocessing.testing.FakeEventPreprocessor
 import org.wfanet.panelmatch.client.launcher.testing.inputStep
 import org.wfanet.panelmatch.client.privatemembership.testing.PlaintextPrivateMembershipCryptor
 import org.wfanet.panelmatch.client.privatemembership.testing.PlaintextQueryEvaluator
@@ -100,6 +101,8 @@ class ExchangeTaskMapperForJoinKeyExchangeTest {
       override val dataProviderMaxByteSize = 8L
       override val dataProviderPreprocessedEventsFileCount = 2
       override fun newPipeline(): Pipeline = throw NotImplementedError("Not needed for test")
+      override val eventPreprocessor = FakeEventPreprocessor()
+      override val dataProviderPreprocessedEventsFileCount = 2
     }
 
   private val testStorageDetails = storageDetails {

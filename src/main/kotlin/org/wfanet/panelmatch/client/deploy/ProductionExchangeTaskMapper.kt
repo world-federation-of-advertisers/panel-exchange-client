@@ -37,6 +37,7 @@ class ProductionExchangeTaskMapper(
   override val dataProviderMaxByteSize: Long,
   override val dataProviderPreprocessedEventsFileCount: Int
   private val pipelineOptions: PipelineOptions
+  override val dataProviderPreprocessedEventsFileCount: Int
 ) : ExchangeTaskMapperForJoinKeyExchange() {
   override val deterministicCommutativeCryptor by lazy { JniDeterministicCommutativeCipher() }
   override val getPrivateMembershipCryptor = ::JniPrivateMembershipCryptor

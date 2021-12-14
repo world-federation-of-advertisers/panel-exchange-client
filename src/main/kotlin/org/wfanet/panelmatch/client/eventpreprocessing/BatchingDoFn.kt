@@ -31,7 +31,7 @@ class BatchingDoFn<T>(
   private val getElementByteSize: SerializableFunction<T, Int>
 ) : DoFn<T, MutableList<T>>() {
   private var buffer = mutableListOf<T>()
-  var size: Long = 0L
+  private var size: Long = 0L
   private val batchSizeDistribution = Metrics.distribution(BatchingDoFn::class.java, "batch-sizes")
 
   @ProcessElement
