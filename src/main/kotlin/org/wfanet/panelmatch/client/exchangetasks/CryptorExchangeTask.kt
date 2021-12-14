@@ -48,7 +48,8 @@ internal constructor(
     val joinKeys = inputList.map { it.joinKey.key }
     val joinKeyIds = inputList.map { it.joinKeyIdentifier }
     val results = operation(cryptoKey, joinKeys)
-    /** For now, we assume the join keys return in the same order that they were input. */
+
+    // For now, we assume the join keys are output in the same order that they were input.
     val serializedOutput =
       joinKeyAndIdCollection {
           joinKeysAndIds +=

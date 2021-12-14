@@ -16,8 +16,6 @@ package org.wfanet.panelmatch.common.certificates
 
 import com.google.common.truth.Truth.assertThat
 import com.google.common.truth.extensions.proto.ProtoTruth.assertThat
-import java.security.PrivateKey
-import java.security.cert.X509Certificate
 import java.time.LocalDate
 import kotlin.test.assertFailsWith
 import org.junit.Rule
@@ -48,6 +46,7 @@ import org.wfanet.measurement.common.crypto.testing.KEY_ALGORITHM
 import org.wfanet.measurement.common.grpc.testing.GrpcTestServerRule
 import org.wfanet.measurement.common.toByteString
 import org.wfanet.panelmatch.common.ExchangeDateKey
+import org.wfanet.panelmatch.common.certificates.testing.TestCertificateAuthority
 import org.wfanet.panelmatch.common.secrets.testing.TestMutableSecretMap
 import org.wfanet.panelmatch.common.secrets.testing.TestSecretMap
 import org.wfanet.panelmatch.common.testing.runBlockingTest
@@ -196,11 +195,5 @@ class V2AlphaCertificateManagerTest {
     assertThat(certificateManager.createForExchange(EXCHANGE_DATE_KEY)).isEqualTo(RESOURCE_NAME)
 
     verifyZeroInteractions(certificatesService)
-  }
-}
-
-private object TestCertificateAuthority : CertificateAuthority {
-  override suspend fun generateX509CertificateAndPrivateKey(): Pair<X509Certificate, PrivateKey> {
-    return CERTIFICATE to PRIVATE_KEY
   }
 }
