@@ -61,7 +61,7 @@ private val ROOT_PRIVATE_KEY_FILE by lazy { FIXED_CA_CERT_PEM_FILE.resolveSiblin
 class CertificateAuthorityTest {
 
   @Test
-  suspend fun mockGenerateX509CertificateAndPrivateKeyTest() {
+  suspend fun mockGenerateX509CertificateAndPrivateKeyTest(): Void {
 
     val mockCreateCertificateClient: CreateCertificateClient = mock<CreateCertificateClient>()
 
