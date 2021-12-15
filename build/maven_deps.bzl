@@ -35,6 +35,7 @@ _ARTIFACTS = artifacts.dict_to_list({
     "com.google.api.grpc:proto-google-cloud-security-private-ca-v1": "2.2.0",
     "com.google.cloud:google-cloud-bigquery": "2.4.1",
     "com.google.cloud:google-cloud-bigquerystorage": "2.6.3",
+    "com.google.cloud:google-cloud-core": "2.3.3",
     "com.google.cloud:google-cloud-nio": "0.123.10",
     "com.google.cloud:google-cloud-security-private-ca": "2.2.0",
     "com.google.cloud:google-cloud-storage": "2.2.1",
@@ -56,6 +57,7 @@ _ARTIFACTS = artifacts.dict_to_list({
     "org.apache.beam:beam-vendor-guava-26_0-jre": "0.1",
     "org.hamcrest:hamcrest": "2.2",
     "org.slf4j:slf4j-simple": "1.7.32",
+    "software.amazon.awssdk:utils": "2.17.100",
 })
 
 _EXCLUDED_ARTIFACTS = [
