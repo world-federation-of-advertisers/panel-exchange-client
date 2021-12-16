@@ -33,6 +33,7 @@ TEST_GOOGLE_CLOUD_SETTINGS = struct(
     cloud_storage_bucket = "panel",
 )
 
+# Config for Panel Exchange Client Example Daemon.
 EXAMPLE_DAEMON_CONFIG = struct(
     daemon_id = "A",
     daemon_party_type = "EDP",
