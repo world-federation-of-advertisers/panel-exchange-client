@@ -51,9 +51,8 @@ private val CONTEXT =
     validDays = 5,
   )
 
-private val CA_POOL_NAME =
-  CaPoolName.of("some-project-id", "some-ca-location", "some-pool-id").toString()
-
+private val CA_POOL_NAME = CaPoolName.of("some-project-id", "some-ca-location", "some-pool-id")
+private const val CERTIFICATE_AUTHORITY_NAME = "some-certificate-authority-name"
 private val ROOT_X509 by lazy { readCertificate(FIXED_CA_CERT_PEM_FILE) }
 private val ROOT_PUBLIC_KEY by lazy { ROOT_X509.publicKey }
 private val ROOT_PRIVATE_KEY_FILE by lazy { FIXED_CA_CERT_PEM_FILE.resolveSibling("ca.key") }
@@ -90,9 +89,9 @@ class CertificateAuthorityTest {
         .setLifetime(CERTIFICATE_LIFETIME.toProto())
         .build()
 
-    val createCertificateRequest: CreateCertificateRequest =
+    val expectedCertificateRequest: CreateCertificateRequest =
       CreateCertificateRequest.newBuilder()
-        .setParent(CA_POOL_NAME)
+        .setParent(CA_POOL_NAME.toString())
         .setCertificate(certificate)
         .setIssuingCertificateAuthorityId("some-certificate-authority-name")
         .build()
@@ -105,10 +104,10 @@ class CertificateAuthorityTest {
     val certificateAuthority =
       CertificateAuthority(
         context = CONTEXT,
-        projectId = "some-project-id",
-        caLocation = "some-ca-location",
-        poolId = "some-pool-id",
-        certificateAuthorityName = "some-certificate-authority-name",
+        projectId = CA_POOL_NAME.project,
+        caLocation = CA_POOL_NAME.location,
+        poolId = CA_POOL_NAME.caPool,
+        certificateAuthorityName = CERTIFICATE_AUTHORITY_NAME,
         client = mockCreateCertificateClient,
         generateKeyPair = { KeyPair(ROOT_PUBLIC_KEY, readPrivateKey(ROOT_PRIVATE_KEY_FILE, "ec")) }
       )
@@ -117,7 +116,7 @@ class CertificateAuthorityTest {
 
     argumentCaptor<CreateCertificateRequest> {
       verify(mockCreateCertificateClient).createCertificate(capture())
-      assertThat(firstValue).isEqualTo(createCertificateRequest)
+      assertThat(firstValue).isEqualTo(expectedCertificateRequest)
     }
 
     assertThat(x509.publicKey).isEqualTo(ROOT_PUBLIC_KEY)
