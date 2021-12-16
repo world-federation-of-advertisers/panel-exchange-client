@@ -27,15 +27,3 @@ filegroup(
     srcs = ALL_GKE_IMAGE_ARCHIVES,
     tags = ["manual"],
 )
-
-filegroup(
-    name = "k8s_deployment_config",
-    srcs = [
-        ":example_daemon_from_cue_gke.yaml",
-    ],
-    data = [
-        ":all_archives",
-    ],
-    tags = ["manual"],
-    visibility = [":k8s_deployer"],
-)
