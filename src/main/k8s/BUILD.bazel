@@ -1,15 +1,17 @@
 load("//build:variables.bzl", "IMAGE_REPOSITORY_SETTINGS", "TEST_GOOGLE_CLOUD_SETTINGS", "EXAMPLE_DAEMON_CONFIG")
-load("//src/main/docker:images.bzl", "ALL_GKE_IMAGES")
-load(":macros.bzl", "cue_dump")
+load("@wfa_measurement_system//build/cue:defs.bzl", "cue_export")
 
 package(default_visibility = ["//src/main/k8s:__subpackages__"])
 
-cue_dump(
+cue_export(
     name = "example_daemon_from_cue_gke",
     srcs = [
         "base.cue",
         "example_daemon_gke.cue"
         ],
+    outfile = "example_daemon_from_cue_gke.yaml",
+    filetype = "yaml",
+    expression = "listObject",
     cue_tags = {
         "daemon_id": EXAMPLE_DAEMON_CONFIG.daemon_id,
         "daemon_party_type": EXAMPLE_DAEMON_CONFIG.daemon_party_type,
