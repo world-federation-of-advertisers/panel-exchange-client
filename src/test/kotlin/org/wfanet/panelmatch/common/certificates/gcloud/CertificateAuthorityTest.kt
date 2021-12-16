@@ -90,13 +90,14 @@ class CertificateAuthorityTest {
     val createCertificateRequest: CreateCertificateRequest =
       CreateCertificateRequest.newBuilder()
         .setParent(CaPoolName.of("some-project-id", "some-ca-location", "some-pool-id").toString())
-        .setCertificateId("some-certificate-name")
         .setCertificate(certificate)
         .setIssuingCertificateAuthorityId("some-certificate-authority-name")
         .build()
 
     whenever(mockCreateCertificateClient.createCertificate(any()))
-      .thenReturn(Certificate.newBuilder().setPemCertificate(ROOT_PUBLIC_KEY.toString()).build())
+      .thenReturn(
+        Certificate.newBuilder().setPemCertificate(FIXED_CA_CERT_PEM_FILE.readText()).build()
+      )
 
     val certificateAuthority =
       CertificateAuthority(
@@ -123,7 +124,5 @@ class CertificateAuthorityTest {
     val signature = privateKey.sign(x509, data)
 
     assertThat(x509.verifySignature(data, signature)).isTrue()
-
-    assertThat(false).isTrue()
   }
 }
