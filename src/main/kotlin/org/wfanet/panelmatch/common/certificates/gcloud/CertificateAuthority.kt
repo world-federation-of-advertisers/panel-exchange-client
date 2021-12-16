@@ -71,7 +71,7 @@ class CertificateAuthority(
   private val generateKeyPair: () -> KeyPair = { generateKeyPair("EC") }
 ) : CertificateAuthority {
 
-  private val SUBJECT_CONFIG =
+  private val subjectConfig =
     SubjectConfig.newBuilder()
       .setSubject(
         Subject.newBuilder()
@@ -82,9 +82,9 @@ class CertificateAuthority(
       .setSubjectAltName(SubjectAltNames.newBuilder().addDnsNames(context.domainName).build())
       .build()
 
-  private val CA_POOL_NAME = CaPoolName.of(projectId, caLocation, poolId).toString()
+  private val caPoolName = CaPoolName.of(projectId, caLocation, poolId).toString()
 
-  private val CERTIFICATE_LIFETIME = Duration.ofDays(context.validDays.toLong())
+  private val certificateLifetime = Duration.ofDays(context.validDays.toLong())
 
   override suspend fun generateX509CertificateAndPrivateKey(): Pair<X509Certificate, PrivateKey> {
 
@@ -99,16 +99,16 @@ class CertificateAuthority(
         .setConfig(
           CertificateConfig.newBuilder()
             .setPublicKey(cloudPublicKeyInput)
-            .setSubjectConfig(SUBJECT_CONFIG)
+            .setSubjectConfig(subjectConfig)
             .setX509Config(X509_PARAMETERS)
             .build()
         )
-        .setLifetime(CERTIFICATE_LIFETIME.toProto())
+        .setLifetime(certificateLifetime.toProto())
         .build()
 
     val certificateRequest: CreateCertificateRequest =
       CreateCertificateRequest.newBuilder()
-        .setParent(CA_POOL_NAME)
+        .setParent(caPoolName)
         .setCertificate(certificate)
         .setIssuingCertificateAuthorityId(certificateAuthorityName)
         .build()

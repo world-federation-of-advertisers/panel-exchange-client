@@ -51,6 +51,9 @@ private val CONTEXT =
     validDays = 5,
   )
 
+private val CA_POOL_NAME =
+  CaPoolName.of("some-project-id", "some-ca-location", "some-pool-id").toString()
+
 private val ROOT_X509 by lazy { readCertificate(FIXED_CA_CERT_PEM_FILE) }
 private val ROOT_PUBLIC_KEY by lazy { ROOT_X509.publicKey }
 private val ROOT_PRIVATE_KEY_FILE by lazy { FIXED_CA_CERT_PEM_FILE.resolveSibling("ca.key") }
@@ -89,7 +92,7 @@ class CertificateAuthorityTest {
 
     val createCertificateRequest: CreateCertificateRequest =
       CreateCertificateRequest.newBuilder()
-        .setParent(CaPoolName.of("some-project-id", "some-ca-location", "some-pool-id").toString())
+        .setParent(CA_POOL_NAME)
         .setCertificate(certificate)
         .setIssuingCertificateAuthorityId("some-certificate-authority-name")
         .build()
