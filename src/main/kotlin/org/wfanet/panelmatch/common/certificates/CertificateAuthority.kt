@@ -33,5 +33,5 @@ interface CertificateAuthority {
    *
    * TODO(@efoxepstein): use SigningKeyHandle instead of a PrivateKey directly.
    */
-  fun generateX509CertificateAndPrivateKey(): Pair<X509Certificate, PrivateKey>
+  suspend fun generateX509CertificateAndPrivateKey(): Pair<X509Certificate, PrivateKey>
 }

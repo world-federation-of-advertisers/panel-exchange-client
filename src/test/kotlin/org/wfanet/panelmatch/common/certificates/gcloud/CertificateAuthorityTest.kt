@@ -25,6 +25,7 @@ import com.google.common.truth.Truth.assertThat
 import com.google.protobuf.kotlin.toByteStringUtf8
 import java.security.KeyPair
 import java.time.Duration
+import kotlinx.coroutines.runBlocking
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
@@ -71,8 +72,7 @@ private val SUBJECT_CONFIG =
 class CertificateAuthorityTest {
 
   @Test
-  fun generateX509CertificateAndPrivateKey(): Void {
-
+  fun generateX509CertificateAndPrivateKey() = runBlocking {
     val mockCreateCertificateClient: CreateCertificateClient = mock<CreateCertificateClient>()
 
     val certificate: Certificate =

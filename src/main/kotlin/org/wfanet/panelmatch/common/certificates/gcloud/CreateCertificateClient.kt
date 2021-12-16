@@ -18,5 +18,5 @@ import com.google.cloud.security.privateca.v1.Certificate
 import com.google.cloud.security.privateca.v1.CreateCertificateRequest
 
 interface CreateCertificateClient {
-  fun createCertificate(request: CreateCertificateRequest): Certificate
+  suspend fun createCertificate(request: CreateCertificateRequest): Certificate
 }

@@ -22,7 +22,7 @@ class PrivateCaClient : CreateCertificateClient, AutoCloseable {
 
   private val client = CertificateAuthorityServiceClient.create()
 
-  override fun createCertificate(request: CreateCertificateRequest): Certificate {
+  override suspend fun createCertificate(request: CreateCertificateRequest): Certificate {
     return client.createCertificate(request)
   }
 
