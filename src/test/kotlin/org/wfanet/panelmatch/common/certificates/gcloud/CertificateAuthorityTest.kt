@@ -25,7 +25,6 @@ import com.google.common.truth.Truth.assertThat
 import com.google.protobuf.kotlin.toByteStringUtf8
 import java.security.KeyPair
 import java.time.Duration
-import kotlinx.coroutines.runBlocking
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
@@ -54,40 +53,38 @@ private val CONTEXT =
 private val ROOT_X509 by lazy { readCertificate(FIXED_CA_CERT_PEM_FILE) }
 private val ROOT_PUBLIC_KEY by lazy { ROOT_X509.publicKey }
 private val ROOT_PRIVATE_KEY_FILE by lazy { FIXED_CA_CERT_PEM_FILE.resolveSibling("ca.key") }
+private val CERTIFICATE_LIFETIME = Duration.ofDays(CONTEXT.validDays.toLong())
+private val CLOUD_PUBLIC_KEY: CloudPublicKey = ROOT_PUBLIC_KEY.toGCloudPublicKey()
+
+private val SUBJECT_CONFIG =
+  CertificateConfig.SubjectConfig.newBuilder()
+    .setSubject(
+      Subject.newBuilder()
+        .setCommonName(CONTEXT.commonName)
+        .setOrganization(CONTEXT.orgName)
+        .build()
+    )
+    .setSubjectAltName(SubjectAltNames.newBuilder().addDnsNames(CONTEXT.domainName).build())
+    .build()
 
 @RunWith(JUnit4::class)
 class CertificateAuthorityTest {
 
   @Test
-  suspend fun mockGenerateX509CertificateAndPrivateKeyTest() {
+  fun generateX509CertificateAndPrivateKey(): Void {
 
     val mockCreateCertificateClient: CreateCertificateClient = mock<CreateCertificateClient>()
-
-    val certificateLifetime = Duration.ofDays(CONTEXT.validDays.toLong())
-
-    val cloudPublicKey: CloudPublicKey = ROOT_PUBLIC_KEY.toGCloudPublicKey()
-
-    val subjectConfig =
-      CertificateConfig.SubjectConfig.newBuilder()
-        .setSubject(
-          Subject.newBuilder()
-            .setCommonName(CONTEXT.commonName)
-            .setOrganization(CONTEXT.orgName)
-            .build()
-        )
-        .setSubjectAltName(SubjectAltNames.newBuilder().addDnsNames(CONTEXT.domainName).build())
-        .build()
 
     val certificate: Certificate =
       Certificate.newBuilder()
         .setConfig(
           CertificateConfig.newBuilder()
-            .setPublicKey(cloudPublicKey)
-            .setSubjectConfig(subjectConfig)
+            .setPublicKey(CLOUD_PUBLIC_KEY)
+            .setSubjectConfig(SUBJECT_CONFIG)
             .setX509Config(X509_PARAMETERS)
             .build()
         )
-        .setLifetime(certificateLifetime.toProto())
+        .setLifetime(CERTIFICATE_LIFETIME.toProto())
         .build()
 
     val createCertificateRequest: CreateCertificateRequest =
@@ -112,8 +109,7 @@ class CertificateAuthorityTest {
         generateKeyPair = { KeyPair(ROOT_PUBLIC_KEY, readPrivateKey(ROOT_PRIVATE_KEY_FILE, "ec")) }
       )
 
-    val (x509, privateKey) =
-      runBlocking { certificateAuthority.generateX509CertificateAndPrivateKey() }
+    val (x509, privateKey) = certificateAuthority.generateX509CertificateAndPrivateKey()
 
     argumentCaptor<CreateCertificateRequest> {
       verify(mockCreateCertificateClient).createCertificate(capture())

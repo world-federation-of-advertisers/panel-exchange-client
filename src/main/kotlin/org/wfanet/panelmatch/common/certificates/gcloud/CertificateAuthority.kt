@@ -62,18 +62,31 @@ val X509_PARAMETERS: X509Parameters =
     .build()
 
 class CertificateAuthority(
-  private val context: CertificateAuthority.Context,
-  private val projectId: String,
-  private val caLocation: String,
-  private val poolId: String,
+  context: CertificateAuthority.Context,
+  projectId: String,
+  caLocation: String,
+  poolId: String,
   private val certificateAuthorityName: String,
   private val client: CreateCertificateClient,
   private val generateKeyPair: () -> KeyPair = { generateKeyPair("EC") }
 ) : CertificateAuthority {
 
-  override suspend fun generateX509CertificateAndPrivateKey(): Pair<X509Certificate, PrivateKey> {
+  private val SUBJECT_CONFIG =
+    SubjectConfig.newBuilder()
+      .setSubject(
+        Subject.newBuilder()
+          .setCommonName(context.commonName)
+          .setOrganization(context.orgName)
+          .build()
+      )
+      .setSubjectAltName(SubjectAltNames.newBuilder().addDnsNames(context.domainName).build())
+      .build()
 
-    val certificateLifetime = Duration.ofDays(context.validDays.toLong())
+  private val CA_POOL_NAME = CaPoolName.of(projectId, caLocation, poolId).toString()
+
+  private val CERTIFICATE_LIFETIME = Duration.ofDays(context.validDays.toLong())
+
+  override suspend fun generateX509CertificateAndPrivateKey(): Pair<X509Certificate, PrivateKey> {
 
     val keyPair: KeyPair = generateKeyPair()
     val privateKey: PrivateKey = keyPair.private
@@ -81,32 +94,21 @@ class CertificateAuthority(
 
     val cloudPublicKeyInput = publicKey.toGCloudPublicKey()
 
-    val subjectConfig =
-      SubjectConfig.newBuilder()
-        .setSubject(
-          Subject.newBuilder()
-            .setCommonName(context.commonName)
-            .setOrganization(context.orgName)
-            .build()
-        )
-        .setSubjectAltName(SubjectAltNames.newBuilder().addDnsNames(context.domainName).build())
-        .build()
-
     val certificate: Certificate =
       Certificate.newBuilder()
         .setConfig(
           CertificateConfig.newBuilder()
             .setPublicKey(cloudPublicKeyInput)
-            .setSubjectConfig(subjectConfig)
+            .setSubjectConfig(SUBJECT_CONFIG)
             .setX509Config(X509_PARAMETERS)
             .build()
         )
-        .setLifetime(certificateLifetime.toProto())
+        .setLifetime(CERTIFICATE_LIFETIME.toProto())
         .build()
 
     val certificateRequest: CreateCertificateRequest =
       CreateCertificateRequest.newBuilder()
-        .setParent(CaPoolName.of(projectId, caLocation, poolId).toString())
+        .setParent(CA_POOL_NAME)
         .setCertificate(certificate)
         .setIssuingCertificateAuthorityId(certificateAuthorityName)
         .build()
