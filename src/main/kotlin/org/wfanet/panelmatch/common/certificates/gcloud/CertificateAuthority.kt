@@ -22,13 +22,10 @@ import com.google.cloud.security.privateca.v1.CreateCertificateRequest
 import com.google.cloud.security.privateca.v1.KeyUsage
 import com.google.cloud.security.privateca.v1.KeyUsage.ExtendedKeyUsageOptions
 import com.google.cloud.security.privateca.v1.KeyUsage.KeyUsageOptions
-import com.google.cloud.security.privateca.v1.PublicKey as CloudPublicKey
-import com.google.cloud.security.privateca.v1.PublicKey.KeyFormat
 import com.google.cloud.security.privateca.v1.Subject
 import com.google.cloud.security.privateca.v1.SubjectAltNames
 import com.google.cloud.security.privateca.v1.X509Parameters
 import com.google.cloud.security.privateca.v1.X509Parameters.CaOptions
-import com.google.protobuf.kotlin.toByteString
 import java.security.KeyPair
 import java.security.PrivateKey
 import java.security.PublicKey
@@ -40,7 +37,13 @@ import org.wfanet.panelmatch.common.certificates.CertificateAuthority
 import org.wfanet.panelmatch.common.loggerFor
 import org.wfanet.panelmatch.common.toProto
 
-// Set the X.509 fields required for the certificate.
+/**
+ * Fixed parameters for X509 certificates that allow digital signatures, key encipherment, and
+ * certificate signing.
+ *
+ * This enables serverAuth extended key usage (see
+ * https://datatracker.ietf.org/doc/html/rfc5280.html#section-4.2.1.12).
+ */
 val X509_PARAMETERS: X509Parameters =
   X509Parameters.newBuilder()
     .setKeyUsage(
@@ -64,7 +67,6 @@ class CertificateAuthority(
   private val caLocation: String,
   private val poolId: String,
   private val certificateAuthorityName: String,
-  private val certificateName: String,
   private val client: CreateCertificateClient,
   private val generateKeyPair: () -> KeyPair = { generateKeyPair("EC") }
 ) : CertificateAuthority {
@@ -77,25 +79,19 @@ class CertificateAuthority(
     val privateKey: PrivateKey = keyPair.private
     val publicKey: PublicKey = keyPair.public
 
-    // Set the Public Key and its format.
-    val cloudPublicKeyInput =
-      CloudPublicKey.newBuilder()
-        .setKey(publicKey.encoded.toByteString())
-        .setFormat(KeyFormat.PEM)
-        .build()
+    val cloudPublicKeyInput = publicKey.toGCloudPublicKey()
 
     val subjectConfig =
-      SubjectConfig.newBuilder() // Set the common name and org name.
+      SubjectConfig.newBuilder()
         .setSubject(
           Subject.newBuilder()
             .setCommonName(context.commonName)
             .setOrganization(context.orgName)
             .build()
-        ) // Set the fully qualified domain name.
+        )
         .setSubjectAltName(SubjectAltNames.newBuilder().addDnsNames(context.domainName).build())
         .build()
 
-    // Create certificate.
     val certificate: Certificate =
       Certificate.newBuilder()
         .setConfig(
@@ -108,17 +104,14 @@ class CertificateAuthority(
         .setLifetime(certificateLifetime.toProto())
         .build()
 
-    // Create the Certificate Request.
-    val certificateRequest =
+    val certificateRequest: CreateCertificateRequest =
       CreateCertificateRequest.newBuilder()
         .setParent(CaPoolName.of(projectId, caLocation, poolId).toString())
-        .setCertificateId(certificateName)
         .setCertificate(certificate)
         .setIssuingCertificateAuthorityId(certificateAuthorityName)
         .build()
 
-    // Get the Certificate response.
-    val response = client.createCertificate(certificateRequest)
+    val response: Certificate = client.createCertificate(certificateRequest)
 
     return readCertificate(response.pemCertificate.byteInputStream()) to privateKey
   }

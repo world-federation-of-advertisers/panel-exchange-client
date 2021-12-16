@@ -7,7 +7,6 @@ kt_jvm_test(
     data = [
         "@wfa_common_jvm//src/main/kotlin/org/wfanet/measurement/common/crypto/testing/testdata:static_certs",
     ],
-    tags = ["manual"],
     test_class = "org.wfanet.panelmatch.common.certificates.gcloud.CertificateAuthorityTest",
     deps = [
         "//imports/java/com/google/api:core",

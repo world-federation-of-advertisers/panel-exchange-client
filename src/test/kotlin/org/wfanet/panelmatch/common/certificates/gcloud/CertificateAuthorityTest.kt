@@ -19,11 +19,9 @@ import com.google.cloud.security.privateca.v1.Certificate
 import com.google.cloud.security.privateca.v1.CertificateConfig
 import com.google.cloud.security.privateca.v1.CreateCertificateRequest
 import com.google.cloud.security.privateca.v1.PublicKey as CloudPublicKey
-import com.google.cloud.security.privateca.v1.PublicKey.KeyFormat
 import com.google.cloud.security.privateca.v1.Subject
 import com.google.cloud.security.privateca.v1.SubjectAltNames
 import com.google.common.truth.Truth.assertThat
-import com.google.protobuf.kotlin.toByteString
 import com.google.protobuf.kotlin.toByteStringUtf8
 import java.security.KeyPair
 import java.time.Duration
@@ -61,31 +59,25 @@ private val ROOT_PRIVATE_KEY_FILE by lazy { FIXED_CA_CERT_PEM_FILE.resolveSiblin
 class CertificateAuthorityTest {
 
   @Test
-  suspend fun mockGenerateX509CertificateAndPrivateKeyTest(): Void {
+  suspend fun mockGenerateX509CertificateAndPrivateKeyTest() {
 
     val mockCreateCertificateClient: CreateCertificateClient = mock<CreateCertificateClient>()
 
     val certificateLifetime = Duration.ofDays(CONTEXT.validDays.toLong())
 
-    // Set the Public Key and its format.
-    val cloudPublicKey: CloudPublicKey =
-      CloudPublicKey.newBuilder()
-        .setKey(ROOT_PUBLIC_KEY.encoded.toByteString())
-        .setFormat(KeyFormat.PEM)
-        .build()
+    val cloudPublicKey: CloudPublicKey = ROOT_PUBLIC_KEY.toGCloudPublicKey()
 
     val subjectConfig =
-      CertificateConfig.SubjectConfig.newBuilder() // Set the common name and org name.
+      CertificateConfig.SubjectConfig.newBuilder()
         .setSubject(
           Subject.newBuilder()
             .setCommonName(CONTEXT.commonName)
             .setOrganization(CONTEXT.orgName)
             .build()
-        ) // Set the fully qualified domain name.
+        )
         .setSubjectAltName(SubjectAltNames.newBuilder().addDnsNames(CONTEXT.domainName).build())
         .build()
 
-    // Create certificate.
     val certificate: Certificate =
       Certificate.newBuilder()
         .setConfig(
@@ -116,7 +108,6 @@ class CertificateAuthorityTest {
         caLocation = "some-ca-location",
         poolId = "some-pool-id",
         certificateAuthorityName = "some-certificate-authority-name",
-        certificateName = "some-certificate-name",
         client = mockCreateCertificateClient,
         generateKeyPair = { KeyPair(ROOT_PUBLIC_KEY, readPrivateKey(ROOT_PRIVATE_KEY_FILE, "ec")) }
       )
@@ -136,5 +127,7 @@ class CertificateAuthorityTest {
     val signature = privateKey.sign(x509, data)
 
     assertThat(x509.verifySignature(data, signature)).isTrue()
+
+    assertThat(false).isTrue()
   }
 }
