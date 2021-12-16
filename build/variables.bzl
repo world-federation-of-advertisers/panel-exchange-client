@@ -32,3 +32,8 @@ TEST_GOOGLE_CLOUD_SETTINGS = struct(
     cloud_storage_project = "panel",
     cloud_storage_bucket = "panel",
 )
+
+EXAMPLE_DAEMON_CONFIG = struct(
+    daemon_id = "A",
+    daemon_party_type = "EDP",
+)
