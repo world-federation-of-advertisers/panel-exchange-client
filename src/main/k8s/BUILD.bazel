@@ -6,7 +6,10 @@ package(default_visibility = ["//src/main/k8s:__subpackages__"])
 
 cue_dump(
     name = "example_daemon_from_cue_gke",
-    srcs = ["example_daemon_gke.cue"],
+    srcs = [
+        "base.cue",
+        "example_daemon_gke.cue"
+        ],
     cue_tags = {
         "daemon_id": EXAMPLE_DAEMON_CONFIG.daemon_id,
         "daemon_party_type": EXAMPLE_DAEMON_CONFIG.daemon_party_type,
@@ -15,15 +18,4 @@ cue_dump(
         "container_registry": IMAGE_REPOSITORY_SETTINGS.container_registry,
         "repository_prefix": IMAGE_REPOSITORY_SETTINGS.repository_prefix,
     },
-)
-
-ALL_GKE_IMAGE_ARCHIVES = [
-    image_spec.image + ".tar"
-    for image_spec in ALL_GKE_IMAGES
-]
-
-filegroup(
-    name = "all_archives",
-    srcs = ALL_GKE_IMAGE_ARCHIVES,
-    tags = ["manual"],
 )
