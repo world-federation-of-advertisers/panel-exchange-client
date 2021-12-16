@@ -17,15 +17,24 @@
 
 package k8s
 
+#GloudProject:            "TBD"
+#SpannerInstance:         "dev-instance"
+#CloudStorageBucket:      "halo-panel-dev-bucket"
+#ContainerRegistry:       "gcr.io"
+#ContainerRegistryPrefix: #ContainerRegistry + "/" + #GloudProject
+#DefaultResourceConfig: {
+	replicas:              1
+	resourceRequestCpu:    "200m"
+	resourceLimitCpu:      "800m"
+	resourceRequestMemory: "4g"
+	resourceLimitMemory:   "16g"
+}
+
 example_daemon_deployment: "example_daemon_deployment": #Deployment & {
-  _name:       "example-panel-exchange-daemon"
-	_replicas:   1
-	_image:      "gcr.io/cloud-example-panel-exchange-daemon"
-	_jvm_flags: "-Xmx12g -Xms2g"
-	_resourceRequestCpu:    "200m"
-  _resourceLimitCpu:      "800m"
-	_resourceRequestMemory: "4g"
-	_resourceLimitMemory:   "16g"
+  _name:            "example-panel-exchange-daemon"
+	_image:           "gcr.io/cloud-example-panel-exchange-daemon"
+	_jvm_flags:       "-Xmx12g -Xms2g"
+	_resource_config: #DefaultResourceConfig
   _args: [
     "--id=\(_daemon_id)",
     "--party-type=\(_daemon_party_type)",

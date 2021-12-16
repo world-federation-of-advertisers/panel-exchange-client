@@ -34,19 +34,23 @@ objectSets: [ example_daemon_deployment ]
 
 #AppName: "panel-exchange"
 
+#ResourceConfig: {
+	replicas:              int
+	resourceRequestCpu:    string
+	resourceLimitCpu:      string
+	resourceRequestMemory: string
+	resourceLimitMemory:   string
+}
+
 #Deployment: {
-	_name:       string
-	_replicas:   int
-	_image:      string
-	_args: [...string]
-	_ports:           [{containerPort: 8443}] | *[]
-	_restartPolicy:   string | *"Always"
-	_imagePullPolicy: string | *"Never"
-	_jvm_flags:       string | *""
-	_resourceRequestCpu:    string
-	_resourceLimitCpu:      string
-	_resourceRequestMemory: string
-	_resourceLimitMemory:   string
+	_name:                  string
+	_image:                 string
+	_args:                  [...string]
+	_ports:                 [{containerPort: 8443}] | *[]
+	_restartPolicy:         string | *"Always"
+	_imagePullPolicy:       string | *"Never"
+	_jvm_flags:             string | *""
+	_resource_config:       #ResourceConfig
 	apiVersion:             "apps/v1"
 	kind:                   "Deployment"
 	metadata: {
@@ -57,7 +61,7 @@ objectSets: [ example_daemon_deployment ]
 		}
 	}
 	spec: {
-		replicas: _replicas
+		replicas: _resource_config.replicas
 		selector: matchLabels: app: _name + "-app"
 		template: {
 			metadata: labels: app: _name + "-app"
@@ -66,12 +70,12 @@ objectSets: [ example_daemon_deployment ]
 					name:  _name + "-container"
 					image: _image
 					resources: requests: {
-						memory: _resourceRequestMemory
-						cpu:    _resourceRequestCpu
+						memory: _resource_config.resourceRequestMemory
+						cpu:    _resource_config.resourceRequestCpu
 					}
 					resources: limits: {
-						memory: _resourceLimitMemory
-						cpu:    _resourceLimitCpu
+						memory: _resource_config.resourceLimitMemory
+						cpu:    _resource_config.resourceLimitCpu
 					}
 					imagePullPolicy: _imagePullPolicy
 					args:            _args
