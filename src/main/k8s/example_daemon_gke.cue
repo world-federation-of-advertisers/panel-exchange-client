@@ -17,6 +17,8 @@
 
 package k8s
 
+_daemon_id:                 string @tag("daemon_id")
+_daemon_party_type:         string @tag("daemon_party_type")
 _cloud_storage_project:     string @tag("cloud_storage_project")
 _cloud_storage_bucket:      string @tag("cloud_storage_bucket")
 _container_registry:        string @tag("container_registry")
@@ -38,15 +40,12 @@ objectSets: [ example_daemon_deployment ]
 #Deployment: {
 	_name:       string
 	_replicas:   int
-	_secretName: string | *""
 	_image:      string
 	_args: [...string]
 	_ports:           [{containerPort: 8443}] | *[]
 	_restartPolicy:   string | *"Always"
 	_imagePullPolicy: string | *"Never"
-	_system:          string
 	_jvm_flags:       string | *""
-	_dependencies: [...string]
 	_resourceRequestCpu:    string
 	_resourceLimitCpu:      string
 	_resourceRequestMemory: string
@@ -59,7 +58,6 @@ objectSets: [ example_daemon_deployment ]
 			app:                      _name + "-app"
 			"app.kubernetes.io/name": #AppName
 		}
-		annotations: system: _system
 	}
 	spec: {
 		replicas: _replicas
@@ -95,17 +93,6 @@ objectSets: [ example_daemon_deployment ]
 						periodSeconds: uint32
 					}
 				}]
-				volumes: [{
-					name: _name + "-files"
-					secret: {
-						secretName: _secretName
-					}
-				}]
-				initContainers: [ for ds in _dependencies {
-					name:  "init-\(ds)"
-					image: "gcr.io/google-containers/busybox:1.27"
-					command: ["sh", "-c", "until nslookup \(ds); do echo waiting for \(ds); sleep 2; done"]
-				}]
 				restartPolicy: _restartPolicy
 			}
 		}
@@ -113,9 +100,17 @@ objectSets: [ example_daemon_deployment ]
 }
 
 example_daemon_deployment: "example_daemon_deployment": #Deployment & {
+  _name:       "example-panel-exchange-daemon"
+	_replicas:   1
+	_image:      "gcr.io/cloud-example-panel-exchange-daemon"
+	_jvm_flags: "-Xmx12g -Xms2g"
+	_resourceRequestCpu:    "200m"
+  _resourceLimitCpu:      "800m"
+	_resourceRequestMemory: "4g"
+	_resourceLimitMemory:   "16g"
   _args: [
-    "--id=A",
-    "--party-type=EDP",
+    "--id=\(_daemon_id)",
+    "--party-type=\(_daemon_party_type)",
     "--tink-key-uri=localhost",
     "--blob_size_limit_bytes=1GiB",
     "--storage-signing-algorithm=EC",

@@ -1,4 +1,4 @@
-load("//build:variables.bzl", "IMAGE_REPOSITORY_SETTINGS", "TEST_GOOGLE_CLOUD_SETTINGS")
+load("//build:variables.bzl", "IMAGE_REPOSITORY_SETTINGS", "TEST_GOOGLE_CLOUD_SETTINGS", "EXAMPLE_DAEMON_CONFIG")
 load("//src/main/docker:images.bzl", "ALL_GKE_IMAGES")
 load(":macros.bzl", "cue_dump")
 
@@ -8,6 +8,8 @@ cue_dump(
     name = "example_daemon_from_cue_gke",
     srcs = ["example_daemon_gke.cue"],
     cue_tags = {
+        "daemon_id": EXAMPLE_DAEMON_CONFIG.daemon_id,
+        "daemon_party_type": EXAMPLE_DAEMON_CONFIG.daemon_party_type,
         "cloud_storage_bucket": TEST_GOOGLE_CLOUD_SETTINGS.cloud_storage_bucket,
         "cloud_storage_project": TEST_GOOGLE_CLOUD_SETTINGS.cloud_storage_project,
         "container_registry": IMAGE_REPOSITORY_SETTINGS.container_registry,
@@ -36,11 +38,4 @@ filegroup(
     ],
     tags = ["manual"],
     visibility = [":k8s_deployer"],
-)
-
-package_group(
-    name = "k8s_deployer",
-    packages = [
-        "//src/main/kotlin/org/wfanet/measurement/tools/...",
-    ],
 )
