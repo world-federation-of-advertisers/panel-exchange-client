@@ -24,7 +24,7 @@ IMAGE_REPOSITORY_SETTINGS = struct(
     # URL of the container registry.
     container_registry = "gcr.io",
     # Common prefix of all images.
-    repository_prefix = "halo-panel-dev",
+    repository_prefix = "TBD",
 )
 
 # Settings for deploying tests to Google Cloud.
