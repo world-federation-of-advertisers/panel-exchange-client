@@ -86,7 +86,7 @@ class CertificateAuthority(
 
   private val CERTIFICATE_LIFETIME = Duration.ofDays(context.validDays.toLong())
 
-  override suspend fun generateX509CertificateAndPrivateKey(): Pair<X509Certificate, PrivateKey> {
+  override fun generateX509CertificateAndPrivateKey(): Pair<X509Certificate, PrivateKey> {
 
     val keyPair: KeyPair = generateKeyPair()
     val privateKey: PrivateKey = keyPair.private
