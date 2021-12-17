@@ -12,15 +12,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package org.wfanet.panelmatch.common.storage
+package org.wfanet.panelmatch.common.certificates.gcloud
 
-import com.google.protobuf.ByteString
-import org.wfanet.measurement.common.flatten
-import org.wfanet.measurement.storage.StorageClient.Blob
-import org.wfanet.measurement.storage.read
+import com.google.cloud.security.privateca.v1.Certificate
+import com.google.cloud.security.privateca.v1.CertificateAuthorityServiceClient
+import com.google.cloud.security.privateca.v1.CreateCertificateRequest
 
-/** Reads the blob into a single [ByteString]. */
-suspend fun Blob.toByteString(): ByteString = read().flatten()
+class PrivateCaClient : CreateCertificateClient, AutoCloseable {
 
-/** Reads the blob bytes as a UTF8 [String]. */
-suspend fun Blob.toStringUtf8(): String = toByteString().toStringUtf8()
+  private val client = CertificateAuthorityServiceClient.create()
+
+  override suspend fun createCertificate(request: CreateCertificateRequest): Certificate {
+    return client.createCertificate(request)
+  }
+
+  override fun close() {
+    client.close()
+  }
+}

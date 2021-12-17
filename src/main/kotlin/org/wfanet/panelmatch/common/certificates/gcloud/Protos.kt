@@ -12,15 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package org.wfanet.panelmatch.common.storage
+package org.wfanet.panelmatch.common.certificates.gcloud
 
-import com.google.protobuf.ByteString
-import org.wfanet.measurement.common.flatten
-import org.wfanet.measurement.storage.StorageClient.Blob
-import org.wfanet.measurement.storage.read
+import com.google.cloud.security.privateca.v1.PublicKey as CloudPublicKey
+import com.google.cloud.security.privateca.v1.PublicKey.KeyFormat
+import com.google.protobuf.kotlin.toByteString
+import java.security.PublicKey
 
-/** Reads the blob into a single [ByteString]. */
-suspend fun Blob.toByteString(): ByteString = read().flatten()
-
-/** Reads the blob bytes as a UTF8 [String]. */
-suspend fun Blob.toStringUtf8(): String = toByteString().toStringUtf8()
+/** Converts a java.security.PublicKey to com.google.cloud.security.privateca.v1.PublicKey */
+fun PublicKey.toGCloudPublicKey(): CloudPublicKey {
+  return CloudPublicKey.newBuilder().setKey(encoded.toByteString()).setFormat(KeyFormat.PEM).build()
+}

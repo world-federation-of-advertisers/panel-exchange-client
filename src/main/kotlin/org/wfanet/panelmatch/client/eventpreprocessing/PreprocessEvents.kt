@@ -99,3 +99,63 @@ class PreprocessEvents(
       }
   }
 }
+
+class PreprocessEventsDoFn(
+  private val maxByteSize: Long,
+  private val identifierHashPepperProvider: IdentifierHashPepperProvider,
+  private val hkdfPepperProvider: HkdfPepperProvider,
+  private val cryptoKeyProvider: DeterministicCommutativeCipherKeyProvider,
+  private val eventPreprocessor: EventPreprocessor,
+  private val compressionParametersView: PCollectionView<CompressionParameters>,
+) : DoFn<PCollection<UnprocessedEvent>, PCollection<DatabaseEntry>>() {
+
+  @ProcessElement
+  fun process(c: ProcessContext) {
+    val events: MutableList<KV<ByteString, ByteString>> = c.element()
+    events
+      .map<UnprocessedEvent, KV<ByteString, ByteString>>("Map to KV") { kvOf(it.id, it.data) }
+      .groupByKey()
+      .mapValues("Make CombinedEvents") { combinedEvents { serializedEvents += it }.toByteString() }
+      .parDo(BatchingDoFn(maxByteSize, EventSize), name = "Batch by $maxByteSize bytes")
+      .apply(
+        "Encrypt Batches",
+        ParDo.of(
+          EncryptEventsDoFn(
+            eventPreprocessor,
+            identifierHashPepperProvider,
+            hkdfPepperProvider,
+            cryptoKeyProvider,
+            compressionParametersView
+          ),
+        )
+          .withSideInputs(compressionParametersView)
+      )
+      .map("Map to DatabaseEntry") {
+        databaseEntry {
+          this.lookupKey = lookupKey { key = it.key }
+          this.encryptedEntry = encryptedEntry { data = it.value }
+        }
+      }
+    val request = preprocessEventsRequest {
+      cryptoKey = deterministicCommutativeCipherKeyProvider.get()
+      identifierHashPepper = identifierHashPepperProvider.get()
+      hkdfPepper = hkdfPepperProvider.get()
+      compressionParameters = c.sideInput(compressionParametersView)
+      for (event in events) {
+        unprocessedEvents +=
+          unprocessedEvent {
+            id = event.key
+            data = event.value
+          }
+      }
+    }
+    val stopWatch: Stopwatch = Stopwatch.createStarted()
+    val response: PreprocessEventsResponse = eventPreprocessor.preprocess(request)
+    stopWatch.stop()
+    jniCallTimeDistribution.update(stopWatch.elapsed(TimeUnit.MICROSECONDS))
+
+    for (processedEvent in response.processedEventsList) {
+      c.output(kvOf(processedEvent.encryptedId, processedEvent.encryptedData))
+    }
+  }
+}
