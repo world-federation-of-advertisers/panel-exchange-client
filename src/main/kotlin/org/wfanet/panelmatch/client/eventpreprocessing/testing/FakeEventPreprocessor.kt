@@ -14,10 +14,10 @@
 
 package org.wfanet.panelmatch.client.eventpreprocessing.testing
 
+import org.wfanet.panelmatch.client.eventpreprocessing.EventPreprocessor
 import org.wfanet.panelmatch.client.eventpreprocessing.PreprocessEventsRequest
 import org.wfanet.panelmatch.client.eventpreprocessing.PreprocessEventsResponse
 import org.wfanet.panelmatch.client.eventpreprocessing.PreprocessEventsResponseKt.processedEvent
-import org.wfanet.panelmatch.client.eventpreprocessing.EventPreprocessor
 import org.wfanet.panelmatch.client.eventpreprocessing.preprocessEventsResponse
 
 /** A fake [EventPreprocessor] implementation. */

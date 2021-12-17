@@ -51,6 +51,7 @@ import org.wfanet.measurement.common.testing.chainRulesSequentially
 import org.wfanet.measurement.common.toProtoDate
 import org.wfanet.measurement.integration.deploy.gcloud.buildKingdomSpannerEmulatorDatabaseRule
 import org.wfanet.measurement.integration.deploy.gcloud.buildSpannerInProcessKingdom
+import org.wfanet.panelmatch.client.common.StepContext
 import org.wfanet.panelmatch.common.ExchangeDateKey
 import org.wfanet.panelmatch.common.loggerFor
 import org.wfanet.panelmatch.common.testing.runBlockingTest
@@ -75,6 +76,8 @@ abstract class AbstractInProcessPanelMatchIntegrationTest {
   protected abstract val exchangeWorkflowResourcePath: String
   protected abstract val initialDataProviderInputs: Map<String, ByteString>
   protected abstract val initialModelProviderInputs: Map<String, ByteString>
+  protected abstract val edpStepContexts: Map<ExchangeWorkflow.Step.StepCase, StepContext>
+  protected abstract val mpStepContexts: Map<ExchangeWorkflow.Step.StepCase, StepContext>
 
   /** This is responsible for making an assertions about the final state of the workflow. */
   protected abstract fun validateFinalState(
@@ -184,7 +187,8 @@ abstract class AbstractInProcessPanelMatchIntegrationTest {
   private fun makeDaemon(
     owner: ProviderContext,
     partner: ProviderContext,
-    exchangeDateKey: ExchangeDateKey
+    exchangeDateKey: ExchangeDateKey,
+    stepContexts: Map<ExchangeWorkflow.Step.StepCase, StepContext>,
   ): ExchangeWorkflowDaemonForTest {
     return ExchangeWorkflowDaemonForTest(
       v2alphaChannel = inProcessKingdom.publicApiChannel,
@@ -194,7 +198,8 @@ abstract class AbstractInProcessPanelMatchIntegrationTest {
       serializedExchangeWorkflow = serializedExchangeWorkflow,
       privateDirectory = owner.privateStoragePath,
       sharedDirectory = sharedFolder.root.toPath(),
-      scope = owner.scope
+      scope = owner.scope,
+      stepContexts = stepContexts,
     )
   }
 
@@ -234,8 +239,10 @@ abstract class AbstractInProcessPanelMatchIntegrationTest {
   @Test
   fun runTest() = runBlockingTest {
     val exchangeDateKey = ExchangeDateKey(recurringExchangeId, EXCHANGE_DATE)
-    val dataProviderDaemon = makeDaemon(dataProviderContext, modelProviderContext, exchangeDateKey)
-    val modelProviderDaemon = makeDaemon(modelProviderContext, dataProviderContext, exchangeDateKey)
+    val dataProviderDaemon =
+      makeDaemon(dataProviderContext, modelProviderContext, exchangeDateKey, edpStepContexts)
+    val modelProviderDaemon =
+      makeDaemon(modelProviderContext, dataProviderContext, exchangeDateKey, mpStepContexts)
 
     for ((blobKey, value) in initialDataProviderInputs) {
       dataProviderDaemon.writePrivateBlob(blobKey, value)

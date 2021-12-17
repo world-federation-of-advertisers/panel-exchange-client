@@ -19,6 +19,8 @@ import com.google.protobuf.ByteString
 import com.google.protobuf.kotlin.toByteStringUtf8
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
+import org.wfanet.measurement.api.v2alpha.ExchangeWorkflow.Step.StepCase
+import org.wfanet.panelmatch.client.common.StepContext
 
 private val HKDF_PEPPER = "some-hkdf-pepper".toByteStringUtf8()
 
@@ -30,6 +32,9 @@ class MiniWorkflowTest : AbstractInProcessPanelMatchIntegrationTest() {
     mapOf("edp-hkdf-pepper" to HKDF_PEPPER)
 
   override val initialModelProviderInputs: Map<String, ByteString> = emptyMap()
+
+  override val edpStepContexts = emptyMap<StepCase, StepContext>()
+  override val mpStepContexts = emptyMap<StepCase, StepContext>()
 
   override fun validateFinalState(
     dataProviderDaemon: ExchangeWorkflowDaemonForTest,

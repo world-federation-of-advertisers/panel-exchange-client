@@ -23,15 +23,10 @@ import org.junit.runners.JUnit4
 import org.wfanet.measurement.api.v2alpha.ExchangeWorkflow.Step.StepCase
 import org.wfanet.measurement.common.flatten
 import org.wfanet.panelmatch.client.common.StepContext
-import org.wfanet.panelmatch.client.common.databaseEntryOf
-import org.wfanet.panelmatch.client.common.encryptedEntryOf
 import org.wfanet.panelmatch.client.common.joinKeyAndIdOf
-import org.wfanet.panelmatch.client.common.lookupKeyOf
-import org.wfanet.panelmatch.client.eventpreprocessing.JniEventPreprocessor
-import org.wfanet.panelmatch.client.eventpreprocessing.preprocessEventsRequest
-import org.wfanet.panelmatch.client.eventpreprocessing.unprocessedEvent
+import org.wfanet.panelmatch.client.common.unprocessedEventOf
+import org.wfanet.panelmatch.client.eventpreprocessing.PreprocessingStepContext
 import org.wfanet.panelmatch.client.exchangetasks.joinKeyAndIdCollection
-import org.wfanet.panelmatch.client.privatemembership.DatabaseEntry
 import org.wfanet.panelmatch.client.privatemembership.keyedDecryptedEventDataSet
 import org.wfanet.panelmatch.common.compression.CompressionParametersKt.brotliCompressionParameters
 import org.wfanet.panelmatch.common.compression.compressionParameters
@@ -51,55 +46,45 @@ private val EDP_HKDF_PEPPER = "edp-hkdf-pepper".toByteStringUtf8()
 private val EDP_COMPRESSION_PARAMETERS = compressionParameters {
   brotli = brotliCompressionParameters { dictionary = ByteString.EMPTY }
 }
-private val EDP_ENCRYPTED_EVENT_DATA_MANIFEST = "edp-encrypted-event-data-?-of-1".toByteStringUtf8()
+private val EDP_EVENT_DATA_MANIFEST = "edp-event-data-?-of-1".toByteStringUtf8()
 
-private fun makeDatabaseEntry(index: Int): DatabaseEntry {
-  val request = preprocessEventsRequest {
-    cryptoKey = EDP_COMMUTATIVE_DETERMINISTIC_KEY
-    hkdfPepper = EDP_HKDF_PEPPER
-    identifierHashPepper = EDP_IDENTIFIER_HASH_PEPPER
-    compressionParameters = EDP_COMPRESSION_PARAMETERS
-    unprocessedEvents +=
-      unprocessedEvent {
-        id = "join-key-$index".toByteStringUtf8()
-        data = "payload-for-join-key-$index".toByteStringUtf8()
-      }
+private val EDP_DATABASE_ENTRIES =
+  (0 until 100).map { index ->
+    unprocessedEventOf(
+      "join-key-$index".toByteStringUtf8(),
+      "payload-for-join-key-$index".toByteStringUtf8()
+    )
   }
-  val response = JniEventPreprocessor().preprocess(request)
-  val processedEvent = response.processedEventsList.single()
-  return databaseEntryOf(
-    lookupKeyOf(processedEvent.encryptedId),
-    encryptedEntryOf(processedEvent.encryptedData)
+
+private val EDP_EVENT_DATA_BLOB = EDP_DATABASE_ENTRIES.map { it.toDelimitedByteString() }.flatten()
+
+private val PREPROCESSING_STEP_CONTEXT =
+  PreprocessingStepContext(
+    maxByteSize = 1024.toLong(),
+    fileCount = 5,
   )
-}
-
-private val EDP_DATABASE_ENTRIES = (0 until 100).map { makeDatabaseEntry(it) }
-
-private val EDP_ENCRYPTED_EVENT_DATA_BLOB =
-  EDP_DATABASE_ENTRIES.map { it.toDelimitedByteString() }.flatten()
 
 @RunWith(JUnit4::class)
-class FullWorkflowTest : AbstractInProcessPanelMatchIntegrationTest() {
-  override val exchangeWorkflowResourcePath: String = "config/full_exchange_workflow.textproto"
-
+class FullWithPreprocessingTest : AbstractInProcessPanelMatchIntegrationTest() {
+  override val exchangeWorkflowResourcePath: String = "config/full_with_preprocessing.textproto"
+  // TODO: Add generate pepper step
   override val initialDataProviderInputs: Map<String, ByteString> =
     mapOf(
+      "edp-event-data" to EDP_EVENT_DATA_MANIFEST,
+      "edp-event-data-0-of-1" to EDP_EVENT_DATA_BLOB,
       "edp-identifier-hash-pepper" to EDP_IDENTIFIER_HASH_PEPPER,
-      "edp-commutative-deterministic-key" to EDP_COMMUTATIVE_DETERMINISTIC_KEY,
-      "edp-encrypted-event-data" to EDP_ENCRYPTED_EVENT_DATA_MANIFEST,
-      "edp-encrypted-event-data-0-of-1" to EDP_ENCRYPTED_EVENT_DATA_BLOB,
-      "edp-compression-parameters" to EDP_COMPRESSION_PARAMETERS.toByteString(),
       "edp-hkdf-pepper" to EDP_HKDF_PEPPER,
+      "edp-compression-parameters" to EDP_COMPRESSION_PARAMETERS.toByteString(),
       "edp-previous-single-blinded-join-keys" to ByteString.EMPTY,
     )
+  override val edpStepContexts =
+    mapOf(StepCase.PREPROCESS_EVENTS_STEP to PREPROCESSING_STEP_CONTEXT)
+  override val mpStepContexts = emptyMap<StepCase, StepContext>()
 
   override val initialModelProviderInputs: Map<String, ByteString> =
     mapOf(
       "mp-plaintext-join-keys" to PLAINTEXT_JOIN_KEYS.toByteString(),
     )
-
-  override val edpStepContexts = emptyMap<StepCase, StepContext>()
-  override val mpStepContexts = emptyMap<StepCase, StepContext>()
 
   override fun validateFinalState(
     dataProviderDaemon: ExchangeWorkflowDaemonForTest,

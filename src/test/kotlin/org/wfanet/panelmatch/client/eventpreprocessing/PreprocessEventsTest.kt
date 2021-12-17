@@ -15,18 +15,16 @@
 package org.wfanet.panelmatch.client.eventpreprocessing
 
 import com.google.common.truth.Truth.assertThat
-import com.google.protobuf.ByteString
 import com.google.protobuf.kotlin.toByteStringUtf8
-import org.apache.beam.sdk.values.KV
-import org.apache.beam.sdk.values.PCollectionView
+import org.apache.beam.sdk.extensions.protobuf.ProtoCoder
+import org.apache.beam.sdk.values.PCollection
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
-import org.wfanet.panelmatch.client.common.testing.eventsOf
+import org.wfanet.panelmatch.client.common.unprocessedEventOf
 import org.wfanet.panelmatch.common.beam.map
 import org.wfanet.panelmatch.common.beam.testing.BeamTestBase
 import org.wfanet.panelmatch.common.beam.testing.assertThat
-import org.wfanet.panelmatch.common.compression.CompressionParameters
 import org.wfanet.panelmatch.common.compression.CompressionParametersKt.noCompression
 import org.wfanet.panelmatch.common.compression.compressionParameters
 
@@ -43,32 +41,30 @@ class PreprocessEventsTest : BeamTestBase() {
 
   @Test
   fun hardCodedProviders() {
-    val events =
-      eventsOf("A" to "B", "C" to "D").map { event: KV<ByteString, ByteString> ->
-        unprocessedEvent {
-          id = event.key
-          data = event.value
-        }
-      }
-    val compressionParametersView: PCollectionView<CompressionParameters> =
-      pcollectionViewOf("Create Compression Parameters", COMPRESSION_PARAMETERS)
+    val rawEvents: List<UnprocessedEvent> =
+      listOf(
+        unprocessedEventOf("id-1".toByteStringUtf8(), "event-1".toByteStringUtf8()),
+        unprocessedEventOf("id-2".toByteStringUtf8(), "event-2".toByteStringUtf8()),
+      )
+    val unprocessedEvents: PCollection<UnprocessedEvent> =
+      pcollectionOf("unprocessed events", rawEvents)
+        .setCoder(ProtoCoder.of(UnprocessedEvent::class.java))
     val encryptedEvents =
-      events.apply(
-        PreprocessEvents(
-          MAX_BYTE_SIZE,
-          IDENTIFIER_HASH_PEPPER_PROVIDER,
-          HKDF_PEPPER_PROVIDER,
-          CRYPTO_KEY_PROVIDER,
-          pcollectionViewOf("Create Compression Parameters", COMPRESSION_PARAMETERS),
-          JniEventPreprocessor()
-        )
+      preprocessEvents(
+        unprocessedEvents,
+        MAX_BYTE_SIZE,
+        IDENTIFIER_HASH_PEPPER_PROVIDER,
+        HKDF_PEPPER_PROVIDER,
+        CRYPTO_KEY_PROVIDER,
+        JniEventPreprocessor(),
+        pcollectionViewOf("Create Compression Parameters", COMPRESSION_PARAMETERS),
       )
 
     assertThat(encryptedEvents).satisfies {
       val results = it.toList()
       assertThat(results).hasSize(2)
-      assertThat(results.map { databaseEntry -> databaseEntry.plaintext.payload })
-        .containsNoneOf("B".toByteStringUtf8(), "D".toByteStringUtf8())
+      assertThat(results.map { databaseEntry -> databaseEntry.encryptedEntry.data })
+        .containsNoneOf("event-1".toByteStringUtf8(), "event-2".toByteStringUtf8())
       null
     }
   }

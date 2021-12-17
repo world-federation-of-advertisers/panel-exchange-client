@@ -22,14 +22,36 @@ import org.apache.beam.sdk.values.PCollection
 import org.apache.beam.sdk.values.PCollectionView
 import org.wfanet.panelmatch.client.privatemembership.DatabaseEntry
 import org.wfanet.panelmatch.client.privatemembership.databaseEntry
-import org.wfanet.panelmatch.client.privatemembership.databaseKey
-import org.wfanet.panelmatch.client.privatemembership.plaintext
+import org.wfanet.panelmatch.client.privatemembership.encryptedEntry
+import org.wfanet.panelmatch.client.privatemembership.lookupKey
 import org.wfanet.panelmatch.common.beam.groupByKey
 import org.wfanet.panelmatch.common.beam.kvOf
 import org.wfanet.panelmatch.common.beam.map
 import org.wfanet.panelmatch.common.beam.mapValues
 import org.wfanet.panelmatch.common.beam.parDo
 import org.wfanet.panelmatch.common.compression.CompressionParameters
+
+fun preprocessEvents(
+  unprocessedEvents: PCollection<UnprocessedEvent>,
+  maxByteSize: Long,
+  identifierHashPepperProvider: IdentifierHashPepperProvider,
+  hkdfPepperProvider: HkdfPepperProvider,
+  cryptoKeyProvider: DeterministicCommutativeCipherKeyProvider,
+  eventPreprocessor: EventPreprocessor,
+  compressionParametersView: PCollectionView<CompressionParameters>,
+): PCollection<DatabaseEntry> {
+  return unprocessedEvents.apply(
+    "Preprocess Events",
+    PreprocessEvents(
+      maxByteSize = maxByteSize,
+      identifierHashPepperProvider = identifierHashPepperProvider,
+      hkdfPepperProvider = hkdfPepperProvider,
+      cryptoKeyProvider = cryptoKeyProvider,
+      eventPreprocessor = eventPreprocessor,
+      compressionParametersView = compressionParametersView,
+    )
+  )
+}
 
 /**
  * Preprocesses events for use in Private Membership.
@@ -46,8 +68,8 @@ class PreprocessEvents(
   private val identifierHashPepperProvider: IdentifierHashPepperProvider,
   private val hkdfPepperProvider: HkdfPepperProvider,
   private val cryptoKeyProvider: DeterministicCommutativeCipherKeyProvider,
+  private val eventPreprocessor: EventPreprocessor,
   private val compressionParametersView: PCollectionView<CompressionParameters>,
-  private val eventPreprocessor: EventPreprocessor
 ) : PTransform<PCollection<UnprocessedEvent>, PCollection<DatabaseEntry>>() {
 
   override fun expand(events: PCollection<UnprocessedEvent>): PCollection<DatabaseEntry> {
@@ -69,10 +91,10 @@ class PreprocessEvents(
           )
           .withSideInputs(compressionParametersView)
       )
-      .map("Map to ProcessedEvent") {
+      .map("Map to DatabaseEntry") {
         databaseEntry {
-          this.databaseKey = databaseKey { id = it.key }
-          this.plaintext = plaintext { payload = it.value }
+          this.lookupKey = lookupKey { key = it.key }
+          this.encryptedEntry = encryptedEntry { data = it.value }
         }
       }
   }

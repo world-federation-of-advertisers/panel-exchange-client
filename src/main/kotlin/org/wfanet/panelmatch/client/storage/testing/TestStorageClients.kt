@@ -85,7 +85,8 @@ private val TEST_CONTEXT =
     ),
     LocalDate.of(2020, 10, 6),
     WORKFLOW,
-    WORKFLOW.stepsList.first()
+    WORKFLOW.stepsList.first(),
+    null,
   )
 
 fun makeTestVerifiedStorageClient(

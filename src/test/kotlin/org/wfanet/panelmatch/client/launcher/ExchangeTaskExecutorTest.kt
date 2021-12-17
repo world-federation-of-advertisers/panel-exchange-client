@@ -25,10 +25,12 @@ import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
 import org.mockito.kotlin.mock
 import org.wfanet.measurement.api.v2alpha.ExchangeStepAttemptKey
+import org.wfanet.measurement.api.v2alpha.ExchangeWorkflow.Step.StepCase
 import org.wfanet.measurement.api.v2alpha.ExchangeWorkflowKt.StepKt.encryptStep
 import org.wfanet.measurement.api.v2alpha.ExchangeWorkflowKt.step
 import org.wfanet.measurement.api.v2alpha.exchangeWorkflow
 import org.wfanet.measurement.common.asBufferedFlow
+import org.wfanet.panelmatch.client.common.StepContext
 import org.wfanet.panelmatch.client.exchangetasks.testing.FakeExchangeTaskMapper
 import org.wfanet.panelmatch.client.launcher.ExchangeStepValidator.ValidatedExchangeStep
 import org.wfanet.panelmatch.client.launcher.testing.FakeTimeout
@@ -73,7 +75,8 @@ class ExchangeTaskExecutorTest {
       apiClient,
       timeout,
       testPrivateStorageSelector.selector,
-      exchangeTaskMapper
+      exchangeTaskMapper,
+      emptyMap<StepCase, StepContext>(),
     )
 
   @Before

@@ -27,6 +27,8 @@ class FakeExchangeTaskMapper : ExchangeTaskMapper() {
   override suspend fun ExchangeContext.generateEncryptionKey() =
     FakeExchangeTask("generate-encryption-key")
 
+  override suspend fun ExchangeContext.preprocessEvents() = FakeExchangeTask("preprocess-events")
+
   override suspend fun ExchangeContext.buildPrivateMembershipQueries() =
     FakeExchangeTask("build-private-membership-queries")
 

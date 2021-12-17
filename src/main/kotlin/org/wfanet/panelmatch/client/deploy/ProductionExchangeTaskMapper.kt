@@ -20,6 +20,11 @@ import org.wfanet.measurement.api.v2alpha.ExchangeWorkflow
 import org.wfanet.measurement.common.throttler.Throttler
 import org.wfanet.measurement.common.toLocalDate
 import org.wfanet.panelmatch.client.common.ExchangeContext
+import org.wfanet.panelmatch.client.eventpreprocessing.HardCodedDeterministicCommutativeCipherKeyProvider
+import org.wfanet.panelmatch.client.eventpreprocessing.HardCodedHkdfPepperProvider
+import org.wfanet.panelmatch.client.eventpreprocessing.HardCodedIdentifierHashPepperProvider
+import org.wfanet.panelmatch.client.eventpreprocessing.JniEventPreprocessor
+import org.wfanet.panelmatch.client.eventpreprocessing.PreprocessingStepContext
 import org.wfanet.panelmatch.client.exchangetasks.ApacheBeamContext
 import org.wfanet.panelmatch.client.exchangetasks.ApacheBeamTask
 import org.wfanet.panelmatch.client.exchangetasks.CopyFromPreviousExchangeTask
@@ -37,6 +42,7 @@ import org.wfanet.panelmatch.client.exchangetasks.JoinKeyHashingExchangeTask
 import org.wfanet.panelmatch.client.exchangetasks.buildPrivateMembershipQueries
 import org.wfanet.panelmatch.client.exchangetasks.decryptPrivateMembershipResults
 import org.wfanet.panelmatch.client.exchangetasks.executePrivateMembershipQueries
+import org.wfanet.panelmatch.client.exchangetasks.preprocessEventsTask
 import org.wfanet.panelmatch.client.privatemembership.CreateQueriesParameters
 import org.wfanet.panelmatch.client.privatemembership.EvaluateQueriesParameters
 import org.wfanet.panelmatch.client.privatemembership.JniPrivateMembershipCryptor
@@ -48,10 +54,8 @@ import org.wfanet.panelmatch.client.storage.SharedStorageSelector
 import org.wfanet.panelmatch.common.ShardedFileName
 import org.wfanet.panelmatch.common.certificates.CertificateManager
 import org.wfanet.panelmatch.common.crypto.JniDeterministicCommutativeCipher
-import org.wfanet.panelmatch.client.eventpreprocessing.HardCodedDeterministicCommutativeCipherKeyProvider
-import org.wfanet.panelmatch.client.eventpreprocessing.HardCodedHkdfPepperProvider
-import org.wfanet.panelmatch.client.eventpreprocessing.HardCodedIdentifierHashPepperProvider
-import org.wfanet.panelmatch.client.eventpreprocessing.JniEventPreprocessor
+
+// import kotlin.reflect.KClass.isInstance
 
 class ProductionExchangeTaskMapper(
   private val inputTaskThrottler: Throttler,
@@ -77,23 +81,25 @@ class ProductionExchangeTaskMapper(
   }
 
   override suspend fun ExchangeContext.preprocessEvents(): ExchangeTask {
-    check(step.stepCase == StepCase.PREPROCESS_EVENTS_STEP)
-    val stepDetails = step.preprocessEventsStep
+    check(step.stepCase == ExchangeWorkflow.Step.StepCase.PREPROCESS_EVENTS_STEP)
     val eventPreprocessor = JniEventPreprocessor()
-    val deterministicCommutativeCipherKeyProvider = ::HardCodedDeterministicCommutativeCipherKeyProvider
-    val hkdfPepper = ::HardCodedHkdfPepperProvider
+    val deterministicCommutativeCipherKeyProvider =
+      ::HardCodedDeterministicCommutativeCipherKeyProvider
+    val hkdfPepperProvider = ::HardCodedHkdfPepperProvider
     val identifierHashPepperProvider = ::HardCodedIdentifierHashPepperProvider
-    val outputsManifests =
-      mapOf(
-        "preprocessed-event-data" to dataProviderPreprocessedEventsFileCount
-      )
+    val preprocessingStepContext =
+      requireNotNull(stepContext) { "Preprocessing context cannot be null" }
+    require(preprocessingStepContext is PreprocessingStepContext) {
+      "Invalid Preprocessing Step Context"
+    }
+    val outputsManifests = mapOf("preprocessed-event-data" to preprocessingStepContext.fileCount)
     return apacheBeamTaskFor(outputsManifests) {
       preprocessEventsTask(
         eventPreprocessor = eventPreprocessor,
         deterministicCommutativeCipherKeyProvider = deterministicCommutativeCipherKeyProvider,
         identifierPepperProvider = identifierHashPepperProvider,
         hkdfPepperProvider = hkdfPepperProvider,
-        maxByteSize = dataProviderMaxByteSize,
+        maxByteSize = preprocessingStepContext.maxByteSize,
       )
     }
   }

@@ -24,6 +24,7 @@ import org.wfanet.measurement.api.v2alpha.ExchangeWorkflow.Step
 import org.wfanet.measurement.storage.StorageClient
 import org.wfanet.measurement.storage.StorageClient.Blob
 import org.wfanet.panelmatch.client.common.ExchangeContext
+import org.wfanet.panelmatch.client.common.StepContext
 import org.wfanet.panelmatch.client.exchangetasks.CustomIOExchangeTask
 import org.wfanet.panelmatch.client.exchangetasks.ExchangeTask
 import org.wfanet.panelmatch.client.exchangetasks.ExchangeTaskMapper
@@ -49,13 +50,24 @@ class ExchangeTaskExecutor(
   private val apiClient: ApiClient,
   private val timeout: Timeout,
   private val privateStorageSelector: PrivateStorageSelector,
-  private val exchangeTaskMapper: ExchangeTaskMapper
+  private val exchangeTaskMapper: ExchangeTaskMapper,
+  private val stepContexts: Map<Step.StepCase, StepContext>,
 ) : ExchangeStepExecutor {
 
-  override suspend fun execute(step: ValidatedExchangeStep, attemptKey: ExchangeStepAttemptKey) {
-    val name = "${step.step.stepId}@${attemptKey.toName()}"
+  override suspend fun execute(
+    validatedStep: ValidatedExchangeStep,
+    attemptKey: ExchangeStepAttemptKey
+  ) {
+    val name = "${validatedStep.step.stepId}@${attemptKey.toName()}"
     withContext(TaskLog(name)) {
-      val context = ExchangeContext(attemptKey, step.date, step.workflow, step.step)
+      val context =
+        ExchangeContext(
+          attemptKey,
+          validatedStep.date,
+          validatedStep.workflow,
+          validatedStep.step,
+          stepContexts.get(validatedStep.step.stepCase)
+        )
       try {
         context.tryExecute()
       } catch (e: Exception) {

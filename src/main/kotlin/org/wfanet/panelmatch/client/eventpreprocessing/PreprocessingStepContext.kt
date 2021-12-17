@@ -14,8 +14,9 @@
 
 package org.wfanet.panelmatch.client.eventpreprocessing
 
-data class PreprocessingContext(
-  val dataProviderMaxByteSize: Long,
-  val dataProviderPreprocessedEventsFileCount: Int,
-  val eventPreprocessor: EventPreprocessor,
-)
+import org.wfanet.panelmatch.client.common.StepContext
+
+data class PreprocessingStepContext(
+  val maxByteSize: Long,
+  val fileCount: Int,
+) : StepContext

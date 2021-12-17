@@ -18,6 +18,7 @@ import java.net.InetSocketAddress
 import java.time.Duration
 import org.wfanet.measurement.api.v2alpha.ExchangeWorkflow.Party
 import org.wfanet.measurement.common.grpc.TlsFlags
+import org.wfanet.panelmatch.client.eventpreprocessing.PreprocessingStepContext
 import picocli.CommandLine
 import picocli.CommandLine.ITypeConverter
 import picocli.CommandLine.Option
@@ -94,20 +95,24 @@ class ExchangeWorkflowFlags {
   lateinit var exchangeApiCertHost: String
     private set
 
-  @CommandLine.Option(
-    names = ["--data-provider-max-byte-size"],
+  @CommandLine.Mixin
+  lateinit var preprocessingStepContext: PreprocessingStepContext
+    private set
+
+  @Option(
+    names = ["--max-byte-size"],
     description = ["Max batch size for processing"],
     required = true
   )
   lateinit var dataProviderMaxByteSize: String
     private set
 
-  @CommandLine.Option(
-    names = ["--data-provider-event-preprocessing-file-count"],
+  @Option(
+    names = ["--file-count"],
     description = ["Number of output files from event preprocessing step"],
     required = true
   )
-  lateinit var dataProviderPreprocessedEventsFileCount: String
+  lateinit var fileCount: String
     private set
 
   private inner class InetSocketAddressConverter : ITypeConverter<InetSocketAddress> {

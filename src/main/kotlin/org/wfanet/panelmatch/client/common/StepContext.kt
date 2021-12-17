@@ -12,14 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package org.wfanet.panelmatch.client.launcher
+package org.wfanet.panelmatch.client.common
 
-import org.wfanet.measurement.api.v2alpha.ExchangeStepAttemptKey
-import org.wfanet.measurement.api.v2alpha.ExchangeWorkflow
-import org.wfanet.panelmatch.client.launcher.ExchangeStepValidator.ValidatedExchangeStep
+import java.io.Serializable
 
-/** Executes [ExchangeWorkflow.Step]s. */
-interface ExchangeStepExecutor {
-  /** Executes [step]. */
-  suspend fun execute(validatedStep: ValidatedExchangeStep, attemptKey: ExchangeStepAttemptKey)
-}
+interface StepContext : Serializable

@@ -119,8 +119,8 @@ fun main(args: Array<String>) {
         HardCodedIdentifierHashPepperProvider(options.identifierHashPepper.toByteStringUtf8()),
         HardCodedHkdfPepperProvider(options.hkdfPepper.toByteStringUtf8()),
         HardCodedDeterministicCommutativeCipherKeyProvider(options.cryptokey.toByteStringUtf8()),
+        JniEventPreprocessor(),
         compressionParameters,
-        JniEventPreprocessor()
       )
     )
 
@@ -166,8 +166,8 @@ private fun writeToBigQuery(encryptedEvents: PCollection<DatabaseEntry>, outputT
   val encryptedTableRows =
     encryptedEvents.map(name = "Map to TableRows") {
       TableRow()
-        .set("EncryptedId", it.databaseKey.id)
-        .set("EncryptedData", Base64.getEncoder().encode(it.plaintext.payload.toByteArray()))
+        .set("EncryptedId", it.lookupKey.key)
+        .set("EncryptedData", Base64.getEncoder().encode(it.encryptedEntry.data.toByteArray()))
     }
 
   // Write to BigQueryIO

@@ -63,7 +63,7 @@ class ExchangeTaskMapperTest {
 
   @Test
   fun `map input task`() = runBlockingTest {
-    val context = ExchangeContext(ATTEMPT_KEY, DATE, WORKFLOW, WORKFLOW.getSteps(0))
+    val context = ExchangeContext(ATTEMPT_KEY, DATE, WORKFLOW, WORKFLOW.getSteps(0), null)
     val exchangeTask = exchangeTaskMapper.getExchangeTaskForStep(context)
     assertThat(exchangeTask).isInstanceOf(FakeExchangeTask::class.java)
     assertThat((exchangeTask as FakeExchangeTask).taskName).isEqualTo("input")
@@ -71,7 +71,7 @@ class ExchangeTaskMapperTest {
 
   @Test
   fun `map crypto task`() = runBlockingTest {
-    val context = ExchangeContext(ATTEMPT_KEY, DATE, WORKFLOW, WORKFLOW.getSteps(1))
+    val context = ExchangeContext(ATTEMPT_KEY, DATE, WORKFLOW, WORKFLOW.getSteps(1), null)
     val exchangeTask = exchangeTaskMapper.getExchangeTaskForStep(context)
     assertThat(exchangeTask).isInstanceOf(FakeExchangeTask::class.java)
     assertThat((exchangeTask as FakeExchangeTask).taskName).isEqualTo("encrypt")

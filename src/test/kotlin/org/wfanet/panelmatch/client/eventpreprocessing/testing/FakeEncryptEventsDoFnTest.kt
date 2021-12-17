@@ -26,7 +26,6 @@ import org.apache.beam.sdk.values.KV
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
-import org.wfanet.panelmatch.client.eventpreprocessing.PreprocessEventsResponseKt.processedEvent
 import org.wfanet.panelmatch.client.eventpreprocessing.EncryptEventsDoFn
 import org.wfanet.panelmatch.client.eventpreprocessing.HardCodedDeterministicCommutativeCipherKeyProvider
 import org.wfanet.panelmatch.client.eventpreprocessing.HardCodedHkdfPepperProvider

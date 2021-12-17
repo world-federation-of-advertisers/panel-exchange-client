@@ -15,26 +15,18 @@
 package org.wfanet.panelmatch.client.exchangetasks
 
 import com.google.protobuf.ByteString
-import com.google.protobuf.kotlin.toByteStringUtf8
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flowOf
-import org.apache.beam.sdk.Pipeline
 import org.apache.beam.sdk.values.PCollection
-import org.wfanet.measurement.storage.StorageClient
 import org.wfanet.panelmatch.client.eventpreprocessing.DeterministicCommutativeCipherKeyProvider
+import org.wfanet.panelmatch.client.eventpreprocessing.EventPreprocessor
 import org.wfanet.panelmatch.client.eventpreprocessing.HkdfPepperProvider
 import org.wfanet.panelmatch.client.eventpreprocessing.IdentifierHashPepperProvider
-import org.wfanet.panelmatch.client.eventpreprocessing.PreprocessEvents
-import org.wfanet.panelmatch.client.eventpreprocessing.EventPreprocessor
-import org.wfanet.panelmatch.client.eventpreprocessing.unprocessedEvent
 import org.wfanet.panelmatch.client.eventpreprocessing.UnprocessedEvent
+import org.wfanet.panelmatch.client.eventpreprocessing.preprocessEvents
+import org.wfanet.panelmatch.client.eventpreprocessing.unprocessedEvent
 import org.wfanet.panelmatch.client.privatemembership.DatabaseEntry
-import org.wfanet.panelmatch.common.ShardedFileName
 import org.wfanet.panelmatch.common.beam.map
 import org.wfanet.panelmatch.common.beam.toSingletonView
 import org.wfanet.panelmatch.common.compression.CompressionParameters
-import org.wfanet.panelmatch.common.storage.toByteString
-import org.wfanet.panelmatch.common.storage.toStringUtf8
 
 suspend fun ApacheBeamContext.preprocessEventsTask(
   eventPreprocessor: EventPreprocessor,
@@ -45,29 +37,28 @@ suspend fun ApacheBeamContext.preprocessEventsTask(
   maxByteSize: Long
 ) {
 
-    val unprocessedEventData: PCollection<UnprocessedEvent> =
-      readShardedPCollection("unprocessed-event-data", unprocessedEvent {})
+  val unprocessedEventData: PCollection<UnprocessedEvent> =
+    readShardedPCollection("unprocessed-event-data", unprocessedEvent {})
 
-    val hkdfPepper = readBlob("hkdf-pepper")
-    val identifierPepper = readBlob("identifier-pepper")
-    val encryptionKey = readBlob("encryption-key")
+  val hkdfPepper = readBlob("hkdf-pepper")
+  val identifierPepper = readBlob("identifier-pepper")
+  val encryptionKey = readBlob("encryption-key")
 
-    val compressionParameters =
-      readBlobAsPCollection("compression-parameters")
-        .map("Parse as CompressionParameters") { CompressionParameters.parseFrom(it) }
-        .toSingletonView()
+  val compressionParameters =
+    readBlobAsPCollection("compression-parameters")
+      .map("Parse as CompressionParameters") { CompressionParameters.parseFrom(it) }
+      .toSingletonView()
 
-    val preprocessedEvents: PCollection<DatabaseEntry> =
-      unprocessedEventData.apply(
-        PreprocessEvents(
-          maxByteSize,
-          identifierPepperProvider(identifierPepper),
-          hkdfPepperProvider(hkdfPepper),
-          deterministicCommutativeCipherKeyProvider(encryptionKey),
-          compressionParameters,
-          eventPreprocessor,
-        )
-      )
+  val preprocessedEvents: PCollection<DatabaseEntry> =
+    preprocessEvents(
+      unprocessedEventData,
+      maxByteSize,
+      identifierPepperProvider(identifierPepper),
+      hkdfPepperProvider(hkdfPepper),
+      deterministicCommutativeCipherKeyProvider(encryptionKey),
+      eventPreprocessor,
+      compressionParameters,
+    )
 
-    preprocessedEvents.write("preprocessed-event-data")
+  preprocessedEvents.write("preprocessed-event-data")
 }
