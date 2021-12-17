@@ -37,7 +37,7 @@ import org.wfanet.panelmatch.client.eventpreprocessing.HardCodedDeterministicCom
 import org.wfanet.panelmatch.client.eventpreprocessing.HardCodedHkdfPepperProvider
 import org.wfanet.panelmatch.client.eventpreprocessing.HardCodedIdentifierHashPepperProvider
 import org.wfanet.panelmatch.client.eventpreprocessing.JniEventPreprocessor
-import org.wfanet.panelmatch.client.eventpreprocessing.PreprocessEvents
+import org.wfanet.panelmatch.client.eventpreprocessing.PreprocessEventsTransform
 import org.wfanet.panelmatch.client.eventpreprocessing.UnprocessedEvent
 import org.wfanet.panelmatch.client.eventpreprocessing.unprocessedEvent
 import org.wfanet.panelmatch.client.privatemembership.DatabaseEntry
@@ -114,7 +114,7 @@ fun main(args: Array<String>) {
   val encryptedEvents =
     unencryptedEvents.apply(
       "PreprocessEvents",
-      PreprocessEvents(
+      PreprocessEventsTransform(
         options.batchSize,
         HardCodedIdentifierHashPepperProvider(options.identifierHashPepper.toByteStringUtf8()),
         HardCodedHkdfPepperProvider(options.hkdfPepper.toByteStringUtf8()),

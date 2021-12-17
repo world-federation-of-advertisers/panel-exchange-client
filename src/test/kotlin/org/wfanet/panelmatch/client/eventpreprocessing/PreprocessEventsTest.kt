@@ -16,7 +16,6 @@ package org.wfanet.panelmatch.client.eventpreprocessing
 
 import com.google.common.truth.Truth.assertThat
 import com.google.protobuf.kotlin.toByteStringUtf8
-import org.apache.beam.sdk.extensions.protobuf.ProtoCoder
 import org.apache.beam.sdk.values.PCollection
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -48,7 +47,6 @@ class PreprocessEventsTest : BeamTestBase() {
       )
     val unprocessedEvents: PCollection<UnprocessedEvent> =
       pcollectionOf("unprocessed events", rawEvents)
-        .setCoder(ProtoCoder.of(UnprocessedEvent::class.java))
     val encryptedEvents =
       preprocessEvents(
         unprocessedEvents,

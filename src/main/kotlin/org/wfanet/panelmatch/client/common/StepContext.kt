@@ -16,4 +16,5 @@ package org.wfanet.panelmatch.client.common
 
 import java.io.Serializable
 
+/** Serializable interface containing additional context for an exchange step */
 interface StepContext : Serializable

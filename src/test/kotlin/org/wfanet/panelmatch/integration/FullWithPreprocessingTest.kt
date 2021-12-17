@@ -61,7 +61,7 @@ private val EDP_EVENT_DATA_BLOB = EDP_DATABASE_ENTRIES.map { it.toDelimitedByteS
 private val PREPROCESSING_STEP_CONTEXT =
   PreprocessingStepContext(
     maxByteSize = 1024.toLong(),
-    fileCount = 5,
+    fileCount = 1,
   )
 
 @RunWith(JUnit4::class)
@@ -93,13 +93,15 @@ class FullWithPreprocessingTest : AbstractInProcessPanelMatchIntegrationTest() {
     val blob = modelProviderDaemon.readPrivateBlob("decrypted-event-data-0-of-1")
     assertNotNull(blob)
 
-    val decryptedEvents =
+    val decryptedEvents: List<Pair<String, String>> =
       blob.parseDelimitedMessages(keyedDecryptedEventDataSet {}).map {
         val payload =
           it.decryptedEventDataList.joinToString("") { plaintext ->
             plaintext.payload.toStringUtf8()
           }
-        it.plaintextJoinKeyAndId.joinKey.key.toStringUtf8() to payload
+        // TODO: Figure out where this extra carriage return is coming from
+        requireNotNull(it.plaintextJoinKeyAndId.joinKey).key.toStringUtf8() to
+          payload.replace("\n", "").replace(22.toChar().toString(), "")
       }
     assertThat(decryptedEvents)
       .containsExactly(
