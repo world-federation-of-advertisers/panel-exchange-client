@@ -16,6 +16,7 @@ package org.wfanet.panelmatch.client.eventpreprocessing
 
 import org.wfanet.panelmatch.common.loadLibraryFromResource
 import org.wfanet.panelmatch.common.wrapJniException
+import org.wfanet.panelmatch.protocol.eventpreprocessing.EventPreprocessingSwig
 
 /** A [EventPreprocessor] implementation using the JNI [EventPreprocessor]. */
 class JniEventPreprocessor : EventPreprocessor {
@@ -23,7 +24,7 @@ class JniEventPreprocessor : EventPreprocessor {
   override fun preprocess(request: PreprocessEventsRequest): PreprocessEventsResponse {
     return wrapJniException {
       PreprocessEventsResponse.parseFrom(
-        EventPreprocessing.preprocessEventsWrapper(request.toByteArray())
+        EventPreprocessingSwig.preprocessEventsWrapper(request.toByteArray())
       )
     }
   }

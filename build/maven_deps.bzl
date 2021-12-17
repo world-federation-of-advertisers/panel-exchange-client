@@ -17,7 +17,12 @@ Step 4 of configuring WORKSPACE: Maven.
 """
 
 load("@wfa_common_jvm//build/maven:artifacts.bzl", "artifacts")
-load("@wfa_common_jvm//build:common_jvm_maven.bzl", "COMMON_JVM_MAVEN_OVERRIDE_TARGETS", "common_jvm_maven_artifacts")
+load(
+    "@wfa_common_jvm//build:common_jvm_maven.bzl",
+    "COMMON_JVM_EXCLUDED_ARTIFACTS",
+    "COMMON_JVM_MAVEN_OVERRIDE_TARGETS",
+    "common_jvm_maven_artifacts",
+)
 
 _BEAM_VERSION = "2.34.0"
 
@@ -28,6 +33,7 @@ _ARTIFACTS = artifacts.dict_to_list({
     "com.google.api:gax-grpc": "2.7.0",
     "com.google.cloud:google-cloud-bigquery": "2.4.1",
     "com.google.cloud:google-cloud-bigquerystorage": "2.6.3",
+    "com.google.cloud:google-cloud-core": "2.3.3",
     "com.google.cloud:google-cloud-nio": "0.123.10",
     "com.google.cloud:google-cloud-security-private-ca": "2.2.0",
     "com.google.cloud:google-cloud-storage": "2.2.1",
@@ -49,6 +55,7 @@ _ARTIFACTS = artifacts.dict_to_list({
     "org.apache.beam:beam-vendor-guava-26_0-jre": "0.1",
     "org.hamcrest:hamcrest": "2.2",
     "org.slf4j:slf4j-simple": "1.7.32",
+    "software.amazon.awssdk:utils": "2.17.100",
 })
 
 _EXCLUDED_ARTIFACTS = [
@@ -62,4 +69,6 @@ def panel_exchange_client_maven_override_targets():
     return COMMON_JVM_MAVEN_OVERRIDE_TARGETS
 
 def panel_exchange_client_maven_excluded_artifacts():
-    return _EXCLUDED_ARTIFACTS
+    # TODO(@efoxepstein): why does org.slf4j:slf4j-log4j12 cause build failures?
+    common_jvm_exclusions = [x for x in COMMON_JVM_EXCLUDED_ARTIFACTS if x != "org.slf4j:slf4j-log4j12"]
+    return _EXCLUDED_ARTIFACTS + common_jvm_exclusions
