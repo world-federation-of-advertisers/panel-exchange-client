@@ -10,6 +10,8 @@ kt_jvm_library(
     name = "deploy",
     srcs = glob(["*.kt"]),
     deps = [
+        "//src/main/kotlin/org/wfanet/panelmatch/client/common",
+        "//src/main/kotlin/org/wfanet/panelmatch/client/common/compression",
         "//src/main/kotlin/org/wfanet/panelmatch/client/eventpreprocessing",
         "//src/main/kotlin/org/wfanet/panelmatch/client/exchangetasks",
         "//src/main/kotlin/org/wfanet/panelmatch/client/launcher",
@@ -70,6 +72,8 @@ java_binary(
         "@wfa_common_jvm//imports/java/org/conscrypt",
         "@wfa_common_jvm//imports/java/org/junit",
         "@wfa_common_jvm//imports/java/picocli",
+        "@wfa_common_jvm//imports/kotlin/com/google/protobuf/kotlin",
+        "@wfa_common_jvm//imports/kotlin/io/grpc/health/v1:health_kt_jvm_grpc",
         "@wfa_common_jvm//imports/kotlin/kotlin:stdlib_jdk7",
         "@wfa_common_jvm//imports/kotlin/kotlin/reflect/jvm",
         "@wfa_common_jvm//imports/kotlin/kotlin/test",

@@ -1,0 +1,9 @@
+# Configuration for deploy to maven.
+
+# Since we don't bundle in libc, we should build on an older but still supported LTS Ubuntu.
+build:maven --host_platform=//build/platforms:ubuntu_18_04
+build:maven --compilation_mode=opt
+build:maven --strip=always
+build:maven --action_env=BAZEL_LINKOPTS=-Wl,-Bstatic
+build:maven --action_env=BAZEL_LINKOPTS=-static-libgcc
+build:maven --action_env=BAZEL_LINKLIBS=-l%:libstdc++.a

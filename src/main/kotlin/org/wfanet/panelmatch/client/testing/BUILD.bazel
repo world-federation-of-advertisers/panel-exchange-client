@@ -29,10 +29,7 @@ java_binary(
     create_executable = False,
     runtime_deps = [
         "//imports/java/org/slf4j:simple",
-        "@wfa_common_jvm//imports/kotlin/kotlin:stdlib_jdk7",
-        "@wfa_common_jvm//imports/kotlin/kotlin/reflect/jvm",
         "@wfa_common_jvm//imports/kotlin/kotlin/test",
-        "@wfa_common_jvm//imports/kotlin/kotlinx/coroutines:core",
         "@wfa_common_jvm//imports/kotlin/org/mockito/kotlin",
     ],
 )
