@@ -12,17 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package org.wfanet.panelmatch.client.storage
+package org.wfanet.panelmatch.client.privatemembership
 
-import com.google.cloud.storage.contrib.nio.testing.LocalStorageHelper
-import org.wfanet.measurement.gcloud.gcs.GcsStorageClient
-import org.wfanet.panelmatch.client.storage.testing.VerifiedStorageClientTest
-import org.wfanet.panelmatch.client.storage.testing.makeTestVerifiedStorageClient
+import com.google.protobuf.ByteString
+import com.google.protobuf.kotlin.toByteStringUtf8
+import org.junit.runner.RunWith
+import org.junit.runners.JUnit4
+import org.wfanet.panelmatch.client.privatemembership.testing.AbstractQueryPreparerTest
 
-private const val BUCKET = "some-test-bucket"
+@RunWith(JUnit4::class)
+class JniQueryPreparerTest : AbstractQueryPreparerTest() {
 
-class GcsVerifiedStorageClientTest : VerifiedStorageClientTest() {
-  override val storage by lazy {
-    makeTestVerifiedStorageClient(GcsStorageClient(LocalStorageHelper.getOptions().service, BUCKET))
-  }
+  override val queryPreparer: QueryPreparer = JniQueryPreparer()
+
+  override val identifierHashPepper: ByteString = "some-pepper".toByteStringUtf8()
 }

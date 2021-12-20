@@ -16,7 +16,7 @@ package org.wfanet.panelmatch.client.exchangetasks
 
 import com.google.protobuf.ByteString
 import kotlinx.coroutines.flow.Flow
-import org.wfanet.measurement.common.asBufferedFlow
+import kotlinx.coroutines.flow.flowOf
 import org.wfanet.measurement.storage.StorageClient
 import org.wfanet.panelmatch.client.logger.addToTaskLog
 import org.wfanet.panelmatch.common.crypto.DeterministicCommutativeCipher
@@ -25,6 +25,11 @@ import org.wfanet.panelmatch.common.storage.toByteString
 
 private const val INPUT_CRYPTO_KEY_LABEL = "encryption-key"
 
+/**
+ * Performs deterministic, commutative encryption on the items in a [JoinKeyAndIdCollection].
+ *
+ * The [operation] should output items in the same order that they are input.
+ */
 class CryptorExchangeTask
 internal constructor(
   private val operation: (ByteString, List<ByteString>) -> List<ByteString>,
@@ -44,14 +49,13 @@ internal constructor(
     //  serialization.
     val cryptoKey = input.getValue(INPUT_CRYPTO_KEY_LABEL).toByteString()
     val serializedInputs = input.getValue(inputDataLabel).toByteString()
-    val inputList = JoinKeyAndIdCollection.parseFrom(serializedInputs).joinKeysAndIdsList
+    val inputList = JoinKeyAndIdCollection.parseFrom(serializedInputs).joinKeyAndIdsList
     val joinKeys = inputList.map { it.joinKey.key }
     val joinKeyIds = inputList.map { it.joinKeyIdentifier }
     val results = operation(cryptoKey, joinKeys)
-    /** For now, we assume the join keys return in the same order that they were input. */
     val serializedOutput =
       joinKeyAndIdCollection {
-          joinKeysAndIds +=
+          joinKeyAndIds +=
             results.zip(joinKeyIds) { result: ByteString, joinKeyId: JoinKeyIdentifier ->
               joinKeyAndId {
                 this.joinKey = joinKey { key = result }
@@ -60,7 +64,7 @@ internal constructor(
             }
         }
         .toByteString()
-    return mapOf(outputDataLabel to serializedOutput.asBufferedFlow(1024))
+    return mapOf(outputDataLabel to flowOf(serializedOutput))
   }
 
   companion object {

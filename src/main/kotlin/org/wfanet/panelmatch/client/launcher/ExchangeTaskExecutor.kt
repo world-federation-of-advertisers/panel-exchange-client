@@ -23,6 +23,7 @@ import org.wfanet.measurement.api.v2alpha.ExchangeStepAttemptKey
 import org.wfanet.measurement.api.v2alpha.ExchangeWorkflow.Step
 import org.wfanet.measurement.storage.StorageClient
 import org.wfanet.measurement.storage.StorageClient.Blob
+import org.wfanet.measurement.storage.createBlob
 import org.wfanet.panelmatch.client.common.ExchangeContext
 import org.wfanet.panelmatch.client.exchangetasks.CustomIOExchangeTask
 import org.wfanet.panelmatch.client.exchangetasks.ExchangeTask
@@ -34,14 +35,15 @@ import org.wfanet.panelmatch.client.logger.getAndClearTaskLog
 import org.wfanet.panelmatch.client.storage.PrivateStorageSelector
 import org.wfanet.panelmatch.common.Timeout
 import org.wfanet.panelmatch.common.loggerFor
-import org.wfanet.panelmatch.common.storage.createBlob
 import org.wfanet.panelmatch.common.storage.createOrReplaceBlob
 
 private const val DONE_TASKS_PATH: String = "done-tasks"
 
 /**
- * Maps ExchangeWorkflow.Step to respective tasks. Retrieves necessary inputs. Executes step. Stores
- * outputs.
+ * Executes the work required for [ValidatedExchangeStep]s.
+ *
+ * This involves finding the appropriate [ExchangeTask], reading the inputs, executing the
+ * [ExchangeTask], and saving the outputs.
  */
 class ExchangeTaskExecutor(
   private val apiClient: ApiClient,

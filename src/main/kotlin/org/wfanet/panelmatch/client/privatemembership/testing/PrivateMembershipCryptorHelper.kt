@@ -29,7 +29,7 @@ import org.wfanet.panelmatch.client.privatemembership.QueryId
 import org.wfanet.panelmatch.client.privatemembership.ShardId
 import org.wfanet.panelmatch.common.crypto.AsymmetricKeys
 
-/** Used for testing createQueries (eg reversing some of the operations) */
+/** Helps test the Private Membership implementation (e.g. by reversing some operations) */
 interface PrivateMembershipCryptorHelper : Serializable {
 
   /** Constructs an encrypted query bundle */
@@ -67,18 +67,4 @@ data class ShardedQuery(val shardId: ShardId, val queryId: QueryId, val bucketId
     query: Int,
     bucket: Int
   ) : this(shardIdOf(shard), queryIdOf(query), bucketIdOf(bucket))
-}
-
-data class PanelistQuery(
-  val shardId: ShardId,
-  val hashedJoinKey: JoinKey,
-  val lookupKey: JoinKey,
-  val bucketId: BucketId
-) : Serializable {
-  constructor(
-    shard: Int,
-    hashedJoinKey: String,
-    lookupKey: String,
-    bucket: Int
-  ) : this(shardIdOf(shard), joinKeyOf(hashedJoinKey), joinKeyOf(lookupKey), bucketIdOf(bucket))
 }

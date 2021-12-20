@@ -15,6 +15,7 @@
 package org.wfanet.panelmatch.integration
 
 import com.google.protobuf.ByteString
+import com.google.protobuf.kotlin.toByteString
 import io.grpc.Channel
 import java.nio.file.Path
 import java.time.Clock
@@ -22,15 +23,17 @@ import java.time.Duration
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
+import org.apache.beam.sdk.options.PipelineOptionsFactory
 import org.wfanet.measurement.api.v2alpha.ExchangeStepAttemptsGrpcKt.ExchangeStepAttemptsCoroutineStub
 import org.wfanet.measurement.api.v2alpha.ExchangeStepsGrpcKt.ExchangeStepsCoroutineStub
 import org.wfanet.measurement.api.v2alpha.ResourceKey
 import org.wfanet.measurement.common.identity.withPrincipalName
 import org.wfanet.measurement.common.throttler.MinimumIntervalThrottler
 import org.wfanet.measurement.common.throttler.Throttler
-import org.wfanet.measurement.common.toByteString
+import org.wfanet.measurement.storage.createBlob
 import org.wfanet.panelmatch.client.common.Identity
 import org.wfanet.panelmatch.client.deploy.ExchangeWorkflowDaemon
+import org.wfanet.panelmatch.client.deploy.ProductionExchangeTaskMapper
 import org.wfanet.panelmatch.client.exchangetasks.ExchangeTaskMapper
 import org.wfanet.panelmatch.client.launcher.ApiClient
 import org.wfanet.panelmatch.client.launcher.GrpcApiClient
@@ -48,7 +51,6 @@ import org.wfanet.panelmatch.common.certificates.CertificateManager
 import org.wfanet.panelmatch.common.certificates.testing.TestCertificateManager
 import org.wfanet.panelmatch.common.secrets.SecretMap
 import org.wfanet.panelmatch.common.secrets.testing.TestSecretMap
-import org.wfanet.panelmatch.common.storage.createBlob
 import org.wfanet.panelmatch.common.storage.toByteString
 
 /** Executes ExchangeWorkflows for InProcess Integration testing. */
@@ -92,11 +94,12 @@ class ExchangeWorkflowDaemonForTest(
   override val throttler: Throttler = MinimumIntervalThrottler(clock, pollingInterval)
 
   override val exchangeTaskMapper: ExchangeTaskMapper by lazy {
-    InProcessExchangeTaskMapper(
+    ProductionExchangeTaskMapper(
       privateStorageSelector = privateStorageSelector,
       sharedStorageSelector = sharedStorageSelector,
       certificateManager = certificateManager,
-      inputTaskThrottler = MinimumIntervalThrottler(clock, Duration.ofMillis(250))
+      inputTaskThrottler = MinimumIntervalThrottler(clock, Duration.ofMillis(250)),
+      pipelineOptions = PipelineOptionsFactory.create()
     )
   }
 
