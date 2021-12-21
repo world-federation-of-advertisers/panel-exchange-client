@@ -74,6 +74,6 @@ class ExchangeTaskMapperTest {
     val context = ExchangeContext(ATTEMPT_KEY, DATE, WORKFLOW, WORKFLOW.getSteps(1))
     val exchangeTask = exchangeTaskMapper.getExchangeTaskForStep(context)
     assertThat(exchangeTask).isInstanceOf(FakeExchangeTask::class.java)
-    assertThat((exchangeTask as FakeExchangeTask).taskName).isEqualTo("encrypt")
+    assertThat((exchangeTask as FakeExchangeTask).taskName).isEqualTo("commutative-encrypt")
   }
 }

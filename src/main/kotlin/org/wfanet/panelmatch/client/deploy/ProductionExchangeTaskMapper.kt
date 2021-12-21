@@ -30,7 +30,10 @@ import org.wfanet.panelmatch.client.exchangetasks.ExchangeTask
 import org.wfanet.panelmatch.client.exchangetasks.ExchangeTaskMapper
 import org.wfanet.panelmatch.client.exchangetasks.GenerateAsymmetricKeysTask
 import org.wfanet.panelmatch.client.exchangetasks.GenerateExchangeCertificateTask
+import org.wfanet.panelmatch.client.exchangetasks.GenerateHybridEncryptionKeysTask
 import org.wfanet.panelmatch.client.exchangetasks.GenerateSymmetricKeyTask
+import org.wfanet.panelmatch.client.exchangetasks.HybridDecryptTask
+import org.wfanet.panelmatch.client.exchangetasks.HybridEncryptTask
 import org.wfanet.panelmatch.client.exchangetasks.InputTask
 import org.wfanet.panelmatch.client.exchangetasks.IntersectValidateTask
 import org.wfanet.panelmatch.client.exchangetasks.JoinKeyHashingExchangeTask
@@ -56,19 +59,19 @@ open class ProductionExchangeTaskMapper(
   private val certificateManager: CertificateManager,
   private val pipelineOptions: PipelineOptions
 ) : ExchangeTaskMapper() {
-  override suspend fun ExchangeContext.encrypt(): ExchangeTask {
+  override suspend fun ExchangeContext.commutativeEncrypt(): ExchangeTask {
     return CryptorExchangeTask.forEncryption(JniDeterministicCommutativeCipher())
   }
 
-  override suspend fun ExchangeContext.decrypt(): ExchangeTask {
+  override suspend fun ExchangeContext.commutativeDecrypt(): ExchangeTask {
     return CryptorExchangeTask.forDecryption(JniDeterministicCommutativeCipher())
   }
 
-  override suspend fun ExchangeContext.reEncrypt(): ExchangeTask {
+  override suspend fun ExchangeContext.commutativeReEncrypt(): ExchangeTask {
     return CryptorExchangeTask.forReEncryption(JniDeterministicCommutativeCipher())
   }
 
-  override suspend fun ExchangeContext.generateEncryptionKey(): ExchangeTask {
+  override suspend fun ExchangeContext.generateCommutativeEncryptionKey(): ExchangeTask {
     return GenerateSymmetricKeyTask(JniDeterministicCommutativeCipher()::generateKey)
   }
 
@@ -127,10 +130,6 @@ open class ProductionExchangeTaskMapper(
     return apacheBeamTaskFor(outputManifests) {
       decryptPrivateMembershipResults(stepDetails.serializedParameters, JniQueryResultsDecryptor())
     }
-  }
-
-  override suspend fun ExchangeContext.generateSymmetricKey(): ExchangeTask {
-    return GenerateSymmetricKeyTask(JniDeterministicCommutativeCipher()::generateKey)
   }
 
   override suspend fun ExchangeContext.generateSerializedRlweKeys(): ExchangeTask {
@@ -218,6 +217,18 @@ open class ProductionExchangeTaskMapper(
       step.inputLabelsMap.values.single(),
       step.outputLabelsMap.values.single()
     )
+  }
+
+  override suspend fun ExchangeContext.encryptBlob(): ExchangeTask {
+    return HybridEncryptTask()
+  }
+
+  override suspend fun ExchangeContext.decryptBlob(): ExchangeTask {
+    return HybridDecryptTask()
+  }
+
+  override suspend fun ExchangeContext.generateBlobEncryptionKeys(): ExchangeTask {
+    return GenerateHybridEncryptionKeysTask()
   }
 
   private suspend fun ExchangeContext.apacheBeamTaskFor(

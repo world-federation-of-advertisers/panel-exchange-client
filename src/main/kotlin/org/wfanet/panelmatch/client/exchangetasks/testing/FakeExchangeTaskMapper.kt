@@ -18,14 +18,17 @@ import org.wfanet.panelmatch.client.common.ExchangeContext
 import org.wfanet.panelmatch.client.exchangetasks.ExchangeTaskMapper
 
 class FakeExchangeTaskMapper : ExchangeTaskMapper() {
-  override suspend fun ExchangeContext.encrypt() = FakeExchangeTask("encrypt")
+  override suspend fun ExchangeContext.commutativeEncrypt() =
+    FakeExchangeTask("commutative-encrypt")
 
-  override suspend fun ExchangeContext.decrypt() = FakeExchangeTask("decrypt")
+  override suspend fun ExchangeContext.commutativeDecrypt() =
+    FakeExchangeTask("commutative-decrypt")
 
-  override suspend fun ExchangeContext.reEncrypt() = FakeExchangeTask("re-encrypt")
+  override suspend fun ExchangeContext.commutativeReEncrypt() =
+    FakeExchangeTask("commutative-re-encrypt")
 
-  override suspend fun ExchangeContext.generateEncryptionKey() =
-    FakeExchangeTask("generate-encryption-key")
+  override suspend fun ExchangeContext.generateCommutativeEncryptionKey() =
+    FakeExchangeTask("generate-commutative-encryption-key")
 
   override suspend fun ExchangeContext.buildPrivateMembershipQueries() =
     FakeExchangeTask("build-private-membership-queries")
@@ -35,9 +38,6 @@ class FakeExchangeTaskMapper : ExchangeTaskMapper() {
 
   override suspend fun ExchangeContext.decryptMembershipResults() =
     FakeExchangeTask("decrypt-membership-results")
-
-  override suspend fun ExchangeContext.generateSymmetricKey() =
-    FakeExchangeTask("generate-symmetric-key")
 
   override suspend fun ExchangeContext.generateSerializedRlweKeys() =
     FakeExchangeTask("generate-serialized-rlwe-keys")
@@ -61,4 +61,11 @@ class FakeExchangeTaskMapper : ExchangeTaskMapper() {
 
   override suspend fun ExchangeContext.copyToSharedStorage() =
     FakeExchangeTask("copy-to-shared-storage")
+
+  override suspend fun ExchangeContext.encryptBlob() = FakeExchangeTask("encrypt-blob")
+
+  override suspend fun ExchangeContext.decryptBlob() = FakeExchangeTask("decrypt-blob")
+
+  override suspend fun ExchangeContext.generateBlobEncryptionKeys() =
+    FakeExchangeTask("generate-blob-encryption-keys")
 }

@@ -91,7 +91,7 @@ class ExchangeTaskExecutorTest {
     exchangeTaskExecutor.execute(VALIDATED_EXCHANGE_STEP, ATTEMPT_KEY)
 
     assertThat(testPrivateStorageSelector.storageClient.getBlob("c")?.toStringUtf8())
-      .isEqualTo("Out:encrypt-some-blob")
+      .isEqualTo("Out:commutative-encrypt-some-blob")
   }
 
   @Test
