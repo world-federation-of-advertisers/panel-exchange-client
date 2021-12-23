@@ -3,7 +3,7 @@ load("@wfa_common_jvm//src/main/kotlin/org/wfanet/measurement/gcloud/spanner/tes
 spanner_emulator_test(
     name = "MiniWorkflowTest",
     size = "small",
-    srcs = glob(["*.kt"]),
+    srcs = glob(["MiniWorkflowTest.kt"]),
     resources = ["//src/test/kotlin/org/wfanet/panelmatch/integration/config"],
     test_class = "org.wfanet.panelmatch.integration.MiniWorkflowTest",
     deps = [
@@ -15,9 +15,28 @@ spanner_emulator_test(
 )
 
 spanner_emulator_test(
+    name = "SingleStepTest",
+    size = "small",
+    srcs = glob(["SingleStepTest.kt"]),
+    data = [
+        "//src/main/kotlin/org/wfanet/panelmatch/integration/fixtures/edp",
+        "//src/main/kotlin/org/wfanet/panelmatch/integration/fixtures/mp",
+        "//src/main/kotlin/org/wfanet/panelmatch/integration/fixtures/shared",
+    ],
+    resources = ["//src/test/kotlin/org/wfanet/panelmatch/integration/config"],
+    test_class = "org.wfanet.panelmatch.integration.SingleStepTest",
+    deps = [
+        "//src/main/kotlin/org/wfanet/panelmatch/integration",
+        "@wfa_common_jvm//imports/java/com/google/common/truth",
+        "@wfa_common_jvm//imports/java/com/google/protobuf",
+        "@wfa_common_jvm//imports/java/org/junit",
+    ],
+)
+
+spanner_emulator_test(
     name = "DoubleBlindWorkflowTest",
     size = "small",
-    srcs = glob(["*.kt"]),
+    srcs = glob(["DoubleBlindWorkflowTest.kt"]),
     resources = ["//src/test/kotlin/org/wfanet/panelmatch/integration/config"],
     test_class = "org.wfanet.panelmatch.integration.DoubleBlindWorkflowTest",
     deps = [
@@ -32,7 +51,7 @@ spanner_emulator_test(
 spanner_emulator_test(
     name = "FullWorkflowTest",
     size = "medium",
-    srcs = glob(["*.kt"]),
+    srcs = glob(["FullWorkflowTest.kt"]),
     resources = ["//src/test/kotlin/org/wfanet/panelmatch/integration/config"],
     test_class = "org.wfanet.panelmatch.integration.FullWorkflowTest",
     deps = [
