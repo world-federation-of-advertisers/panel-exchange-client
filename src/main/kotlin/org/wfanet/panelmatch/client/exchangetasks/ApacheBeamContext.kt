@@ -23,6 +23,7 @@ import org.wfanet.measurement.storage.StorageClient.Blob
 import org.wfanet.panelmatch.client.privatemembership.ReadAsSingletonPCollection
 import org.wfanet.panelmatch.client.privatemembership.ReadShardedData
 import org.wfanet.panelmatch.client.privatemembership.WriteShardedData
+import org.wfanet.panelmatch.client.privatemembership.WriteSingleBlob
 import org.wfanet.panelmatch.client.storage.StorageFactory
 import org.wfanet.panelmatch.common.ShardedFileName
 import org.wfanet.panelmatch.common.beam.toSingletonView
@@ -34,6 +35,7 @@ import org.wfanet.panelmatch.common.storage.toStringUtf8
  * @param pipeline the pipeline to run the task on
  * @param outputManifests location of manifest file which itself contains a list of sharded
  * filenames
+ * @param outputLabels map of labels for writing single blobs
  * @param inputLabels map of expected inputs
  * @param inputBlobs map of keys to blobs
  * @param storageFactory the kind of storage this task will read from
@@ -41,6 +43,7 @@ import org.wfanet.panelmatch.common.storage.toStringUtf8
 class ApacheBeamContext(
   private val pipeline: Pipeline,
   private val outputManifests: Map<String, ShardedFileName>,
+  private val outputLabels: Map<String, String>,
   private val inputLabels: Map<String, String>,
   private val inputBlobs: Map<String, Blob>,
   private val storageFactory: StorageFactory
@@ -76,5 +79,10 @@ class ApacheBeamContext(
   fun <T : Message> PCollection<T>.write(manifestLabel: String) {
     val shardedFileName = outputManifests.getValue(manifestLabel)
     apply("Write ${shardedFileName.spec}", WriteShardedData(shardedFileName.spec, storageFactory))
+  }
+
+  fun <T : Message> PCollection<T>.writeSingleBlob(label: String) {
+    val blobKey = outputLabels.getValue(label)
+    apply("Write $blobKey", WriteSingleBlob(blobKey, storageFactory))
   }
 }
