@@ -29,7 +29,7 @@ import org.wfanet.panelmatch.common.loggerFor
 private const val PRIVATE_KEY_LABEL = "private-key-handle"
 private const val PUBLIC_KEY_LABEL = "public-key-handle"
 
-class GenerateHybridEncryptionKeysTask : ExchangeTask {
+class GenerateHybridEncryptionKeyPairTask : ExchangeTask {
 
   override suspend fun execute(
     input: Map<String, StorageClient.Blob>

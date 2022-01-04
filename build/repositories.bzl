@@ -60,11 +60,12 @@ def panel_exchange_client_repositories():
         url = "https://github.com/world-federation-of-advertisers/cross-media-measurement/archive/b725633b16081a11294cbb63127081041173d0a9.tar.gz",
     )
 
+    # TODO: Point to new release before merging
     http_archive(
         name = "wfa_measurement_proto",
-        sha256 = "2acad48b56cfe2c251580bbaa3cbb37d093fbee553ccfd67e72d42e9ea4d931c",
-        strip_prefix = "cross-media-measurement-api-51236bb6a440db474259cc439246e845167b487f",
-        url = "https://github.com/world-federation-of-advertisers/cross-media-measurement-api/archive/51236bb6a440db474259cc439246e845167b487f.tar.gz",
+        sha256 = "99505d8f90bf290fdad3f74756f36f784e254966c2a616eb9c2750557d7f86a1",
+        strip_prefix = "cross-media-measurement-api-2ce90c59f7be6946177982335769984e7896b274",
+        url = "https://github.com/world-federation-of-advertisers/cross-media-measurement-api/archive/2ce90c59f7be6946177982335769984e7896b274.tar.gz",
     )
 
     http_archive(

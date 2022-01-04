@@ -27,7 +27,7 @@ import org.wfanet.panelmatch.common.beam.map
 import org.wfanet.panelmatch.common.beam.mapWithSideInput
 import org.wfanet.panelmatch.common.beam.toSingletonView
 import org.wfanet.panelmatch.common.compression.CompressionParameters
-import org.wfanet.panelmatch.common.crypto.AsymmetricKeys
+import org.wfanet.panelmatch.common.crypto.AsymmetricKeyPair
 
 suspend fun ApacheBeamContext.decryptPrivateMembershipResults(
   serializedParameters: ByteString,
@@ -57,7 +57,7 @@ suspend fun ApacheBeamContext.decryptPrivateMembershipResults(
   val privateKeysView =
     readBlobAsPCollection("serialized-rlwe-private-key")
       .mapWithSideInput(publicKeyView, "Make Private Membership Keys") { privateKey, publicKey ->
-        AsymmetricKeys(serializedPublicKey = publicKey, serializedPrivateKey = privateKey)
+        AsymmetricKeyPair(serializedPublicKey = publicKey, serializedPrivateKey = privateKey)
       }
       .toSingletonView()
 

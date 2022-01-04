@@ -24,14 +24,15 @@ abstract class ExchangeTaskMapper {
     return with(context) {
       @Suppress("WHEN_ENUM_CAN_BE_NULL_IN_JAVA")
       when (step.stepCase) {
-        StepCase.ENCRYPT_STEP -> commutativeEncrypt()
-        StepCase.REENCRYPT_STEP -> commutativeReEncrypt()
-        StepCase.DECRYPT_STEP -> commutativeDecrypt()
+        StepCase.COMMUTATIVE_DETERMINISTIC_ENCRYPT_STEP -> commutativeDeterministicEncrypt()
+        StepCase.COMMUTATIVE_DETERMINISTIC_REENCRYPT_STEP -> commutativeDeterministicReEncrypt()
+        StepCase.COMMUTATIVE_DETERMINISTIC_DECRYPT_STEP -> commutativeDeterministicDecrypt()
         StepCase.GENERATE_LOOKUP_KEYS_STEP -> generateLookupKeys()
         StepCase.INPUT_STEP -> input()
         StepCase.COPY_FROM_PREVIOUS_EXCHANGE_STEP -> copyFromPreviousExchange()
-        StepCase.GENERATE_COMMUTATIVE_DETERMINISTIC_KEY_STEP -> generateCommutativeEncryptionKey()
-        StepCase.GENERATE_SERIALIZED_RLWE_KEYS_STEP -> generateSerializedRlweKeys()
+        StepCase.GENERATE_COMMUTATIVE_DETERMINISTIC_KEY_STEP ->
+          generateCommutativeDeterministicEncryptionKey()
+        StepCase.GENERATE_SERIALIZED_RLWE_KEY_PAIR_STEP -> generateSerializedRlweKeyPair()
         StepCase.GENERATE_CERTIFICATE_STEP -> generateExchangeCertificate()
         StepCase.INTERSECT_AND_VALIDATE_STEP -> intersectAndValidate()
         StepCase.EXECUTE_PRIVATE_MEMBERSHIP_QUERIES_STEP -> executePrivateMembershipQueries()
@@ -39,25 +40,25 @@ abstract class ExchangeTaskMapper {
         StepCase.DECRYPT_PRIVATE_MEMBERSHIP_QUERY_RESULTS_STEP -> decryptMembershipResults()
         StepCase.COPY_FROM_SHARED_STORAGE_STEP -> copyFromSharedStorage()
         StepCase.COPY_TO_SHARED_STORAGE_STEP -> copyToSharedStorage()
-        StepCase.ENCRYPT_BLOB_STEP -> encryptBlob()
-        StepCase.DECRYPT_BLOB_STEP -> decryptBlob()
-        StepCase.GENERATE_ENCRYPTION_KEYS_STEP -> generateBlobEncryptionKeys()
+        StepCase.HYBRID_ENCRYPT_STEP -> hybridEncrypt()
+        StepCase.HYBRID_DECRYPT_STEP -> hybridDecrypt()
+        StepCase.GENERATE_HYBRID_ENCRYPTION_KEY_PAIR_STEP -> generateHybridEncryptionKeyPair()
         else -> throw IllegalArgumentException("Unsupported step type: ${step.stepCase}")
       }
     }
   }
 
   /** Returns the task that commutative encrypts. */
-  abstract suspend fun ExchangeContext.commutativeEncrypt(): ExchangeTask
+  abstract suspend fun ExchangeContext.commutativeDeterministicEncrypt(): ExchangeTask
 
   /** Returns the task that commutative decrypts. */
-  abstract suspend fun ExchangeContext.commutativeDecrypt(): ExchangeTask
+  abstract suspend fun ExchangeContext.commutativeDeterministicDecrypt(): ExchangeTask
 
   /** Returns the task that commutative re-encrypts. */
-  abstract suspend fun ExchangeContext.commutativeReEncrypt(): ExchangeTask
+  abstract suspend fun ExchangeContext.commutativeDeterministicReEncrypt(): ExchangeTask
 
   /** Returns the task that generates a commutative encryption key. */
-  abstract suspend fun ExchangeContext.generateCommutativeEncryptionKey(): ExchangeTask
+  abstract suspend fun ExchangeContext.generateCommutativeDeterministicEncryptionKey(): ExchangeTask
 
   /** Returns the task that builds private membership queries. */
   abstract suspend fun ExchangeContext.buildPrivateMembershipQueries(): ExchangeTask
@@ -69,7 +70,7 @@ abstract class ExchangeTaskMapper {
   abstract suspend fun ExchangeContext.decryptMembershipResults(): ExchangeTask
 
   /** Returns the task that generates serialized rlwe keys. */
-  abstract suspend fun ExchangeContext.generateSerializedRlweKeys(): ExchangeTask
+  abstract suspend fun ExchangeContext.generateSerializedRlweKeyPair(): ExchangeTask
 
   /** Returns the task that generates a certificate. */
   abstract suspend fun ExchangeContext.generateExchangeCertificate(): ExchangeTask
@@ -92,12 +93,12 @@ abstract class ExchangeTaskMapper {
   /** Returns the task that copies from the shared storage. */
   abstract suspend fun ExchangeContext.copyFromSharedStorage(): ExchangeTask
 
-  /** Returns the task that encrypts a blob. */
-  abstract suspend fun ExchangeContext.encryptBlob(): ExchangeTask
+  /** Returns the task that encrypts using hybrid encryption. */
+  abstract suspend fun ExchangeContext.hybridEncrypt(): ExchangeTask
 
-  /** Returns the task that decrypts a blob. */
-  abstract suspend fun ExchangeContext.decryptBlob(): ExchangeTask
+  /** Returns the task that decrypts using hybrid encryption. */
+  abstract suspend fun ExchangeContext.hybridDecrypt(): ExchangeTask
 
-  /** Returns the task that generates serialized rlwe keys. */
-  abstract suspend fun ExchangeContext.generateBlobEncryptionKeys(): ExchangeTask
+  /** Returns the task that generates hybrid encryption keys. */
+  abstract suspend fun ExchangeContext.generateHybridEncryptionKeyPair(): ExchangeTask
 }

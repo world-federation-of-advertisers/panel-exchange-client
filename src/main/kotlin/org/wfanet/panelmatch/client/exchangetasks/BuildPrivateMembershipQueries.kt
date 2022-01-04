@@ -23,7 +23,7 @@ import org.wfanet.panelmatch.client.privatemembership.createQueries
 import org.wfanet.panelmatch.common.beam.flatMap
 import org.wfanet.panelmatch.common.beam.mapWithSideInput
 import org.wfanet.panelmatch.common.beam.toSingletonView
-import org.wfanet.panelmatch.common.crypto.AsymmetricKeys
+import org.wfanet.panelmatch.common.crypto.AsymmetricKeyPair
 
 fun ApacheBeamContext.buildPrivateMembershipQueries(
   parameters: CreateQueriesParameters,
@@ -39,7 +39,7 @@ fun ApacheBeamContext.buildPrivateMembershipQueries(
   val privateKeysView =
     readBlobAsPCollection("serialized-rlwe-private-key")
       .mapWithSideInput(publicKeyView, "Make Private Membership Keys") { privateKey, publicKey ->
-        AsymmetricKeys(serializedPublicKey = publicKey, serializedPrivateKey = privateKey)
+        AsymmetricKeyPair(serializedPublicKey = publicKey, serializedPrivateKey = privateKey)
       }
       .toSingletonView()
 

@@ -53,7 +53,7 @@ class HybridCryptorTasksTest {
   }
 
   private fun createKeys(vararg inputs: Pair<String, ByteString>): Map<String, ByteString> {
-    return GenerateHybridEncryptionKeysTask().executeToByteStrings(*inputs)
+    return GenerateHybridEncryptionKeyPairTask().executeToByteStrings(*inputs)
   }
 
   private fun encrypt(vararg inputs: Pair<String, ByteString>): Map<String, ByteString> {

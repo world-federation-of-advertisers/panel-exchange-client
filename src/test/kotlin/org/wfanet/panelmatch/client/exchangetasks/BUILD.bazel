@@ -176,10 +176,10 @@ kt_jvm_test(
 )
 
 kt_jvm_test(
-    name = "GenerateAsymmetricKeysTaskTest",
+    name = "GenerateAsymmetricKeyPairTaskTest",
     timeout = "short",
-    srcs = ["GenerateAsymmetricKeysTaskTest.kt"],
-    test_class = "org.wfanet.panelmatch.client.exchangetasks.GenerateAsymmetricKeysTaskTest",
+    srcs = ["GenerateAsymmetricKeyPairTaskTest.kt"],
+    test_class = "org.wfanet.panelmatch.client.exchangetasks.GenerateAsymmetricKeyPairTaskTest",
     deps = [
         "//src/main/kotlin/org/wfanet/panelmatch/client/exchangetasks",
         "//src/main/kotlin/org/wfanet/panelmatch/client/launcher",

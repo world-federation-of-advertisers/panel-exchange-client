@@ -28,19 +28,21 @@ import org.wfanet.panelmatch.common.storage.toByteString
 private const val PUBLIC_KEY_LABEL = "public-key-handle"
 private const val PLAINTEXT_DATA_LABEL = "plaintext-data"
 private const val ENCRYPTED_DATA_LABEL = "encrypted-data"
+private val NO_ASSOCIATED_DATA: ByteArray? = null
 
 class HybridEncryptTask : ExchangeTask {
 
   override suspend fun execute(
     input: Map<String, StorageClient.Blob>
   ): Map<String, Flow<ByteString>> {
-    logger.addToTaskLog("Executing encrypt blob task")
+    logger.addToTaskLog("Executing hybrid encrypt task")
 
     val inputData = input.getValue(PLAINTEXT_DATA_LABEL).toByteString()
     val publicKeyData = input.getValue(PUBLIC_KEY_LABEL).toByteString()
     val publicKeysetHandle = KeysetHandle.readNoSecret(publicKeyData.toByteArray())
     val hybridEncrypt = publicKeysetHandle.getPrimitive(HybridEncrypt::class.java)
-    val encryptedData = hybridEncrypt.encrypt(inputData.toByteArray(), null).toByteString()
+    val encryptedData =
+      hybridEncrypt.encrypt(inputData.toByteArray(), NO_ASSOCIATED_DATA).toByteString()
     return mapOf(
       ENCRYPTED_DATA_LABEL to flowOf(encryptedData),
     )

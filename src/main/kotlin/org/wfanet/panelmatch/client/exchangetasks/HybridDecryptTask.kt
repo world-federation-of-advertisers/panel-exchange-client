@@ -29,13 +29,14 @@ import org.wfanet.panelmatch.common.storage.toByteString
 private const val PRIVATE_KEY_LABEL = "private-key-handle"
 private const val ENCRYPTED_DATA_LABEL = "encrypted-data"
 private const val DECRYPTED_DATA_LABEL = "decrypted-data"
+private val NO_ASSOCIATED_DATA: ByteArray? = null
 
 class HybridDecryptTask : ExchangeTask {
 
   override suspend fun execute(
     input: Map<String, StorageClient.Blob>
   ): Map<String, Flow<ByteString>> {
-    logger.addToTaskLog("Executing decrypt blob task")
+    logger.addToTaskLog("Executing hybrid decrypt task")
 
     val encryptedData = input.getValue(ENCRYPTED_DATA_LABEL).toByteString()
     // TODO: Read private key material from a KMS storage layer
@@ -43,7 +44,8 @@ class HybridDecryptTask : ExchangeTask {
     val privateKeysetHandle =
       CleartextKeysetHandle.read(BinaryKeysetReader.withBytes(keysetHandleData.toByteArray()))
     val hybridDecrypt = privateKeysetHandle.getPrimitive(HybridDecrypt::class.java)
-    val decryptedData = hybridDecrypt.decrypt(encryptedData.toByteArray(), null).toByteString()
+    val decryptedData =
+      hybridDecrypt.decrypt(encryptedData.toByteArray(), NO_ASSOCIATED_DATA).toByteString()
     return mapOf(
       DECRYPTED_DATA_LABEL to flowOf(decryptedData),
     )
