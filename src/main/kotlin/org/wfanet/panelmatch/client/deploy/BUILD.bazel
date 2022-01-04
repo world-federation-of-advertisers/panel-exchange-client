@@ -84,7 +84,7 @@ java_binary(
 )
 
 java_binary(
-    name = "DeployJar",
+    name = "MavenJar",
     deploy_env = [
         ":provided-deps",
     ],

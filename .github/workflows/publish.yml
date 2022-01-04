@@ -18,7 +18,8 @@ on:
     types: [created]
 jobs:
   publish:
-    # We run on an older LTS Ubuntu since libc is not bundled into the jar.
+    # Since libc is not easily bundled into the jar, we want to link to an older supported libc.
+    # Thus, we run on an older LTS Ubuntu.
     runs-on: ubuntu-18.04
     permissions:
       contents: read
@@ -32,26 +33,28 @@ jobs:
       # TODO: Publish to Maven Central Repository
       - name: Publish packages
         run: |
-          bazel build \
+          bazelisk build \
+            --host_platform=//build/platforms:ubuntu_18_04 \
             --config=maven \
-            //src/main/kotlin/org/wfanet/panelmatch/client/deploy:DeployJar_deploy.jar
+            //src/main/kotlin/org/wfanet/panelmatch/client/deploy:MavenJar_deploy.jar
           mvn deploy:deploy-file \
             -DpomFile=deploy/pom.xml \
             -DrepositoryId=github \
             -Durl=https://maven.pkg.github.com/world-federation-of-advertisers/panel-exchange-client \
             -Dpackaging=jar \
-            -Dfile=bazel-bin/src/main/kotlin/org/wfanet/panelmatch/client/deploy/DeployJar_deploy.jar \
+            -Dfile=bazel-bin/src/main/kotlin/org/wfanet/panelmatch/client/deploy/MavenJar_deploy.jar \
             -DartifactId=panel-exchange-client-core \
             -Dversion=${{ github.event.release.tag_name }}
-          bazel build \
+          bazelisk build \
+            --host_platform=//build/platforms:ubuntu_18_04 \
             --config=maven \
-            //src/main/kotlin/org/wfanet/panelmatch/client/testing:TestingJar_deploy.jar
+            //src/main/kotlin/org/wfanet/panelmatch/client/testing:MavenTestingJar_deploy.jar
           mvn deploy:deploy-file \
             -DpomFile=deploy/pom.xml \
             -DrepositoryId=github \
             -Durl=https://maven.pkg.github.com/world-federation-of-advertisers/panel-exchange-client \
             -Dpackaging=jar \
-            -Dfile=bazel-bin/src/main/kotlin/org/wfanet/panelmatch/client/testing/TestingJar_deploy.jar \
+            -Dfile=bazel-bin/src/main/kotlin/org/wfanet/panelmatch/client/testing/MavenTestingJar_deploy.jar \
             -DartifactId=panel-exchange-client-testing \
             -Dversion=${{ github.event.release.tag_name }}
         env:

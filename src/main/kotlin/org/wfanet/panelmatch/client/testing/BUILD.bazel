@@ -35,11 +35,11 @@ java_binary(
 )
 
 java_binary(
-    name = "TestingJar",
+    name = "MavenTestingJar",
     deploy_env = [
         ":provided-deps",
         "//src/main/kotlin/org/wfanet/panelmatch/client/deploy:provided-deps",
-        "//src/main/kotlin/org/wfanet/panelmatch/client/deploy:DeployJar",
+        "//src/main/kotlin/org/wfanet/panelmatch/client/deploy:MavenJar",
     ],
     runtime_deps = [
         ":testing",
