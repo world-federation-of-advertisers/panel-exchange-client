@@ -95,7 +95,7 @@ open class ProductionExchangeTaskMapper(
         padQueries = stepDetails.addPaddingQueries,
       )
 
-    return apacheBeamTaskFor(outputManifests) {
+    return apacheBeamTaskFor(outputManifests, emptyList()) {
       buildPrivateMembershipQueries(parameters, privateMembershipCryptor)
     }
   }
@@ -114,8 +114,9 @@ open class ProductionExchangeTaskMapper(
     val queryResultsEvaluator = JniQueryEvaluator(stepDetails.serializedParameters)
 
     val outputManifests = mapOf("encrypted-results" to stepDetails.encryptedQueryResultFileCount)
+    val outputLabels = listOf("padding-nonces")
 
-    return apacheBeamTaskFor(outputManifests) {
+    return apacheBeamTaskFor(outputManifests, outputLabels) {
       executePrivateMembershipQueries(parameters, queryResultsEvaluator)
     }
   }
@@ -128,7 +129,7 @@ open class ProductionExchangeTaskMapper(
 
     val outputManifests = mapOf("decrypted-event-data" to stepDetails.decryptEventDataSetFileCount)
 
-    return apacheBeamTaskFor(outputManifests) {
+    return apacheBeamTaskFor(outputManifests, emptyList()) {
       decryptPrivateMembershipResults(stepDetails.serializedParameters, JniQueryResultsDecryptor())
     }
   }
@@ -234,12 +235,14 @@ open class ProductionExchangeTaskMapper(
 
   private suspend fun ExchangeContext.apacheBeamTaskFor(
     outputManifests: Map<String, Int>,
+    outputBlobs: List<String>,
     execute: suspend ApacheBeamContext.() -> Unit
   ): ApacheBeamTask {
     return ApacheBeamTask(
       Pipeline.create(pipelineOptions),
       privateStorageSelector.getStorageFactory(exchangeDateKey),
       step.inputLabelsMap,
+      outputBlobs.associateWith { step.outputLabelsMap.getValue(it) },
       outputManifests.mapValues { (k, v) -> ShardedFileName(step.outputLabelsMap.getValue(k), v) },
       execute
     )

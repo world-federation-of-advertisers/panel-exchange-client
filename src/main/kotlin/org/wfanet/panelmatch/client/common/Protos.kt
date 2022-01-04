@@ -31,6 +31,7 @@ import org.wfanet.panelmatch.client.privatemembership.EncryptedQueryBundle
 import org.wfanet.panelmatch.client.privatemembership.EncryptedQueryResult
 import org.wfanet.panelmatch.client.privatemembership.LookupKey
 import org.wfanet.panelmatch.client.privatemembership.LookupKeyAndId
+import org.wfanet.panelmatch.client.privatemembership.PaddingNonce
 import org.wfanet.panelmatch.client.privatemembership.Plaintext
 import org.wfanet.panelmatch.client.privatemembership.QueryId
 import org.wfanet.panelmatch.client.privatemembership.ShardId
@@ -46,6 +47,7 @@ import org.wfanet.panelmatch.client.privatemembership.encryptedQueryBundle
 import org.wfanet.panelmatch.client.privatemembership.encryptedQueryResult
 import org.wfanet.panelmatch.client.privatemembership.lookupKey
 import org.wfanet.panelmatch.client.privatemembership.lookupKeyAndId
+import org.wfanet.panelmatch.client.privatemembership.paddingNonce
 import org.wfanet.panelmatch.client.privatemembership.plaintext
 import org.wfanet.panelmatch.client.privatemembership.queryId
 import org.wfanet.panelmatch.client.privatemembership.shardId
@@ -69,8 +71,10 @@ fun unencryptedQueryOf(shardId: ShardId, bucketId: BucketId, queryId: QueryId): 
 }
 
 /** Constructs a [DecryptedQueryResult]. */
-fun decryptedQueryOf(queryId: QueryId, bucketContents: Iterable<ByteString>): DecryptedQueryResult =
-    decryptedQueryResult {
+fun decryptedQueryResultOf(
+  queryId: QueryId,
+  bucketContents: Iterable<ByteString>
+): DecryptedQueryResult = decryptedQueryResult {
   this.queryId = queryId
   this.queryResult = bucketContents { items += bucketContents }
 }
@@ -88,14 +92,16 @@ fun bucketOf(bucketId: BucketId, items: Iterable<ByteString>): Bucket = bucket {
 }
 
 /** Constructs a [Result]. */
-fun resultOf(queryId: QueryId, serializedEncryptedQueryResult: ByteString): EncryptedQueryResult =
-    encryptedQueryResult {
+fun encryptedQueryResultOf(
+  queryId: QueryId,
+  serializedEncryptedQueryResult: ByteString
+): EncryptedQueryResult = encryptedQueryResult {
   this.queryId = queryId
   this.serializedEncryptedQueryResult = serializedEncryptedQueryResult
 }
 
 /** Constructs a [EncryptedQueryBundle]. */
-fun queryBundleOf(
+fun encryptedQueryBundleOf(
   shardId: ShardId,
   queryIds: Iterable<QueryId>,
   serializedEncryptedQueries: ByteString
@@ -137,3 +143,6 @@ fun lookupKeyAndIdOf(key: Long, id: ByteString): LookupKeyAndId = lookupKeyAndId
   lookupKey = lookupKeyOf(key)
   joinKeyIdentifier = joinKeyIdentifierOf(id)
 }
+
+/** Constructs a [PaddingNonce]. */
+fun paddingNonceOf(nonce: ByteString): PaddingNonce = paddingNonce { this.nonce = nonce }

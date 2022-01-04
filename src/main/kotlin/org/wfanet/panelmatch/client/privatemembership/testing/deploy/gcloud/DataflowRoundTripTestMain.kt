@@ -42,6 +42,7 @@ import org.apache.beam.sdk.values.PCollection
 import org.wfanet.panelmatch.client.common.databaseEntryOf
 import org.wfanet.panelmatch.client.common.databaseKeyOf
 import org.wfanet.panelmatch.client.common.lookupKeyAndIdOf
+import org.wfanet.panelmatch.client.common.paddingNonceOf
 import org.wfanet.panelmatch.client.common.plaintextOf
 import org.wfanet.panelmatch.client.privatemembership.BucketContents
 import org.wfanet.panelmatch.client.privatemembership.CreateQueriesParameters
@@ -57,9 +58,11 @@ import org.wfanet.panelmatch.client.privatemembership.createQueries
 import org.wfanet.panelmatch.client.privatemembership.evaluateQueries
 import org.wfanet.panelmatch.client.privatemembership.testing.PRIVATE_MEMBERSHIP_CRYPTO_PARAMETERS
 import org.wfanet.panelmatch.common.beam.flatMap
+import org.wfanet.panelmatch.common.beam.kvOf
 import org.wfanet.panelmatch.common.beam.map
 import org.wfanet.panelmatch.common.beam.parDo
 import org.wfanet.panelmatch.common.beam.parDoWithSideInput
+import org.wfanet.panelmatch.common.beam.toMapView
 import org.wfanet.panelmatch.common.beam.toSingletonView
 import org.wfanet.panelmatch.common.crypto.AsymmetricKeyPair
 
@@ -129,6 +132,12 @@ fun main(args: Array<String>) {
       )
       .encryptedQueryBundles
 
+  val paddingNonces =
+    encryptedQueryBundles
+      .flatMap { it.queryIdsList }
+      .map { kvOf(it, paddingNonceOf("padding-nonce-for-${it.id}".toByteStringUtf8())) }
+      .toMapView()
+
   val queryEvaluator = JniQueryEvaluator(PRIVATE_MEMBERSHIP_PARAMETERS.toByteString())
 
   val database: PCollection<DatabaseEntry> =
@@ -157,6 +166,7 @@ fun main(args: Array<String>) {
       database,
       encryptedQueryBundles,
       serializedPublicKey,
+      paddingNonces,
       evaluateQueriesParameters,
       queryEvaluator
     )
