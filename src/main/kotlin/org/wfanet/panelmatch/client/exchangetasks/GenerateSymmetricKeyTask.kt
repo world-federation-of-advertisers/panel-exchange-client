@@ -23,6 +23,7 @@ import org.wfanet.panelmatch.common.loggerFor
 
 private const val OUTPUT_DATA_LABEL = "symmetric-key"
 
+/** A task for generating a symmetric cryptor's private key. */
 class GenerateSymmetricKeyTask(private val generateKey: () -> ByteString) : ExchangeTask {
 
   override suspend fun execute(

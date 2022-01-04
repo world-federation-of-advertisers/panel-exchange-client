@@ -29,6 +29,7 @@ import org.wfanet.panelmatch.common.beam.toSingletonView
 import org.wfanet.panelmatch.common.compression.CompressionParameters
 import org.wfanet.panelmatch.common.crypto.AsymmetricKeyPair
 
+/** Decrypts private membership results given serialized parameters. */
 suspend fun ApacheBeamContext.decryptPrivateMembershipResults(
   serializedParameters: ByteString,
   queryResultsDecryptor: QueryResultsDecryptor,

@@ -25,6 +25,7 @@ import org.wfanet.panelmatch.common.loggerFor
 private const val PRIVATE_KEY_LABEL = "private-key"
 private const val PUBLIC_KEY_LABEL = "public-key"
 
+/** A task for generating an asymmetric key pair given a key pair generator. */
 class GenerateAsymmetricKeyPairTask(private val generateKeys: () -> AsymmetricKeyPair) :
   ExchangeTask {
 

@@ -25,6 +25,7 @@ import org.wfanet.panelmatch.common.beam.mapWithSideInput
 import org.wfanet.panelmatch.common.beam.toSingletonView
 import org.wfanet.panelmatch.common.crypto.AsymmetricKeyPair
 
+/** Builds a set of encrypted queries. */
 fun ApacheBeamContext.buildPrivateMembershipQueries(
   parameters: CreateQueriesParameters,
   privateMembershipCryptor: PrivateMembershipCryptor,

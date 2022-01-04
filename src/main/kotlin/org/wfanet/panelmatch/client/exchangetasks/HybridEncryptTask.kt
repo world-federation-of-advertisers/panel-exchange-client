@@ -30,6 +30,7 @@ private const val PLAINTEXT_DATA_LABEL = "plaintext-data"
 private const val ENCRYPTED_DATA_LABEL = "encrypted-data"
 private val NO_ASSOCIATED_DATA: ByteArray? = null
 
+/** Hybrid encrypts plaintext data given a public key. */
 class HybridEncryptTask : ExchangeTask {
 
   override suspend fun execute(

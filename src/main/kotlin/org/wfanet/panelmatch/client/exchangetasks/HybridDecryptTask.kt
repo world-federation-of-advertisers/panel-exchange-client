@@ -31,6 +31,7 @@ private const val ENCRYPTED_DATA_LABEL = "encrypted-data"
 private const val DECRYPTED_DATA_LABEL = "decrypted-data"
 private val NO_ASSOCIATED_DATA: ByteArray? = null
 
+/** Hybrid decrypts input given a private key. */
 class HybridDecryptTask : ExchangeTask {
 
   override suspend fun execute(
