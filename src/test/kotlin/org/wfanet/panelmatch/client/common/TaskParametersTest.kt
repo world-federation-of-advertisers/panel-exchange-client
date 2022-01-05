@@ -49,7 +49,8 @@ class TaskParametersTest {
 
   @Test
   fun readInvalidKey() {
-    assertFails { TaskParameters(setOf(TestDataClass1(1))).get(InvalidClass1::class) }
+    val parameters = TaskParameters(setOf(TestDataClass1(1)))
+    assertFails { parameters.get(InvalidClass1::class) }
   }
 
   @Test

@@ -28,6 +28,7 @@ import org.wfanet.panelmatch.common.beam.map
 import org.wfanet.panelmatch.common.beam.toSingletonView
 import org.wfanet.panelmatch.common.compression.CompressionParameters
 
+/** Preprocesses a database to be used in a private membership query. */
 suspend fun ApacheBeamContext.preprocessEvents(
   eventPreprocessor: EventPreprocessor,
   deterministicCommutativeCipherKeyProvider:

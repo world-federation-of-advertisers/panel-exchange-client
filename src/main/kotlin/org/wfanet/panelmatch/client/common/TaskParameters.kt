@@ -19,16 +19,13 @@ import kotlin.reflect.KClass
 /** Provides a map to access a task-specific context. */
 class TaskParameters(parameters: Set<Any>) {
   private val underlyingMap: Map<KClass<*>, Any> =
-    parameters
-      .map {
-        require(it::class.isData) { "Task Parameters only store data classes" }
-        it::class to it
-      }
-      .toMap()
+    parameters.associateBy {
+      require(it::class.isData) { "Task Parameters only store data classes" }
+      it::class
+    }
 
   fun <T : Any> get(key: KClass<T>): T? {
     require(key.isData) { "Task Parameters only store data classes" }
-    val value = underlyingMap[key] ?: return null
-    @Suppress("UNCHECKED_CAST") return value as T
+    @Suppress("UNCHECKED_CAST") return underlyingMap[key] as T?
   }
 }

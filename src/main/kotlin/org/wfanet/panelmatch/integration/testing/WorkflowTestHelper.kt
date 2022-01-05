@@ -17,20 +17,25 @@ package org.wfanet.panelmatch.integration.testing
 import org.wfanet.panelmatch.client.eventpreprocessing.CombinedEvents
 import org.wfanet.panelmatch.client.privatemembership.KeyedDecryptedEventDataSet
 
+data class ParsedPlaintextResults(val joinKey: String, val plaintexts: List<String>)
+
 /**
  * Parses plaintext results from a [KeyedDecryptedEventDataSet] containing serialized
  * [CombinedEvents] as its data.
  */
 fun parsePlaintextResults(
-  plaintexts: Iterable<KeyedDecryptedEventDataSet>
-): List<Pair<String, List<String>>> {
-  return plaintexts.map {
+  combinedTexts: Iterable<KeyedDecryptedEventDataSet>
+): List<ParsedPlaintextResults> {
+  return combinedTexts.map {
     val payload =
       it.decryptedEventDataList.flatMap { plaintext ->
         CombinedEvents.parseFrom(plaintext.payload).serializedEventsList.map { serializedEvent ->
           serializedEvent.toStringUtf8()
         }
       }
-    requireNotNull(it.plaintextJoinKeyAndId.joinKey).key.toStringUtf8() to payload
+    ParsedPlaintextResults(
+      joinKey = requireNotNull(it.plaintextJoinKeyAndId.joinKey).key.toStringUtf8(),
+      plaintexts = payload
+    )
   }
 }

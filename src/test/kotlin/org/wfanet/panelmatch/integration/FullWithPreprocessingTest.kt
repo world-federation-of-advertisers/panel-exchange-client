@@ -88,8 +88,10 @@ class FullWithPreprocessingTest : AbstractInProcessPanelMatchIntegrationTest() {
     val blob = modelProviderDaemon.readPrivateBlob("decrypted-event-data-0-of-1")
     assertNotNull(blob)
 
-    val decryptedEvents: List<Pair<String, List<String>>> =
-      parsePlaintextResults(blob.parseDelimitedMessages(keyedDecryptedEventDataSet {}))
+    val decryptedEvents =
+      parsePlaintextResults(blob.parseDelimitedMessages(keyedDecryptedEventDataSet {})).map {
+        it.joinKey to it.plaintexts
+      }
 
     assertThat(decryptedEvents)
       .containsExactly(
