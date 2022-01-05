@@ -23,6 +23,8 @@ import org.junit.runners.JUnit4
 import org.wfanet.measurement.common.flatten
 import org.wfanet.panelmatch.client.common.joinKeyAndIdOf
 import org.wfanet.panelmatch.client.common.unprocessedEventOf
+import org.wfanet.panelmatch.client.eventpreprocessing.CombinedEvents
+import org.wfanet.panelmatch.client.eventpreprocessing.UnprocessedEvent
 import org.wfanet.panelmatch.client.exchangetasks.joinKeyAndIdCollection
 import org.wfanet.panelmatch.client.privatemembership.keyedDecryptedEventDataSet
 import org.wfanet.panelmatch.common.compression.CompressionParametersKt.brotliCompressionParameters
@@ -44,11 +46,17 @@ private val EDP_COMPRESSION_PARAMETERS = compressionParameters {
 }
 private val EDP_EVENT_DATA_MANIFEST = "edp-event-data-?-of-1".toByteStringUtf8()
 
-private val EDP_DATABASE_ENTRIES =
-  (0 until 100).map { index ->
-    unprocessedEventOf(
-      "join-key-$index".toByteStringUtf8(),
-      "payload-for-join-key-$index".toByteStringUtf8()
+private val EDP_DATABASE_ENTRIES: List<UnprocessedEvent> =
+  (0 until 100).flatMap { index ->
+    listOf(
+      unprocessedEventOf(
+        "join-key-$index".toByteStringUtf8(),
+        "payload-1-for-join-key-$index".toByteStringUtf8()
+      ),
+      unprocessedEventOf(
+        "join-key-$index".toByteStringUtf8(),
+        "payload-2-for-join-key-$index".toByteStringUtf8()
+      )
     )
   }
 
@@ -80,20 +88,22 @@ class FullWithPreprocessingTest : AbstractInProcessPanelMatchIntegrationTest() {
     val blob = modelProviderDaemon.readPrivateBlob("decrypted-event-data-0-of-1")
     assertNotNull(blob)
 
-    val decryptedEvents: List<Pair<String, String>> =
+    val decryptedEvents: List<Pair<String, List<String>>> =
       blob.parseDelimitedMessages(keyedDecryptedEventDataSet {}).map {
         val payload =
-          it.decryptedEventDataList.joinToString("") { plaintext ->
-            plaintext.payload.toStringUtf8()
+          it.decryptedEventDataList.flatMap { plaintext ->
+            CombinedEvents.parseFrom(plaintext.payload).serializedEventsList.map { serializedEvent
+              ->
+              serializedEvent.toStringUtf8()
+            }
           }
-        // TODO: Figure out where this extra carriage return is coming from
-        requireNotNull(it.plaintextJoinKeyAndId.joinKey).key.toStringUtf8() to
-          payload.replace("\n", "").replace(22.toChar().toString(), "")
+        requireNotNull(it.plaintextJoinKeyAndId.joinKey).key.toStringUtf8() to payload
       }
+
     assertThat(decryptedEvents)
       .containsExactly(
-        "join-key-1" to "payload-for-join-key-1",
-        "join-key-2" to "payload-for-join-key-2",
+        "join-key-1" to listOf("payload-1-for-join-key-1", "payload-2-for-join-key-1"),
+        "join-key-2" to listOf("payload-1-for-join-key-2", "payload-2-for-join-key-2"),
       )
   }
 }

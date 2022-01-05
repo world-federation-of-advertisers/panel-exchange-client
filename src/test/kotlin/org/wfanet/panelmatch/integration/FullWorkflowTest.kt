@@ -25,9 +25,7 @@ import org.wfanet.panelmatch.client.common.databaseEntryOf
 import org.wfanet.panelmatch.client.common.encryptedEntryOf
 import org.wfanet.panelmatch.client.common.joinKeyAndIdOf
 import org.wfanet.panelmatch.client.common.lookupKeyOf
-import org.wfanet.panelmatch.client.eventpreprocessing.JniEventPreprocessor
-import org.wfanet.panelmatch.client.eventpreprocessing.preprocessEventsRequest
-import org.wfanet.panelmatch.client.eventpreprocessing.unprocessedEvent
+import org.wfanet.panelmatch.client.eventpreprocessing.*
 import org.wfanet.panelmatch.client.exchangetasks.joinKeyAndIdCollection
 import org.wfanet.panelmatch.client.privatemembership.DatabaseEntry
 import org.wfanet.panelmatch.client.privatemembership.keyedDecryptedEventDataSet
@@ -60,7 +58,9 @@ private fun makeDatabaseEntry(index: Int): DatabaseEntry {
     unprocessedEvents +=
       unprocessedEvent {
         id = "join-key-$index".toByteStringUtf8()
-        data = "payload-for-join-key-$index".toByteStringUtf8()
+        data =
+          combinedEvents { serializedEvents += "payload-for-join-key-$index".toByteStringUtf8() }
+            .toByteString()
       }
   }
   val response = JniEventPreprocessor().preprocess(request)
@@ -103,18 +103,21 @@ class FullWorkflowTest : AbstractInProcessPanelMatchIntegrationTest() {
     val blob = modelProviderDaemon.readPrivateBlob("decrypted-event-data-0-of-1")
     assertNotNull(blob)
 
-    val decryptedEvents =
+    val decryptedEvents: List<Pair<String, List<String>>> =
       blob.parseDelimitedMessages(keyedDecryptedEventDataSet {}).map {
         val payload =
-          it.decryptedEventDataList.joinToString("") { plaintext ->
-            plaintext.payload.toStringUtf8()
+          it.decryptedEventDataList.flatMap { plaintext ->
+            CombinedEvents.parseFrom(plaintext.payload).serializedEventsList.map { serializedEvent
+              ->
+              serializedEvent.toStringUtf8()
+            }
           }
-        it.plaintextJoinKeyAndId.joinKey.key.toStringUtf8() to payload
+        requireNotNull(it.plaintextJoinKeyAndId.joinKey).key.toStringUtf8() to payload
       }
     assertThat(decryptedEvents)
       .containsExactly(
-        "join-key-1" to "payload-for-join-key-1",
-        "join-key-2" to "payload-for-join-key-2",
+        "join-key-1" to listOf("payload-for-join-key-1"),
+        "join-key-2" to listOf("payload-for-join-key-2"),
       )
   }
 }
