@@ -18,7 +18,7 @@ import java.net.InetSocketAddress
 import java.time.Duration
 import org.wfanet.measurement.api.v2alpha.ExchangeWorkflow.Party
 import org.wfanet.measurement.common.grpc.TlsFlags
-import org.wfanet.panelmatch.client.eventpreprocessing.PreprocessingStepContext
+import org.wfanet.panelmatch.client.eventpreprocessing.PreprocessingParameters
 import picocli.CommandLine
 import picocli.CommandLine.ITypeConverter
 import picocli.CommandLine.Option
@@ -96,7 +96,7 @@ class ExchangeWorkflowFlags {
     private set
 
   @CommandLine.Mixin
-  lateinit var preprocessingStepContext: PreprocessingStepContext
+  lateinit var preprocessingStepContext: PreprocessingParameters
     private set
 
   @Option(

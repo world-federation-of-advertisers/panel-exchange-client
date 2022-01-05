@@ -20,9 +20,7 @@ import com.google.protobuf.kotlin.toByteStringUtf8
 import kotlin.test.assertNotNull
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
-import org.wfanet.measurement.api.v2alpha.ExchangeWorkflow.Step.StepCase
 import org.wfanet.measurement.common.flatten
-import org.wfanet.panelmatch.client.common.StepContext
 import org.wfanet.panelmatch.client.common.databaseEntryOf
 import org.wfanet.panelmatch.client.common.encryptedEntryOf
 import org.wfanet.panelmatch.client.common.joinKeyAndIdOf
@@ -97,9 +95,6 @@ class FullWorkflowTest : AbstractInProcessPanelMatchIntegrationTest() {
     mapOf(
       "mp-plaintext-join-keys" to PLAINTEXT_JOIN_KEYS.toByteString(),
     )
-
-  override val edpStepContexts = emptyMap<StepCase, StepContext>()
-  override val mpStepContexts = emptyMap<StepCase, StepContext>()
 
   override fun validateFinalState(
     dataProviderDaemon: ExchangeWorkflowDaemonForTest,

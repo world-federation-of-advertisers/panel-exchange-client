@@ -20,11 +20,12 @@ import org.wfanet.measurement.api.v2alpha.ExchangeWorkflow
 import org.wfanet.measurement.common.throttler.Throttler
 import org.wfanet.measurement.common.toLocalDate
 import org.wfanet.panelmatch.client.common.ExchangeContext
+import org.wfanet.panelmatch.client.common.TaskParameters
 import org.wfanet.panelmatch.client.eventpreprocessing.HardCodedDeterministicCommutativeCipherKeyProvider
 import org.wfanet.panelmatch.client.eventpreprocessing.HardCodedHkdfPepperProvider
 import org.wfanet.panelmatch.client.eventpreprocessing.HardCodedIdentifierHashPepperProvider
 import org.wfanet.panelmatch.client.eventpreprocessing.JniEventPreprocessor
-import org.wfanet.panelmatch.client.eventpreprocessing.PreprocessingStepContext
+import org.wfanet.panelmatch.client.eventpreprocessing.PreprocessingParameters
 import org.wfanet.panelmatch.client.exchangetasks.ApacheBeamContext
 import org.wfanet.panelmatch.client.exchangetasks.ApacheBeamTask
 import org.wfanet.panelmatch.client.exchangetasks.CopyFromPreviousExchangeTask
@@ -33,16 +34,19 @@ import org.wfanet.panelmatch.client.exchangetasks.CopyToSharedStorageTask
 import org.wfanet.panelmatch.client.exchangetasks.CryptorExchangeTask
 import org.wfanet.panelmatch.client.exchangetasks.ExchangeTask
 import org.wfanet.panelmatch.client.exchangetasks.ExchangeTaskMapper
-import org.wfanet.panelmatch.client.exchangetasks.GenerateAsymmetricKeysTask
+import org.wfanet.panelmatch.client.exchangetasks.GenerateAsymmetricKeyPairTask
 import org.wfanet.panelmatch.client.exchangetasks.GenerateExchangeCertificateTask
+import org.wfanet.panelmatch.client.exchangetasks.GenerateHybridEncryptionKeyPairTask
 import org.wfanet.panelmatch.client.exchangetasks.GenerateSymmetricKeyTask
+import org.wfanet.panelmatch.client.exchangetasks.HybridDecryptTask
+import org.wfanet.panelmatch.client.exchangetasks.HybridEncryptTask
 import org.wfanet.panelmatch.client.exchangetasks.InputTask
 import org.wfanet.panelmatch.client.exchangetasks.IntersectValidateTask
 import org.wfanet.panelmatch.client.exchangetasks.JoinKeyHashingExchangeTask
 import org.wfanet.panelmatch.client.exchangetasks.buildPrivateMembershipQueries
 import org.wfanet.panelmatch.client.exchangetasks.decryptPrivateMembershipResults
 import org.wfanet.panelmatch.client.exchangetasks.executePrivateMembershipQueries
-import org.wfanet.panelmatch.client.exchangetasks.preprocessEventsTask
+import org.wfanet.panelmatch.client.exchangetasks.preprocessEvents
 import org.wfanet.panelmatch.client.privatemembership.CreateQueriesParameters
 import org.wfanet.panelmatch.client.privatemembership.EvaluateQueriesParameters
 import org.wfanet.panelmatch.client.privatemembership.JniPrivateMembershipCryptor
@@ -60,21 +64,23 @@ open class ProductionExchangeTaskMapper(
   private val privateStorageSelector: PrivateStorageSelector,
   private val sharedStorageSelector: SharedStorageSelector,
   private val certificateManager: CertificateManager,
-  private val pipelineOptions: PipelineOptions
+  private val pipelineOptions: PipelineOptions,
+  private val taskContext: TaskParameters,
 ) : ExchangeTaskMapper() {
-  override suspend fun ExchangeContext.encrypt(): ExchangeTask {
+  override suspend fun ExchangeContext.commutativeDeterministicEncrypt(): ExchangeTask {
     return CryptorExchangeTask.forEncryption(JniDeterministicCommutativeCipher())
   }
 
-  override suspend fun ExchangeContext.decrypt(): ExchangeTask {
+  override suspend fun ExchangeContext.commutativeDeterministicDecrypt(): ExchangeTask {
     return CryptorExchangeTask.forDecryption(JniDeterministicCommutativeCipher())
   }
 
-  override suspend fun ExchangeContext.reEncrypt(): ExchangeTask {
+  override suspend fun ExchangeContext.commutativeDeterministicReEncrypt(): ExchangeTask {
     return CryptorExchangeTask.forReEncryption(JniDeterministicCommutativeCipher())
   }
 
-  override suspend fun ExchangeContext.generateEncryptionKey(): ExchangeTask {
+  override suspend fun ExchangeContext.generateCommutativeDeterministicEncryptionKey():
+    ExchangeTask {
     return GenerateSymmetricKeyTask(JniDeterministicCommutativeCipher()::generateKey)
   }
 
@@ -85,19 +91,18 @@ open class ProductionExchangeTaskMapper(
       ::HardCodedDeterministicCommutativeCipherKeyProvider
     val hkdfPepperProvider = ::HardCodedHkdfPepperProvider
     val identifierHashPepperProvider = ::HardCodedIdentifierHashPepperProvider
-    val preprocessingStepContext =
-      requireNotNull(stepContext) { "Preprocessing context cannot be null" }
-    require(preprocessingStepContext is PreprocessingStepContext) {
-      "Invalid Preprocessing Step Context"
-    }
-    val outputsManifests = mapOf("preprocessed-event-data" to preprocessingStepContext.fileCount)
+    val preprocessingParameters: PreprocessingParameters =
+      requireNotNull(taskContext.get(PreprocessingParameters::class)) {
+        "PreprocessingParameters must be set in taskContext"
+      }
+    val outputsManifests = mapOf("preprocessed-event-data" to preprocessingParameters.fileCount)
     return apacheBeamTaskFor(outputsManifests) {
-      preprocessEventsTask(
+      preprocessEvents(
         eventPreprocessor = eventPreprocessor,
         deterministicCommutativeCipherKeyProvider = deterministicCommutativeCipherKeyProvider,
         identifierPepperProvider = identifierHashPepperProvider,
         hkdfPepperProvider = hkdfPepperProvider,
-        maxByteSize = preprocessingStepContext.maxByteSize,
+        maxByteSize = preprocessingParameters.maxByteSize,
       )
     }
   }
@@ -159,15 +164,11 @@ open class ProductionExchangeTaskMapper(
     }
   }
 
-  override suspend fun ExchangeContext.generateSymmetricKey(): ExchangeTask {
-    return GenerateSymmetricKeyTask(JniDeterministicCommutativeCipher()::generateKey)
-  }
-
-  override suspend fun ExchangeContext.generateSerializedRlweKeys(): ExchangeTask {
-    check(step.stepCase == ExchangeWorkflow.Step.StepCase.GENERATE_SERIALIZED_RLWE_KEYS_STEP)
+  override suspend fun ExchangeContext.generateSerializedRlweKeyPair(): ExchangeTask {
+    check(step.stepCase == ExchangeWorkflow.Step.StepCase.GENERATE_SERIALIZED_RLWE_KEY_PAIR_STEP)
     val privateMembershipCryptor =
-      JniPrivateMembershipCryptor(step.generateSerializedRlweKeysStep.serializedParameters)
-    return GenerateAsymmetricKeysTask(generateKeys = privateMembershipCryptor::generateKeys)
+      JniPrivateMembershipCryptor(step.generateSerializedRlweKeyPairStep.serializedParameters)
+    return GenerateAsymmetricKeyPairTask(generateKeys = privateMembershipCryptor::generateKeys)
   }
 
   override suspend fun ExchangeContext.generateExchangeCertificate(): ExchangeTask {
@@ -248,6 +249,18 @@ open class ProductionExchangeTaskMapper(
       step.inputLabelsMap.values.single(),
       step.outputLabelsMap.values.single()
     )
+  }
+
+  override suspend fun ExchangeContext.hybridEncrypt(): ExchangeTask {
+    return HybridEncryptTask()
+  }
+
+  override suspend fun ExchangeContext.hybridDecrypt(): ExchangeTask {
+    return HybridDecryptTask()
+  }
+
+  override suspend fun ExchangeContext.generateHybridEncryptionKeyPair(): ExchangeTask {
+    return GenerateHybridEncryptionKeyPairTask()
   }
 
   private suspend fun ExchangeContext.apacheBeamTaskFor(

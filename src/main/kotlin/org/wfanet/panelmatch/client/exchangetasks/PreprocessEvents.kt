@@ -28,7 +28,7 @@ import org.wfanet.panelmatch.common.beam.map
 import org.wfanet.panelmatch.common.beam.toSingletonView
 import org.wfanet.panelmatch.common.compression.CompressionParameters
 
-suspend fun ApacheBeamContext.preprocessEventsTask(
+suspend fun ApacheBeamContext.preprocessEvents(
   eventPreprocessor: EventPreprocessor,
   deterministicCommutativeCipherKeyProvider:
     (ByteString) -> DeterministicCommutativeCipherKeyProvider,

@@ -21,7 +21,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
 import org.wfanet.measurement.api.v2alpha.ExchangeStepAttemptKey
-import org.wfanet.measurement.api.v2alpha.ExchangeWorkflowKt.StepKt.encryptStep
+import org.wfanet.measurement.api.v2alpha.ExchangeWorkflowKt.StepKt.commutativeDeterministicEncryptStep
 import org.wfanet.measurement.api.v2alpha.ExchangeWorkflowKt.step
 import org.wfanet.measurement.api.v2alpha.exchangeWorkflow
 import org.wfanet.panelmatch.client.common.ExchangeContext
@@ -36,7 +36,8 @@ import org.wfanet.panelmatch.common.testing.runBlockingTest
 
 private val WORKFLOW = exchangeWorkflow {
   steps += inputStep("a" to "b")
-  steps += step { encryptStep = encryptStep {} }
+  steps +=
+    step { this.commutativeDeterministicEncryptStep = commutativeDeterministicEncryptStep {} }
 }
 
 private val DATE: LocalDate = LocalDate.of(2021, 11, 1)
@@ -63,7 +64,7 @@ class ExchangeTaskMapperTest {
 
   @Test
   fun `map input task`() = runBlockingTest {
-    val context = ExchangeContext(ATTEMPT_KEY, DATE, WORKFLOW, WORKFLOW.getSteps(0), null)
+    val context = ExchangeContext(ATTEMPT_KEY, DATE, WORKFLOW, WORKFLOW.getSteps(0))
     val exchangeTask = exchangeTaskMapper.getExchangeTaskForStep(context)
     assertThat(exchangeTask).isInstanceOf(FakeExchangeTask::class.java)
     assertThat((exchangeTask as FakeExchangeTask).taskName).isEqualTo("input")
@@ -71,9 +72,10 @@ class ExchangeTaskMapperTest {
 
   @Test
   fun `map crypto task`() = runBlockingTest {
-    val context = ExchangeContext(ATTEMPT_KEY, DATE, WORKFLOW, WORKFLOW.getSteps(1), null)
+    val context = ExchangeContext(ATTEMPT_KEY, DATE, WORKFLOW, WORKFLOW.getSteps(1))
     val exchangeTask = exchangeTaskMapper.getExchangeTaskForStep(context)
     assertThat(exchangeTask).isInstanceOf(FakeExchangeTask::class.java)
-    assertThat((exchangeTask as FakeExchangeTask).taskName).isEqualTo("encrypt")
+    assertThat((exchangeTask as FakeExchangeTask).taskName)
+      .isEqualTo("commutative-deterministic-encrypt")
   }
 }

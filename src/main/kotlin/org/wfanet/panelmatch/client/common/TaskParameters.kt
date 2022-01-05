@@ -14,7 +14,24 @@
 
 package org.wfanet.panelmatch.client.common
 
-import java.io.Serializable
+import kotlin.reflect.KClass
 
-/** Serializable interface containing additional context for an exchange step */
-interface StepContext : Serializable
+/** Provides a map to access a task-specific context. */
+class TaskParameters {
+  private val underlyingMap = mutableMapOf<KClass<*>, Any>()
+
+  fun <T : Any> put(value: T) {
+    require(value::class.isData) { "Task Parameters only store data classes" }
+    require(value::class !in underlyingMap) { "Task Parameters cannot be overwritten" }
+    underlyingMap[value::class] = value
+  }
+
+  fun <T : Any> get(key: KClass<T>): T? {
+    require(key.isData) { "Task Parameters only store data classes" }
+    val value = underlyingMap[key]
+    value?.let {
+      return value as T
+    }
+    return null
+  }
+}

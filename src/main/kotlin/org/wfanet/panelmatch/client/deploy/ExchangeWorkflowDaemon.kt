@@ -18,11 +18,9 @@ import java.time.Clock
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
-import org.wfanet.measurement.api.v2alpha.ExchangeWorkflow.Step.StepCase
 import org.wfanet.measurement.common.logAndSuppressExceptionSuspend
 import org.wfanet.measurement.common.throttler.Throttler
 import org.wfanet.panelmatch.client.common.Identity
-import org.wfanet.panelmatch.client.common.StepContext
 import org.wfanet.panelmatch.client.exchangetasks.ExchangeTaskMapper
 import org.wfanet.panelmatch.client.launcher.ApiClient
 import org.wfanet.panelmatch.client.launcher.CoroutineLauncher
@@ -98,17 +96,13 @@ abstract class ExchangeWorkflowDaemon : Runnable {
     SharedStorageSelector(certificateManager, sharedStorageFactories, sharedStorageInfo)
   }
 
-  /** Context for any particular step. */
-  protected abstract val stepContexts: Map<StepCase, StepContext>
-
   override fun run() {
     val stepExecutor =
       ExchangeTaskExecutor(
         apiClient = apiClient,
         timeout = taskTimeout,
         privateStorageSelector = privateStorageSelector,
-        exchangeTaskMapper = exchangeTaskMapper,
-        stepContexts = stepContexts,
+        exchangeTaskMapper = exchangeTaskMapper
       )
 
     val launcher = CoroutineLauncher(stepExecutor = stepExecutor)

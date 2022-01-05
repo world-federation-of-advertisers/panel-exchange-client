@@ -25,12 +25,10 @@ import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
 import org.mockito.kotlin.mock
 import org.wfanet.measurement.api.v2alpha.ExchangeStepAttemptKey
-import org.wfanet.measurement.api.v2alpha.ExchangeWorkflow.Step.StepCase
-import org.wfanet.measurement.api.v2alpha.ExchangeWorkflowKt.StepKt.encryptStep
+import org.wfanet.measurement.api.v2alpha.ExchangeWorkflowKt.StepKt.commutativeDeterministicEncryptStep
 import org.wfanet.measurement.api.v2alpha.ExchangeWorkflowKt.step
 import org.wfanet.measurement.api.v2alpha.exchangeWorkflow
 import org.wfanet.measurement.common.asBufferedFlow
-import org.wfanet.panelmatch.client.common.StepContext
 import org.wfanet.panelmatch.client.exchangetasks.testing.FakeExchangeTaskMapper
 import org.wfanet.panelmatch.client.launcher.ExchangeStepValidator.ValidatedExchangeStep
 import org.wfanet.panelmatch.client.launcher.testing.FakeTimeout
@@ -49,7 +47,7 @@ private val DATE = LocalDate.of(2021, 11, 3)
 private val WORKFLOW = exchangeWorkflow {
   steps +=
     step {
-      encryptStep = encryptStep {}
+      this.commutativeDeterministicEncryptStep = commutativeDeterministicEncryptStep {}
       inputLabels["a"] = "b"
       outputLabels["Out:a"] = "c"
     }
@@ -75,8 +73,7 @@ class ExchangeTaskExecutorTest {
       apiClient,
       timeout,
       testPrivateStorageSelector.selector,
-      exchangeTaskMapper,
-      emptyMap<StepCase, StepContext>(),
+      exchangeTaskMapper
     )
 
   @Before
@@ -94,7 +91,7 @@ class ExchangeTaskExecutorTest {
     exchangeTaskExecutor.execute(VALIDATED_EXCHANGE_STEP, ATTEMPT_KEY)
 
     assertThat(testPrivateStorageSelector.storageClient.getBlob("c")?.toStringUtf8())
-      .isEqualTo("Out:encrypt-some-blob")
+      .isEqualTo("Out:commutative-deterministic-encrypt-some-blob")
   }
 
   @Test

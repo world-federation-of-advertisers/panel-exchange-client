@@ -26,16 +26,16 @@ import kotlinx.coroutines.runBlocking
 import org.apache.beam.sdk.options.PipelineOptionsFactory
 import org.wfanet.measurement.api.v2alpha.ExchangeStepAttemptsGrpcKt.ExchangeStepAttemptsCoroutineStub
 import org.wfanet.measurement.api.v2alpha.ExchangeStepsGrpcKt.ExchangeStepsCoroutineStub
-import org.wfanet.measurement.api.v2alpha.ExchangeWorkflow.Step.StepCase
 import org.wfanet.measurement.api.v2alpha.ResourceKey
 import org.wfanet.measurement.common.identity.withPrincipalName
 import org.wfanet.measurement.common.throttler.MinimumIntervalThrottler
 import org.wfanet.measurement.common.throttler.Throttler
 import org.wfanet.measurement.storage.createBlob
 import org.wfanet.panelmatch.client.common.Identity
-import org.wfanet.panelmatch.client.common.StepContext
+import org.wfanet.panelmatch.client.common.TaskParameters
 import org.wfanet.panelmatch.client.deploy.ExchangeWorkflowDaemon
 import org.wfanet.panelmatch.client.deploy.ProductionExchangeTaskMapper
+import org.wfanet.panelmatch.client.eventpreprocessing.PreprocessingParameters
 import org.wfanet.panelmatch.client.exchangetasks.ExchangeTaskMapper
 import org.wfanet.panelmatch.client.launcher.ApiClient
 import org.wfanet.panelmatch.client.launcher.GrpcApiClient
@@ -67,8 +67,7 @@ class ExchangeWorkflowDaemonForTest(
   override val scope: CoroutineScope,
   override val clock: Clock = Clock.systemUTC(),
   pollingInterval: Duration = Duration.ofMillis(100),
-  taskTimeoutDuration: Duration = Duration.ofMinutes(2),
-  override val stepContexts: Map<StepCase, StepContext>,
+  taskTimeoutDuration: Duration = Duration.ofMinutes(2)
 ) : ExchangeWorkflowDaemon() {
   private val recurringExchangeId = exchangeDateKey.recurringExchangeId
 
@@ -96,13 +95,22 @@ class ExchangeWorkflowDaemonForTest(
 
   override val throttler: Throttler = MinimumIntervalThrottler(clock, pollingInterval)
 
+  private val preprocessingParameters =
+    PreprocessingParameters(
+      maxByteSize = 1024 * 1024,
+      fileCount = 1,
+    )
+
+  private val taskContext = TaskParameters().apply { put(preprocessingParameters) }
+
   override val exchangeTaskMapper: ExchangeTaskMapper by lazy {
     ProductionExchangeTaskMapper(
       privateStorageSelector = privateStorageSelector,
       sharedStorageSelector = sharedStorageSelector,
       certificateManager = certificateManager,
       inputTaskThrottler = MinimumIntervalThrottler(clock, Duration.ofMillis(250)),
-      pipelineOptions = PipelineOptionsFactory.create()
+      pipelineOptions = PipelineOptionsFactory.create(),
+      taskContext = taskContext,
     )
   }
 

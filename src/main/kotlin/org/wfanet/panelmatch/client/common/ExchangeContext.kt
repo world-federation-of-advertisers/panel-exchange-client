@@ -24,8 +24,7 @@ data class ExchangeContext(
   val attemptKey: ExchangeStepAttemptKey,
   val date: LocalDate,
   val workflow: ExchangeWorkflow,
-  val step: ExchangeWorkflow.Step,
-  val stepContext: StepContext?,
+  val step: ExchangeWorkflow.Step
 ) {
   val recurringExchangeId: String
     get() = attemptKey.recurringExchangeId

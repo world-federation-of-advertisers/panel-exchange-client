@@ -21,14 +21,14 @@ import org.apache.beam.sdk.options.PipelineOptions
 import org.wfanet.measurement.api.v2alpha.CertificatesGrpcKt
 import org.wfanet.measurement.api.v2alpha.ExchangeStepAttemptsGrpcKt.ExchangeStepAttemptsCoroutineStub
 import org.wfanet.measurement.api.v2alpha.ExchangeStepsGrpcKt.ExchangeStepsCoroutineStub
-import org.wfanet.measurement.api.v2alpha.ExchangeWorkflow.Step.StepCase
 import org.wfanet.measurement.common.crypto.SigningCerts
 import org.wfanet.measurement.common.grpc.buildMutualTlsChannel
 import org.wfanet.measurement.common.grpc.withShutdownTimeout
 import org.wfanet.measurement.common.throttler.MinimumIntervalThrottler
 import org.wfanet.measurement.common.throttler.Throttler
 import org.wfanet.panelmatch.client.common.Identity
-import org.wfanet.panelmatch.client.eventpreprocessing.PreprocessingStepContext
+import org.wfanet.panelmatch.client.common.TaskParameters
+import org.wfanet.panelmatch.client.eventpreprocessing.PreprocessingParameters
 import org.wfanet.panelmatch.client.exchangetasks.ExchangeTaskMapper
 import org.wfanet.panelmatch.client.launcher.ApiClient
 import org.wfanet.panelmatch.client.launcher.GrpcApiClient
@@ -91,13 +91,13 @@ abstract class ExchangeWorkflowDaemonFromFlags : ExchangeWorkflowDaemon() {
     MinimumIntervalThrottler(Clock.systemUTC(), flags.pollingInterval)
   }
 
-  val preprocessingStepContext =
-    PreprocessingStepContext(
+  private val preprocessingParameters =
+    PreprocessingParameters(
       maxByteSize = flags.preprocessingStepContext.maxByteSize.toLong(),
       fileCount = flags.preprocessingStepContext.fileCount.toInt(),
     )
 
-  override val stepContexts = mapOf(StepCase.PREPROCESS_EVENTS_STEP to preprocessingStepContext)
+  private val taskContext = TaskParameters().apply { put(preprocessingParameters) }
 
   override val exchangeTaskMapper: ExchangeTaskMapper by lazy {
     ProductionExchangeTaskMapper(
@@ -105,7 +105,8 @@ abstract class ExchangeWorkflowDaemonFromFlags : ExchangeWorkflowDaemon() {
       privateStorageSelector = privateStorageSelector,
       sharedStorageSelector = sharedStorageSelector,
       certificateManager = certificateManager,
-      pipelineOptions = pipelineOptions
+      pipelineOptions = pipelineOptions,
+      taskContext = taskContext,
     )
   }
 

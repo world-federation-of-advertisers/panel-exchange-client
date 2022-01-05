@@ -20,12 +20,10 @@ import com.google.protobuf.kotlin.toByteStringUtf8
 import kotlin.test.assertNotNull
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
-import org.wfanet.measurement.api.v2alpha.ExchangeWorkflow.Step.StepCase
 import org.wfanet.measurement.common.flatten
-import org.wfanet.panelmatch.client.common.StepContext
 import org.wfanet.panelmatch.client.common.joinKeyAndIdOf
 import org.wfanet.panelmatch.client.common.unprocessedEventOf
-import org.wfanet.panelmatch.client.eventpreprocessing.PreprocessingStepContext
+import org.wfanet.panelmatch.client.eventpreprocessing.PreprocessingParameters
 import org.wfanet.panelmatch.client.exchangetasks.joinKeyAndIdCollection
 import org.wfanet.panelmatch.client.privatemembership.keyedDecryptedEventDataSet
 import org.wfanet.panelmatch.common.compression.CompressionParametersKt.brotliCompressionParameters
@@ -59,7 +57,7 @@ private val EDP_DATABASE_ENTRIES =
 private val EDP_EVENT_DATA_BLOB = EDP_DATABASE_ENTRIES.map { it.toDelimitedByteString() }.flatten()
 
 private val PREPROCESSING_STEP_CONTEXT =
-  PreprocessingStepContext(
+  PreprocessingParameters(
     maxByteSize = 1024.toLong(),
     fileCount = 1,
   )
@@ -77,9 +75,6 @@ class FullWithPreprocessingTest : AbstractInProcessPanelMatchIntegrationTest() {
       "edp-compression-parameters" to EDP_COMPRESSION_PARAMETERS.toByteString(),
       "edp-previous-single-blinded-join-keys" to ByteString.EMPTY,
     )
-  override val edpStepContexts =
-    mapOf(StepCase.PREPROCESS_EVENTS_STEP to PREPROCESSING_STEP_CONTEXT)
-  override val mpStepContexts = emptyMap<StepCase, StepContext>()
 
   override val initialModelProviderInputs: Map<String, ByteString> =
     mapOf(

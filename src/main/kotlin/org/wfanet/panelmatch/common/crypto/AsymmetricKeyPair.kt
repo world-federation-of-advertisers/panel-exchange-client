@@ -12,11 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package org.wfanet.panelmatch.client.eventpreprocessing
+package org.wfanet.panelmatch.common.crypto
 
-import org.wfanet.panelmatch.client.common.StepContext
+import com.google.protobuf.ByteString
+import java.io.Serializable
 
-data class PreprocessingStepContext(
-  val maxByteSize: Long,
-  val fileCount: Int,
-) : StepContext
+data class AsymmetricKeyPair(
+  val serializedPublicKey: ByteString,
+  val serializedPrivateKey: ByteString,
+) : Serializable

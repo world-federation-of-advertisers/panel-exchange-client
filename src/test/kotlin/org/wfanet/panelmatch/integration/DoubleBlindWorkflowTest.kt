@@ -19,8 +19,6 @@ import com.google.protobuf.ByteString
 import com.google.protobuf.kotlin.toByteStringUtf8
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
-import org.wfanet.measurement.api.v2alpha.ExchangeWorkflow.Step.StepCase
-import org.wfanet.panelmatch.client.common.StepContext
 import org.wfanet.panelmatch.client.common.joinKeyAndIdOf
 import org.wfanet.panelmatch.client.exchangetasks.JoinKeyAndIdCollection
 import org.wfanet.panelmatch.client.exchangetasks.joinKeyAndIdCollection
@@ -44,9 +42,6 @@ class DoubleBlindWorkflowTest : AbstractInProcessPanelMatchIntegrationTest() {
 
   override val initialModelProviderInputs: Map<String, ByteString> =
     mapOf("mp-plaintext-join-keys" to PLAINTEXT_JOIN_KEYS.toByteString())
-
-  override val edpStepContexts = emptyMap<StepCase, StepContext>()
-  override val mpStepContexts = emptyMap<StepCase, StepContext>()
 
   override fun validateFinalState(
     dataProviderDaemon: ExchangeWorkflowDaemonForTest,
