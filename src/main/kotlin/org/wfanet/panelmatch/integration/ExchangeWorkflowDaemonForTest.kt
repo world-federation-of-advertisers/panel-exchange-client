@@ -101,7 +101,7 @@ class ExchangeWorkflowDaemonForTest(
       fileCount = 1,
     )
 
-  private val taskContext = TaskParameters().apply { put(preprocessingParameters) }
+  private val taskContext: TaskParameters = TaskParameters(setOf(preprocessingParameters))
 
   override val exchangeTaskMapper: ExchangeTaskMapper by lazy {
     ProductionExchangeTaskMapper(

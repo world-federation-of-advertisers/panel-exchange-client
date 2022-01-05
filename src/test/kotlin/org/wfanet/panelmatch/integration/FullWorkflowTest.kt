@@ -25,7 +25,10 @@ import org.wfanet.panelmatch.client.common.databaseEntryOf
 import org.wfanet.panelmatch.client.common.encryptedEntryOf
 import org.wfanet.panelmatch.client.common.joinKeyAndIdOf
 import org.wfanet.panelmatch.client.common.lookupKeyOf
-import org.wfanet.panelmatch.client.eventpreprocessing.*
+import org.wfanet.panelmatch.client.eventpreprocessing.JniEventPreprocessor
+import org.wfanet.panelmatch.client.eventpreprocessing.combinedEvents
+import org.wfanet.panelmatch.client.eventpreprocessing.preprocessEventsRequest
+import org.wfanet.panelmatch.client.eventpreprocessing.unprocessedEvent
 import org.wfanet.panelmatch.client.exchangetasks.joinKeyAndIdCollection
 import org.wfanet.panelmatch.client.privatemembership.DatabaseEntry
 import org.wfanet.panelmatch.client.privatemembership.keyedDecryptedEventDataSet
@@ -33,6 +36,7 @@ import org.wfanet.panelmatch.common.compression.CompressionParametersKt.brotliCo
 import org.wfanet.panelmatch.common.compression.compressionParameters
 import org.wfanet.panelmatch.common.parseDelimitedMessages
 import org.wfanet.panelmatch.common.toDelimitedByteString
+import org.wfanet.panelmatch.integration.testing.parsePlaintextResults
 
 private val PLAINTEXT_JOIN_KEYS = joinKeyAndIdCollection {
   joinKeyAndIds +=
@@ -104,16 +108,7 @@ class FullWorkflowTest : AbstractInProcessPanelMatchIntegrationTest() {
     assertNotNull(blob)
 
     val decryptedEvents: List<Pair<String, List<String>>> =
-      blob.parseDelimitedMessages(keyedDecryptedEventDataSet {}).map {
-        val payload =
-          it.decryptedEventDataList.flatMap { plaintext ->
-            CombinedEvents.parseFrom(plaintext.payload).serializedEventsList.map { serializedEvent
-              ->
-              serializedEvent.toStringUtf8()
-            }
-          }
-        requireNotNull(it.plaintextJoinKeyAndId.joinKey).key.toStringUtf8() to payload
-      }
+      parsePlaintextResults(blob.parseDelimitedMessages(keyedDecryptedEventDataSet {}))
     assertThat(decryptedEvents)
       .containsExactly(
         "join-key-1" to listOf("payload-for-join-key-1"),

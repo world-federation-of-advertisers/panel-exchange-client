@@ -23,7 +23,6 @@ import org.junit.runners.JUnit4
 import org.wfanet.measurement.common.flatten
 import org.wfanet.panelmatch.client.common.joinKeyAndIdOf
 import org.wfanet.panelmatch.client.common.unprocessedEventOf
-import org.wfanet.panelmatch.client.eventpreprocessing.CombinedEvents
 import org.wfanet.panelmatch.client.eventpreprocessing.UnprocessedEvent
 import org.wfanet.panelmatch.client.exchangetasks.joinKeyAndIdCollection
 import org.wfanet.panelmatch.client.privatemembership.keyedDecryptedEventDataSet
@@ -31,6 +30,7 @@ import org.wfanet.panelmatch.common.compression.CompressionParametersKt.brotliCo
 import org.wfanet.panelmatch.common.compression.compressionParameters
 import org.wfanet.panelmatch.common.parseDelimitedMessages
 import org.wfanet.panelmatch.common.toDelimitedByteString
+import org.wfanet.panelmatch.integration.testing.parsePlaintextResults
 
 private val PLAINTEXT_JOIN_KEYS = joinKeyAndIdCollection {
   joinKeyAndIds +=
@@ -89,16 +89,7 @@ class FullWithPreprocessingTest : AbstractInProcessPanelMatchIntegrationTest() {
     assertNotNull(blob)
 
     val decryptedEvents: List<Pair<String, List<String>>> =
-      blob.parseDelimitedMessages(keyedDecryptedEventDataSet {}).map {
-        val payload =
-          it.decryptedEventDataList.flatMap { plaintext ->
-            CombinedEvents.parseFrom(plaintext.payload).serializedEventsList.map { serializedEvent
-              ->
-              serializedEvent.toStringUtf8()
-            }
-          }
-        requireNotNull(it.plaintextJoinKeyAndId.joinKey).key.toStringUtf8() to payload
-      }
+      parsePlaintextResults(blob.parseDelimitedMessages(keyedDecryptedEventDataSet {}))
 
     assertThat(decryptedEvents)
       .containsExactly(

@@ -17,19 +17,18 @@ package org.wfanet.panelmatch.client.common
 import kotlin.reflect.KClass
 
 /** Provides a map to access a task-specific context. */
-class TaskParameters {
-  private val underlyingMap = mutableMapOf<KClass<*>, Any>()
-
-  fun <T : Any> put(value: T) {
-    require(value::class.isData) { "Task Parameters only store data classes" }
-    require(value::class !in underlyingMap) { "Task Parameters cannot be overwritten" }
-    underlyingMap[value::class] = value
-  }
+class TaskParameters(parameters: Set<Any>) {
+  private val underlyingMap: Map<KClass<*>, Any> =
+    parameters
+      .map {
+        require(it::class.isData) { "Task Parameters only store data classes" }
+        it::class to it
+      }
+      .toMap()
 
   fun <T : Any> get(key: KClass<T>): T? {
     require(key.isData) { "Task Parameters only store data classes" }
-    val value = underlyingMap[key]
-    value?.let { @Suppress("UNCHECKED_CAST") return value as T }
-    return null
+    val value = underlyingMap[key] ?: return null
+    @Suppress("UNCHECKED_CAST") return value as T
   }
 }
