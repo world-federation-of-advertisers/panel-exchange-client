@@ -23,7 +23,6 @@ import org.junit.runners.JUnit4
 import org.wfanet.measurement.common.flatten
 import org.wfanet.panelmatch.client.common.joinKeyAndIdOf
 import org.wfanet.panelmatch.client.common.unprocessedEventOf
-import org.wfanet.panelmatch.client.eventpreprocessing.PreprocessingParameters
 import org.wfanet.panelmatch.client.exchangetasks.joinKeyAndIdCollection
 import org.wfanet.panelmatch.client.privatemembership.keyedDecryptedEventDataSet
 import org.wfanet.panelmatch.common.compression.CompressionParametersKt.brotliCompressionParameters
@@ -38,7 +37,6 @@ private val PLAINTEXT_JOIN_KEYS = joinKeyAndIdCollection {
     joinKeyAndIdOf("join-key-2".toByteStringUtf8(), "join-key-id-2".toByteStringUtf8())
 }
 
-private val EDP_COMMUTATIVE_DETERMINISTIC_KEY = "some-key".toByteStringUtf8()
 private val EDP_IDENTIFIER_HASH_PEPPER = "edp-identifier-hash-pepper".toByteStringUtf8()
 private val EDP_HKDF_PEPPER = "edp-hkdf-pepper".toByteStringUtf8()
 private val EDP_COMPRESSION_PARAMETERS = compressionParameters {
@@ -55,12 +53,6 @@ private val EDP_DATABASE_ENTRIES =
   }
 
 private val EDP_EVENT_DATA_BLOB = EDP_DATABASE_ENTRIES.map { it.toDelimitedByteString() }.flatten()
-
-private val PREPROCESSING_STEP_CONTEXT =
-  PreprocessingParameters(
-    maxByteSize = 1024.toLong(),
-    fileCount = 1,
-  )
 
 @RunWith(JUnit4::class)
 class FullWithPreprocessingTest : AbstractInProcessPanelMatchIntegrationTest() {
