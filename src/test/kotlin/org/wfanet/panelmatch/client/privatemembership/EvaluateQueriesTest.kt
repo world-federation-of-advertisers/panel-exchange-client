@@ -23,15 +23,15 @@ import org.apache.beam.sdk.values.PCollection
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
-import org.wfanet.panelmatch.client.common.bucketIdOf
-import org.wfanet.panelmatch.client.common.databaseEntryOf
-import org.wfanet.panelmatch.client.common.encryptedEntryOf
-import org.wfanet.panelmatch.client.common.lookupKeyOf
-import org.wfanet.panelmatch.client.common.paddingNonceOf
-import org.wfanet.panelmatch.client.common.queryIdOf
-import org.wfanet.panelmatch.client.common.shardIdOf
 import org.wfanet.panelmatch.client.privatemembership.testing.PlaintextQueryEvaluator
 import org.wfanet.panelmatch.client.privatemembership.testing.PlaintextQueryEvaluatorTestHelper
+import org.wfanet.panelmatch.client.protos.bucketIdOf
+import org.wfanet.panelmatch.client.protos.databaseEntryOf
+import org.wfanet.panelmatch.client.protos.encryptedEntryOf
+import org.wfanet.panelmatch.client.protos.lookupKeyOf
+import org.wfanet.panelmatch.client.protos.paddingNonceOf
+import org.wfanet.panelmatch.client.protos.queryIdOf
+import org.wfanet.panelmatch.client.protos.shardIdOf
 import org.wfanet.panelmatch.common.beam.testing.BeamTestBase
 import org.wfanet.panelmatch.common.beam.testing.assertThat
 

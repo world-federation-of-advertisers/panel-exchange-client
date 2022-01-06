@@ -27,8 +27,8 @@ import org.apache.beam.sdk.values.PCollection
 import org.apache.beam.sdk.values.PCollectionTuple
 import org.apache.beam.sdk.values.PCollectionView
 import org.apache.beam.sdk.values.TupleTag
-import org.wfanet.panelmatch.client.common.bucketOf
-import org.wfanet.panelmatch.client.common.databaseShardOf
+import org.wfanet.panelmatch.client.protos.bucketOf
+import org.wfanet.panelmatch.client.protos.databaseShardOf
 import org.wfanet.panelmatch.common.beam.keyBy
 import org.wfanet.panelmatch.common.beam.kvOf
 import org.wfanet.panelmatch.common.beam.map

@@ -16,14 +16,6 @@ package org.wfanet.panelmatch.client.privatemembership.testing
 
 import com.google.protobuf.ByteString
 import com.google.protobuf.kotlin.toByteStringUtf8
-import org.wfanet.panelmatch.client.common.bucketIdOf
-import org.wfanet.panelmatch.client.common.decryptedQueryResultOf
-import org.wfanet.panelmatch.client.common.joinKeyIdentifierOf
-import org.wfanet.panelmatch.client.common.joinKeyOf
-import org.wfanet.panelmatch.client.common.plaintextOf
-import org.wfanet.panelmatch.client.common.queryIdOf
-import org.wfanet.panelmatch.client.common.shardIdOf
-import org.wfanet.panelmatch.client.common.unencryptedQueryOf
 import org.wfanet.panelmatch.client.exchangetasks.JoinKey
 import org.wfanet.panelmatch.client.exchangetasks.JoinKeyAndId
 import org.wfanet.panelmatch.client.exchangetasks.joinKeyAndId
@@ -37,6 +29,14 @@ import org.wfanet.panelmatch.client.privatemembership.ShardId
 import org.wfanet.panelmatch.client.privatemembership.UnencryptedQuery
 import org.wfanet.panelmatch.client.privatemembership.encryptedEventData
 import org.wfanet.panelmatch.client.privatemembership.queryIdAndId
+import org.wfanet.panelmatch.client.protos.bucketIdOf
+import org.wfanet.panelmatch.client.protos.decryptedQueryResultOf
+import org.wfanet.panelmatch.client.protos.joinKeyIdentifierOf
+import org.wfanet.panelmatch.client.protos.joinKeyOf
+import org.wfanet.panelmatch.client.protos.plaintextOf
+import org.wfanet.panelmatch.client.protos.queryIdOf
+import org.wfanet.panelmatch.client.protos.shardIdOf
+import org.wfanet.panelmatch.client.protos.unencryptedQueryOf
 
 /** Constructs a [UnencryptedQuery]. */
 fun unencryptedQueryOf(shard: Int, query: Int, bucket: Int): UnencryptedQuery =

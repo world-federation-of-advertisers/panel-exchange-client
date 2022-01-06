@@ -15,7 +15,7 @@
 package org.wfanet.panelmatch.client.exchangetasks
 
 import org.wfanet.measurement.api.v2alpha.ExchangeWorkflow.Step.StepCase
-import org.wfanet.panelmatch.client.common.ExchangeContext
+import org.wfanet.panelmatch.common.ExchangeContext
 
 /** Maps join key exchange steps to exchange tasks */
 abstract class ExchangeTaskMapper {

@@ -14,8 +14,8 @@
 
 package org.wfanet.panelmatch.client.exchangetasks.testing
 
-import org.wfanet.panelmatch.client.common.ExchangeContext
 import org.wfanet.panelmatch.client.exchangetasks.ExchangeTaskMapper
+import org.wfanet.panelmatch.common.ExchangeContext
 
 class FakeExchangeTaskMapper : ExchangeTaskMapper() {
   override suspend fun ExchangeContext.commutativeDeterministicEncrypt() =

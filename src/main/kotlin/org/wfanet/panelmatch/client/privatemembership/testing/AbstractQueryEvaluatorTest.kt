@@ -18,12 +18,6 @@ import com.google.common.truth.Truth.assertThat
 import com.google.protobuf.ByteString
 import com.google.protobuf.kotlin.toByteStringUtf8
 import org.junit.Test
-import org.wfanet.panelmatch.client.common.bucketIdOf
-import org.wfanet.panelmatch.client.common.bucketOf
-import org.wfanet.panelmatch.client.common.databaseShardOf
-import org.wfanet.panelmatch.client.common.paddingNonceOf
-import org.wfanet.panelmatch.client.common.queryIdOf
-import org.wfanet.panelmatch.client.common.shardIdOf
 import org.wfanet.panelmatch.client.privatemembership.Bucket
 import org.wfanet.panelmatch.client.privatemembership.BucketContents
 import org.wfanet.panelmatch.client.privatemembership.DatabaseShard
@@ -33,6 +27,12 @@ import org.wfanet.panelmatch.client.privatemembership.QueryEvaluator
 import org.wfanet.panelmatch.client.privatemembership.QueryId
 import org.wfanet.panelmatch.client.privatemembership.bucketContents
 import org.wfanet.panelmatch.client.privatemembership.testing.QueryEvaluatorTestHelper.DecodedResult
+import org.wfanet.panelmatch.client.protos.bucketIdOf
+import org.wfanet.panelmatch.client.protos.bucketOf
+import org.wfanet.panelmatch.client.protos.databaseShardOf
+import org.wfanet.panelmatch.client.protos.paddingNonceOf
+import org.wfanet.panelmatch.client.protos.queryIdOf
+import org.wfanet.panelmatch.client.protos.shardIdOf
 
 /** Tests for [QueryEvaluator]s. */
 abstract class AbstractQueryEvaluatorTest {

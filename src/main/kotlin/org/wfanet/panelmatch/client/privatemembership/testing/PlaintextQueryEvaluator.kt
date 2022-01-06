@@ -16,8 +16,6 @@ package org.wfanet.panelmatch.client.privatemembership.testing
 
 import com.google.protobuf.ByteString
 import com.google.protobuf.ListValue
-import org.wfanet.panelmatch.client.common.bucketIdOf
-import org.wfanet.panelmatch.client.common.encryptedQueryResultOf
 import org.wfanet.panelmatch.client.privatemembership.Bucket
 import org.wfanet.panelmatch.client.privatemembership.BucketId
 import org.wfanet.panelmatch.client.privatemembership.DatabaseShard
@@ -26,6 +24,8 @@ import org.wfanet.panelmatch.client.privatemembership.EncryptedQueryResult
 import org.wfanet.panelmatch.client.privatemembership.PaddingNonce
 import org.wfanet.panelmatch.client.privatemembership.QueryEvaluator
 import org.wfanet.panelmatch.client.privatemembership.QueryId
+import org.wfanet.panelmatch.client.protos.bucketIdOf
+import org.wfanet.panelmatch.client.protos.encryptedQueryResultOf
 import org.wfanet.panelmatch.common.singleOrNullIfEmpty
 
 /**

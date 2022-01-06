@@ -24,16 +24,16 @@ import org.wfanet.measurement.api.v2alpha.ExchangeWorkflow.Step
 import org.wfanet.measurement.storage.StorageClient
 import org.wfanet.measurement.storage.StorageClient.Blob
 import org.wfanet.measurement.storage.createBlob
-import org.wfanet.panelmatch.client.common.ExchangeContext
 import org.wfanet.panelmatch.client.exchangetasks.CustomIOExchangeTask
 import org.wfanet.panelmatch.client.exchangetasks.ExchangeTask
 import org.wfanet.panelmatch.client.exchangetasks.ExchangeTaskMapper
 import org.wfanet.panelmatch.client.launcher.ExchangeStepValidator.ValidatedExchangeStep
-import org.wfanet.panelmatch.client.logger.TaskLog
-import org.wfanet.panelmatch.client.logger.addToTaskLog
-import org.wfanet.panelmatch.client.logger.getAndClearTaskLog
 import org.wfanet.panelmatch.client.storage.PrivateStorageSelector
+import org.wfanet.panelmatch.common.ExchangeContext
 import org.wfanet.panelmatch.common.Timeout
+import org.wfanet.panelmatch.common.logger.TaskLog
+import org.wfanet.panelmatch.common.logger.addToTaskLog
+import org.wfanet.panelmatch.common.logger.getAndClearTaskLog
 import org.wfanet.panelmatch.common.loggerFor
 import org.wfanet.panelmatch.common.storage.createOrReplaceBlob
 

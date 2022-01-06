@@ -23,8 +23,7 @@ import com.google.privatemembership.batch.server.Server.RawDatabaseShard
 import com.google.privatemembership.batch.server.applyQueriesRequest
 import com.google.privatemembership.batch.server.rawDatabaseShard
 import com.google.protobuf.ByteString
-import org.wfanet.panelmatch.client.common.encryptedQueryResultOf
-import org.wfanet.panelmatch.client.common.queryIdOf
+import org.wfanet.panelmatch.client.protos.queryIdOf
 
 /** [QueryEvaluator] that calls into C++ via JNI. */
 class JniQueryEvaluator(serializedParameters: ByteString) : QueryEvaluator {
@@ -75,7 +74,7 @@ class JniQueryEvaluator(serializedParameters: ByteString) : QueryEvaluator {
     }
 
     return response.queryResultsList.map { encryptedQueryResult ->
-      encryptedQueryResultOf(
+      org.wfanet.panelmatch.client.protos.encryptedQueryResultOf(
         queryIdOf(encryptedQueryResult.queryMetadata.queryId),
         encryptedQueryResult.toByteString()
       )

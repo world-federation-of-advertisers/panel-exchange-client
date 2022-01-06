@@ -17,8 +17,6 @@ package org.wfanet.panelmatch.client.privatemembership.testing
 import com.google.protobuf.ListValue
 import com.google.protobuf.listValue
 import com.google.protobuf.value
-import org.wfanet.panelmatch.client.common.encryptedQueryBundleOf
-import org.wfanet.panelmatch.client.common.encryptedQueryResultOf
 import org.wfanet.panelmatch.client.exchangetasks.JoinKey
 import org.wfanet.panelmatch.client.privatemembership.BucketId
 import org.wfanet.panelmatch.client.privatemembership.DecryptEventDataRequest.EncryptedEventDataSet
@@ -32,6 +30,8 @@ import org.wfanet.panelmatch.client.privatemembership.ShardId
 import org.wfanet.panelmatch.client.privatemembership.bucketContents
 import org.wfanet.panelmatch.client.privatemembership.decryptedQueryResult
 import org.wfanet.panelmatch.client.privatemembership.encryptedEventData
+import org.wfanet.panelmatch.client.protos.encryptedQueryBundleOf
+import org.wfanet.panelmatch.client.protos.encryptedQueryResultOf
 import org.wfanet.panelmatch.common.crypto.AsymmetricKeyPair
 import org.wfanet.panelmatch.common.crypto.SymmetricCryptor
 import org.wfanet.panelmatch.common.crypto.testing.FakeSymmetricCryptor

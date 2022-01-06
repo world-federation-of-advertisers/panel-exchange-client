@@ -14,7 +14,6 @@ kt_jvm_library(
         "//imports/java/org/apache/beam/extensions:protobuf",
         "//imports/java/org/apache/beam/io:google_cloud_platform",
         "//imports/java/org/apache/beam/runners:google_cloud_dataflow",
-        "//src/main/kotlin/org/wfanet/panelmatch/client/common",
         "//src/main/kotlin/org/wfanet/panelmatch/client/privatemembership",
         "//src/main/kotlin/org/wfanet/panelmatch/client/privatemembership/testing",
         "//src/main/kotlin/org/wfanet/panelmatch/common/beam",

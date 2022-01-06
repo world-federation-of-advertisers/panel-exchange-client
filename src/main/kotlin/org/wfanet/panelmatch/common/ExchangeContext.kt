@@ -12,12 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package org.wfanet.panelmatch.client.common
+package org.wfanet.panelmatch.common
 
 import java.time.LocalDate
 import org.wfanet.measurement.api.v2alpha.ExchangeStepAttemptKey
 import org.wfanet.measurement.api.v2alpha.ExchangeWorkflow
-import org.wfanet.panelmatch.common.ExchangeDateKey
 
 /** Contextual information about an ExchangeStepAttempt. */
 data class ExchangeContext(

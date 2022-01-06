@@ -26,6 +26,8 @@ import kotlinx.coroutines.runBlocking
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
+import org.wfanet.panelmatch.common.logger.TaskLog
+import org.wfanet.panelmatch.common.logger.addToTaskLog
 import org.wfanet.panelmatch.common.loggerFor
 import org.wfanet.panelmatch.common.testing.runBlockingTest
 
@@ -77,7 +79,7 @@ class LoggerTest {
       async(TaskLog(NAME) + Dispatchers.Default) {
         logger.addToTaskLog("Log Message 0")
         JobTestClass1().logWithDelay()
-        val log = getAndClearTaskLog()
+        val log = org.wfanet.panelmatch.common.logger.getAndClearTaskLog()
         assertThat(log).hasSize(3)
         log.forEach { assertThat(it).contains(NAME) }
       }
@@ -90,13 +92,13 @@ class LoggerTest {
       async(TaskLog(NAME) + Dispatchers.Default) {
         logger.addToTaskLog("Log Message 0")
         JobTestClass1().logWithDelay()
-        val log = getAndClearTaskLog()
+        val log = org.wfanet.panelmatch.common.logger.getAndClearTaskLog()
         assertThat(log).hasSize(3)
         log.forEach { assertThat(it).contains(NAME) }
       },
       async(TaskLog(ANOTHER_NAME) + Dispatchers.Default) {
         JobTestClass1().logWithDelay()
-        val log = getAndClearTaskLog()
+        val log = org.wfanet.panelmatch.common.logger.getAndClearTaskLog()
         assertThat(log).hasSize(2)
         log.forEach { assertThat(it).contains(ANOTHER_NAME) }
       }
@@ -116,7 +118,7 @@ class LoggerTest {
         val subJob = launch { JobTestClass2().logWithDelay() }
         JobTestClass1().logWithDelay()
         subJob.join()
-        val log = getAndClearTaskLog()
+        val log = org.wfanet.panelmatch.common.logger.getAndClearTaskLog()
         assertThat(log).hasSize(5)
         log.forEach { assertThat(it).contains(NAME) }
       }
@@ -131,7 +133,7 @@ class LoggerTest {
         val subJob = launch { JobTestClass3().logWithDelay() }
         JobTestClass1().logWithDelay()
         subJob.join()
-        val log = getAndClearTaskLog()
+        val log = org.wfanet.panelmatch.common.logger.getAndClearTaskLog()
         assertThat(log).hasSize(3)
         log.forEach { assertThat(it).contains(NAME) }
       }

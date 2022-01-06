@@ -15,7 +15,6 @@
 package org.wfanet.panelmatch.client.exchangetasks
 
 import org.apache.beam.sdk.values.PCollection
-import org.wfanet.panelmatch.client.common.paddingNonceOf
 import org.wfanet.panelmatch.client.privatemembership.EncryptedQueryResult
 import org.wfanet.panelmatch.client.privatemembership.EvaluateQueriesParameters
 import org.wfanet.panelmatch.client.privatemembership.PaddingNonce
@@ -24,6 +23,7 @@ import org.wfanet.panelmatch.client.privatemembership.databaseEntry
 import org.wfanet.panelmatch.client.privatemembership.encryptedQueryBundle
 import org.wfanet.panelmatch.client.privatemembership.evaluateQueries
 import org.wfanet.panelmatch.client.privatemembership.paddingNonces
+import org.wfanet.panelmatch.client.protos.paddingNonceOf
 import org.wfanet.panelmatch.common.beam.combineIntoList
 import org.wfanet.panelmatch.common.beam.flatMap
 import org.wfanet.panelmatch.common.beam.kvOf

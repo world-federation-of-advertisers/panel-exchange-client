@@ -18,10 +18,10 @@ import com.google.common.truth.Truth.assertThat
 import com.google.protobuf.ByteString
 import com.google.protobuf.kotlin.toByteStringUtf8
 import org.junit.Test
-import org.wfanet.panelmatch.client.common.joinKeyAndIdOf
 import org.wfanet.panelmatch.client.exchangetasks.JoinKeyAndId
 import org.wfanet.panelmatch.client.privatemembership.LookupKeyAndId
 import org.wfanet.panelmatch.client.privatemembership.QueryPreparer
+import org.wfanet.panelmatch.client.protos.joinKeyAndIdOf
 
 private val DECRYPTED_JOIN_KEYS: List<JoinKeyAndId> =
   listOf(

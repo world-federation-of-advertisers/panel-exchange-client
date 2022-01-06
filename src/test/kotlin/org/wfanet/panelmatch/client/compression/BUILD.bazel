@@ -4,9 +4,9 @@ kt_jvm_test(
     name = "DefaultCompressionParametersTest",
     timeout = "short",
     srcs = ["DefaultCompressionParametersTest.kt"],
-    test_class = "org.wfanet.panelmatch.client.common.compression.DefaultCompressionParametersTest",
+    test_class = "org.wfanet.panelmatch.client.compression.DefaultCompressionParametersTest",
     deps = [
-        "//src/main/kotlin/org/wfanet/panelmatch/client/common/compression",
+        "//src/main/kotlin/org/wfanet/panelmatch/client/compression",
         "//src/main/proto/wfa/panelmatch/common/compression:compression_kt_jvm_proto",
         "@wfa_common_jvm//imports/java/com/google/common/truth",
         "@wfa_common_jvm//imports/java/org/junit",

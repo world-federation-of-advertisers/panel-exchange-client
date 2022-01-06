@@ -28,7 +28,7 @@ import org.wfanet.measurement.common.flatten
 import org.wfanet.measurement.storage.StorageClient.Blob
 import org.wfanet.measurement.storage.createBlob
 import org.wfanet.measurement.storage.testing.InMemoryStorageClient
-import org.wfanet.panelmatch.client.logger.TaskLog
+import org.wfanet.panelmatch.common.logger.TaskLog
 
 private const val ATTEMPT_KEY = "some-arbitrary-attempt-key"
 

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package org.wfanet.panelmatch.client.logger
+package org.wfanet.panelmatch.common.logger
 
 import java.util.Collections.synchronizedList
 import java.util.logging.Level

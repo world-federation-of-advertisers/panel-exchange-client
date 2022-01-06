@@ -21,7 +21,7 @@ import com.google.protobuf.kotlin.toByteString
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
 import org.wfanet.measurement.storage.StorageClient
-import org.wfanet.panelmatch.client.logger.addToTaskLog
+import org.wfanet.panelmatch.common.logger.addToTaskLog
 import org.wfanet.panelmatch.common.loggerFor
 import org.wfanet.panelmatch.common.storage.toByteString
 

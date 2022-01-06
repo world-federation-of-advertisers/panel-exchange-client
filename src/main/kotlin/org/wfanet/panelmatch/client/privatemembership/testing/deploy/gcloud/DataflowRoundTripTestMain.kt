@@ -39,11 +39,6 @@ import org.apache.beam.sdk.options.Validation
 import org.apache.beam.sdk.options.ValueProvider
 import org.apache.beam.sdk.transforms.Create
 import org.apache.beam.sdk.values.PCollection
-import org.wfanet.panelmatch.client.common.databaseEntryOf
-import org.wfanet.panelmatch.client.common.encryptedEntryOf
-import org.wfanet.panelmatch.client.common.lookupKeyAndIdOf
-import org.wfanet.panelmatch.client.common.lookupKeyOf
-import org.wfanet.panelmatch.client.common.paddingNonceOf
 import org.wfanet.panelmatch.client.privatemembership.BucketContents
 import org.wfanet.panelmatch.client.privatemembership.CreateQueriesParameters
 import org.wfanet.panelmatch.client.privatemembership.DatabaseEntry
@@ -57,6 +52,11 @@ import org.wfanet.panelmatch.client.privatemembership.LookupKeyAndId
 import org.wfanet.panelmatch.client.privatemembership.createQueries
 import org.wfanet.panelmatch.client.privatemembership.evaluateQueries
 import org.wfanet.panelmatch.client.privatemembership.testing.PRIVATE_MEMBERSHIP_CRYPTO_PARAMETERS
+import org.wfanet.panelmatch.client.protos.databaseEntryOf
+import org.wfanet.panelmatch.client.protos.encryptedEntryOf
+import org.wfanet.panelmatch.client.protos.lookupKeyAndIdOf
+import org.wfanet.panelmatch.client.protos.lookupKeyOf
+import org.wfanet.panelmatch.client.protos.paddingNonceOf
 import org.wfanet.panelmatch.common.beam.flatMap
 import org.wfanet.panelmatch.common.beam.kvOf
 import org.wfanet.panelmatch.common.beam.map

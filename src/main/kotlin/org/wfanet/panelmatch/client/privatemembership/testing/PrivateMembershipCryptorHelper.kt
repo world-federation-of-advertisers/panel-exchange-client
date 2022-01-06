@@ -15,9 +15,6 @@
 package org.wfanet.panelmatch.client.privatemembership.testing
 
 import java.io.Serializable
-import org.wfanet.panelmatch.client.common.bucketIdOf
-import org.wfanet.panelmatch.client.common.queryIdOf
-import org.wfanet.panelmatch.client.common.shardIdOf
 import org.wfanet.panelmatch.client.exchangetasks.JoinKey
 import org.wfanet.panelmatch.client.privatemembership.BucketId
 import org.wfanet.panelmatch.client.privatemembership.DecryptEventDataRequest.EncryptedEventDataSet
@@ -27,6 +24,9 @@ import org.wfanet.panelmatch.client.privatemembership.EncryptedQueryBundle
 import org.wfanet.panelmatch.client.privatemembership.EncryptedQueryResult
 import org.wfanet.panelmatch.client.privatemembership.QueryId
 import org.wfanet.panelmatch.client.privatemembership.ShardId
+import org.wfanet.panelmatch.client.protos.bucketIdOf
+import org.wfanet.panelmatch.client.protos.queryIdOf
+import org.wfanet.panelmatch.client.protos.shardIdOf
 import org.wfanet.panelmatch.common.crypto.AsymmetricKeyPair
 
 /** Helps test the Private Membership implementation (e.g. by reversing some operations) */

@@ -21,11 +21,11 @@ import kotlin.test.assertNotNull
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
 import org.wfanet.measurement.common.flatten
-import org.wfanet.panelmatch.client.common.joinKeyAndIdOf
-import org.wfanet.panelmatch.client.common.unprocessedEventOf
 import org.wfanet.panelmatch.client.eventpreprocessing.UnprocessedEvent
 import org.wfanet.panelmatch.client.exchangetasks.joinKeyAndIdCollection
 import org.wfanet.panelmatch.client.privatemembership.keyedDecryptedEventDataSet
+import org.wfanet.panelmatch.client.protos.joinKeyAndIdOf
+import org.wfanet.panelmatch.client.protos.unprocessedEventOf
 import org.wfanet.panelmatch.common.compression.CompressionParametersKt.brotliCompressionParameters
 import org.wfanet.panelmatch.common.compression.compressionParameters
 import org.wfanet.panelmatch.common.parseDelimitedMessages

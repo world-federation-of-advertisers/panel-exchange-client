@@ -32,7 +32,7 @@ import org.apache.beam.sdk.options.Description
 import org.apache.beam.sdk.options.PipelineOptionsFactory
 import org.apache.beam.sdk.options.Validation
 import org.apache.beam.sdk.values.PCollection
-import org.wfanet.panelmatch.client.common.compression.CreateDefaultCompressionParameters
+import org.wfanet.panelmatch.client.compression.CreateDefaultCompressionParameters
 import org.wfanet.panelmatch.client.eventpreprocessing.HardCodedDeterministicCommutativeCipherKeyProvider
 import org.wfanet.panelmatch.client.eventpreprocessing.HardCodedHkdfPepperProvider
 import org.wfanet.panelmatch.client.eventpreprocessing.HardCodedIdentifierHashPepperProvider

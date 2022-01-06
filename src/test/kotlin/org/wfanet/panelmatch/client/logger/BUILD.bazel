@@ -5,7 +5,7 @@ kt_jvm_test(
     timeout = "short",
     srcs = ["LoggerTest.kt"],
     associates = [
-        "//src/main/kotlin/org/wfanet/panelmatch/client/logger",
+        "//src/main/kotlin/org/wfanet/panelmatch/common/logger:logger",
     ],
     test_class = "org.wfanet.panelmatch.client.logger.LoggerTest",
     deps = [

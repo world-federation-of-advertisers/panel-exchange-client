@@ -22,11 +22,6 @@ import kotlin.random.Random
 import org.apache.beam.sdk.transforms.Create
 import org.apache.beam.sdk.values.PCollection
 import org.junit.Test
-import org.wfanet.panelmatch.client.common.databaseEntryOf
-import org.wfanet.panelmatch.client.common.encryptedEntryOf
-import org.wfanet.panelmatch.client.common.lookupKeyOf
-import org.wfanet.panelmatch.client.common.paddingNonceOf
-import org.wfanet.panelmatch.client.common.queryIdOf
 import org.wfanet.panelmatch.client.privatemembership.BucketId
 import org.wfanet.panelmatch.client.privatemembership.Bucketing
 import org.wfanet.panelmatch.client.privatemembership.DatabaseEntry
@@ -39,6 +34,11 @@ import org.wfanet.panelmatch.client.privatemembership.QueryId
 import org.wfanet.panelmatch.client.privatemembership.ShardId
 import org.wfanet.panelmatch.client.privatemembership.evaluateQueries
 import org.wfanet.panelmatch.client.privatemembership.paddingNonceMapCoder
+import org.wfanet.panelmatch.client.protos.databaseEntryOf
+import org.wfanet.panelmatch.client.protos.encryptedEntryOf
+import org.wfanet.panelmatch.client.protos.lookupKeyOf
+import org.wfanet.panelmatch.client.protos.paddingNonceOf
+import org.wfanet.panelmatch.client.protos.queryIdOf
 import org.wfanet.panelmatch.common.beam.testing.BeamTestBase
 import org.wfanet.panelmatch.common.beam.testing.assertThat
 

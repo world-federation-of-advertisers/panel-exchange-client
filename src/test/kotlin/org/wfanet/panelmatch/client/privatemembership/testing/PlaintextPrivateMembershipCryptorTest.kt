@@ -19,12 +19,12 @@ import com.google.protobuf.kotlin.toByteStringUtf8
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
-import org.wfanet.panelmatch.client.common.bucketIdOf
-import org.wfanet.panelmatch.client.common.decryptedQueryResultOf
-import org.wfanet.panelmatch.client.common.queryIdOf
-import org.wfanet.panelmatch.client.common.shardIdOf
 import org.wfanet.panelmatch.client.privatemembership.EncryptedEventData
 import org.wfanet.panelmatch.client.privatemembership.EncryptedQueryBundle
+import org.wfanet.panelmatch.client.protos.bucketIdOf
+import org.wfanet.panelmatch.client.protos.decryptedQueryResultOf
+import org.wfanet.panelmatch.client.protos.queryIdOf
+import org.wfanet.panelmatch.client.protos.shardIdOf
 
 @RunWith(JUnit4::class)
 class PlaintextPrivateMembershipCryptorTest {

@@ -36,7 +36,6 @@ spanner_emulator_test(
     resources = ["//src/test/kotlin/org/wfanet/panelmatch/integration/config"],
     test_class = "org.wfanet.panelmatch.integration.FullWorkflowTest",
     deps = [
-        "//src/main/kotlin/org/wfanet/panelmatch/client/common",
         "//src/main/kotlin/org/wfanet/panelmatch/client/eventpreprocessing",
         "//src/main/kotlin/org/wfanet/panelmatch/integration",
         "//src/main/kotlin/org/wfanet/panelmatch/integration/testing",
@@ -57,7 +56,6 @@ spanner_emulator_test(
     resources = ["//src/test/kotlin/org/wfanet/panelmatch/integration/config"],
     test_class = "org.wfanet.panelmatch.integration.FullWithPreprocessingTest",
     deps = [
-        "//src/main/kotlin/org/wfanet/panelmatch/client/common",
         "//src/main/kotlin/org/wfanet/panelmatch/client/eventpreprocessing",
         "//src/main/kotlin/org/wfanet/panelmatch/integration",
         "//src/main/kotlin/org/wfanet/panelmatch/integration/testing",

@@ -12,20 +12,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package org.wfanet.panelmatch.client.common.compression
+package org.wfanet.panelmatch.client.exchangetasks
 
-import com.google.common.truth.Truth.assertThat
-import org.junit.Test
-import org.junit.runner.RunWith
-import org.junit.runners.JUnit4
-import org.wfanet.panelmatch.common.compression.CompressionParameters.TypeCase.BROTLI
+import kotlin.reflect.KClass
 
-@RunWith(JUnit4::class)
-class DefaultCompressionParametersTest {
+/** Provides a map to access a task-specific context. */
+class TaskParameters(parameters: Set<Any>) {
+  private val underlyingMap: Map<KClass<*>, Any> =
+    parameters.associateBy {
+      require(it::class.isData) { "Task Parameters only store data classes" }
+      it::class
+    }
 
-  @Test
-  fun loadsFromJar() {
-    assertThat(DEFAULT_COMPRESSION_PARAMETERS.typeCase).isEqualTo(BROTLI)
-    assertThat(DEFAULT_COMPRESSION_PARAMETERS.brotli.dictionary).isNotEmpty()
+  fun <T : Any> get(key: KClass<T>): T? {
+    require(key.isData) { "Task Parameters only store data classes" }
+    @Suppress("UNCHECKED_CAST") return underlyingMap[key] as T?
   }
 }

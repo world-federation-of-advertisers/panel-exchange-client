@@ -22,8 +22,8 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
 import org.wfanet.measurement.common.flatten
-import org.wfanet.panelmatch.client.logger.TaskLog
 import org.wfanet.panelmatch.client.privatemembership.testing.PlaintextPrivateMembershipCryptor
+import org.wfanet.panelmatch.common.logger.TaskLog
 
 private const val ATTEMPT_KEY = "some-arbitrary-attempt-key"
 

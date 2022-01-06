@@ -26,7 +26,7 @@ import org.wfanet.measurement.common.flatten
 import org.wfanet.measurement.storage.StorageClient
 import org.wfanet.measurement.storage.StorageClient.Blob
 import org.wfanet.measurement.storage.createBlob
-import org.wfanet.panelmatch.client.common.ExchangeContext
+import org.wfanet.panelmatch.common.ExchangeContext
 import org.wfanet.panelmatch.common.certificates.CertificateManager
 import org.wfanet.panelmatch.common.storage.toByteString
 import org.wfanet.panelmatch.protocol.NamedSignature

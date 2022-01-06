@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package org.wfanet.panelmatch.client.common
+package org.wfanet.panelmatch.client.protos
 
 import com.google.protobuf.ByteString
 import org.wfanet.panelmatch.client.eventpreprocessing.UnprocessedEvent
@@ -116,18 +116,6 @@ fun encryptedQueryBundleOf(
 /** Constructs a [Plaintext]. */
 fun plaintextOf(payload: ByteString): Plaintext = plaintext { this.payload = payload }
 
-/** Constructs a [JoinKey]. */
-fun joinKeyOf(key: ByteString): JoinKey = joinKey { this.key = key }
-
-/** Constructs a [JoinKeyIdentifier]. */
-fun joinKeyIdentifierOf(id: ByteString): JoinKeyIdentifier = joinKeyIdentifier { this.id = id }
-
-/** Constructs a [JoinKeyAndId]. */
-fun joinKeyAndIdOf(key: ByteString, id: ByteString): JoinKeyAndId = joinKeyAndId {
-  joinKey = joinKeyOf(key)
-  joinKeyIdentifier = joinKeyIdentifierOf(id)
-}
-
 /** Constructs a [EncryptedEntry]. */
 fun encryptedEntryOf(data: ByteString): EncryptedEntry = encryptedEntry { this.data = data }
 
@@ -136,13 +124,6 @@ fun databaseEntryOf(lookupKey: LookupKey, encryptedEntry: EncryptedEntry): Datab
     databaseEntry {
   this.lookupKey = lookupKey
   this.encryptedEntry = encryptedEntry
-}
-
-/** Constructs a [UnprocessedEvent]. */
-fun unprocessedEventOf(eventId: ByteString, eventData: ByteString): UnprocessedEvent =
-    unprocessedEvent {
-  id = eventId
-  data = eventData
 }
 
 /** Constructs a [LookupKey]. */
@@ -156,3 +137,22 @@ fun lookupKeyAndIdOf(key: Long, id: ByteString): LookupKeyAndId = lookupKeyAndId
 
 /** Constructs a [PaddingNonce]. */
 fun paddingNonceOf(nonce: ByteString): PaddingNonce = paddingNonce { this.nonce = nonce }
+
+/** Constructs a [UnprocessedEvent]. */
+fun unprocessedEventOf(eventId: ByteString, eventData: ByteString): UnprocessedEvent =
+    unprocessedEvent {
+  id = eventId
+  data = eventData
+}
+
+/** Constructs a [JoinKey]. */
+fun joinKeyOf(key: ByteString): JoinKey = joinKey { this.key = key }
+
+/** Constructs a [JoinKeyIdentifier]. */
+fun joinKeyIdentifierOf(id: ByteString): JoinKeyIdentifier = joinKeyIdentifier { this.id = id }
+
+/** Constructs a [JoinKeyAndId]. */
+fun joinKeyAndIdOf(key: ByteString, id: ByteString): JoinKeyAndId = joinKeyAndId {
+  joinKey = joinKeyOf(key)
+  joinKeyIdentifier = joinKeyIdentifierOf(id)
+}

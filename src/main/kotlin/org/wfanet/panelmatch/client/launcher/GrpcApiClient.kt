@@ -28,8 +28,8 @@ import org.wfanet.measurement.api.v2alpha.claimReadyExchangeStepRequest
 import org.wfanet.measurement.api.v2alpha.finishExchangeStepAttemptRequest
 import org.wfanet.measurement.common.grpc.grpcRequireNotNull
 import org.wfanet.measurement.common.toProtoTime
-import org.wfanet.panelmatch.client.common.Identity
 import org.wfanet.panelmatch.client.launcher.ApiClient.ClaimedExchangeStep
+import org.wfanet.panelmatch.common.Identity
 
 class GrpcApiClient(
   private val identity: Identity,

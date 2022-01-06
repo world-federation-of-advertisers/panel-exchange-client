@@ -6,7 +6,6 @@ kt_jvm_library(
     name = "storage",
     srcs = glob(["*.kt"]),
     deps = [
-        "//src/main/kotlin/org/wfanet/panelmatch/client/common",
         "//src/main/kotlin/org/wfanet/panelmatch/common",
         "//src/main/kotlin/org/wfanet/panelmatch/common/certificates",
         "//src/main/kotlin/org/wfanet/panelmatch/common/storage",

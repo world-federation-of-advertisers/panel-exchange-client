@@ -21,11 +21,6 @@ import com.google.privatemembership.batch.client.plaintextQuery
 import com.google.privatemembership.batch.queryMetadata
 import com.google.protobuf.ByteString
 import com.google.protobuf.kotlin.toByteStringUtf8
-import org.wfanet.panelmatch.client.common.bucketIdOf
-import org.wfanet.panelmatch.client.common.bucketOf
-import org.wfanet.panelmatch.client.common.databaseShardOf
-import org.wfanet.panelmatch.client.common.encryptedQueryBundleOf
-import org.wfanet.panelmatch.client.common.shardIdOf
 import org.wfanet.panelmatch.client.privatemembership.BucketContents
 import org.wfanet.panelmatch.client.privatemembership.BucketId
 import org.wfanet.panelmatch.client.privatemembership.EncryptedQueryBundle
@@ -36,6 +31,11 @@ import org.wfanet.panelmatch.client.privatemembership.QueryId
 import org.wfanet.panelmatch.client.privatemembership.ShardId
 import org.wfanet.panelmatch.client.privatemembership.bucketContents
 import org.wfanet.panelmatch.client.privatemembership.paddingNonce
+import org.wfanet.panelmatch.client.protos.bucketIdOf
+import org.wfanet.panelmatch.client.protos.bucketOf
+import org.wfanet.panelmatch.client.protos.databaseShardOf
+import org.wfanet.panelmatch.client.protos.encryptedQueryBundleOf
+import org.wfanet.panelmatch.client.protos.shardIdOf
 
 class JniQueryEvaluatorTestHelper(private val context: JniQueryEvaluatorContext) :
   QueryEvaluatorTestHelper {

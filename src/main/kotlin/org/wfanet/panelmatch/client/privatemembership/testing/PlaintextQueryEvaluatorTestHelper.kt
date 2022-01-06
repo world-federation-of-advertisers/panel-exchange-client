@@ -18,14 +18,14 @@ import com.google.protobuf.ByteString
 import com.google.protobuf.kotlin.toByteStringUtf8
 import com.google.protobuf.listValue
 import com.google.protobuf.value
-import org.wfanet.panelmatch.client.common.encryptedQueryBundleOf
-import org.wfanet.panelmatch.client.common.encryptedQueryResultOf
 import org.wfanet.panelmatch.client.privatemembership.BucketContents
 import org.wfanet.panelmatch.client.privatemembership.BucketId
 import org.wfanet.panelmatch.client.privatemembership.EncryptedQueryBundle
 import org.wfanet.panelmatch.client.privatemembership.EncryptedQueryResult
 import org.wfanet.panelmatch.client.privatemembership.QueryId
 import org.wfanet.panelmatch.client.privatemembership.ShardId
+import org.wfanet.panelmatch.client.protos.encryptedQueryBundleOf
+import org.wfanet.panelmatch.client.protos.encryptedQueryResultOf
 
 /**
  * Helper with [PlaintextQueryEvaluator].
