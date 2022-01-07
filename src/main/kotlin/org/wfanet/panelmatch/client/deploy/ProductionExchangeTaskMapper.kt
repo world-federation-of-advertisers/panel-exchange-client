@@ -31,7 +31,7 @@ import org.wfanet.panelmatch.client.exchangetasks.ApacheBeamTask
 import org.wfanet.panelmatch.client.exchangetasks.CopyFromPreviousExchangeTask
 import org.wfanet.panelmatch.client.exchangetasks.CopyFromSharedStorageTask
 import org.wfanet.panelmatch.client.exchangetasks.CopyToSharedStorageTask
-import org.wfanet.panelmatch.client.exchangetasks.CryptorExchangeTask
+import org.wfanet.panelmatch.client.exchangetasks.DeterministicCommutativeCipherTask
 import org.wfanet.panelmatch.client.exchangetasks.ExchangeTask
 import org.wfanet.panelmatch.client.exchangetasks.ExchangeTaskMapper
 import org.wfanet.panelmatch.client.exchangetasks.GenerateAsymmetricKeyPairTask
@@ -68,20 +68,20 @@ open class ProductionExchangeTaskMapper(
   private val taskContext: TaskParameters,
 ) : ExchangeTaskMapper() {
   override suspend fun ExchangeContext.commutativeDeterministicEncrypt(): ExchangeTask {
-    return CryptorExchangeTask.forEncryption(JniDeterministicCommutativeCipher())
+    return DeterministicCommutativeCipherTask.forEncryption(JniDeterministicCommutativeCipher())
   }
 
   override suspend fun ExchangeContext.commutativeDeterministicDecrypt(): ExchangeTask {
-    return CryptorExchangeTask.forDecryption(JniDeterministicCommutativeCipher())
+    return DeterministicCommutativeCipherTask.forDecryption(JniDeterministicCommutativeCipher())
   }
 
   override suspend fun ExchangeContext.commutativeDeterministicReEncrypt(): ExchangeTask {
-    return CryptorExchangeTask.forReEncryption(JniDeterministicCommutativeCipher())
+    return DeterministicCommutativeCipherTask.forReEncryption(JniDeterministicCommutativeCipher())
   }
 
   override suspend fun ExchangeContext.generateCommutativeDeterministicEncryptionKey():
     ExchangeTask {
-    return GenerateSymmetricKeyTask(JniDeterministicCommutativeCipher()::generateKey)
+    return GenerateSymmetricKeyTask(JniDeterministicCommutativeCipher())
   }
 
   override suspend fun ExchangeContext.preprocessEvents(): ExchangeTask {

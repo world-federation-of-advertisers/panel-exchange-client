@@ -18,24 +18,15 @@ import com.google.protobuf.ByteString
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
 import org.wfanet.measurement.storage.StorageClient
-import org.wfanet.panelmatch.client.logger.addToTaskLog
-import org.wfanet.panelmatch.common.loggerFor
+import org.wfanet.panelmatch.common.crypto.DeterministicCommutativeCipher
 
 private const val OUTPUT_DATA_LABEL = "symmetric-key"
 
-/** A task for generating a symmetric cryptor's private key. */
-class GenerateSymmetricKeyTask(private val generateKey: () -> ByteString) : ExchangeTask {
-
+/** A task for generating an symmetric key for a [DeterministicCommutativeCipher]. */
+class GenerateSymmetricKeyTask(private val cipher: DeterministicCommutativeCipher) : ExchangeTask {
   override suspend fun execute(
     input: Map<String, StorageClient.Blob>
   ): Map<String, Flow<ByteString>> {
-    logger.addToTaskLog("Executing generate symmetric key")
-
-    val key = generateKey()
-    return mapOf(OUTPUT_DATA_LABEL to flowOf(key))
-  }
-
-  companion object {
-    private val logger by loggerFor()
+    return mapOf(OUTPUT_DATA_LABEL to flowOf(cipher.generateKey()))
   }
 }
