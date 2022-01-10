@@ -32,6 +32,7 @@ class GenerateRandomBytesTaskTest {
   @Test
   fun numBytesMustBeGreaterThanZero() = withTestContext {
     assertFails { GenerateRandomBytesTask(numBytes = 0).execute(emptyMap()) }
+    assertFails { GenerateRandomBytesTask(numBytes = -100).execute(emptyMap()) }
   }
 
   @Test
