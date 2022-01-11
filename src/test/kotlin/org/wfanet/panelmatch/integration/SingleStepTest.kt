@@ -16,19 +16,16 @@ package org.wfanet.panelmatch.integration
 
 import com.google.common.truth.Truth.assertThat
 import com.google.protobuf.ByteString
-import com.google.protobuf.kotlin.toByteStringUtf8
-import java.lang.IllegalArgumentException
 import java.nio.file.Path
 import java.nio.file.Paths
 import java.util.regex.Pattern
-import org.junit.runners.Parameterized
 import org.junit.runner.RunWith
-import org.junit.runners.JUnit4
+import org.junit.runners.Parameterized
 import org.wfanet.measurement.api.v2alpha.ExchangeWorkflow
+import org.wfanet.measurement.api.v2alpha.ExchangeWorkflow.Step.StepCase
 import org.wfanet.measurement.api.v2alpha.exchangeWorkflow
 import org.wfanet.measurement.common.getRuntimePath
 import org.wfanet.measurement.common.readByteString
-import org.wfanet.measurement.api.v2alpha.ExchangeWorkflow.Step.StepCase
 
 private val FIXTURES_FILES_PATH: Path =
   checkNotNull(
@@ -48,55 +45,50 @@ private val FIXTURES_FILES_PATH: Path =
   )
 
 @RunWith(Parameterized::class)
-class SingleStepTest(filteredStep: ExchangeWorkflow.Step) : AbstractInProcessPanelMatchIntegrationTest() {
-
-  private val party:ExchangeWorkflow.Party = filteredStep.party
+class SingleStepTest(
+  private val filteredStep: ExchangeWorkflow.Step,
+  override val exchangeWorkflowResourcePath: String
+) : AbstractInProcessPanelMatchIntegrationTest() {
+  private val party: ExchangeWorkflow.Party = filteredStep.party
   private val neededInputs: Map<String, String> = filteredStep.inputLabelsMap
   private val neededOutputs: Map<String, String> = filteredStep.outputLabelsMap
   override val initialDataProviderInputs by lazy {
-    if (filteredStep.stepCase === StepCase.COPY_FROM_SHARED_STORAGE_STEP)
-      mutableMapOf()
-    else if (filteredStep.stepCase === StepCase.INPUT_STEP)
-      getData(neededOutputs, party)
-    else
-      getData(neededInputs, party)
+    if (filteredStep.stepCase === StepCase.COPY_FROM_SHARED_STORAGE_STEP) mutableMapOf()
+    else if (filteredStep.stepCase === StepCase.INPUT_STEP) getData(neededOutputs, party)
+    else getData(neededInputs, party)
   }
   override val initialModelProviderInputs by lazy {
-    if (filteredStep.stepCase === StepCase.COPY_FROM_SHARED_STORAGE_STEP)
-      mutableMapOf()
-    else if (filteredStep.stepCase === StepCase.INPUT_STEP)
-      getData(neededOutputs, party)
-    else
-      getData(neededInputs, party)
+    if (filteredStep.stepCase === StepCase.COPY_FROM_SHARED_STORAGE_STEP) mutableMapOf()
+    else if (filteredStep.stepCase === StepCase.INPUT_STEP) getData(neededOutputs, party)
+    else getData(neededInputs, party)
   }
   override val initialSharedInputs by lazy {
     if (filteredStep.stepCase === StepCase.COPY_FROM_SHARED_STORAGE_STEP)
       getData(neededInputs, null)
-    else
-      mutableMapOf()
+    else mutableMapOf()
   }
 
   override val providedExchangeWorkflow by lazy { exchangeWorkflow { steps += filteredStep } }
 
   private val dataProviderOutputs by lazy {
-    if (filteredStep.stepCase === StepCase.COPY_TO_SHARED_STORAGE_STEP || party !== ExchangeWorkflow.Party.DATA_PROVIDER)
+    if (filteredStep.stepCase === StepCase.COPY_TO_SHARED_STORAGE_STEP ||
+        party !== ExchangeWorkflow.Party.DATA_PROVIDER
+    )
       emptyMap()
-    else
-      getData(neededOutputs, party)
+    else getData(neededOutputs, party)
   }
 
   private val modelProviderOutputs by lazy {
-    if (filteredStep.stepCase === StepCase.COPY_TO_SHARED_STORAGE_STEP || party !== ExchangeWorkflow.Party.MODEL_PROVIDER)
+    if (filteredStep.stepCase === StepCase.COPY_TO_SHARED_STORAGE_STEP ||
+        party !== ExchangeWorkflow.Party.MODEL_PROVIDER
+    )
       emptyMap()
-    else
-      getData(neededOutputs, party)
+    else getData(neededOutputs, party)
   }
 
   override val finalSharedOutputs by lazy {
-    if (filteredStep.stepCase === StepCase.COPY_TO_SHARED_STORAGE_STEP)
-      getData(neededOutputs, null)
-    else
-      emptyMap()
+    if (filteredStep.stepCase === StepCase.COPY_TO_SHARED_STORAGE_STEP) getData(neededOutputs, null)
+    else emptyMap()
   }
 
   override fun validateFinalState(
@@ -112,16 +104,51 @@ class SingleStepTest(filteredStep: ExchangeWorkflow.Step) : AbstractInProcessPan
   }
 
   companion object {
-    // TODO: Update to preprocessing workflow
-    private const val fullExchangeWorkflowResourcePath: String = "config/full_exchange_workflow.textproto"
+
+    private const val exchangeWorkflowResourcePath: String =
+      "config/full_with_preprocessing.textproto"
+
+    // TODO: Test non-deterministic steps as well
+    private val nonDeterministicTests: List<String> =
+      listOf(
+        "decrypt-hkdf-pepper", // TODO: Investigate the Tink error here
+        "decrypt-encrypted-query-results",
+        "decrypt-identifier-hash-pepper", // TODO: Investigate the Tink error here
+        "execute-encrypted-queries",
+        "encrypt-hkdf-pepper",
+        "encrypt-identifier-hash-pepper",
+        "execute-encrypted-queries",
+        "export-blob-encryption-public-key",
+        "export-compression-parameters",
+        "export-double-blinded-join-keys",
+        "export-encrypted-hkdf-pepper",
+        "export-encrypted-queries",
+        "export-encrypted-query-results",
+        "export-identifier-hash-pepper",
+        "export-single-blinded-join-keys",
+        "export-serialized-rlwe-public-key",
+        "generate-blob-encryption-key-pair-step",
+        "generate-edp-commutative-deterministic-key",
+        "generate-mp-commutative-deterministic-key",
+        "generate-blob-encryption-key-pair-step",
+        "generate-identifier-hash-pepper",
+        "generate-hkdf-pepper",
+        "generate-serialized-rlwe-keys",
+        "prepare-event-lookup-queries",
+        "preprocess-events",
+      )
 
     @JvmStatic
     @Parameterized.Parameters(name = "{index}: Test with Step={0}")
-    fun stepsToTest():List<ExchangeWorkflow.Step> {
-      return getExchangeWorkflow((fullExchangeWorkflowResourcePath)).stepsList
+    fun stepsToTest(): List<Array<Any>> {
+      return getExchangeWorkflow(exchangeWorkflowResourcePath)
+        .stepsList
+        .filter { !nonDeterministicTests.contains(it.stepId) }
+        .map { arrayOf(it, exchangeWorkflowResourcePath) }
     }
 
     private val manifestNumberPattern = Pattern.compile("\\d+")
+    /** Reads in golden data for use as test inputs and to verify test outputs. */
     private fun getData(
       neededData: Map<String, String>,
       currentParty: ExchangeWorkflow.Party?
@@ -136,9 +163,14 @@ class SingleStepTest(filteredStep: ExchangeWorkflow.Step) : AbstractInProcessPan
       for ((_, value) in neededData) {
         val data = FIXTURES_FILES_PATH.resolve(folderName).resolve(value).toFile().readByteString()
         inputs[value] = data
-        if (folderName === "shared"){
+        if (folderName === "shared") {
           val signatureValue = "$value.signature"
-          val signatureData = FIXTURES_FILES_PATH.resolve(folderName).resolve(signatureValue).toFile().readByteString()
+          val signatureData =
+            FIXTURES_FILES_PATH
+              .resolve(folderName)
+              .resolve(signatureValue)
+              .toFile()
+              .readByteString()
           inputs[signatureValue] = signatureData
         }
         val dataString = data.toStringUtf8()
@@ -150,6 +182,16 @@ class SingleStepTest(filteredStep: ExchangeWorkflow.Step) : AbstractInProcessPan
             val key = dataString.replace("*", i.toString())
             inputs[key] =
               FIXTURES_FILES_PATH.resolve(folderName).resolve(key).toFile().readByteString()
+            if (folderName === "shared") {
+              val signatureManifestValue = "$key.signature"
+              val signatureManifestData =
+                FIXTURES_FILES_PATH
+                  .resolve(folderName)
+                  .resolve(signatureManifestValue)
+                  .toFile()
+                  .readByteString()
+              inputs[signatureManifestValue] = signatureManifestData
+            }
           }
         }
       }

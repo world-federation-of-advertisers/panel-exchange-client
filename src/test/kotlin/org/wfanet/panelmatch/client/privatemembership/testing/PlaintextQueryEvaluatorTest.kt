@@ -17,6 +17,6 @@ package org.wfanet.panelmatch.client.privatemembership.testing
 import org.wfanet.panelmatch.client.privatemembership.QueryEvaluator
 
 class PlaintextQueryEvaluatorTest : AbstractQueryEvaluatorTest() {
-  override val evaluator: QueryEvaluator = PlaintextQueryEvaluator
+  override val evaluator: QueryEvaluator = PlaintextQueryEvaluator(bucketsPerShardCount)
   override val helper: QueryEvaluatorTestHelper = PlaintextQueryEvaluatorTestHelper
 }

@@ -26,6 +26,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.runBlocking
 import org.junit.Before
 import org.junit.Rule
@@ -52,14 +53,13 @@ import org.wfanet.measurement.common.toProtoDate
 import org.wfanet.measurement.integration.deploy.gcloud.buildKingdomSpannerEmulatorDatabaseRule
 import org.wfanet.measurement.integration.deploy.gcloud.buildSpannerInProcessKingdom
 import org.wfanet.panelmatch.client.storage.*
+import org.wfanet.panelmatch.client.storage.FileSystemStorageFactory
 import org.wfanet.panelmatch.common.ExchangeDateKey
 import org.wfanet.panelmatch.common.loggerFor
 import org.wfanet.panelmatch.common.secrets.testing.TestSecretMap
-import org.wfanet.panelmatch.common.testing.runBlockingTest
-import kotlinx.coroutines.flow.flowOf
-import org.wfanet.panelmatch.client.storage.FileSystemStorageFactory
-import org.wfanet.measurement.common.flatten
+import org.wfanet.panelmatch.common.storage.StorageFactory
 import org.wfanet.panelmatch.common.storage.toByteString
+import org.wfanet.panelmatch.common.testing.runBlockingTest
 
 private val TERMINAL_STEP_STATES = setOf(ExchangeStep.State.SUCCEEDED, ExchangeStep.State.FAILED)
 private val READY_STEP_STATES =
@@ -78,11 +78,14 @@ private val EXCHANGE_DATE = LocalDate.now()
 
 /** Base class to run a full, in-process end-to-end test of an ExchangeWorkflow. */
 abstract class AbstractInProcessPanelMatchIntegrationTest {
-  protected abstract val providedExchangeWorkflow: ExchangeWorkflow
+  protected abstract val exchangeWorkflowResourcePath: String
+  open val providedExchangeWorkflow: ExchangeWorkflow by lazy {
+    getExchangeWorkflow(exchangeWorkflowResourcePath)
+  }
   protected abstract val initialDataProviderInputs: Map<String, ByteString>
   protected abstract val initialModelProviderInputs: Map<String, ByteString>
   open val initialSharedInputs: MutableMap<String, ByteString> = mutableMapOf()
-  open val finalSharedOutputs:Map<String, ByteString> = emptyMap()
+  open val finalSharedOutputs: Map<String, ByteString> = emptyMap()
 
   /** This is responsible for making an assertions about the final state of the workflow. */
   protected abstract fun validateFinalState(
@@ -232,11 +235,18 @@ abstract class AbstractInProcessPanelMatchIntegrationTest {
     return PrivateStorageSelector(specialSharedStorageFactories, specialSharedStorageInfo)
   }
 
-  private fun PrivateStorageSelector.writeSharedBlob(blobKey: String, contents: ByteString, exchangeDateKey: ExchangeDateKey) =
+  private fun PrivateStorageSelector.writeSharedBlob(
+    blobKey: String,
+    contents: ByteString,
+    exchangeDateKey: ExchangeDateKey
+  ) =
     runBlocking(Dispatchers.IO) {
       getStorageClient(exchangeDateKey).createBlob(blobKey, flowOf(contents))
     }
-  private fun PrivateStorageSelector.readSharedBlob(blobKey: String, exchangeDateKey: ExchangeDateKey): ByteString? =
+  private fun PrivateStorageSelector.readSharedBlob(
+    blobKey: String,
+    exchangeDateKey: ExchangeDateKey
+  ): ByteString? =
     runBlocking(Dispatchers.IO) {
       getStorageClient(exchangeDateKey).getBlob(blobKey)?.toByteString()
     }
@@ -288,7 +298,7 @@ abstract class AbstractInProcessPanelMatchIntegrationTest {
       modelProviderDaemon.writePrivateBlob(blobKey, value)
     }
 
-    val specialSharedStorageSelector:PrivateStorageSelector = makeSpecialSharedStorageSelector()
+    val specialSharedStorageSelector: PrivateStorageSelector = makeSpecialSharedStorageSelector()
     for ((blobKey, value) in initialSharedInputs) {
       specialSharedStorageSelector.writeSharedBlob(blobKey, value, exchangeDateKey)
     }

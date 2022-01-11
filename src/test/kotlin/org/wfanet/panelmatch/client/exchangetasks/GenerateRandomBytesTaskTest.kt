@@ -15,7 +15,7 @@
 package org.wfanet.panelmatch.client.exchangetasks
 
 import com.google.common.truth.Truth.assertThat
-import com.google.protobuf.kotlin.toByteStringUtf8
+import kotlin.test.assertFails
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import org.junit.Test
@@ -23,23 +23,23 @@ import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
 import org.wfanet.measurement.common.flatten
 import org.wfanet.panelmatch.client.logger.TaskLog
-import org.wfanet.panelmatch.client.privatemembership.testing.PlaintextPrivateMembershipCryptor
 
 private const val ATTEMPT_KEY = "some-arbitrary-attempt-key"
 
 @RunWith(JUnit4::class)
-class GenerateAsymmetricKeysTaskTest {
-  private val keyGenerator = PlaintextPrivateMembershipCryptor()::generateKeys
+class GenerateRandomBytesTaskTest {
 
   @Test
-  fun `public key is not equal to private key`() = withTestContext {
-    val result =
-      GenerateAsymmetricKeysTask(generateKeys = keyGenerator).execute(emptyMap()).mapValues {
-        it.value.flatten()
-      }
+  fun numBytesMustBeGreaterThanZero() = withTestContext {
+    assertFails { GenerateRandomBytesTask(numBytes = 0).execute(emptyMap()) }
+    assertFails { GenerateRandomBytesTask(numBytes = -100).execute(emptyMap()) }
+  }
 
-    assertThat(result.getValue("public-key")).isEqualTo("some public key".toByteStringUtf8())
-    assertThat(result.getValue("private-key")).isEqualTo("some private key".toByteStringUtf8())
+  @Test
+  fun generateBytes() = withTestContext {
+    val outputs = GenerateRandomBytesTask(numBytes = 10).execute(emptyMap())
+    val randomBytes = requireNotNull(outputs["random-bytes"]).flatten()
+    assertThat(randomBytes.size()).isEqualTo(10)
   }
 }
 

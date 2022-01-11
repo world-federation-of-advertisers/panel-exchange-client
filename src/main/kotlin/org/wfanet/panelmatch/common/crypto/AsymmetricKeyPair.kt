@@ -12,11 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package org.wfanet.panelmatch.client.storage
+package org.wfanet.panelmatch.common.crypto
 
+import com.google.protobuf.ByteString
 import java.io.Serializable
-import org.wfanet.measurement.storage.StorageClient
 
-interface StorageFactory : Serializable {
-  fun build(): StorageClient
-}
+data class AsymmetricKeyPair(
+  val serializedPublicKey: ByteString,
+  val serializedPrivateKey: ByteString,
+) : Serializable
