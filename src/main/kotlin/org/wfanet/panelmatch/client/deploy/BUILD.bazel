@@ -1,5 +1,6 @@
 load("@io_bazel_rules_kotlin//kotlin:jvm.bzl", "kt_jvm_library")
-load("@rules_java//java:defs.bzl", "java_binary")
+load("@rules_jvm_external//:defs.bzl", "java_export")
+
 
 package(default_visibility = [
     "//src/main/kotlin/org/wfanet/panelmatch:__subpackages__",
@@ -54,6 +55,7 @@ java_binary(
         "@tink_java//src/main/java/com/google/crypto/tink:hybrid_encrypt",
         "@tink_java//src/main/java/com/google/crypto/tink:kms_clients",
         "@tink_java//src/main/java/com/google/crypto/tink:registry_cluster",
+        "@wfa_common_jvm//imports/java/com/google/devtools/build/runfiles",
         "@wfa_common_jvm//imports/java/com/google/cloud:core",
         "@wfa_common_jvm//imports/java/com/google/cloud/grpc",
         "@wfa_common_jvm//imports/java/com/google/cloud/spanner",
@@ -83,10 +85,22 @@ java_binary(
     ],
 )
 
-java_binary(
-    name = "MavenJar",
-    deploy_env = [
-        ":provided-deps",
-    ],
-    runtime_deps = [":deploy"],
+#java_binary(
+#    name = "MavenJar",
+#    deploy_env = [
+#        ":provided-deps",
+#    ],
+#    runtime_deps = [":deploy"],
+#)
+
+java_export(
+  name = "MavenJar",
+  maven_coordinates = "org.wfanet:panel-exchange-client-core:${local_release}",
+  pom_template = "//deploy:pom",
+  deploy_env = [
+    ":provided-deps",
+  ],
+  runtime_deps = [
+    ":deploy",
+  ],
 )
