@@ -2,7 +2,6 @@ package(
     default_visibility = ["//visibility:public"],
 )
 
-filegroup(
-    name = "pom",
-    srcs = glob(["*.xml"]),
+exports_files(
+    ["pom_template.xml"],
 )

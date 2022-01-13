@@ -16,6 +16,8 @@ name: Publish package to GitHub Packages
 on:
   release:
     types: [created]
+  push:
+    branches: [stevenwarejones_maven]
 jobs:
   publish:
     # Since it may not be desirable to bundle libc into the jar, we want to link to an older supported libc.
@@ -33,6 +35,7 @@ jobs:
       # TODO: Publish to Maven Central Repository
       - name: Publish packages
         run: |
+          export TEST_VERSION=v0.1
           bazel run \
             --define "maven_repo=https://maven.pkg.github.com/world-federation-of-advertisers/panel-exchange-client" \
             //src/main/kotlin/org/wfanet/panelmatch/client/deploy:MavenJar.publish

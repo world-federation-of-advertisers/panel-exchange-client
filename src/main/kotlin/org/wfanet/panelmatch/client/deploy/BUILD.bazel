@@ -95,12 +95,12 @@ java_binary(
 
 java_export(
   name = "MavenJar",
-  maven_coordinates = "org.wfanet:panel-exchange-client-core:${local_release}",
-  pom_template = "//deploy:pom",
+  maven_coordinates = "org.wfanet:panel-exchange-client-core:${TEST_VERSION}",
+  pom_template = "//deploy:pom_template.xml",
   deploy_env = [
     ":provided-deps",
   ],
-  runtime_deps = [
+  resources = [
     ":deploy",
   ],
 )
