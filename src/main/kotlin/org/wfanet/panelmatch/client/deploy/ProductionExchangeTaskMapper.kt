@@ -14,29 +14,39 @@
 
 package org.wfanet.panelmatch.client.deploy
 
+import com.google.protobuf.kotlin.toByteStringUtf8
 import org.apache.beam.sdk.Pipeline
 import org.apache.beam.sdk.options.PipelineOptions
 import org.wfanet.measurement.api.v2alpha.ExchangeWorkflow
 import org.wfanet.measurement.common.throttler.Throttler
 import org.wfanet.measurement.common.toLocalDate
 import org.wfanet.panelmatch.client.common.ExchangeContext
+import org.wfanet.panelmatch.client.common.TaskParameters
+import org.wfanet.panelmatch.client.eventpreprocessing.HardCodedDeterministicCommutativeCipherKeyProvider
+import org.wfanet.panelmatch.client.eventpreprocessing.HardCodedHkdfPepperProvider
+import org.wfanet.panelmatch.client.eventpreprocessing.HardCodedIdentifierHashPepperProvider
+import org.wfanet.panelmatch.client.eventpreprocessing.JniEventPreprocessor
+import org.wfanet.panelmatch.client.eventpreprocessing.PreprocessingParameters
 import org.wfanet.panelmatch.client.exchangetasks.ApacheBeamContext
 import org.wfanet.panelmatch.client.exchangetasks.ApacheBeamTask
 import org.wfanet.panelmatch.client.exchangetasks.CopyFromPreviousExchangeTask
 import org.wfanet.panelmatch.client.exchangetasks.CopyFromSharedStorageTask
 import org.wfanet.panelmatch.client.exchangetasks.CopyToSharedStorageTask
-import org.wfanet.panelmatch.client.exchangetasks.CryptorExchangeTask
+import org.wfanet.panelmatch.client.exchangetasks.DeterministicCommutativeCipherTask
 import org.wfanet.panelmatch.client.exchangetasks.ExchangeTask
 import org.wfanet.panelmatch.client.exchangetasks.ExchangeTaskMapper
-import org.wfanet.panelmatch.client.exchangetasks.GenerateAsymmetricKeysTask
-import org.wfanet.panelmatch.client.exchangetasks.GenerateExchangeCertificateTask
-import org.wfanet.panelmatch.client.exchangetasks.GenerateSymmetricKeyTask
+import org.wfanet.panelmatch.client.exchangetasks.GenerateAsymmetricKeyPairTask
+import org.wfanet.panelmatch.client.exchangetasks.GenerateHybridEncryptionKeyPairTask
+import org.wfanet.panelmatch.client.exchangetasks.HybridDecryptTask
+import org.wfanet.panelmatch.client.exchangetasks.HybridEncryptTask
 import org.wfanet.panelmatch.client.exchangetasks.InputTask
 import org.wfanet.panelmatch.client.exchangetasks.IntersectValidateTask
 import org.wfanet.panelmatch.client.exchangetasks.JoinKeyHashingExchangeTask
+import org.wfanet.panelmatch.client.exchangetasks.ProducerTask
 import org.wfanet.panelmatch.client.exchangetasks.buildPrivateMembershipQueries
 import org.wfanet.panelmatch.client.exchangetasks.decryptPrivateMembershipResults
 import org.wfanet.panelmatch.client.exchangetasks.executePrivateMembershipQueries
+import org.wfanet.panelmatch.client.exchangetasks.preprocessEvents
 import org.wfanet.panelmatch.client.privatemembership.CreateQueriesParameters
 import org.wfanet.panelmatch.client.privatemembership.EvaluateQueriesParameters
 import org.wfanet.panelmatch.client.privatemembership.JniPrivateMembershipCryptor
@@ -48,28 +58,55 @@ import org.wfanet.panelmatch.client.storage.SharedStorageSelector
 import org.wfanet.panelmatch.common.ShardedFileName
 import org.wfanet.panelmatch.common.certificates.CertificateManager
 import org.wfanet.panelmatch.common.crypto.JniDeterministicCommutativeCipher
+import org.wfanet.panelmatch.common.crypto.generateSecureRandomByteString
 
 open class ProductionExchangeTaskMapper(
   private val inputTaskThrottler: Throttler,
   private val privateStorageSelector: PrivateStorageSelector,
   private val sharedStorageSelector: SharedStorageSelector,
   private val certificateManager: CertificateManager,
-  private val pipelineOptions: PipelineOptions
+  private val pipelineOptions: PipelineOptions,
+  private val taskContext: TaskParameters,
 ) : ExchangeTaskMapper() {
-  override suspend fun ExchangeContext.encrypt(): ExchangeTask {
-    return CryptorExchangeTask.forEncryption(JniDeterministicCommutativeCipher())
+  override suspend fun ExchangeContext.commutativeDeterministicEncrypt(): ExchangeTask {
+    return DeterministicCommutativeCipherTask.forEncryption(JniDeterministicCommutativeCipher())
   }
 
-  override suspend fun ExchangeContext.decrypt(): ExchangeTask {
-    return CryptorExchangeTask.forDecryption(JniDeterministicCommutativeCipher())
+  override suspend fun ExchangeContext.commutativeDeterministicDecrypt(): ExchangeTask {
+    return DeterministicCommutativeCipherTask.forDecryption(JniDeterministicCommutativeCipher())
   }
 
-  override suspend fun ExchangeContext.reEncrypt(): ExchangeTask {
-    return CryptorExchangeTask.forReEncryption(JniDeterministicCommutativeCipher())
+  override suspend fun ExchangeContext.commutativeDeterministicReEncrypt(): ExchangeTask {
+    return DeterministicCommutativeCipherTask.forReEncryption(JniDeterministicCommutativeCipher())
   }
 
-  override suspend fun ExchangeContext.generateEncryptionKey(): ExchangeTask {
-    return GenerateSymmetricKeyTask(JniDeterministicCommutativeCipher()::generateKey)
+  override suspend fun ExchangeContext.generateCommutativeDeterministicEncryptionKey():
+    ExchangeTask {
+    val cipher = JniDeterministicCommutativeCipher()
+    return ProducerTask("symmetric-key") { cipher.generateKey() }
+  }
+
+  override suspend fun ExchangeContext.preprocessEvents(): ExchangeTask {
+    check(step.stepCase == ExchangeWorkflow.Step.StepCase.PREPROCESS_EVENTS_STEP)
+    val eventPreprocessor = JniEventPreprocessor()
+    val deterministicCommutativeCipherKeyProvider =
+      ::HardCodedDeterministicCommutativeCipherKeyProvider
+    val hkdfPepperProvider = ::HardCodedHkdfPepperProvider
+    val identifierHashPepperProvider = ::HardCodedIdentifierHashPepperProvider
+    val preprocessingParameters: PreprocessingParameters =
+      requireNotNull(taskContext.get(PreprocessingParameters::class)) {
+        "PreprocessingParameters must be set in taskContext"
+      }
+    val outputsManifests = mapOf("preprocessed-event-data" to preprocessingParameters.fileCount)
+    return apacheBeamTaskFor(outputsManifests, emptyList()) {
+      preprocessEvents(
+        eventPreprocessor = eventPreprocessor,
+        deterministicCommutativeCipherKeyProvider = deterministicCommutativeCipherKeyProvider,
+        identifierPepperProvider = identifierHashPepperProvider,
+        hkdfPepperProvider = hkdfPepperProvider,
+        maxByteSize = preprocessingParameters.maxByteSize,
+      )
+    }
   }
 
   override suspend fun ExchangeContext.buildPrivateMembershipQueries(): ExchangeTask {
@@ -91,7 +128,7 @@ open class ProductionExchangeTaskMapper(
         padQueries = stepDetails.addPaddingQueries,
       )
 
-    return apacheBeamTaskFor(outputManifests) {
+    return apacheBeamTaskFor(outputManifests, emptyList()) {
       buildPrivateMembershipQueries(parameters, privateMembershipCryptor)
     }
   }
@@ -110,8 +147,9 @@ open class ProductionExchangeTaskMapper(
     val queryResultsEvaluator = JniQueryEvaluator(stepDetails.serializedParameters)
 
     val outputManifests = mapOf("encrypted-results" to stepDetails.encryptedQueryResultFileCount)
+    val outputLabels = listOf("padding-nonces")
 
-    return apacheBeamTaskFor(outputManifests) {
+    return apacheBeamTaskFor(outputManifests, outputLabels) {
       executePrivateMembershipQueries(parameters, queryResultsEvaluator)
     }
   }
@@ -124,24 +162,22 @@ open class ProductionExchangeTaskMapper(
 
     val outputManifests = mapOf("decrypted-event-data" to stepDetails.decryptEventDataSetFileCount)
 
-    return apacheBeamTaskFor(outputManifests) {
+    return apacheBeamTaskFor(outputManifests, emptyList()) {
       decryptPrivateMembershipResults(stepDetails.serializedParameters, JniQueryResultsDecryptor())
     }
   }
 
-  override suspend fun ExchangeContext.generateSymmetricKey(): ExchangeTask {
-    return GenerateSymmetricKeyTask(JniDeterministicCommutativeCipher()::generateKey)
-  }
-
-  override suspend fun ExchangeContext.generateSerializedRlweKeys(): ExchangeTask {
-    check(step.stepCase == ExchangeWorkflow.Step.StepCase.GENERATE_SERIALIZED_RLWE_KEYS_STEP)
+  override suspend fun ExchangeContext.generateSerializedRlweKeyPair(): ExchangeTask {
+    check(step.stepCase == ExchangeWorkflow.Step.StepCase.GENERATE_SERIALIZED_RLWE_KEY_PAIR_STEP)
     val privateMembershipCryptor =
-      JniPrivateMembershipCryptor(step.generateSerializedRlweKeysStep.serializedParameters)
-    return GenerateAsymmetricKeysTask(generateKeys = privateMembershipCryptor::generateKeys)
+      JniPrivateMembershipCryptor(step.generateSerializedRlweKeyPairStep.serializedParameters)
+    return GenerateAsymmetricKeyPairTask(generateKeys = privateMembershipCryptor::generateKeys)
   }
 
   override suspend fun ExchangeContext.generateExchangeCertificate(): ExchangeTask {
-    return GenerateExchangeCertificateTask(certificateManager, exchangeDateKey)
+    return ProducerTask("certificate-resource-name") {
+      certificateManager.createForExchange(exchangeDateKey).toByteStringUtf8()
+    }
   }
 
   override suspend fun ExchangeContext.generateLookupKeys(): ExchangeTask {
@@ -220,14 +256,33 @@ open class ProductionExchangeTaskMapper(
     )
   }
 
+  override suspend fun ExchangeContext.hybridEncrypt(): ExchangeTask {
+    return HybridEncryptTask()
+  }
+
+  override suspend fun ExchangeContext.hybridDecrypt(): ExchangeTask {
+    return HybridDecryptTask()
+  }
+
+  override suspend fun ExchangeContext.generateHybridEncryptionKeyPair(): ExchangeTask {
+    return GenerateHybridEncryptionKeyPairTask()
+  }
+
+  override suspend fun ExchangeContext.generateRandomBytes(): ExchangeTask {
+    val numBytes = step.generateRandomBytesStep.numBytes
+    return ProducerTask("random-bytes") { generateSecureRandomByteString(numBytes) }
+  }
+
   private suspend fun ExchangeContext.apacheBeamTaskFor(
     outputManifests: Map<String, Int>,
+    outputBlobs: List<String>,
     execute: suspend ApacheBeamContext.() -> Unit
   ): ApacheBeamTask {
     return ApacheBeamTask(
       Pipeline.create(pipelineOptions),
       privateStorageSelector.getStorageFactory(exchangeDateKey),
       step.inputLabelsMap,
+      outputBlobs.associateWith { step.outputLabelsMap.getValue(it) },
       outputManifests.mapValues { (k, v) -> ShardedFileName(step.outputLabelsMap.getValue(k), v) },
       execute
     )

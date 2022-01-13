@@ -57,8 +57,9 @@ kt_jvm_test(
 
 kt_jvm_test(
     name = "JniQueryEvaluatorTest",
-    timeout = "short",
+    size = "medium",
     srcs = ["JniQueryEvaluatorTest.kt"],
+    shard_count = 2,
     test_class = "org.wfanet.panelmatch.client.privatemembership.JniQueryEvaluatorTest",
     deps = [
         "//src/main/kotlin/org/wfanet/panelmatch/client/privatemembership",
@@ -107,7 +108,6 @@ kt_jvm_test(
     deps = [
         "//imports/java/org/apache/beam:core",
         "//imports/java/org/apache/beam/extensions:protobuf",
-        "//src/main/kotlin/org/wfanet/panelmatch/client/common/testing",
         "//src/main/kotlin/org/wfanet/panelmatch/client/privatemembership",
         "//src/main/kotlin/org/wfanet/panelmatch/client/privatemembership/testing",
         "//src/main/kotlin/org/wfanet/panelmatch/common/beam",

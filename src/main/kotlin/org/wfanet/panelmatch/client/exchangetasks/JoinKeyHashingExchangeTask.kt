@@ -21,11 +21,11 @@ import org.wfanet.measurement.storage.StorageClient
 import org.wfanet.panelmatch.client.privatemembership.LookupKeyAndId
 import org.wfanet.panelmatch.client.privatemembership.QueryPreparer
 import org.wfanet.panelmatch.client.privatemembership.lookupKeyAndIdCollection
-import org.wfanet.panelmatch.common.loggerFor
 import org.wfanet.panelmatch.common.storage.toByteString
 
 private const val INPUT_PEPPER_KEY_LABEL = "pepper"
 
+/** Hashes a list of [JoinKeyAndId] given a pepper. */
 class JoinKeyHashingExchangeTask
 internal constructor(
   private val operation: (ByteString, List<JoinKeyAndId>) -> List<LookupKeyAndId>,
@@ -46,8 +46,6 @@ internal constructor(
   }
 
   companion object {
-    private val logger by loggerFor()
-
     /** Returns an [ExchangeTask] that adds another layer of hashing to data. */
     @JvmStatic
     fun forHashing(QueryPreparer: QueryPreparer): ExchangeTask {

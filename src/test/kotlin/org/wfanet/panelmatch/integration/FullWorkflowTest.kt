@@ -21,20 +21,22 @@ import kotlin.test.assertNotNull
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
 import org.wfanet.measurement.common.flatten
-import org.wfanet.panelmatch.client.PreprocessEventsRequestKt.unprocessedEvent
 import org.wfanet.panelmatch.client.common.databaseEntryOf
-import org.wfanet.panelmatch.client.common.databaseKeyOf
+import org.wfanet.panelmatch.client.common.encryptedEntryOf
 import org.wfanet.panelmatch.client.common.joinKeyAndIdOf
-import org.wfanet.panelmatch.client.common.plaintextOf
+import org.wfanet.panelmatch.client.common.lookupKeyOf
 import org.wfanet.panelmatch.client.eventpreprocessing.JniEventPreprocessor
+import org.wfanet.panelmatch.client.eventpreprocessing.combinedEvents
+import org.wfanet.panelmatch.client.eventpreprocessing.preprocessEventsRequest
+import org.wfanet.panelmatch.client.eventpreprocessing.unprocessedEvent
 import org.wfanet.panelmatch.client.exchangetasks.joinKeyAndIdCollection
-import org.wfanet.panelmatch.client.preprocessEventsRequest
 import org.wfanet.panelmatch.client.privatemembership.DatabaseEntry
 import org.wfanet.panelmatch.client.privatemembership.keyedDecryptedEventDataSet
 import org.wfanet.panelmatch.common.compression.CompressionParametersKt.brotliCompressionParameters
 import org.wfanet.panelmatch.common.compression.compressionParameters
 import org.wfanet.panelmatch.common.parseDelimitedMessages
 import org.wfanet.panelmatch.common.toDelimitedByteString
+import org.wfanet.panelmatch.integration.testing.parsePlaintextResults
 
 private val PLAINTEXT_JOIN_KEYS = joinKeyAndIdCollection {
   joinKeyAndIds +=
@@ -60,14 +62,16 @@ private fun makeDatabaseEntry(index: Int): DatabaseEntry {
     unprocessedEvents +=
       unprocessedEvent {
         id = "join-key-$index".toByteStringUtf8()
-        data = "payload-for-join-key-$index".toByteStringUtf8()
+        data =
+          combinedEvents { serializedEvents += "payload-for-join-key-$index".toByteStringUtf8() }
+            .toByteString()
       }
   }
   val response = JniEventPreprocessor().preprocess(request)
   val processedEvent = response.processedEventsList.single()
   return databaseEntryOf(
-    databaseKeyOf(processedEvent.encryptedId),
-    plaintextOf(processedEvent.encryptedData)
+    lookupKeyOf(processedEvent.encryptedId),
+    encryptedEntryOf(processedEvent.encryptedData)
   )
 }
 
@@ -104,17 +108,13 @@ class FullWorkflowTest : AbstractInProcessPanelMatchIntegrationTest() {
     assertNotNull(blob)
 
     val decryptedEvents =
-      blob.parseDelimitedMessages(keyedDecryptedEventDataSet {}).map {
-        val payload =
-          it.decryptedEventDataList.joinToString("") { plaintext ->
-            plaintext.payload.toStringUtf8()
-          }
-        it.plaintextJoinKeyAndId.joinKey.key.toStringUtf8() to payload
+      parsePlaintextResults(blob.parseDelimitedMessages(keyedDecryptedEventDataSet {})).map {
+        it.joinKey to it.plaintexts
       }
     assertThat(decryptedEvents)
       .containsExactly(
-        "join-key-1" to "payload-for-join-key-1",
-        "join-key-2" to "payload-for-join-key-2",
+        "join-key-1" to listOf("payload-for-join-key-1"),
+        "join-key-2" to listOf("payload-for-join-key-2"),
       )
   }
 }

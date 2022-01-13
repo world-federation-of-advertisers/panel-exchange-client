@@ -14,24 +14,39 @@
 
 package org.wfanet.panelmatch.client.exchangetasks
 
+import com.google.crypto.tink.HybridEncrypt
+import com.google.crypto.tink.KeysetHandle
 import com.google.protobuf.ByteString
+import com.google.protobuf.kotlin.toByteString
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
 import org.wfanet.measurement.storage.StorageClient
 import org.wfanet.panelmatch.client.logger.addToTaskLog
 import org.wfanet.panelmatch.common.loggerFor
+import org.wfanet.panelmatch.common.storage.toByteString
 
-private const val OUTPUT_DATA_LABEL = "symmetric-key"
+private const val PUBLIC_KEY_LABEL = "public-key-handle"
+private const val PLAINTEXT_DATA_LABEL = "plaintext-data"
+private const val ENCRYPTED_DATA_LABEL = "encrypted-data"
+private val NO_ASSOCIATED_DATA: ByteArray? = null
 
-class GenerateSymmetricKeyTask(private val generateKey: () -> ByteString) : ExchangeTask {
+/** Hybrid encrypts plaintext data given a public key. */
+class HybridEncryptTask : ExchangeTask {
 
   override suspend fun execute(
     input: Map<String, StorageClient.Blob>
   ): Map<String, Flow<ByteString>> {
-    logger.addToTaskLog("Executing generate symmetric key")
+    logger.addToTaskLog("Executing hybrid encrypt task")
 
-    val key = generateKey()
-    return mapOf(OUTPUT_DATA_LABEL to flowOf(key))
+    val inputData = input.getValue(PLAINTEXT_DATA_LABEL).toByteString()
+    val publicKeyData = input.getValue(PUBLIC_KEY_LABEL).toByteString()
+    val publicKeysetHandle = KeysetHandle.readNoSecret(publicKeyData.toByteArray())
+    val hybridEncrypt = publicKeysetHandle.getPrimitive(HybridEncrypt::class.java)
+    val encryptedData =
+      hybridEncrypt.encrypt(inputData.toByteArray(), NO_ASSOCIATED_DATA).toByteString()
+    return mapOf(
+      ENCRYPTED_DATA_LABEL to flowOf(encryptedData),
+    )
   }
 
   companion object {

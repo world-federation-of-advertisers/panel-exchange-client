@@ -18,28 +18,16 @@ import com.google.protobuf.ByteString
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
 import org.wfanet.measurement.storage.StorageClient
-import org.wfanet.panelmatch.client.logger.addToTaskLog
-import org.wfanet.panelmatch.common.crypto.AsymmetricKeys
-import org.wfanet.panelmatch.common.loggerFor
 
-private const val PRIVATE_KEY_LABEL = "private-key"
-private const val PUBLIC_KEY_LABEL = "public-key"
-
-class GenerateAsymmetricKeysTask(private val generateKeys: () -> AsymmetricKeys) : ExchangeTask {
-
+/** Wraps [produceOutput] in a task that reads no inputs and outputs to label [outputLabel]. */
+class ProducerTask(
+  private val outputLabel: String,
+  private val produceOutput: suspend () -> ByteString
+) : ExchangeTask {
   override suspend fun execute(
     input: Map<String, StorageClient.Blob>
   ): Map<String, Flow<ByteString>> {
-    logger.addToTaskLog("Executing generate asymmetric keys")
-
-    val key = generateKeys()
-    return mapOf(
-      PUBLIC_KEY_LABEL to flowOf(key.serializedPublicKey),
-      PRIVATE_KEY_LABEL to flowOf(key.serializedPrivateKey)
-    )
-  }
-
-  companion object {
-    private val logger by loggerFor()
+    require(input.isEmpty())
+    return mapOf(outputLabel to flowOf(produceOutput()))
   }
 }

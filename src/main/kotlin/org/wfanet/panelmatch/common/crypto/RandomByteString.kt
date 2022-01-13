@@ -1,4 +1,4 @@
-// Copyright 2021 The Cross-Media Measurement Authors
+// Copyright 2022 The Cross-Media Measurement Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,9 +15,12 @@
 package org.wfanet.panelmatch.common.crypto
 
 import com.google.protobuf.ByteString
-import java.io.Serializable
+import com.google.protobuf.kotlin.toByteString
+import java.security.SecureRandom
 
-data class AsymmetricKeys(
-  val serializedPublicKey: ByteString,
-  val serializedPrivateKey: ByteString,
-) : Serializable
+/** Generates a [ByteString] of [sizeBytes] random bytes. */
+fun generateSecureRandomByteString(sizeBytes: Int): ByteString {
+  val bytes = ByteArray(sizeBytes)
+  SecureRandom.getInstanceStrong().nextBytes(bytes)
+  return bytes.toByteString()
+}

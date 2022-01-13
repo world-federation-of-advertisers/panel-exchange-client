@@ -15,29 +15,25 @@
 package org.wfanet.panelmatch.client.exchangetasks
 
 import com.google.protobuf.ByteString
-import com.google.protobuf.kotlin.toByteStringUtf8
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
 import org.wfanet.measurement.storage.StorageClient
-import org.wfanet.panelmatch.common.ExchangeDateKey
-import org.wfanet.panelmatch.common.certificates.CertificateManager
+import org.wfanet.panelmatch.common.crypto.AsymmetricKeyPair
 
-/**
- * Generates a private key and X.509 certificate pair.
- *
- * The generated certificates are verifiable by the executing party's root certificate and are
- * registered with Kingdom. The resulting Certificate resource name is written as an output.
- */
-class GenerateExchangeCertificateTask(
-  private val certificateManager: CertificateManager,
-  private val exchangeDateKey: ExchangeDateKey
-) : ExchangeTask {
+private const val PRIVATE_KEY_LABEL = "private-key"
+private const val PUBLIC_KEY_LABEL = "public-key"
+
+/** A task for generating an asymmetric key pair given a key pair generator. */
+class GenerateAsymmetricKeyPairTask(private val generateKeys: () -> AsymmetricKeyPair) :
+  ExchangeTask {
 
   override suspend fun execute(
     input: Map<String, StorageClient.Blob>
   ): Map<String, Flow<ByteString>> {
-    require(input.isEmpty())
-    val certResourceName = certificateManager.createForExchange(exchangeDateKey)
-    return mapOf("certificate-resource-name" to flowOf(certResourceName.toByteStringUtf8()))
+    val key = generateKeys()
+    return mapOf(
+      PUBLIC_KEY_LABEL to flowOf(key.serializedPublicKey),
+      PRIVATE_KEY_LABEL to flowOf(key.serializedPrivateKey)
+    )
   }
 }

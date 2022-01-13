@@ -21,5 +21,5 @@ import org.wfanet.panelmatch.client.launcher.ExchangeStepValidator.ValidatedExch
 /** Executes [ExchangeWorkflow.Step]s. */
 interface ExchangeStepExecutor {
   /** Executes [step]. */
-  suspend fun execute(step: ValidatedExchangeStep, attemptKey: ExchangeStepAttemptKey)
+  suspend fun execute(validatedStep: ValidatedExchangeStep, attemptKey: ExchangeStepAttemptKey)
 }
