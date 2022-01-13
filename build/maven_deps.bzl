@@ -58,6 +58,8 @@ _ARTIFACTS = artifacts.dict_to_list({
     "org.hamcrest:hamcrest": "2.2",
     "org.slf4j:slf4j-simple": "1.7.32",
     "software.amazon.awssdk:utils": "2.17.100",
+    "org.jetbrains.kotlin:kotlin-annotations-jvm": "1.5.0",
+    "org.jetbrains.kotlin:kotlin-reflect": "1.5.0",
 })
 
 _EXCLUDED_ARTIFACTS = [

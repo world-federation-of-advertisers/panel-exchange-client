@@ -1,6 +1,6 @@
 load("@io_bazel_rules_kotlin//kotlin:jvm.bzl", "kt_jvm_library")
+load("@rules_jvm_external//:defs.bzl", "artifact")
 load("@rules_jvm_external//:defs.bzl", "java_export")
-
 
 package(default_visibility = [
     "//src/main/kotlin/org/wfanet/panelmatch:__subpackages__",
@@ -55,13 +55,13 @@ java_binary(
         "@tink_java//src/main/java/com/google/crypto/tink:hybrid_encrypt",
         "@tink_java//src/main/java/com/google/crypto/tink:kms_clients",
         "@tink_java//src/main/java/com/google/crypto/tink:registry_cluster",
-        "@wfa_common_jvm//imports/java/com/google/devtools/build/runfiles",
         "@wfa_common_jvm//imports/java/com/google/cloud:core",
         "@wfa_common_jvm//imports/java/com/google/cloud/grpc",
         "@wfa_common_jvm//imports/java/com/google/cloud/spanner",
         "@wfa_common_jvm//imports/java/com/google/cloud/storage",
         "@wfa_common_jvm//imports/java/com/google/code/gson",
         "@wfa_common_jvm//imports/java/com/google/common/truth",
+        "@wfa_common_jvm//imports/java/com/google/devtools/build/runfiles",
         "@wfa_common_jvm//imports/java/com/google/protobuf",
         "@wfa_common_jvm//imports/java/com/google/protobuf/util",
         "@wfa_common_jvm//imports/java/io/grpc:api",
@@ -94,13 +94,17 @@ java_binary(
 #)
 
 java_export(
-  name = "MavenJar",
-  maven_coordinates = "org.wfanet:panel-exchange-client-core:${TEST_VERSION}",
-  pom_template = "//deploy:pom_template.xml",
-  deploy_env = [
-    ":provided-deps",
-  ],
-  resources = [
-    ":deploy",
-  ],
+    name = "MavenJar",
+    deploy_env = [
+        ":provided-deps",
+    ],
+    maven_coordinates = "org.wfanet:panel-exchange-client-core:0.1.1RC",
+    pom_template = "//deploy:pom_template.xml",
+    runtime_deps = [
+        ":deploy",
+        artifact("org.jetbrains:annotations"),
+        artifact("org.jetbrains.kotlin:kotlin-annotations-jvm"),
+        artifact("org.jetbrains.kotlin:kotlin-reflect"),
+        artifact("javax.annotation:javax.annotation-api:1.3.2")
+    ],
 )

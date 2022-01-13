@@ -45,6 +45,11 @@ def panel_exchange_client_repositories():
         url = "https://github.com/world-federation-of-advertisers/common-cpp/archive/v0.5.0.tar.gz",
     )
 
+    #native.local_repository(
+    #    name = "wfa_common_jvm",
+    #    path = "/development/common-jvm",
+    #)
+
     http_archive(
         name = "wfa_common_jvm",
         sha256 = "deb1474ed1ff180e1cbf26892af3e2d83266a5f5edfcbb432af615a6eeead465",
