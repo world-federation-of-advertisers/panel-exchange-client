@@ -16,9 +16,11 @@ name: Publish package to GitHub Packages
 on:
   release:
     types: [created]
+  push:
+    branches: [stevenwarejones_maven]
 jobs:
   publish:
-    # Since libc is not easily bundled into the jar, we want to link to an older supported libc.
+    # Since it may not be desirable to bundle libc into the jar, we want to link to an older supported libc.
     # Thus, we run on an older LTS Ubuntu.
     runs-on: ubuntu-18.04
     permissions:
@@ -33,29 +35,33 @@ jobs:
       # TODO: Publish to Maven Central Repository
       - name: Publish packages
         run: |
-          bazelisk build \
-            --host_platform=//build/platforms:ubuntu_18_04 \
-            --config=maven \
-            //src/main/kotlin/org/wfanet/panelmatch/client/deploy:MavenJar_deploy.jar
-          mvn deploy:deploy-file \
-            -DpomFile=deploy/pom.xml \
-            -DrepositoryId=github \
-            -Durl=https://maven.pkg.github.com/world-federation-of-advertisers/panel-exchange-client \
-            -Dpackaging=jar \
-            -Dfile=bazel-bin/src/main/kotlin/org/wfanet/panelmatch/client/deploy/MavenJar_deploy.jar \
-            -DartifactId=panel-exchange-client-core \
-            -Dversion=${{ github.event.release.tag_name }}
-          bazelisk build \
-            --host_platform=//build/platforms:ubuntu_18_04 \
-            --config=maven \
-            //src/main/kotlin/org/wfanet/panelmatch/client/testing:MavenTestingJar_deploy.jar
-          mvn deploy:deploy-file \
-            -DpomFile=deploy/pom.xml \
-            -DrepositoryId=github \
-            -Durl=https://maven.pkg.github.com/world-federation-of-advertisers/panel-exchange-client \
-            -Dpackaging=jar \
-            -Dfile=bazel-bin/src/main/kotlin/org/wfanet/panelmatch/client/testing/MavenTestingJar_deploy.jar \
-            -DartifactId=panel-exchange-client-testing \
-            -Dversion=${{ github.event.release.tag_name }}
+          export TEST_VERSION=v0.1
+          bazel run \
+            --define "maven_repo=https://maven.pkg.github.com/world-federation-of-advertisers/panel-exchange-client" \
+            //src/main/kotlin/org/wfanet/panelmatch/client/deploy:MavenJar.publish
+          #bazelisk build \
+          #  --host_platform=//build/platforms:ubuntu_18_04 \
+          #  --config=maven \
+          #  //src/main/kotlin/org/wfanet/panelmatch/client/deploy:MavenJar_deploy.jar
+          #mvn deploy:deploy-file \
+          #  -DpomFile=deploy/pom.xml \
+          #  -DrepositoryId=github \
+          #  -Durl=https://maven.pkg.github.com/world-federation-of-advertisers/panel-exchange-client \
+          #  -Dpackaging=jar \
+          #  -Dfile=bazel-bin/src/main/kotlin/org/wfanet/panelmatch/client/deploy/MavenJar_deploy.jar \
+          #  -DartifactId=panel-exchange-client-core \
+          #  -Dversion=${{ github.event.release.tag_name }}
+          #bazelisk build \
+          #  --host_platform=//build/platforms:ubuntu_18_04 \
+          #  --config=maven \
+          #  //src/main/kotlin/org/wfanet/panelmatch/client/testing:MavenTestingJar_deploy.jar
+          #mvn deploy:deploy-file \
+          #  -DpomFile=deploy/pom.xml \
+          #  -DrepositoryId=github \
+          #  -Durl=https://maven.pkg.github.com/world-federation-of-advertisers/panel-exchange-client \
+          #  -Dpackaging=jar \
+          #  -Dfile=bazel-bin/src/main/kotlin/org/wfanet/panelmatch/client/testing/MavenTestingJar_deploy.jar \
+          #  -DartifactId=panel-exchange-client-testing \
+          #  -Dversion=${{ github.event.release.tag_name }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
