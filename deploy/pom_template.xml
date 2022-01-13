@@ -23,4 +23,5 @@ limitations under the License.-->
             <url>https://maven.pkg.github.com/world-federation-of-advertisers/panel-exchange-client</url>
         </repository>
     </distributionManagement>
+
 </project>
