@@ -1,5 +1,5 @@
 load("@io_bazel_rules_kotlin//kotlin:jvm.bzl", "kt_jvm_library")
-load("@rules_java//java:defs.bzl", "java_binary")
+load("@rules_jvm_external//:defs.bzl", "java_export")
 
 package(default_visibility = [
     "//src/main/kotlin/org/wfanet/panelmatch:__subpackages__",
@@ -60,6 +60,7 @@ java_binary(
         "@wfa_common_jvm//imports/java/com/google/cloud/storage",
         "@wfa_common_jvm//imports/java/com/google/code/gson",
         "@wfa_common_jvm//imports/java/com/google/common/truth",
+        "@wfa_common_jvm//imports/java/com/google/devtools/build/runfiles",
         "@wfa_common_jvm//imports/java/com/google/protobuf",
         "@wfa_common_jvm//imports/java/com/google/protobuf/util",
         "@wfa_common_jvm//imports/java/io/grpc:api",
@@ -83,10 +84,15 @@ java_binary(
     ],
 )
 
-java_binary(
+java_export(
     name = "MavenJar",
     deploy_env = [
         ":provided-deps",
     ],
-    runtime_deps = [":deploy"],
+    maven_coordinates = "org.wfanet:panel-exchange-client-core:${{ github.event.release.tag_name }}",
+    pom_template = "//deploy:pom_template.xml",
+    tags = ["no-javadocs"],
+    runtime_deps = [
+        ":deploy",
+    ],
 )

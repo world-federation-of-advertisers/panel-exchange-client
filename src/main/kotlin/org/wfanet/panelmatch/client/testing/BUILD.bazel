@@ -4,6 +4,8 @@ library. It is a java_binary instead of a java_library since it should be a fat
 jar of all the testing dependencies.
 """
 
+load("@rules_jvm_external//:defs.bzl", "java_export")
+
 package(
     default_testonly = True,
 )
@@ -23,9 +25,8 @@ java_library(
     ],
 )
 
-java_binary(
+java_library(
     name = "provided-deps",
-    create_executable = False,
     runtime_deps = [
         "//imports/java/org/slf4j:simple",
         "@wfa_common_jvm//imports/kotlin/kotlin/test",
@@ -33,13 +34,16 @@ java_binary(
     ],
 )
 
-java_binary(
+java_export(
     name = "MavenTestingJar",
     deploy_env = [
         ":provided-deps",
+        "//src/main/kotlin/org/wfanet/panelmatch/client/deploy:deploy",
         "//src/main/kotlin/org/wfanet/panelmatch/client/deploy:provided-deps",
-        "//src/main/kotlin/org/wfanet/panelmatch/client/deploy:MavenJar",
     ],
+    maven_coordinates = "org.wfanet:panel-exchange-client-testing:${{ github.event.release.tag_name }}",
+    pom_template = "//deploy:pom_template.xml",
+    tags = ["no-javadocs"],
     runtime_deps = [
         ":testing",
     ],
