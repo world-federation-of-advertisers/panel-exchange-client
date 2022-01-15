@@ -43,3 +43,5 @@ jobs:
             --define "maven_user=x-access-token" \
             --define "maven_password=${{ secrets.GITHUB_TOKEN }}" \
             //src/main/kotlin/org/wfanet/panelmatch/client/testing:MavenTestingJar.publish
+        env:
+          TAG_NAME: ${{ github.event.release.tag_name }}

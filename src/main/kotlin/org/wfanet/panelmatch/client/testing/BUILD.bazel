@@ -41,7 +41,7 @@ java_export(
         "//src/main/kotlin/org/wfanet/panelmatch/client/deploy:deploy",
         "//src/main/kotlin/org/wfanet/panelmatch/client/deploy:provided-deps",
     ],
-    maven_coordinates = "org.wfanet:panel-exchange-client-testing:${{ github.event.release.tag_name }}",
+    maven_coordinates = "org.wfanet:panel-exchange-client-testing:${TAG_NAME}",
     pom_template = "//deploy:pom_template.xml",
     tags = ["no-javadocs"],
     runtime_deps = [
