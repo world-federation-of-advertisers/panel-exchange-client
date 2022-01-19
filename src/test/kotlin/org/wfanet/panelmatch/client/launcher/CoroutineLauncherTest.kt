@@ -48,7 +48,7 @@ class CoroutineLauncherTest {
     val startLatch = CountDownLatch(1)
     val middleLatch = CountDownLatch(1)
     val endLatch = CountDownLatch(1)
-    whenever(stepExecutor.execute(any(), any())).thenAnswer {
+    whenever(stepExecutor.execute(any(), any(), any())).thenAnswer {
       runBlocking {
         startLatch.countDown()
         middleLatch.await()
@@ -56,20 +56,24 @@ class CoroutineLauncherTest {
       }
     }
 
+    val jobId = "some-job-id"
     val attemptKey = ExchangeStepAttemptKey("w", "x", "y", "z")
     val date = LocalDate.of(2021, 11, 29)
 
     val validatedExchangeStep = ValidatedExchangeStep(workflow, workflow.getSteps(0), date)
 
-    launcher.execute(validatedExchangeStep, attemptKey)
+    launcher.execute(jobId, validatedExchangeStep, attemptKey)
 
     startLatch.await()
     middleLatch.countDown()
     endLatch.await()
 
+    val jobIdCaptor = argumentCaptor<String>()
     val stepCaptor = argumentCaptor<ValidatedExchangeStep>()
     val attemptKeyCaptor = argumentCaptor<ExchangeStepAttemptKey>()
-    verify(stepExecutor).execute(stepCaptor.capture(), attemptKeyCaptor.capture())
+    verify(stepExecutor)
+      .execute(jobIdCaptor.capture(), stepCaptor.capture(), attemptKeyCaptor.capture())
+    assertThat(jobIdCaptor.firstValue).isEqualTo(jobId)
     assertThat(stepCaptor.firstValue).isEqualTo(validatedExchangeStep)
     assertThat(attemptKeyCaptor.firstValue).isEqualTo(attemptKey)
   }

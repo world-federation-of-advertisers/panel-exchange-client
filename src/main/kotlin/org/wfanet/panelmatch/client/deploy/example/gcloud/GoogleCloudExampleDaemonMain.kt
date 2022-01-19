@@ -14,12 +14,17 @@
 
 package org.wfanet.panelmatch.client.deploy.example.gcloud
 
+import java.time.Duration
+import java.util.UUID
 import org.wfanet.measurement.common.commandLineMain
+import org.wfanet.measurement.common.throttler.MinimumIntervalThrottler
+import org.wfanet.measurement.common.throttler.Throttler
 import org.wfanet.measurement.gcloud.gcs.GcsFromFlags
 import org.wfanet.measurement.gcloud.gcs.GcsStorageClient
 import org.wfanet.measurement.storage.StorageClient
 import org.wfanet.panelmatch.client.deploy.CertificateAuthorityFlags
 import org.wfanet.panelmatch.client.deploy.example.ExampleDaemon
+import org.wfanet.panelmatch.client.launcher.ExchangeStepReporterToStorage
 import org.wfanet.panelmatch.common.certificates.gcloud.CertificateAuthority
 import org.wfanet.panelmatch.common.certificates.gcloud.PrivateCaClient
 import picocli.CommandLine.Command
@@ -85,6 +90,14 @@ private class GoogleCloudExampleDaemon : ExampleDaemon() {
       PrivateCaClient(),
     )
   }
+
+  override val generateJobId = { UUID.randomUUID().toString() }
+
+  private val pollingInterval: Duration = Duration.ofMillis(5 * 60 * 1000)
+  private val statusThrottler: Throttler = MinimumIntervalThrottler(clock, pollingInterval)
+  private val reporterStorageClient = GcsStorageClient.fromFlags(GcsFromFlags(gcsFlags))
+  override val exchangeStepReporter =
+    ExchangeStepReporterToStorage(apiClient, reporterStorageClient, statusThrottler)
 }
 
 /** Reference Google Cloud implementation of a daemon for executing Exchange Workflows. */

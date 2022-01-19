@@ -15,10 +15,15 @@
 package org.wfanet.panelmatch.client.deploy.example.filesystem
 
 import java.io.File
+import java.time.Duration
+import java.util.UUID
 import org.wfanet.measurement.common.commandLineMain
+import org.wfanet.measurement.common.throttler.MinimumIntervalThrottler
+import org.wfanet.measurement.common.throttler.Throttler
 import org.wfanet.measurement.storage.StorageClient
 import org.wfanet.measurement.storage.filesystem.FileSystemStorageClient
 import org.wfanet.panelmatch.client.deploy.example.ExampleDaemon
+import org.wfanet.panelmatch.client.launcher.ExchangeStepReporterToStorage
 import org.wfanet.panelmatch.common.certificates.CertificateAuthority
 import picocli.CommandLine.Option
 
@@ -37,6 +42,14 @@ private class FileSystemExampleDaemon : ExampleDaemon() {
 
   override val certificateAuthority: CertificateAuthority
     get() = TODO("Not yet implemented")
+
+  override val generateJobId = { UUID.randomUUID().toString() }
+
+  private val pollingInterval: Duration = Duration.ofMillis(5 * 60 * 1000)
+  private val statusThrottler: Throttler = MinimumIntervalThrottler(clock, pollingInterval)
+  private val reporterStorageClient = FileSystemStorageClient(privateStorageRoot)
+  override val exchangeStepReporter =
+    ExchangeStepReporterToStorage(apiClient, reporterStorageClient, statusThrottler)
 }
 
 /** Example implementation of a daemon for executing Exchange Workflows. */

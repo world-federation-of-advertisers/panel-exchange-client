@@ -20,6 +20,7 @@ import io.grpc.Channel
 import java.nio.file.Path
 import java.time.Clock
 import java.time.Duration
+import java.util.UUID
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
@@ -31,6 +32,7 @@ import org.wfanet.measurement.common.identity.withPrincipalName
 import org.wfanet.measurement.common.throttler.MinimumIntervalThrottler
 import org.wfanet.measurement.common.throttler.Throttler
 import org.wfanet.measurement.storage.createBlob
+import org.wfanet.measurement.storage.filesystem.FileSystemStorageClient
 import org.wfanet.panelmatch.client.common.Identity
 import org.wfanet.panelmatch.client.common.TaskParameters
 import org.wfanet.panelmatch.client.deploy.ExchangeWorkflowDaemon
@@ -38,6 +40,7 @@ import org.wfanet.panelmatch.client.deploy.ProductionExchangeTaskMapper
 import org.wfanet.panelmatch.client.eventpreprocessing.PreprocessingParameters
 import org.wfanet.panelmatch.client.exchangetasks.ExchangeTaskMapper
 import org.wfanet.panelmatch.client.launcher.ApiClient
+import org.wfanet.panelmatch.client.launcher.ExchangeStepReporterToStorage
 import org.wfanet.panelmatch.client.launcher.GrpcApiClient
 import org.wfanet.panelmatch.client.storage.FileSystemStorageFactory
 import org.wfanet.panelmatch.client.storage.StorageDetails
@@ -152,4 +155,11 @@ class ExchangeWorkflowDaemonForTest(
     )
 
   override val taskTimeout: Timeout = taskTimeoutDuration.asTimeout()
+
+  override val generateJobId = { UUID.randomUUID().toString() }
+
+  private val statusThrottler: Throttler = MinimumIntervalThrottler(clock, pollingInterval)
+  private val reporterStorageClient = FileSystemStorageClient(sharedDirectory.toFile())
+  override val exchangeStepReporter =
+    ExchangeStepReporterToStorage(apiClient, reporterStorageClient, statusThrottler)
 }

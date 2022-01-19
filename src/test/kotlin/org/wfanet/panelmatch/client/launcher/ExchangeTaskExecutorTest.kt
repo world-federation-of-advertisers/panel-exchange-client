@@ -41,7 +41,7 @@ import org.wfanet.panelmatch.common.testing.runBlockingTest
 
 private const val RECURRING_EXCHANGE_ID = "some-recurring-exchange-id"
 private val ATTEMPT_KEY = ExchangeStepAttemptKey(RECURRING_EXCHANGE_ID, "x", "y", "z")
-
+private const val JOB_ID = "some-job-id"
 private val DATE = LocalDate.of(2021, 11, 3)
 
 private val WORKFLOW = exchangeWorkflow {
@@ -58,7 +58,7 @@ private val VALIDATED_EXCHANGE_STEP = ValidatedExchangeStep(WORKFLOW, WORKFLOW.g
 @RunWith(JUnit4::class)
 class ExchangeTaskExecutorTest {
   private val testPrivateStorageSelector = TestPrivateStorageSelector()
-  private val apiClient: ApiClient = mock()
+  private val reporter: ExchangeStepReporter = mock()
   private val timeout = FakeTimeout()
 
   private val storageDetails = storageDetails {
@@ -69,12 +69,7 @@ class ExchangeTaskExecutorTest {
   private val exchangeTaskMapper = FakeExchangeTaskMapper()
 
   private val exchangeTaskExecutor =
-    ExchangeTaskExecutor(
-      apiClient,
-      timeout,
-      testPrivateStorageSelector.selector,
-      exchangeTaskMapper
-    )
+    ExchangeTaskExecutor(timeout, testPrivateStorageSelector.selector, exchangeTaskMapper, reporter)
 
   @Before
   fun setUpStorage() {
@@ -88,7 +83,7 @@ class ExchangeTaskExecutorTest {
 
     testPrivateStorageSelector.storageClient.createBlob("b", blob.asBufferedFlow(1024))
 
-    exchangeTaskExecutor.execute(VALIDATED_EXCHANGE_STEP, ATTEMPT_KEY)
+    exchangeTaskExecutor.execute(JOB_ID, VALIDATED_EXCHANGE_STEP, ATTEMPT_KEY)
 
     assertThat(testPrivateStorageSelector.storageClient.getBlob("c")?.toStringUtf8())
       .isEqualTo("Out:commutative-deterministic-encrypt-some-blob")
@@ -99,7 +94,7 @@ class ExchangeTaskExecutorTest {
     timeout.expired = true
 
     assertFailsWith<CancellationException> {
-      exchangeTaskExecutor.execute(VALIDATED_EXCHANGE_STEP, ATTEMPT_KEY)
+      exchangeTaskExecutor.execute(JOB_ID, VALIDATED_EXCHANGE_STEP, ATTEMPT_KEY)
     }
 
     assertThat(testPrivateStorageSelector.storageClient.getBlob("c")).isNull()

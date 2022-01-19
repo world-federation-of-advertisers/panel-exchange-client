@@ -1,10 +1,10 @@
 load("@io_bazel_rules_kotlin//kotlin:jvm.bzl", "kt_jvm_test")
 
 kt_jvm_test(
-    name = "ExchangeStepLauncherTest",
+    name = "ExchangeStepManagerTest",
     timeout = "short",
-    srcs = ["ExchangeStepLauncherTest.kt"],
-    test_class = "org.wfanet.panelmatch.client.launcher.ExchangeStepLauncherTest",
+    srcs = ["ExchangeStepManagerTest.kt"],
+    test_class = "org.wfanet.panelmatch.client.launcher.ExchangeStepManagerTest",
     deps = [
         "//src/main/kotlin/org/wfanet/panelmatch/client/launcher",
         "//src/main/kotlin/org/wfanet/panelmatch/common/testing",

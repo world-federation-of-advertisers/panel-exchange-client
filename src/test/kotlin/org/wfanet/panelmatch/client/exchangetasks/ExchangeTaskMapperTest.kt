@@ -41,7 +41,7 @@ private val WORKFLOW = exchangeWorkflow {
 }
 
 private val DATE: LocalDate = LocalDate.of(2021, 11, 1)
-
+private const val JOB_ID = "some-job-id"
 private const val RECURRING_EXCHANGE_ID = "some-recurring-exchange-id"
 private val ATTEMPT_KEY =
   ExchangeStepAttemptKey(RECURRING_EXCHANGE_ID, "some-exchange", "some-step", "some-attempt")
@@ -64,7 +64,7 @@ class ExchangeTaskMapperTest {
 
   @Test
   fun `map input task`() = runBlockingTest {
-    val context = ExchangeContext(ATTEMPT_KEY, DATE, WORKFLOW, WORKFLOW.getSteps(0))
+    val context = ExchangeContext(JOB_ID, ATTEMPT_KEY, DATE, WORKFLOW, WORKFLOW.getSteps(0))
     val exchangeTask = exchangeTaskMapper.getExchangeTaskForStep(context)
     assertThat(exchangeTask).isInstanceOf(FakeExchangeTask::class.java)
     assertThat((exchangeTask as FakeExchangeTask).taskName).isEqualTo("input")
@@ -72,7 +72,7 @@ class ExchangeTaskMapperTest {
 
   @Test
   fun `map crypto task`() = runBlockingTest {
-    val context = ExchangeContext(ATTEMPT_KEY, DATE, WORKFLOW, WORKFLOW.getSteps(1))
+    val context = ExchangeContext(JOB_ID, ATTEMPT_KEY, DATE, WORKFLOW, WORKFLOW.getSteps(1))
     val exchangeTask = exchangeTaskMapper.getExchangeTaskForStep(context)
     assertThat(exchangeTask).isInstanceOf(FakeExchangeTask::class.java)
     assertThat((exchangeTask as FakeExchangeTask).taskName)

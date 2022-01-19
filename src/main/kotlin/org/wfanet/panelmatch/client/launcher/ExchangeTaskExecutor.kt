@@ -46,25 +46,32 @@ private const val DONE_TASKS_PATH: String = "done-tasks"
  * [ExchangeTask], and saving the outputs.
  */
 class ExchangeTaskExecutor(
-  private val apiClient: ApiClient,
   private val timeout: Timeout,
   private val privateStorageSelector: PrivateStorageSelector,
-  private val exchangeTaskMapper: ExchangeTaskMapper
+  private val exchangeTaskMapper: ExchangeTaskMapper,
+  private val exchangeStepReporter: ExchangeStepReporter
 ) : ExchangeStepExecutor {
 
   override suspend fun execute(
+    jobId: String,
     validatedStep: ValidatedExchangeStep,
     attemptKey: ExchangeStepAttemptKey
   ) {
     val name = "${validatedStep.step.stepId}@${attemptKey.toName()}"
     withContext(TaskLog(name)) {
       val context =
-        ExchangeContext(attemptKey, validatedStep.date, validatedStep.workflow, validatedStep.step)
+        ExchangeContext(
+          jobId,
+          attemptKey,
+          validatedStep.date,
+          validatedStep.workflow,
+          validatedStep.step
+        )
       try {
         context.tryExecute()
       } catch (e: Exception) {
         logger.addToTaskLog(e, Level.SEVERE)
-        markAsFinished(attemptKey, ExchangeStepAttempt.State.FAILED)
+        context.markAsFinished(ExchangeStepAttempt.State.FAILED)
         throw e
       }
     }
@@ -92,12 +99,9 @@ class ExchangeTaskExecutor(
     }
   }
 
-  private suspend fun markAsFinished(
-    attemptKey: ExchangeStepAttemptKey,
-    state: ExchangeStepAttempt.State
-  ) {
+  private suspend fun ExchangeContext.markAsFinished(state: ExchangeStepAttempt.State) {
     logger.addToTaskLog("Marking attempt state: $state")
-    apiClient.finishExchangeStepAttempt(attemptKey, state, getAndClearTaskLog())
+    exchangeStepReporter.storeExecutionStatus(jobId, attemptKey, state, getAndClearTaskLog())
   }
 
   private suspend fun ExchangeContext.tryExecute() {
@@ -110,7 +114,7 @@ class ExchangeTaskExecutor(
     }
     // The Kingdom will be able to detect if it's handing out duplicate tasks because it will
     // attempt to transition an ExchangeStep from some terminal state to `SUCCEEDED`.
-    markAsFinished(attemptKey, ExchangeStepAttempt.State.SUCCEEDED)
+    markAsFinished(ExchangeStepAttempt.State.SUCCEEDED)
   }
 
   private suspend fun ExchangeContext.runStep(privateStorage: StorageClient) {

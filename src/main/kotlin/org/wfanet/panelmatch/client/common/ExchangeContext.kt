@@ -21,6 +21,7 @@ import org.wfanet.panelmatch.common.ExchangeDateKey
 
 /** Contextual information about an ExchangeStepAttempt. */
 data class ExchangeContext(
+  val jobId: String,
   val attemptKey: ExchangeStepAttemptKey,
   val date: LocalDate,
   val workflow: ExchangeWorkflow,

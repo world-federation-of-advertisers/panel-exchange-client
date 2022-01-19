@@ -24,7 +24,8 @@ import org.wfanet.panelmatch.client.common.Identity
 import org.wfanet.panelmatch.client.exchangetasks.ExchangeTaskMapper
 import org.wfanet.panelmatch.client.launcher.ApiClient
 import org.wfanet.panelmatch.client.launcher.CoroutineLauncher
-import org.wfanet.panelmatch.client.launcher.ExchangeStepLauncher
+import org.wfanet.panelmatch.client.launcher.ExchangeStepManager
+import org.wfanet.panelmatch.client.launcher.ExchangeStepReporter
 import org.wfanet.panelmatch.client.launcher.ExchangeStepValidatorImpl
 import org.wfanet.panelmatch.client.launcher.ExchangeTaskExecutor
 import org.wfanet.panelmatch.client.storage.PrivateStorageSelector
@@ -96,28 +97,36 @@ abstract class ExchangeWorkflowDaemon : Runnable {
     SharedStorageSelector(certificateManager, sharedStorageFactories, sharedStorageInfo)
   }
 
+  /** Generates of fetches a jobId for each task run. */
+  protected abstract val generateJobId: () -> String
+
+  /** Reports the status of exchange claiming and execution. */
+  protected abstract val exchangeStepReporter: ExchangeStepReporter
+
   override fun run() {
+
     val stepExecutor =
       ExchangeTaskExecutor(
-        apiClient = apiClient,
         timeout = taskTimeout,
         privateStorageSelector = privateStorageSelector,
-        exchangeTaskMapper = exchangeTaskMapper
+        exchangeTaskMapper = exchangeTaskMapper,
+        exchangeStepReporter = exchangeStepReporter,
       )
 
     val launcher = CoroutineLauncher(stepExecutor = stepExecutor)
 
-    val exchangeStepLauncher =
-      ExchangeStepLauncher(
-        apiClient = apiClient,
-        validator = ExchangeStepValidatorImpl(identity.party, validExchangeWorkflows, clock),
-        jobLauncher = launcher
+    val validator = ExchangeStepValidatorImpl(identity.party, validExchangeWorkflows, clock)
+
+    val exchangeStepManager =
+      ExchangeStepManager(
+        validator = validator,
+        jobLauncher = launcher,
+        exchangeStepReporter = exchangeStepReporter,
+        generateJobId = generateJobId,
       )
 
     scope.launch(CoroutineName("ExchangeWorkflowDaemon")) {
-      throttler.loopOnReady {
-        logAndSuppressExceptionSuspend { exchangeStepLauncher.findAndRunExchangeStep() }
-      }
+      throttler.loopOnReady { logAndSuppressExceptionSuspend { exchangeStepManager.manageStep() } }
     }
   }
 }

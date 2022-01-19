@@ -57,6 +57,7 @@ import org.wfanet.measurement.api.v2alpha.finishExchangeStepAttemptRequest
 import org.wfanet.measurement.common.grpc.testing.GrpcTestServerRule
 import org.wfanet.measurement.common.toProtoTime
 import org.wfanet.panelmatch.client.common.Identity
+import org.wfanet.panelmatch.protocol.ClaimedExchangeStep
 
 private const val RECURRING_EXCHANGE_ID = "some-recurring-exchange-id"
 private const val EXCHANGE_ID = "some-exchange-id"
@@ -134,9 +135,10 @@ class GrpcApiClientTest {
 
     val client = makeClient(DATA_PROVIDER_IDENTITY)
 
-    val result: ApiClient.ClaimedExchangeStep? = runBlocking { client.claimExchangeStep() }
+    val result: ClaimedExchangeStep? = runBlocking { client.claimExchangeStep() }
     assertNotNull(result)
-    val (exchangeStep, attemptKey) = result
+    val exchangeStep = result.step
+    val attemptKey = ExchangeStepAttemptKey.fromName(result.stepAttemptKey)
 
     assertThat(exchangeStep).isEqualTo(EXCHANGE_STEP)
     assertThat(attemptKey).isEqualTo(EXCHANGE_STEP_ATTEMPT_KEY)
@@ -161,7 +163,7 @@ class GrpcApiClientTest {
 
     val client = makeClient(DATA_PROVIDER_IDENTITY)
 
-    val result: ApiClient.ClaimedExchangeStep? = runBlocking { client.claimExchangeStep() }
+    val result: ClaimedExchangeStep? = runBlocking { client.claimExchangeStep() }
     assertNull(result)
   }
 
@@ -174,9 +176,10 @@ class GrpcApiClientTest {
 
     val client = makeClient(MODEL_PROVIDER_IDENTITY)
 
-    val result: ApiClient.ClaimedExchangeStep? = runBlocking { client.claimExchangeStep() }
+    val result: ClaimedExchangeStep? = runBlocking { client.claimExchangeStep() }
     assertNotNull(result)
-    val (exchangeStep, attemptKey) = result
+    val exchangeStep = result.step
+    val attemptKey = ExchangeStepAttemptKey.fromName(result.stepAttemptKey)
 
     assertThat(exchangeStep).isEqualTo(EXCHANGE_STEP)
     assertThat(attemptKey).isEqualTo(EXCHANGE_STEP_ATTEMPT_KEY)
@@ -217,20 +220,19 @@ class GrpcApiClientTest {
   }
 
   @Test
-  fun finishExchangeStepAttempt() {
+  fun reportStepAttempt() {
     exchangeStepsAttemptsServiceMock.stub {
       onBlocking { finishExchangeStepAttempt(any()) }.thenReturn(exchangeStepAttempt {})
     }
-
     runBlocking {
       makeClient()
-        .finishExchangeStepAttempt(
+        .reportStepAttempt(
           EXCHANGE_STEP_ATTEMPT_KEY,
           ExchangeStepAttempt.State.SUCCEEDED,
           listOf("message-1", "message-2")
         )
       makeClient()
-        .finishExchangeStepAttempt(EXCHANGE_STEP_ATTEMPT_KEY, ExchangeStepAttempt.State.FAILED_STEP)
+        .reportStepAttempt(EXCHANGE_STEP_ATTEMPT_KEY, ExchangeStepAttempt.State.FAILED_STEP)
     }
 
     argumentCaptor<FinishExchangeStepAttemptRequest> {

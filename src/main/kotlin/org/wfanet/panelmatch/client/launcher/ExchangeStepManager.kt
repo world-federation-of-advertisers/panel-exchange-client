@@ -20,29 +20,39 @@ import org.wfanet.measurement.api.v2alpha.ExchangeStepAttemptKey
 import org.wfanet.panelmatch.client.launcher.InvalidExchangeStepException.FailureType.PERMANENT
 import org.wfanet.panelmatch.client.launcher.InvalidExchangeStepException.FailureType.TRANSIENT
 
-/** Finds an [ExchangeStep], validates it, and starts executing the work. */
-class ExchangeStepLauncher(
-  private val apiClient: ApiClient,
+/** Finds an [ExchangeStep], validates it, starts executing the work, and then reports status. */
+class ExchangeStepManager(
   private val validator: ExchangeStepValidator,
-  private val jobLauncher: JobLauncher
+  private val jobLauncher: JobLauncher,
+  private val exchangeStepReporter: ExchangeStepReporter,
+  private val generateJobId: () -> String,
 ) {
 
   /**
    * Finds a single ready Exchange Step and starts executing. If an Exchange Step is found,
-   * validates it, and starts executing. If not found simply returns.
+   * validates it, and starts executing. If not found simply returns. Once the step is complete, it
+   * reports status.
    */
-  suspend fun findAndRunExchangeStep() {
-    val (exchangeStep, attemptKey) = apiClient.claimExchangeStep() ?: return
-
+  suspend fun manageStep() {
+    val jobId = generateJobId()
+    val claimedStep = exchangeStepReporter.getAndStoreClaimStatus(jobId) ?: return
     try {
-      val validatedExchangeStep = validator.validate(exchangeStep)
-      jobLauncher.execute(validatedExchangeStep, attemptKey)
+      val validatedExchangeStep = validator.validate(claimedStep.step)
+      val stepToExecute = exchangeStepReporter.getClaimStatus(jobId)
+      val exchangeStepAttemptKey = ExchangeStepAttemptKey.fromName(stepToExecute.stepAttemptKey)!!
+      jobLauncher.execute(jobId, validatedExchangeStep, exchangeStepAttemptKey)
+      exchangeStepReporter.reportExecutionStatus(jobId)
     } catch (e: Exception) {
-      invalidateAttempt(attemptKey, e)
+      val exchangeStepAttemptKey = ExchangeStepAttemptKey.fromName(claimedStep.stepAttemptKey)!!
+      invalidateAttempt(jobId, exchangeStepAttemptKey, e)
     }
   }
 
-  private suspend fun invalidateAttempt(attemptKey: ExchangeStepAttemptKey, exception: Exception) {
+  private suspend fun invalidateAttempt(
+    jobId: String,
+    exchangeStepAttemptKey: ExchangeStepAttemptKey,
+    exception: Exception
+  ) {
     val state =
       when (exception) {
         is InvalidExchangeStepException ->
@@ -55,6 +65,12 @@ class ExchangeStepLauncher(
 
     // TODO: log an error or retry a few times if this fails.
     // TODO: add API-level support for some type of justification about what went wrong.
-    apiClient.finishExchangeStepAttempt(attemptKey, state, listOfNotNull(exception.message))
+    exchangeStepReporter.storeExecutionStatus(
+      jobId,
+      exchangeStepAttemptKey,
+      state,
+      listOfNotNull(exception.message)
+    )
+    exchangeStepReporter.reportExecutionStatus(jobId)
   }
 }

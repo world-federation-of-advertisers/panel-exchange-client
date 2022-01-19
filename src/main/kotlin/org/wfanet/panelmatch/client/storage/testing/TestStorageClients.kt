@@ -77,6 +77,7 @@ private val WORKFLOW = exchangeWorkflow {
 
 private val TEST_CONTEXT =
   ExchangeContext(
+    "some-job-id",
     ExchangeStepAttemptKey(
       "some-recurring-exchange-id",
       "some-exchange-id",

@@ -27,18 +27,17 @@ import org.mockito.kotlin.verifyBlocking
 import org.mockito.kotlin.verifyZeroInteractions
 import org.mockito.kotlin.whenever
 import org.wfanet.measurement.api.v2alpha.ExchangeStep
-import org.wfanet.measurement.api.v2alpha.ExchangeStepAttempt
 import org.wfanet.measurement.api.v2alpha.ExchangeStepAttemptKey
 import org.wfanet.measurement.api.v2alpha.ExchangeStepKey
 import org.wfanet.measurement.api.v2alpha.ExchangeWorkflowKt.step
 import org.wfanet.measurement.api.v2alpha.exchangeStep
 import org.wfanet.measurement.api.v2alpha.exchangeWorkflow
 import org.wfanet.measurement.common.toProtoDate
-import org.wfanet.panelmatch.client.launcher.ApiClient.ClaimedExchangeStep
 import org.wfanet.panelmatch.client.launcher.ExchangeStepValidator.ValidatedExchangeStep
 import org.wfanet.panelmatch.client.launcher.InvalidExchangeStepException.FailureType.PERMANENT
 import org.wfanet.panelmatch.client.launcher.InvalidExchangeStepException.FailureType.TRANSIENT
 import org.wfanet.panelmatch.common.testing.runBlockingTest
+import org.wfanet.panelmatch.protocol.claimedExchangeStep
 
 private const val RECURRING_EXCHANGE_ID = "some-recurring-exchange-id"
 private const val EXCHANGE_ID = "some-exchange-id"
@@ -79,38 +78,46 @@ private val EXCHANGE_STEP: ExchangeStep = exchangeStep {
 
 private val VALIDATED_EXCHANGE_STEP = ValidatedExchangeStep(WORKFLOW, WORKFLOW.getSteps(2), DATE)
 
-private val CLAIMED_EXCHANGE_STEP = ClaimedExchangeStep(EXCHANGE_STEP, EXCHANGE_STEP_ATTEMPT_KEY)
+private val CLAIMED_EXCHANGE_STEP = claimedExchangeStep {
+  step = EXCHANGE_STEP
+  stepAttemptKey = EXCHANGE_STEP_ATTEMPT_KEY.toName()
+}
+private val generateJobId = { "some-job-id" }
+private val JOB_ID by lazy { generateJobId() }
 
 @RunWith(JUnit4::class)
-class ExchangeStepLauncherTest {
-  private val apiClient: ApiClient = mock()
-  private val jobLauncher: JobLauncher = mock()
+class ExchangeStepManagerTest {
   private val validator: ExchangeStepValidator = mock()
-  private val launcher = ExchangeStepLauncher(apiClient, validator, jobLauncher)
+  private val jobLauncher: JobLauncher = mock()
+  private val reporter: ExchangeStepReporter = mock()
+  private val manager = ExchangeStepManager(validator, jobLauncher, reporter, generateJobId)
 
   @Test
   fun noExchangeTask() = runBlockingTest {
-    whenever(apiClient.claimExchangeStep()).thenReturn(null)
+    whenever(reporter.getAndStoreClaimStatus(JOB_ID)).thenReturn(null)
 
-    launcher.findAndRunExchangeStep()
+    manager.manageStep()
 
-    verifyBlocking(apiClient) { claimExchangeStep() }
+    verifyBlocking(reporter) { getAndStoreClaimStatus(JOB_ID) }
     verifyZeroInteractions(jobLauncher, validator)
   }
 
   @Test
   fun validExchangeTask() = runBlockingTest {
-    whenever(apiClient.claimExchangeStep()).thenReturn(CLAIMED_EXCHANGE_STEP)
+    whenever(reporter.getAndStoreClaimStatus(JOB_ID)).thenReturn(CLAIMED_EXCHANGE_STEP)
     whenever(validator.validate(any())).thenReturn(VALIDATED_EXCHANGE_STEP)
+    whenever(reporter.getClaimStatus(JOB_ID)).thenReturn(CLAIMED_EXCHANGE_STEP)
 
-    launcher.findAndRunExchangeStep()
+    manager.manageStep()
 
     verifyBlocking(jobLauncher) {
+      val jobIdCaptor = argumentCaptor<String>()
       val stepCaptor = argumentCaptor<ValidatedExchangeStep>()
       val attemptCaptor = argumentCaptor<ExchangeStepAttemptKey>()
 
-      execute(stepCaptor.capture(), attemptCaptor.capture())
+      execute(jobIdCaptor.capture(), stepCaptor.capture(), attemptCaptor.capture())
 
+      assertThat(jobIdCaptor.firstValue).isEqualTo(JOB_ID)
       assertThat(stepCaptor.firstValue).isEqualTo(VALIDATED_EXCHANGE_STEP)
       assertThat(attemptCaptor.firstValue).isEqualTo(EXCHANGE_STEP_ATTEMPT_KEY)
     }
@@ -126,27 +133,19 @@ class ExchangeStepLauncherTest {
 
   @Test
   fun permanentInvalidExchangeStepException() = runBlockingTest {
-    whenever(apiClient.claimExchangeStep()).thenReturn(CLAIMED_EXCHANGE_STEP)
+    whenever(reporter.getAndStoreClaimStatus(JOB_ID)).thenReturn(CLAIMED_EXCHANGE_STEP)
 
     val message = "some-message"
     whenever(validator.validate(any())).thenThrow(InvalidExchangeStepException(PERMANENT, message))
 
-    launcher.findAndRunExchangeStep()
+    manager.manageStep()
 
-    verifyBlocking(apiClient) {
-      val keyCaptor = argumentCaptor<ExchangeStepAttemptKey>()
-      val stateCaptor = argumentCaptor<ExchangeStepAttempt.State>()
-      val messagesCaptor = argumentCaptor<Iterable<String>>()
+    verifyBlocking(reporter) {
+      val jobIdCaptor = argumentCaptor<String>()
 
-      finishExchangeStepAttempt(
-        keyCaptor.capture(),
-        stateCaptor.capture(),
-        messagesCaptor.capture()
-      )
+      reportExecutionStatus(jobIdCaptor.capture())
 
-      assertThat(keyCaptor.firstValue).isEqualTo(EXCHANGE_STEP_ATTEMPT_KEY)
-      assertThat(stateCaptor.firstValue).isEqualTo(ExchangeStepAttempt.State.FAILED_STEP)
-      assertThat(messagesCaptor.firstValue).containsExactly(message)
+      assertThat(jobIdCaptor.firstValue).isEqualTo(JOB_ID)
     }
 
     verifyZeroInteractions(jobLauncher)
@@ -154,27 +153,19 @@ class ExchangeStepLauncherTest {
 
   @Test
   fun transientInvalidExchangeStepException() = runBlockingTest {
-    whenever(apiClient.claimExchangeStep()).thenReturn(CLAIMED_EXCHANGE_STEP)
+    whenever(reporter.getAndStoreClaimStatus(JOB_ID)).thenReturn(CLAIMED_EXCHANGE_STEP)
 
     val message = "some-message"
     whenever(validator.validate(any())).thenThrow(InvalidExchangeStepException(TRANSIENT, message))
 
-    launcher.findAndRunExchangeStep()
+    manager.manageStep()
 
-    verifyBlocking(apiClient) {
-      val keyCaptor = argumentCaptor<ExchangeStepAttemptKey>()
-      val stateCaptor = argumentCaptor<ExchangeStepAttempt.State>()
-      val messagesCaptor = argumentCaptor<Iterable<String>>()
+    verifyBlocking(reporter) {
+      val jobIdCaptor = argumentCaptor<String>()
 
-      finishExchangeStepAttempt(
-        keyCaptor.capture(),
-        stateCaptor.capture(),
-        messagesCaptor.capture()
-      )
+      reportExecutionStatus(jobIdCaptor.capture())
 
-      assertThat(keyCaptor.firstValue).isEqualTo(EXCHANGE_STEP_ATTEMPT_KEY)
-      assertThat(stateCaptor.firstValue).isEqualTo(ExchangeStepAttempt.State.FAILED)
-      assertThat(messagesCaptor.firstValue).containsExactly(message)
+      assertThat(jobIdCaptor.firstValue).isEqualTo(JOB_ID)
     }
 
     verifyZeroInteractions(jobLauncher)
@@ -182,28 +173,20 @@ class ExchangeStepLauncherTest {
 
   @Test
   fun genericExceptionInLauncher() = runBlockingTest {
-    whenever(apiClient.claimExchangeStep()).thenReturn(CLAIMED_EXCHANGE_STEP)
+    whenever(reporter.getAndStoreClaimStatus(JOB_ID)).thenReturn(CLAIMED_EXCHANGE_STEP)
     whenever(validator.validate(any())).thenReturn(VALIDATED_EXCHANGE_STEP)
 
     val message = "some-message"
-    whenever(jobLauncher.execute(any(), any())).thenThrow(RuntimeException(message))
+    whenever(jobLauncher.execute(any(), any(), any())).thenThrow(RuntimeException(message))
 
-    launcher.findAndRunExchangeStep()
+    manager.manageStep()
 
-    verifyBlocking(apiClient) {
-      val keyCaptor = argumentCaptor<ExchangeStepAttemptKey>()
-      val stateCaptor = argumentCaptor<ExchangeStepAttempt.State>()
-      val messagesCaptor = argumentCaptor<Iterable<String>>()
+    verifyBlocking(reporter) {
+      val jobIdCaptor = argumentCaptor<String>()
 
-      finishExchangeStepAttempt(
-        keyCaptor.capture(),
-        stateCaptor.capture(),
-        messagesCaptor.capture()
-      )
+      reportExecutionStatus(jobIdCaptor.capture())
 
-      assertThat(keyCaptor.firstValue).isEqualTo(EXCHANGE_STEP_ATTEMPT_KEY)
-      assertThat(stateCaptor.firstValue).isEqualTo(ExchangeStepAttempt.State.FAILED)
-      assertThat(messagesCaptor.firstValue).containsExactly(message)
+      assertThat(jobIdCaptor.firstValue).isEqualTo(JOB_ID)
     }
   }
 }

@@ -29,7 +29,8 @@ import org.wfanet.measurement.api.v2alpha.finishExchangeStepAttemptRequest
 import org.wfanet.measurement.common.grpc.grpcRequireNotNull
 import org.wfanet.measurement.common.toProtoTime
 import org.wfanet.panelmatch.client.common.Identity
-import org.wfanet.panelmatch.client.launcher.ApiClient.ClaimedExchangeStep
+import org.wfanet.panelmatch.protocol.ClaimedExchangeStep
+import org.wfanet.panelmatch.protocol.claimedExchangeStep
 
 class GrpcApiClient(
   private val identity: Identity,
@@ -50,7 +51,10 @@ class GrpcApiClient(
     if (response.hasExchangeStep()) {
       val exchangeStepAttemptKey =
         grpcRequireNotNull(ExchangeStepAttemptKey.fromName(response.exchangeStepAttempt))
-      return ClaimedExchangeStep(response.exchangeStep, exchangeStepAttemptKey)
+      return claimedExchangeStep {
+        step = response.exchangeStep
+        stepAttemptKey = exchangeStepAttemptKey.toName()
+      }
     }
     return null
   }
@@ -65,7 +69,7 @@ class GrpcApiClient(
     exchangeStepAttemptsClient.appendLogEntry(request)
   }
 
-  override suspend fun finishExchangeStepAttempt(
+  override suspend fun reportStepAttempt(
     key: ExchangeStepAttemptKey,
     finalState: ExchangeStepAttempt.State,
     logEntryMessages: Iterable<String>

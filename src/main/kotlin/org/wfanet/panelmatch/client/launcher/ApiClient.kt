@@ -17,13 +17,10 @@ package org.wfanet.panelmatch.client.launcher
 import org.wfanet.measurement.api.v2alpha.ExchangeStep
 import org.wfanet.measurement.api.v2alpha.ExchangeStepAttempt
 import org.wfanet.measurement.api.v2alpha.ExchangeStepAttemptKey
+import org.wfanet.panelmatch.protocol.ClaimedExchangeStep
 
 /** Abstracts interactions with the centralized Panel Match APIs. */
 interface ApiClient {
-  data class ClaimedExchangeStep(
-    val exchangeStep: ExchangeStep,
-    val exchangeStepAttempt: ExchangeStepAttemptKey
-  )
 
   /**
    * Attempts to fetch an [ExchangeStep] to work on.
@@ -35,8 +32,8 @@ interface ApiClient {
   /** Attaches debug log entries to an [ExchangeStepAttempt]. */
   suspend fun appendLogEntry(key: ExchangeStepAttemptKey, messages: Iterable<String>)
 
-  /** Marks an ExchangeStepAttempt as complete (successfully or otherwise). */
-  suspend fun finishExchangeStepAttempt(
+  /** Reports ExchangeStepAttempt as complete (successfully or otherwise). */
+  suspend fun reportStepAttempt(
     key: ExchangeStepAttemptKey,
     finalState: ExchangeStepAttempt.State,
     logEntryMessages: Iterable<String> = emptyList()

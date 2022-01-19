@@ -31,6 +31,11 @@ proto_library(
     name = "exchangesteps_proto",
     srcs = ["exchangesteps.proto"],
     strip_import_prefix = "/src/main/proto",
+    deps = [
+        "@com_google_googleapis//google/type:date_proto",
+        "@wfa_measurement_proto//src/main/proto/wfa/measurement/api/v2alpha:exchange_step_attempt_proto",
+        "@wfa_measurement_proto//src/main/proto/wfa/measurement/api/v2alpha:exchange_step_proto",
+    ],
 )
 
 java_proto_library(
