@@ -37,11 +37,11 @@ jobs:
             --define "maven_repo=https://maven.pkg.github.com/world-federation-of-advertisers/panel-exchange-client" \
             --define "maven_user=x-access-token" \
             --define "maven_password=${{ secrets.GITHUB_TOKEN }}" \
-            //src/main/kotlin/org/wfanet/panelmatch/client/deploy:MavenJar.publish
+            //src/main/kotlin/org/wfanet/panelmatch/client/deploy:maven.publish
           bazelisk run \
             --define "maven_repo=https://maven.pkg.github.com/world-federation-of-advertisers/panel-exchange-client" \
             --define "maven_user=x-access-token" \
             --define "maven_password=${{ secrets.GITHUB_TOKEN }}" \
-            //src/main/kotlin/org/wfanet/panelmatch/client/testing:MavenTestingJar.publish
+            //src/main/kotlin/org/wfanet/panelmatch/client/testing:maven_testing.publish
         env:
           TAG_NAME: ${{ github.event.release.tag_name }}

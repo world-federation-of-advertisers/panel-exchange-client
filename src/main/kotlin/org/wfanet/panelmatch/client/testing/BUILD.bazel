@@ -26,20 +26,21 @@ java_library(
 )
 
 java_library(
-    name = "provided-deps",
+    name = "provided_deps",
     runtime_deps = [
+        # io.grpc:grpc-testing
         "@wfa_common_jvm//imports/java/io/grpc/testing",
+        # org.jetbrains.kotlin:kotlin-test
         "@wfa_common_jvm//imports/kotlin/kotlin/test",
-        "@wfa_common_jvm//imports/kotlin/org/mockito/kotlin",
     ],
 )
 
 java_export(
-    name = "MavenTestingJar",
+    name = "maven_testing",
     deploy_env = [
-        ":provided-deps",
+        ":provided_deps",
         "//src/main/kotlin/org/wfanet/panelmatch/client/deploy:deploy",
-        "//src/main/kotlin/org/wfanet/panelmatch/client/deploy:provided-deps",
+        "//src/main/kotlin/org/wfanet/panelmatch/client/deploy:provided_deps",
     ],
     maven_coordinates = "org.wfanet:panel-exchange-client-testing:${TAG_NAME}",
     pom_template = "//deploy:pom_template.xml",
