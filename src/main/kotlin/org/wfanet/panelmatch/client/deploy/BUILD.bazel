@@ -1,4 +1,5 @@
 load("@io_bazel_rules_kotlin//kotlin:jvm.bzl", "kt_jvm_library")
+load("@rules_jvm_external//:defs.bzl", "artifact")
 load("@rules_jvm_external//:defs.bzl", "java_export")
 
 package(default_visibility = [
@@ -41,42 +42,24 @@ kt_jvm_library(
 java_library(
     name = "provided_deps",
     runtime_deps = [
-        # com.google.protobuf:protobuf-java
+        "@com_google_googleapis//google/type:date_proto",
         "@com_google_protobuf//:protobuf_java",
-        # com.google.cloud:google-cloud-core
         "@wfa_common_jvm//imports/java/com/google/cloud:core",
-        # com.google.cloud:google-cloud-core-grpc
         "@wfa_common_jvm//imports/java/com/google/cloud/grpc",
-        # com.google.cloud:google-cloud-spanner
         "@wfa_common_jvm//imports/java/com/google/cloud/spanner",
-        # com.google.cloud:google-cloud-storage
         "@wfa_common_jvm//imports/java/com/google/cloud/storage",
-        # com.google.code.gson:gson
         "@wfa_common_jvm//imports/java/com/google/code/gson",
-        # com.google:truth
-        "@wfa_common_jvm//imports/java/com/google/common/truth",
-        # com.google.protobuf:protobuf-java
         "@wfa_common_jvm//imports/java/com/google/protobuf",
-        # com.google.protobuf:protobuf-java-util
         "@wfa_common_jvm//imports/java/com/google/protobuf/util",
-        # io.grpc:grpc-api
         "@wfa_common_jvm//imports/java/io/grpc:api",
         "@wfa_common_jvm//imports/java/io/grpc:context",
-        # io.grpc:grpc-core
         "@wfa_common_jvm//imports/java/io/grpc/core:util",
         "@wfa_common_jvm//imports/java/io/grpc/inprocess",
-        # io.grpc:grpc-netty
         "@wfa_common_jvm//imports/java/io/grpc/netty",
-        # io.grpc:grpc-services
         "@wfa_common_jvm//imports/java/io/grpc/services:health",
-        # io.grpc:grpc-kotlin-stub
-        "@wfa_common_jvm//imports/java/io/grpc/stub",
         "@wfa_common_jvm//imports/kotlin/io/grpc/health/v1:health_kt_jvm_grpc",
-        # org.jetbrains.kotlin:stdlib-jdk7
         "@wfa_common_jvm//imports/kotlin/kotlin:stdlib_jdk7",
-        # org.jetbrains.kotlin:kotlin-reflect
         "@wfa_common_jvm//imports/kotlin/kotlin/reflect/jvm",
-        # org.jetbrains.kotlin:kotlin-test
         "@wfa_common_jvm//imports/kotlin/kotlin/test",
     ],
 )
@@ -91,5 +74,19 @@ java_export(
     tags = ["no-javadocs"],
     runtime_deps = [
         ":deploy",
+        artifact("com.google.api.grpc:proto-google-common-protos"),
+        artifact("com.google.protobuf:protobuf-java"),
+        artifact("com.google.cloud:google-cloud-core"),
+        artifact("com.google.cloud:google-cloud-core-grpc"),
+        artifact("com.google.cloud:google-cloud-spanner"),
+        artifact("com.google.cloud:google-cloud-storage"),
+        artifact("com.google.code.gson:gson"),
+        artifact("com.google.protobuf:protobuf-java-util"),
+        artifact("io.grpc:grpc-api"),
+        artifact("io.grpc:grpc-core"),
+        artifact("io.grpc:grpc-netty"),
+        artifact("io.grpc:grpc-services"),
+        artifact("org.jetbrains.kotlin:kotlin-reflect"),
+        artifact("org.jetbrains.kotlin:kotlin-stdlib-jdk7"),
     ],
 )
