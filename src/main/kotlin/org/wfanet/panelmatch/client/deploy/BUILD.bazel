@@ -1,4 +1,5 @@
 load("@io_bazel_rules_kotlin//kotlin:jvm.bzl", "kt_jvm_library")
+load("@rules_jvm_external//:defs.bzl", "artifact", "java_export")
 
 package(default_visibility = [
     "//src/main/kotlin/org/wfanet/panelmatch:__subpackages__",
@@ -33,5 +34,26 @@ kt_jvm_library(
         "@wfa_common_jvm//src/main/kotlin/org/wfanet/measurement/common/grpc",
         "@wfa_common_jvm//src/main/kotlin/org/wfanet/measurement/common/throttler",
         "@wfa_common_jvm//src/main/kotlin/org/wfanet/measurement/storage:client",
+    ],
+)
+
+java_export(
+    name = "maven",
+    deploy_env = [
+        "@com_github_jetbrains_kotlin//:kotlin-stdlib-jdk7",
+        "@com_github_jetbrains_kotlin//:kotlin-reflect",
+        "@com_github_grpc_grpc_kotlin//stub/src/main/java/io/grpc/kotlin:stub",
+        "@io_grpc_grpc_java//netty",
+        "@io_grpc_grpc_java//services:health",
+    ],
+    maven_coordinates = "org.wfanet:panel-exchange-client-core:${TAG_NAME}",
+    tags = ["no-javadocs"],
+    exports = [
+        ":deploy",
+        artifact("org.jetbrains.kotlin:kotlin-reflect", "maven_export"),
+        artifact("org.jetbrains.kotlin:kotlin-stdlib-jdk7", "maven_export"),
+        artifact("io.grpc:grpc-kotlin-stub", "maven_export"),
+        artifact("io.grpc:grpc-services", "maven_export"),
+        artifact("io.grpc:grpc-netty", "maven_export"),
     ],
 )
