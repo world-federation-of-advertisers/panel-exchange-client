@@ -54,6 +54,28 @@ maven_install(
     ],
 )
 
+GRPC_JAVA_VERSION = "1.43.2"
+
+KOTLIN_VERSION = "1.4.31"
+
+maven_install(
+    name = "maven_export",
+    artifacts = [
+        "io.grpc:grpc-kotlin-stub:1.2.0",
+        "io.grpc:grpc-netty:" + GRPC_JAVA_VERSION,
+        "io.grpc:grpc-services:" + GRPC_JAVA_VERSION,
+        "org.jetbrains.kotlin:kotlin-reflect:" + KOTLIN_VERSION,
+        "org.jetbrains.kotlin:kotlin-stdlib-jdk7:" + KOTLIN_VERSION,
+        "org.jetbrains.kotlin:kotlin-test:" + KOTLIN_VERSION,
+    ],
+    excluded_artifacts = panel_exchange_client_maven_excluded_artifacts(),
+    fetch_sources = True,
+    generate_compat_repositories = True,
+    repositories = [
+        "https://repo.maven.apache.org/maven2/",
+    ],
+)
+
 load("@wfa_common_jvm//build:common_jvm_extra_deps.bzl", "common_jvm_extra_deps")
 
 common_jvm_extra_deps()

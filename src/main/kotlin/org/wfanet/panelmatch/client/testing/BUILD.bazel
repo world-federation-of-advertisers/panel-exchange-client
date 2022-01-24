@@ -25,25 +25,27 @@ java_library(
     ],
 )
 
-java_library(
-    name = "provided_deps",
-    runtime_deps = [
-        "@wfa_common_jvm//imports/java/com/google/common/truth",
-    ],
-)
-
 java_export(
     name = "maven_testing",
     deploy_env = [
-        ":provided_deps",
         "//src/main/kotlin/org/wfanet/panelmatch/client/deploy:deploy",
-        "//src/main/kotlin/org/wfanet/panelmatch/client/deploy:provided_deps",
+        "@com_github_grpc_grpc_kotlin//stub/src/main/java/io/grpc/kotlin:stub",
+        "@com_github_jetbrains_kotlin//:kotlin-reflect",
+        "@com_github_jetbrains_kotlin//:kotlin-stdlib-jdk7",
+        "@com_github_jetbrains_kotlin//:kotlin-test",
+        "@io_grpc_grpc_java//netty",
+        "@io_grpc_grpc_java//services:health",
     ],
     maven_coordinates = "org.wfanet:panel-exchange-client-testing:${TAG_NAME}",
     pom_template = "//deploy:pom_template.xml",
     tags = ["no-javadocs"],
     runtime_deps = [
         ":testing",
-        artifact("com.google.truth:truth"),
+        artifact("org.jetbrains.kotlin:kotlin-reflect", "maven_export"),
+        artifact("org.jetbrains.kotlin:kotlin-stdlib-jdk7", "maven_export"),
+        artifact("org.jetbrains.kotlin:kotlin-test", "maven_export"),
+        artifact("io.grpc:grpc-kotlin-stub", "maven_export"),
+        artifact("io.grpc:grpc-services", "maven_export"),
+        artifact("io.grpc:grpc-netty", "maven_export"),
     ],
 )
