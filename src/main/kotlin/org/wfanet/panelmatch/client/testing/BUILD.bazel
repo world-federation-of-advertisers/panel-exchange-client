@@ -4,7 +4,8 @@ library. It is a java_binary instead of a java_library since it should be a fat
 jar of all the testing dependencies.
 """
 
-load("@rules_jvm_external//:defs.bzl", "artifact", "java_export")
+load("@rules_jvm_external//:defs.bzl", "java_export")
+load("//build:maven_deps.bzl", "panel_exchange_client_maven_deploy_env", "panel_exchange_client_maven_runtime_deps")
 
 package(
     default_testonly = True,
@@ -25,25 +26,11 @@ java_library(
     ],
 )
 
-java_library(
-    name = "provided_deps",
-    runtime_deps = [
-        "@wfa_common_jvm//imports/java/com/google/common/truth",
-    ],
-)
-
 java_export(
     name = "maven_testing",
-    deploy_env = [
-        ":provided_deps",
-        "//src/main/kotlin/org/wfanet/panelmatch/client/deploy:deploy",
-        "//src/main/kotlin/org/wfanet/panelmatch/client/deploy:provided_deps",
-    ],
+    deploy_env = ["//src/main/kotlin/org/wfanet/panelmatch/client/deploy:deploy"] + panel_exchange_client_maven_deploy_env(),
     maven_coordinates = "org.wfanet:panel-exchange-client-testing:${TAG_NAME}",
     pom_template = "//deploy:pom_template.xml",
     tags = ["no-javadocs"],
-    runtime_deps = [
-        ":testing",
-        artifact("com.google.truth:truth"),
-    ],
+    runtime_deps = [":testing"] + panel_exchange_client_maven_runtime_deps(),
 )

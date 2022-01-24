@@ -1,5 +1,6 @@
 load("@io_bazel_rules_kotlin//kotlin:jvm.bzl", "kt_jvm_library")
-load("@rules_jvm_external//:defs.bzl", "artifact", "java_export")
+load("@rules_jvm_external//:defs.bzl", "java_export")
+load("//build:maven_deps.bzl", "panel_exchange_client_maven_deploy_env", "panel_exchange_client_maven_runtime_deps")
 
 package(default_visibility = [
     "//src/main/kotlin/org/wfanet/panelmatch:__subpackages__",
@@ -38,54 +39,11 @@ kt_jvm_library(
     ],
 )
 
-java_library(
-    name = "provided_deps",
-    runtime_deps = [
-        "@com_google_googleapis//google/type:date_proto",
-        "@com_google_protobuf//:protobuf_java",
-        "@wfa_common_jvm//imports/java/com/google/cloud:core",
-        "@wfa_common_jvm//imports/java/com/google/cloud/grpc",
-        "@wfa_common_jvm//imports/java/com/google/cloud/spanner",
-        "@wfa_common_jvm//imports/java/com/google/cloud/storage",
-        "@wfa_common_jvm//imports/java/com/google/code/gson",
-        "@wfa_common_jvm//imports/java/com/google/protobuf",
-        "@wfa_common_jvm//imports/java/com/google/protobuf/util",
-        "@wfa_common_jvm//imports/java/io/grpc:api",
-        "@wfa_common_jvm//imports/java/io/grpc:context",
-        "@wfa_common_jvm//imports/java/io/grpc/core:util",
-        "@wfa_common_jvm//imports/java/io/grpc/inprocess",
-        "@wfa_common_jvm//imports/java/io/grpc/netty",
-        "@wfa_common_jvm//imports/java/io/grpc/services:health",
-        "@wfa_common_jvm//imports/kotlin/io/grpc/health/v1:health_kt_jvm_grpc",
-        "@wfa_common_jvm//imports/kotlin/kotlin:stdlib_jdk7",
-        "@wfa_common_jvm//imports/kotlin/kotlin/reflect/jvm",
-        "@wfa_common_jvm//imports/kotlin/kotlin/test",
-    ],
-)
-
 java_export(
     name = "maven",
-    deploy_env = [
-        ":provided_deps",
-    ],
+    deploy_env = panel_exchange_client_maven_deploy_env(),
     maven_coordinates = "org.wfanet:panel-exchange-client-core:${TAG_NAME}",
     pom_template = "//deploy:pom_template.xml",
     tags = ["no-javadocs"],
-    runtime_deps = [
-        ":deploy",
-        artifact("com.google.api.grpc:proto-google-common-protos"),
-        artifact("com.google.protobuf:protobuf-java"),
-        artifact("com.google.cloud:google-cloud-core"),
-        artifact("com.google.cloud:google-cloud-core-grpc"),
-        artifact("com.google.cloud:google-cloud-spanner"),
-        artifact("com.google.cloud:google-cloud-storage"),
-        artifact("com.google.code.gson:gson"),
-        artifact("com.google.protobuf:protobuf-java-util"),
-        artifact("io.grpc:grpc-api"),
-        artifact("io.grpc:grpc-core"),
-        artifact("io.grpc:grpc-netty"),
-        artifact("io.grpc:grpc-services"),
-        artifact("org.jetbrains.kotlin:kotlin-reflect"),
-        artifact("org.jetbrains.kotlin:kotlin-stdlib-jdk7"),
-    ],
+    runtime_deps = [":deploy"] + panel_exchange_client_maven_runtime_deps(),
 )
