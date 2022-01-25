@@ -69,7 +69,6 @@ maven_install(
         "org.jetbrains.kotlin:kotlin-test:" + KOTLIN_VERSION,
     ],
     excluded_artifacts = panel_exchange_client_maven_excluded_artifacts(),
-    fetch_sources = True,
     generate_compat_repositories = True,
     repositories = [
         "https://repo.maven.apache.org/maven2/",

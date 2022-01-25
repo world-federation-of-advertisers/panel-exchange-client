@@ -29,18 +29,24 @@ _DEPLOY_ENV = [
     "@com_github_grpc_grpc_kotlin//stub/src/main/java/io/grpc/kotlin:stub",
     "@com_github_jetbrains_kotlin//:kotlin-reflect",
     "@com_github_jetbrains_kotlin//:kotlin-stdlib-jdk7",
-    "@com_github_jetbrains_kotlin//:kotlin-test",
     "@io_grpc_grpc_java//netty",
     "@io_grpc_grpc_java//services:health",
+]
+
+_TEST_DEPLOY_ENV = [
+    "@com_github_jetbrains_kotlin//:kotlin-test",
 ]
 
 _RUNTIME_DEPS = [
     artifact("org.jetbrains.kotlin:kotlin-reflect", "maven_export"),
     artifact("org.jetbrains.kotlin:kotlin-stdlib-jdk7", "maven_export"),
-    artifact("org.jetbrains.kotlin:kotlin-test", "maven_export"),
     artifact("io.grpc:grpc-kotlin-stub", "maven_export"),
     artifact("io.grpc:grpc-services", "maven_export"),
     artifact("io.grpc:grpc-netty", "maven_export"),
+]
+
+_TEST_RUNTIME_DEPS = [
+    artifact("org.jetbrains.kotlin:kotlin-test", "maven_export"),
 ]
 
 _BEAM_VERSION = "2.34.0"
@@ -99,3 +105,9 @@ def panel_exchange_client_maven_deploy_env():
 
 def panel_exchange_client_maven_runtime_deps():
     return _RUNTIME_DEPS
+
+def panel_exchange_client_maven_test_deploy_env():
+    return _TEST_DEPLOY_ENV
+
+def panel_exchange_client_maven_test_runtime_deps():
+    return _TEST_RUNTIME_DEPS
