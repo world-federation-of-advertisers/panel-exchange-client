@@ -12,11 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""
-This file contains local settings for building and deploying the codebase.
-It is in .gitignore; please don't commit your local changes.
-"""
-
 # Settings for the repository where Docker images are stored.
 # The image path is the container_registry, the prefix, and an
 # image-specific suffix joined with slashes.
