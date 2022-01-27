@@ -12,6 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""
+Make variable strings used by build targets in project.
+"""
+
 # Settings for the repository where Docker images are stored.
 # The image path is the container_registry, the prefix, and an
 # image-specific suffix joined with slashes.
