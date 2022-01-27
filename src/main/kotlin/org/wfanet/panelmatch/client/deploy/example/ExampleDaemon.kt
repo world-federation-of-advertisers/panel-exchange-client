@@ -24,7 +24,6 @@ import org.wfanet.panelmatch.client.storage.StorageDetailsProvider
 import org.wfanet.panelmatch.common.secrets.MutableSecretMap
 import org.wfanet.panelmatch.common.secrets.SecretMap
 import picocli.CommandLine.Mixin
-import picocli.CommandLine.Option
 
 /** Example base class for [ExchangeWorkflowDaemonFromFlags] implementations. */
 abstract class ExampleDaemon : ExchangeWorkflowDaemonFromFlags() {
