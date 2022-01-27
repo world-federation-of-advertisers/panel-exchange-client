@@ -19,6 +19,7 @@ import org.wfanet.measurement.gcloud.gcs.GcsFromFlags
 import org.wfanet.measurement.gcloud.gcs.GcsStorageClient
 import org.wfanet.measurement.storage.StorageClient
 import org.wfanet.panelmatch.client.deploy.CertificateAuthorityFlags
+import org.wfanet.panelmatch.client.deploy.DaemonStorageClientDefaults
 import org.wfanet.panelmatch.client.deploy.example.ExampleDaemon
 import org.wfanet.panelmatch.common.certificates.gcloud.CertificateAuthority
 import org.wfanet.panelmatch.common.certificates.gcloud.PrivateCaClient
@@ -67,12 +68,19 @@ private class PrivateCaFlags {
   showDefaultValues = true
 )
 private class GoogleCloudExampleDaemon : ExampleDaemon() {
+  @Option(names = ["--tink-key-uri"], description = ["KMS URI for Tink"], required = true)
+  private lateinit var tinkKeyUri: String
+
   @Mixin private lateinit var gcsFlags: GcsFromFlags.Flags
   @Mixin private lateinit var caFlags: CertificateAuthorityFlags
   @Mixin private lateinit var privateCaFlags: PrivateCaFlags
 
   override val rootStorageClient: StorageClient by lazy {
     GcsStorageClient.fromFlags(GcsFromFlags(gcsFlags))
+  }
+
+  override val defaults: DaemonStorageClientDefaults by lazy {
+    GcpDaemonStorageClientDefaults(rootStorageClient, tinkKeyUri)
   }
 
   override val certificateAuthority by lazy {
