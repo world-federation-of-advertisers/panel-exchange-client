@@ -24,19 +24,23 @@ import org.wfanet.panelmatch.client.storage.StorageDetailsProvider
 import org.wfanet.panelmatch.common.secrets.MutableSecretMap
 import org.wfanet.panelmatch.common.secrets.SecretMap
 import picocli.CommandLine.Mixin
+import picocli.CommandLine.Option
 
 /** Example base class for [ExchangeWorkflowDaemonFromFlags] implementations. */
 abstract class ExampleDaemon : ExchangeWorkflowDaemonFromFlags() {
+  @Option(names = ["--tink-key-uri"], description = ["KMS URI for Tink"], required = true)
+  private lateinit var tinkKeyUri: String
+
   @Mixin private lateinit var blobSizeFlags: BlobSizeFlags
 
   /** This MUST be customized per deployment. */
   abstract val rootStorageClient: StorageClient
 
-  /** This can be customized per deployment. */
-  abstract val defaults: DaemonStorageClientDefaults
-
   /** This should be customized per deployment. */
   override val pipelineOptions: PipelineOptions = PipelineOptionsFactory.create()
+
+  /** This can be customized per deployment. */
+  private val defaults by lazy { DaemonStorageClientDefaults(rootStorageClient, tinkKeyUri) }
 
   /** This can be customized per deployment. */
   override val validExchangeWorkflows: SecretMap

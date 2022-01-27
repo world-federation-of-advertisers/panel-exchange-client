@@ -22,7 +22,7 @@ import org.wfanet.panelmatch.common.secrets.SecretMap
 import org.wfanet.panelmatch.common.secrets.StorageClientSecretMap
 import org.wfanet.panelmatch.common.storage.withPrefix
 
-abstract class DaemonStorageClientDefaults(rootStorageClient: StorageClient, tinkKeyUri: String) {
+class DaemonStorageClientDefaults(rootStorageClient: StorageClient, tinkKeyUri: String) {
   val validExchangeWorkflows: SecretMap by lazy {
     StorageClientSecretMap(rootStorageClient.withPrefix("valid-exchange-workflows"))
   }
