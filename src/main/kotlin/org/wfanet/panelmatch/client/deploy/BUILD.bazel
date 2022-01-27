@@ -9,7 +9,7 @@ kt_jvm_library(
     name = "deploy",
     srcs = glob(["*.kt"]),
     deps = [
-        "@maven//:com_google_crypto_tink_tink_gcpkms",
+        "//imports/java/com/google/common:tink_gcpkms",
         "//src/main/kotlin/org/wfanet/panelmatch/client/common",
         "//src/main/kotlin/org/wfanet/panelmatch/client/eventpreprocessing",
         "//src/main/kotlin/org/wfanet/panelmatch/client/exchangetasks",
