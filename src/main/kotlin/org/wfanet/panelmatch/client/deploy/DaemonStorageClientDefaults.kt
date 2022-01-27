@@ -14,6 +14,8 @@
 
 package org.wfanet.panelmatch.client.deploy
 
+import com.google.crypto.tink.integration.gcpkms.GcpKmsClient
+import java.util.Optional
 import org.wfanet.measurement.common.crypto.tink.TinkKeyStorageProvider
 import org.wfanet.measurement.storage.StorageClient
 import org.wfanet.panelmatch.client.storage.StorageDetailsProvider
@@ -47,5 +49,11 @@ class DaemonStorageClientDefaults(rootStorageClient: StorageClient, tinkKeyUri: 
     val tinkStorageProvider = TinkKeyStorageProvider()
     val kmsStorageClient = tinkStorageProvider.makeKmsStorageClient(rootStorageClient, tinkKeyUri)
     StorageClientSecretMap(kmsStorageClient.withPrefix("private-keys"))
+  }
+
+  companion object {
+    init {
+      GcpKmsClient.register(Optional.empty(), Optional.empty())
+    }
   }
 }
