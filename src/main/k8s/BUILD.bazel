@@ -1,0 +1,54 @@
+#load("//build:variables.bzl", "IMAGE_REPOSITORY_SETTINGS", "TEST_GOOGLE_CLOUD_SETTINGS")
+load("//src/main/docker:images.bzl", "ALL_GKE_IMAGES")
+load("@wfa_measurement_system//build/cue:defs.bzl", "cue_export")
+
+package(default_visibility = ["//src/main/k8s:__subpackages__"])
+
+cue_export(
+    name = "example_daemon_from_cue_gke",
+    srcs = [
+        "base.cue",
+        "example_daemon_gke.cue",
+    ],
+    cue_tags = {
+        "secret_name": "TBD",
+        "party_type": "DATA_PROVIDER",
+        "tink_key_uri": "gcp-kms://projects/ads-open-measurement/locations/us/keyRings/test-key-ring/cryptoKeys/test-aes-key/cryptoKeyVersions/1",
+        "private_ca_name": "20220126-brx-hab",
+        "private_ca_pool_id": "SomeCommonName",
+        "private_ca_location": "us-central1",
+    },
+    expression = "listObject",
+    filetype = "yaml",
+    outfile = "example_daemon_from_cue_gke.yaml",
+)
+
+ALL_IMAGE_ARCHIVES = [
+    image_spec.image + ".tar"
+    for image_spec in ALL_GKE_IMAGES
+]
+
+filegroup(
+    name = "all_archives",
+    srcs = ALL_IMAGE_ARCHIVES,
+    tags = ["manual"],
+)
+
+filegroup(
+    name = "k8s_deployment_config",
+    srcs = [
+        ":example_daemon_from_cue_gke.yaml",
+    ],
+    data = [
+        ":all_archives",
+    ],
+    tags = ["manual"],
+    visibility = [":k8s_deployer"],
+)
+
+package_group(
+    name = "k8s_deployer",
+    packages = [
+        "//src/main/kotlin/org/wfanet/panelmatch/tools/...",
+    ],
+)
