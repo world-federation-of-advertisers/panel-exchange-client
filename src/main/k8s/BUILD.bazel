@@ -1,4 +1,3 @@
-#load("//build:variables.bzl", "IMAGE_REPOSITORY_SETTINGS", "TEST_GOOGLE_CLOUD_SETTINGS")
 load("//src/main/docker:images.bzl", "ALL_GKE_IMAGES")
 load("@wfa_measurement_system//build/cue:defs.bzl", "cue_export")
 
