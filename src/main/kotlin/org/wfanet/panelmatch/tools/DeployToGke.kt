@@ -52,9 +52,7 @@ class DeployToGke : Callable<Int> {
   override fun call(): Int {
     val manifestPath =
       checkNotNull(
-        getRuntimePath(
-          Paths.get("panel_exchange_client", "src", "main", "k8s", yamlFile)
-        )
+        getRuntimePath(Paths.get("panel_exchange_client", "src", "main", "k8s", yamlFile))
       )
     logger.info("*** STARTING ***")
 
