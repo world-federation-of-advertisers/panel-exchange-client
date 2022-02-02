@@ -13,6 +13,7 @@ cue_export(
         "private_ca_pool_id": "SomeCommonName",
         "private_ca_location": "us-central1",
     },
+    tags = ["manual"],
     deps = ["//src/main/k8s:base"],
     expression = "listObject",
     filetype = "yaml",
