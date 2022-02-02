@@ -43,7 +43,5 @@ filegroup(
 
 package_group(
     name = "k8s_deployer",
-    packages = [
-        "//src/main/kotlin/org/wfanet/panelmatch/tools/...",
-    ],
+    packages = ["//src/main/kotlin/org/wfanet/panelmatch/tools/..."],
 )
