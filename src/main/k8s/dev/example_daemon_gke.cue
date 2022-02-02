@@ -24,10 +24,10 @@ _private_ca_name:     string @tag("private_ca_name")
 _private_ca_pool_id:  string @tag("private_ca_pool_id")
 _private_ca_location: string @tag("private_ca_location")
 
-_tink_key_uri_flag: "--tink-key-uri=\(_tink_key_uri)"
-_party_type_flag:   "--party-type=\(_party_type)"
-_private_ca_name_flag: "--privateca-ca-name=\(_private_ca_name)"
-_private_ca_pool_flag: "--privateca-pool-id=\(_private_ca_pool_id)"
+_tink_key_uri_flag:        "--tink-key-uri=\(_tink_key_uri)"
+_party_type_flag:          "--party-type=\(_party_type)"
+_private_ca_name_flag:     "--privateca-ca-name=\(_private_ca_name)"
+_private_ca_pool_flag:     "--privateca-pool-id=\(_private_ca_pool_id)"
 _private_ca_location_flag: "--privateca-ca-location=\(_private_ca_location)"
 
 #GloudProject:            "ads-open-measurement"
@@ -39,44 +39,44 @@ _private_ca_location_flag: "--privateca-ca-location=\(_private_ca_location)"
 #DefaultResourceConfig: {
 	replicas:              1
 	resourceRequestCpu:    "100m"
-  resourceLimitCpu:      "400m"
-  resourceRequestMemory: "256Mi"
-  resourceLimitMemory:   "512Mi"
+	resourceLimitCpu:      "400m"
+	resourceRequestMemory: "256Mi"
+	resourceLimitMemory:   "512Mi"
 }
 #TinkKeyUri: #ContainerRegistry + "/" + #GloudProject
 
 example_daemon_deployment: "example_daemon_deployment": #Deployment & {
-  _name:            "example-panel-exchange-daemon"
+	_name:            "example-panel-exchange-daemon"
 	_image:           #ContainerRegistryPrefix + "/example-panel-exchange-daemon"
 	_jvmFlags:        "-Xmx12g -Xms2g"
 	_imagePullPolicy: "Always"
-	_resourceConfig: #DefaultResourceConfig
+	_resourceConfig:  #DefaultResourceConfig
 	_secretName:      _secret_name // "certs-and-configs-cct246f859"
-  _args: [
-  	_tink_key_uri_flag,
-  	_party_type_flag,
-  	_private_ca_name_flag,
-  	_private_ca_pool_flag,
-  	_private_ca_location_flag,
-    "--id=EDP",
-    "--tls-cert-file=/var/run/secrets/files/test_user.pem",
-	  "--tls-key-file=/var/run/secrets/files/test_user.key",
-	  "--cert-collection-file=/var/run/secrets/files/test_root.pem",
-    "--blob-size-limit-bytes=1000000000",
-    "--storage-signing-algorithm=EC",
-    "--task-timeout=24h",
-    "--exchange-api-target=" + #KingdomPublicApiTarget,
-    "--exchange-api-cert-host=localhost",
-    "--google-cloud-storage-bucket=" + #CloudStorageBucket,
-    "--google-cloud-storage-project=" + #GloudProject,
-    "--channel-shutdown-timeout=3s",
-    "--polling-interval=1m",
-    "--preprocessing-max-byte-size=1000000",
-    "--preprocessing-file-count=1000",
-    "--x509-common-name=SomeCommonName",
-    "--x509-organization=SomeOrganization",
-    "--x509-dns-name=example.com",
-    "--x509-valid-days=365",
-    "--privateca-project-id=" + #GloudProject,
-  ]
+	_args: [
+		_tink_key_uri_flag,
+		_party_type_flag,
+		_private_ca_name_flag,
+		_private_ca_pool_flag,
+		_private_ca_location_flag,
+		"--id=EDP",
+		"--tls-cert-file=/var/run/secrets/files/test_user.pem",
+		"--tls-key-file=/var/run/secrets/files/test_user.key",
+		"--cert-collection-file=/var/run/secrets/files/test_root.pem",
+		"--blob-size-limit-bytes=1000000000",
+		"--storage-signing-algorithm=EC",
+		"--task-timeout=24h",
+		"--exchange-api-target=" + #KingdomPublicApiTarget,
+		"--exchange-api-cert-host=localhost",
+		"--google-cloud-storage-bucket=" + #CloudStorageBucket,
+		"--google-cloud-storage-project=" + #GloudProject,
+		"--channel-shutdown-timeout=3s",
+		"--polling-interval=1m",
+		"--preprocessing-max-byte-size=1000000",
+		"--preprocessing-file-count=1000",
+		"--x509-common-name=SomeCommonName",
+		"--x509-organization=SomeOrganization",
+		"--x509-dns-name=example.com",
+		"--x509-valid-days=365",
+		"--privateca-project-id=" + #GloudProject,
+	]
 }

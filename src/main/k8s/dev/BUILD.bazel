@@ -1,4 +1,4 @@
-load("//build:variables.bzl", "TEST_GOOGLE_CLOUD_SETTINGS")
+load("//build:variables.bzl", "TEST_GOOGLE_CLOUD_SETTINGS", "EXAMPLE_DAEMON_CONFIG")
 load("//src/main/docker:images.bzl", "ALL_GKE_IMAGES")
 load("@wfa_measurement_system//build/cue:defs.bzl", "cue_export")
 
@@ -6,8 +6,8 @@ cue_export(
     name = "example_daemon_from_cue_gke",
     srcs = ["example_daemon_gke.cue"],
     cue_tags = {
-        "secret_name": "SomeSecretName",
-        "party_type": "DATA_PROVIDER",
+        "secret_name": TEST_GOOGLE_CLOUD_SETTINGS.secret_name,
+        "party_type": EXAMPLE_DAEMON_CONFIG.daemon_party_type,
         "tink_key_uri": TEST_GOOGLE_CLOUD_SETTINGS.tink_key_uri,
         "private_ca_name": "20220126-brx-hab",
         "private_ca_pool_id": "SomeCommonName",
