@@ -1,5 +1,4 @@
-load("//build:variables.bzl", "TEST_GOOGLE_CLOUD_SETTINGS")
-load("//build:variables.bzl", "EXAMPLE_DAEMON_CONFIG")
+load("//build:variables.bzl", "EXAMPLE_DAEMON_CONFIG", "TEST_GOOGLE_CLOUD_SETTINGS")
 load("//src/main/docker:images.bzl", "ALL_GKE_IMAGES")
 load("@wfa_measurement_system//build/cue:defs.bzl", "cue_export")
 
