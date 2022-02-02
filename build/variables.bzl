@@ -30,6 +30,7 @@ IMAGE_REPOSITORY_SETTINGS = struct(
 TEST_GOOGLE_CLOUD_SETTINGS = struct(
     cloud_storage_project = "$(cloud_storage_project)",
     cloud_storage_bucket = "$(cloud_storage_bucket)",
+    tink_key_uri = "$(tink_key_uri)",
 )
 
 # Config for Panel Exchange Client Example Daemon.

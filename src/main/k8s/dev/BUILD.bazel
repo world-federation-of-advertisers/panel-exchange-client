@@ -1,0 +1,49 @@
+load("//build:variables.bzl", "TEST_GOOGLE_CLOUD_SETTINGS")
+load("//src/main/docker:images.bzl", "ALL_GKE_IMAGES")
+load("@wfa_measurement_system//build/cue:defs.bzl", "cue_export")
+
+cue_export(
+    name = "example_daemon_from_cue_gke",
+    srcs = ["example_daemon_gke.cue"],
+    cue_tags = {
+        "secret_name": "SomeSecretName",
+        "party_type": "DATA_PROVIDER",
+        "tink_key_uri": TEST_GOOGLE_CLOUD_SETTINGS.tink_key_uri,
+        "private_ca_name": "20220126-brx-hab",
+        "private_ca_pool_id": "SomeCommonName",
+        "private_ca_location": "us-central1",
+    },
+    deps = ["//src/main/k8s:base"],
+    expression = "listObject",
+    filetype = "yaml",
+)
+
+ALL_IMAGE_ARCHIVES = [
+    image_spec.image + ".tar"
+    for image_spec in ALL_GKE_IMAGES
+]
+
+filegroup(
+    name = "all_archives",
+    srcs = ALL_IMAGE_ARCHIVES,
+    tags = ["manual"],
+)
+
+filegroup(
+    name = "k8s_deployment_config",
+    srcs = [
+        ":example_daemon_from_cue_gke.yaml",
+    ],
+    data = [
+        ":all_archives",
+    ],
+    tags = ["manual"],
+    visibility = [":k8s_deployer"],
+)
+
+package_group(
+    name = "k8s_deployer",
+    packages = [
+        "//src/main/kotlin/org/wfanet/panelmatch/tools/...",
+    ],
+)

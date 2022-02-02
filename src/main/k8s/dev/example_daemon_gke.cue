@@ -48,9 +48,9 @@ _private_ca_location_flag: "--privateca-ca-location=\(_private_ca_location)"
 example_daemon_deployment: "example_daemon_deployment": #Deployment & {
   _name:            "example-panel-exchange-daemon"
 	_image:           #ContainerRegistryPrefix + "/example-panel-exchange-daemon"
-	_jvm_flags:       "-Xmx12g -Xms2g"
+	_jvmFlags:        "-Xmx12g -Xms2g"
 	_imagePullPolicy: "Always"
-	_resource_config: #DefaultResourceConfig
+	_resourceConfig: #DefaultResourceConfig
 	_secretName:      _secret_name // "certs-and-configs-cct246f859"
   _args: [
   	_tink_key_uri_flag,

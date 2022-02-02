@@ -51,8 +51,8 @@ objectSets: [ example_daemon_deployment ]
 	_ports:                 [{containerPort: 8443}] | *[]
 	_restartPolicy:         string | *"Always"
 	_imagePullPolicy:       string | *"Never"
-	_jvm_flags:             string | *""
-	_resource_config:       #ResourceConfig
+	_jvmFlags:              string | *""
+	_resourceConfig:        #ResourceConfig
 	_secretName:            string | *null
 	apiVersion:             "apps/v1"
 	kind:                   "Deployment"
@@ -64,7 +64,7 @@ objectSets: [ example_daemon_deployment ]
 		}
 	}
 	spec: {
-		replicas: _resource_config.replicas
+		replicas: _resourceConfig.replicas
 		selector: matchLabels: app: _name + "-app"
 		template: {
 			metadata: labels: app: _name + "-app"
@@ -73,19 +73,19 @@ objectSets: [ example_daemon_deployment ]
 					name:  _name + "-container"
 					image: _image
 					resources: requests: {
-						memory: _resource_config.resourceRequestMemory
-						cpu:    _resource_config.resourceRequestCpu
+						memory: _resourceConfig.resourceRequestMemory
+						cpu:    _resourceConfig.resourceRequestCpu
 					}
 					resources: limits: {
-						memory: _resource_config.resourceLimitMemory
-						cpu:    _resource_config.resourceLimitCpu
+						memory: _resourceConfig.resourceLimitMemory
+						cpu:    _resourceConfig.resourceLimitCpu
 					}
 					imagePullPolicy: _imagePullPolicy
 					args:            _args
 					ports:           _ports
 					env: [{
 						name:  "JAVA_TOOL_OPTIONS"
-						value: _jvm_flags
+						value: _jvmFlags
 					}]
 					if _secretName != null {
 					volumeMounts: [{

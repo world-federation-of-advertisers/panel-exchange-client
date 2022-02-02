@@ -22,7 +22,7 @@ import org.wfanet.measurement.common.getRuntimePath
 import picocli.CommandLine
 import picocli.CommandLine.Command
 
-@Command(name = "deploy_to_kind", description = ["Deploys containers on gcr.io to GKE"])
+@Command(name = "deploy_to_gke", description = ["Deploys containers on gcr.io to GKE"])
 class DeployToGke : Callable<Int> {
 
   @CommandLine.Option(
@@ -52,7 +52,7 @@ class DeployToGke : Callable<Int> {
   override fun call(): Int {
     val manifestPath =
       checkNotNull(
-        getRuntimePath(Paths.get("panel_exchange_client", "src", "main", "k8s", yamlFile))
+        getRuntimePath(Paths.get("panel_exchange_client", "src", "main", "k8s", "dev", yamlFile))
       )
     logger.info("*** STARTING ***")
 
