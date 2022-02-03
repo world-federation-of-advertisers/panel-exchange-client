@@ -66,6 +66,7 @@ _ARTIFACTS = artifacts.dict_to_list({
     "com.google.cloud:google-cloud-storage": "2.2.1",
     "com.google.code.gson:gson": "2.8.9",
     "com.google.crypto.tink:tink": "1.6.0",
+    "com.google.crypto.tink:tink-gcpkms": "1.6.0",
     "com.google.guava:guava": "31.0.1-jre",
     "com.google.http-client:google-http-client": "1.40.1",
     "io.grpc:grpc-api": "1.42.1",
