@@ -32,6 +32,15 @@ load(
     "panel_exchange_client_maven_excluded_artifacts",
     "panel_exchange_client_maven_override_targets",
 )
+
+load("@rules_jvm_external//:repositories.bzl", "rules_jvm_external_deps")
+
+rules_jvm_external_deps()
+
+load("@rules_jvm_external//:setup.bzl", "rules_jvm_external_setup")
+
+rules_jvm_external_setup()
+
 load("@rules_jvm_external//:defs.bzl", "maven_install")
 
 maven_install(
@@ -40,6 +49,27 @@ maven_install(
     fetch_sources = True,
     generate_compat_repositories = True,
     override_targets = panel_exchange_client_maven_override_targets(),
+    repositories = [
+        "https://repo.maven.apache.org/maven2/",
+    ],
+)
+
+GRPC_JAVA_VERSION = "1.43.2"
+
+KOTLIN_VERSION = "1.4.31"
+
+maven_install(
+    name = "maven_export",
+    artifacts = [
+        "io.grpc:grpc-kotlin-stub:1.2.0",
+        "io.grpc:grpc-netty:" + GRPC_JAVA_VERSION,
+        "io.grpc:grpc-services:" + GRPC_JAVA_VERSION,
+        "org.jetbrains.kotlin:kotlin-reflect:" + KOTLIN_VERSION,
+        "org.jetbrains.kotlin:kotlin-stdlib-jdk7:" + KOTLIN_VERSION,
+        "org.jetbrains.kotlin:kotlin-test:" + KOTLIN_VERSION,
+    ],
+    excluded_artifacts = panel_exchange_client_maven_excluded_artifacts(),
+    generate_compat_repositories = True,
     repositories = [
         "https://repo.maven.apache.org/maven2/",
     ],
