@@ -34,11 +34,13 @@ jobs:
       - name: Publish packages
         run: |
           bazelisk run \
+            --config=maven \
             --define "maven_repo=https://maven.pkg.github.com/world-federation-of-advertisers/panel-exchange-client" \
             --define "maven_user=x-access-token" \
             --define "maven_password=${{ secrets.GITHUB_TOKEN }}" \
             //src/main/kotlin/org/wfanet/panelmatch/client/deploy:maven.publish
           bazelisk run \
+            --config=maven \
             --define "maven_repo=https://maven.pkg.github.com/world-federation-of-advertisers/panel-exchange-client" \
             --define "maven_user=x-access-token" \
             --define "maven_password=${{ secrets.GITHUB_TOKEN }}" \
