@@ -17,6 +17,8 @@
 
 package k8s
 
+_container_registry:  string @tag("container_registry")
+_image_repo_prefix:   string @tag("image_repo_prefix")
 _secret_name:         string @tag("secret_name")
 _party_type:          string @tag("party_type")
 _tink_key_uri:        string @tag("tink_key_uri")
@@ -33,9 +35,8 @@ _private_ca_location_flag: "--privateca-ca-location=\(_private_ca_location)"
 #GloudProject:            "ads-open-measurement"
 #SpannerInstance:         "halo-panelmatch-demo-instance"
 #CloudStorageBucket:      "halo-panel-dev-bucket"
-#ContainerRegistry:       "gcr.io"
 #KingdomPublicApiTarget:  "public.kingdom.dev.halo-cmm.org:8443"
-#ContainerRegistryPrefix: #ContainerRegistry + "/" + #GloudProject
+#ContainerRegistryPrefix: _container_registry + "/" + _image_repo_prefix
 #DefaultResourceConfig: {
 	replicas:              1
 	resourceRequestCpu:    "100m"
@@ -43,7 +44,6 @@ _private_ca_location_flag: "--privateca-ca-location=\(_private_ca_location)"
 	resourceRequestMemory: "256Mi"
 	resourceLimitMemory:   "512Mi"
 }
-#TinkKeyUri: #ContainerRegistry + "/" + #GloudProject
 
 example_daemon_deployment: "example_daemon_deployment": #Deployment & {
 	_name:            "example-panel-exchange-daemon"
