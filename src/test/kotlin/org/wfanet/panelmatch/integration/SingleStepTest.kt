@@ -26,6 +26,7 @@ import org.wfanet.measurement.api.v2alpha.ExchangeWorkflow.Step.StepCase
 import org.wfanet.measurement.api.v2alpha.exchangeWorkflow
 import org.wfanet.measurement.common.getRuntimePath
 import org.wfanet.measurement.common.readByteString
+import org.wfanet.measurement.common.toProtoDate
 
 private val FIXTURES_FILES_PATH: Path =
   checkNotNull(
@@ -68,7 +69,12 @@ class SingleStepTest(
     else mutableMapOf()
   }
 
-  override val providedExchangeWorkflow by lazy { exchangeWorkflow { steps += filteredStep } }
+  override val workflow: ExchangeWorkflow by lazy {
+    exchangeWorkflow {
+      firstExchangeDate = EXCHANGE_DATE.toProtoDate()
+      steps += filteredStep
+    }
+  }
 
   private val dataProviderOutputs by lazy {
     if (filteredStep.stepCase === StepCase.COPY_TO_SHARED_STORAGE_STEP ||
@@ -141,7 +147,7 @@ class SingleStepTest(
     @JvmStatic
     @Parameterized.Parameters(name = "{index}: Test with Step={0}")
     fun stepsToTest(): List<Array<Any>> {
-      return getExchangeWorkflow(exchangeWorkflowResourcePath)
+      return readExchangeWorkflowTextProto(exchangeWorkflowResourcePath)
         .stepsList
         .filter { !nonDeterministicTests.contains(it.stepId) }
         .map { arrayOf(it, exchangeWorkflowResourcePath) }

@@ -77,15 +77,9 @@ private val TERMINAL_EXCHANGE_STATES = setOf(Exchange.State.SUCCEEDED, Exchange.
 private const val API_VERSION = "v2alpha"
 private const val SCHEDULE = "@daily"
 
-// TODO(@yunyeng): Think about the tests that start running around midnight.
-private val EXCHANGE_DATE = LocalDate.now()
-
 /** Base class to run a full, in-process end-to-end test of an ExchangeWorkflow. */
 abstract class AbstractInProcessPanelMatchIntegrationTest {
   protected abstract val exchangeWorkflowResourcePath: String
-  open val providedExchangeWorkflow: ExchangeWorkflow by lazy {
-    getExchangeWorkflow(exchangeWorkflowResourcePath)
-  }
   protected abstract val initialDataProviderInputs: Map<String, ByteString>
   protected abstract val initialModelProviderInputs: Map<String, ByteString>
   open val initialSharedInputs: MutableMap<String, ByteString> = mutableMapOf()
@@ -107,10 +101,7 @@ abstract class AbstractInProcessPanelMatchIntegrationTest {
     }
   }
 
-  private val exchangeWorkflow: ExchangeWorkflow by lazy {
-    providedExchangeWorkflow.copy { firstExchangeDate = EXCHANGE_DATE.toProtoDate() }
-  }
-  private val serializedExchangeWorkflow: ByteString by lazy { exchangeWorkflow.toByteString() }
+  abstract val workflow: ExchangeWorkflow
 
   private val databaseRule = buildKingdomSpannerEmulatorDatabaseRule()
   private val inProcessKingdom by lazy {
@@ -160,7 +151,7 @@ abstract class AbstractInProcessPanelMatchIntegrationTest {
   }
 
   private fun logStepStates(steps: Iterable<ExchangeStep>) {
-    val stepsList = exchangeWorkflow.stepsList
+    val stepsList = workflow.stepsList
     val message = StringBuilder("ExchangeStep states:")
     for ((state, stepsForState) in steps.groupBy { it.state }) {
       val stepsString =
@@ -213,7 +204,7 @@ abstract class AbstractInProcessPanelMatchIntegrationTest {
       provider = owner.key,
       partnerProvider = partner.key,
       exchangeDateKey = exchangeDateKey,
-      serializedExchangeWorkflow = serializedExchangeWorkflow,
+      serializedExchangeWorkflow = workflow.toByteString(),
       privateDirectory = owner.privateStoragePath,
       sharedDirectory = sharedFolder.root.toPath(),
       scope = owner.scope
@@ -261,7 +252,7 @@ abstract class AbstractInProcessPanelMatchIntegrationTest {
       resourceSetup.createResourcesForWorkflow(
         SCHEDULE,
         API_VERSION,
-        exchangeWorkflow,
+        workflow,
         EXCHANGE_DATE.toProtoDate(),
       )
     exchangesClient = makeExchangesServiceClient(keys.modelProviderKey.toName())
@@ -324,7 +315,7 @@ abstract class AbstractInProcessPanelMatchIntegrationTest {
     validateSharedStorageState(specialSharedStorageSelector, exchangeDateKey)
 
     val steps = getSteps()
-    assertThat(steps.size == exchangeWorkflow.stepsCount)
+    assertThat(steps.size == workflow.stepsCount)
 
     for (step in steps) {
       assertWithMessage("Step ${step.stepIndex}")
@@ -336,10 +327,14 @@ abstract class AbstractInProcessPanelMatchIntegrationTest {
   companion object {
     private val logger by loggerFor()
 
-    fun getExchangeWorkflow(exchangeWorkflowResourcePath: String): ExchangeWorkflow {
+    // TODO(@yunyeng): Think about the tests that start running around midnight.
+    val EXCHANGE_DATE: LocalDate = LocalDate.now()
+
+    fun readExchangeWorkflowTextProto(exchangeWorkflowResourcePath: String): ExchangeWorkflow {
       return checkNotNull(this::class.java.getResource(exchangeWorkflowResourcePath))
         .openStream()
         .use { input -> parseTextProto(input.bufferedReader(), exchangeWorkflow {}) }
+        .copy { firstExchangeDate = EXCHANGE_DATE.toProtoDate() }
     }
   }
 }
