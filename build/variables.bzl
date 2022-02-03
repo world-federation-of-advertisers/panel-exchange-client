@@ -28,8 +28,10 @@ IMAGE_REPOSITORY_SETTINGS = struct(
 
 # Settings for deploying tests to Google Cloud.
 TEST_GOOGLE_CLOUD_SETTINGS = struct(
+    secret_name = "$(k8s_secret_name)",
     cloud_storage_project = "$(cloud_storage_project)",
     cloud_storage_bucket = "$(cloud_storage_bucket)",
+    tink_key_uri = "$(tink_key_uri)",
 )
 
 # Config for Panel Exchange Client Example Daemon.
