@@ -13,10 +13,10 @@ cue_export(
         "private_ca_pool_id": "SomeCommonName",
         "private_ca_location": "us-central1",
     },
-    tags = ["manual"],
-    deps = ["//src/main/k8s:base"],
     expression = "listObject",
     filetype = "yaml",
+    tags = ["manual"],
+    deps = ["//src/main/k8s:base"],
 )
 
 ALL_IMAGE_ARCHIVES = [
@@ -32,12 +32,8 @@ filegroup(
 
 filegroup(
     name = "k8s_deployment_config",
-    srcs = [
-        ":example_daemon_from_cue_gke.yaml",
-    ],
-    data = [
-        ":all_archives",
-    ],
+    srcs = [":example_daemon_from_cue_gke.yaml"],
+    data = [":all_archives"],
     tags = ["manual"],
     visibility = [":k8s_deployer"],
 )
