@@ -55,9 +55,9 @@ def panel_exchange_client_repositories():
     # TODO: remove dependencies on wfa_measurement_system
     http_archive(
         name = "wfa_measurement_system",
-        sha256 = "82d5084419bf97877e25c2a6960194083ffe094eb61384ddf69c79f8a44a2652",
-        strip_prefix = "cross-media-measurement-d2ac09f5d68052639a1e1181a80fc6b5fbb65050",
-        url = "https://github.com/world-federation-of-advertisers/cross-media-measurement/archive/d2ac09f5d68052639a1e1181a80fc6b5fbb65050.tar.gz",
+        sha256 = "f0e08a51e044d97f4df394b5a16766cff436eeb03a3973f5c1d3437a3bd5b031",
+        strip_prefix = "cross-media-measurement-8739a8554120476353b93cbe255ad11dcfe79518",
+        url = "https://github.com/world-federation-of-advertisers/cross-media-measurement/archive/8739a8554120476353b93cbe255ad11dcfe79518.tar.gz",
     )
 
     http_archive(
@@ -72,6 +72,13 @@ def panel_exchange_client_repositories():
         sha256 = "34c15134d7293fc38df6ed254b55ee912c7479c396178b7f6499b7e5351aeeec",
         strip_prefix = "rules_swig-653d1bdcec85a9373df69920f35961150cf4b1b6",
         url = "https://github.com/world-federation-of-advertisers/rules_swig/archive/653d1bdcec85a9373df69920f35961150cf4b1b6.tar.gz",
+    )
+
+    http_archive(
+        name = "wfa_rules_cue",
+        url = "https://github.com/world-federation-of-advertisers/rules_cue/archive/v0.1.0.tar.gz",
+        strip_prefix = "rules_cue-0.1.0",
+        sha256 = "62def6a4dc401fd1549e44e2a4e2ae73cf75e6870025329bc78a0150d9a2594a",
     )
 
     http_archive(
