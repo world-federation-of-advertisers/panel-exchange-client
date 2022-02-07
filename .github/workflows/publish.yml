@@ -30,8 +30,23 @@ jobs:
         with:
           java-version: '11'
           distribution: 'adopt'
-      # TODO: Publish to Maven Central Repository
-      - name: Publish packages
+      - name: Publish packages to Maven Central
+        run: |
+          bazelisk run \
+            --config=maven \
+            --define "maven_repo=https://s01.oss.sonatype.org/service/local/staging/deploy/maven2" \
+            --define "maven_user=${{ secrets.OSSRH_TOKEN }}" \
+            --define "maven_password=${{ secrets.OSSRH_TOKEN }}" \
+            //src/main/kotlin/org/wfanet/panelmatch/client/deploy:maven.publish
+          bazelisk run \
+            --config=maven \
+            --define "maven_repo=https://oss.oss.sonatype.org/service/local/staging/deploy/maven2" \
+            --define "maven_user=${{ secrets.OSSRH_TOKEN }}" \
+            --define "maven_password=${{ secrets.OSSRH_TOKEN }}" \
+            //src/main/kotlin/org/wfanet/panelmatch/client/testing:maven_testing.publish
+        env:
+          TAG_NAME: ${{ github.event.release.tag_name }}
+      - name: Publish packages to Github
         run: |
           bazelisk run \
             --config=maven \
