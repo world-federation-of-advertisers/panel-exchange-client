@@ -16,7 +16,9 @@ package org.wfanet.panelmatch.integration
 
 import com.google.common.truth.Truth.assertThat
 import com.google.common.truth.Truth.assertWithMessage
+import com.google.privatemembership.batch.Shared
 import com.google.protobuf.ByteString
+import com.google.protobuf.TypeRegistry
 import io.grpc.StatusException
 import java.nio.file.Path
 import java.time.Clock
@@ -55,6 +57,24 @@ import org.wfanet.panelmatch.common.ExchangeDateKey
 import org.wfanet.panelmatch.common.loggerFor
 import org.wfanet.panelmatch.common.testing.runBlockingTest
 
+/*
+fun Message.Builder.mergeFromTextProto(textProto: Readable, typeRegistry: TypeRegistry) {
+  Parser.newBuilder().setTypeRegistry(typeRegistry).build().merge(textProto, this)
+}
+
+@Suppress("UNCHECKED_CAST") // Safe per Message contract.
+fun <T : Message> parseTextProto(
+  textProto: Readable,
+  messageInstance: T,
+  typeRegistry: TypeRegistry = TypeRegistry.getEmptyTypeRegistry()
+): T {
+  return messageInstance
+    .newBuilderForType()
+    .apply { mergeFromTextProto(textProto, typeRegistry) }
+    .build() as
+    T
+}*/
+
 private val TERMINAL_STEP_STATES = setOf(ExchangeStep.State.SUCCEEDED, ExchangeStep.State.FAILED)
 private val READY_STEP_STATES =
   setOf(
@@ -83,9 +103,10 @@ abstract class AbstractInProcessPanelMatchIntegrationTest {
   )
 
   private val exchangeWorkflow: ExchangeWorkflow by lazy {
+    val typeRegistry = TypeRegistry.newBuilder().add(Shared.Parameters.getDescriptor()).build()
     checkNotNull(this::class.java.getResource(exchangeWorkflowResourcePath))
       .openStream()
-      .use { input -> parseTextProto(input.bufferedReader(), exchangeWorkflow {}) }
+      .use { input -> parseTextProto(input.bufferedReader(), exchangeWorkflow {}, typeRegistry) }
       .copy { firstExchangeDate = EXCHANGE_DATE.toProtoDate() }
   }
   private val serializedExchangeWorkflow: ByteString by lazy { exchangeWorkflow.toByteString() }
