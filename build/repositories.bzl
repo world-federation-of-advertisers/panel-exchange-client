@@ -45,12 +45,11 @@ def panel_exchange_client_repositories():
         url = "https://github.com/world-federation-of-advertisers/common-cpp/archive/v0.5.0.tar.gz",
     )
 
-    # TODO: Update to latest release before merging
     http_archive(
         name = "wfa_common_jvm",
-        sha256 = "1d653e260af4d7822c1df028905e1ea109cb9ac56a5b3d4e265dc23d9de438d2",
-        strip_prefix = "common-jvm-4b3bf395f1634d202a401a4f100419b6e0b64110",
-        url = "https://github.com/world-federation-of-advertisers/common-jvm/archive/4b3bf395f1634d202a401a4f100419b6e0b64110.tar.gz",
+        sha256 = "4ce5b9f86b5441a08c5d3442516fad882a3645144656449488017c4774b8daec",
+        strip_prefix = "common-jvm-0.28.1",
+        url = "https://github.com/world-federation-of-advertisers/common-jvm/archive/v0.28.1.tar.gz",
     )
 
     # TODO: remove dependencies on wfa_measurement_system
