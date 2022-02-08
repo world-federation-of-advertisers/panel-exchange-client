@@ -77,9 +77,9 @@ def panel_exchange_client_repositories():
 
     http_archive(
         name = "wfa_rules_cue",
-        url = "https://github.com/world-federation-of-advertisers/rules_cue/archive/v0.1.0.tar.gz",
-        strip_prefix = "rules_cue-0.1.0",
         sha256 = "62def6a4dc401fd1549e44e2a4e2ae73cf75e6870025329bc78a0150d9a2594a",
+        strip_prefix = "rules_cue-0.1.0",
+        url = "https://github.com/world-federation-of-advertisers/rules_cue/archive/v0.1.0.tar.gz",
     )
 
     http_archive(

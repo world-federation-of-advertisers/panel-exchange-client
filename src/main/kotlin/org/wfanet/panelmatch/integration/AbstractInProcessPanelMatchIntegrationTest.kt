@@ -57,24 +57,6 @@ import org.wfanet.panelmatch.common.ExchangeDateKey
 import org.wfanet.panelmatch.common.loggerFor
 import org.wfanet.panelmatch.common.testing.runBlockingTest
 
-/*
-fun Message.Builder.mergeFromTextProto(textProto: Readable, typeRegistry: TypeRegistry) {
-  Parser.newBuilder().setTypeRegistry(typeRegistry).build().merge(textProto, this)
-}
-
-@Suppress("UNCHECKED_CAST") // Safe per Message contract.
-fun <T : Message> parseTextProto(
-  textProto: Readable,
-  messageInstance: T,
-  typeRegistry: TypeRegistry = TypeRegistry.getEmptyTypeRegistry()
-): T {
-  return messageInstance
-    .newBuilderForType()
-    .apply { mergeFromTextProto(textProto, typeRegistry) }
-    .build() as
-    T
-}*/
-
 private val TERMINAL_STEP_STATES = setOf(ExchangeStep.State.SUCCEEDED, ExchangeStep.State.FAILED)
 private val READY_STEP_STATES =
   setOf(
