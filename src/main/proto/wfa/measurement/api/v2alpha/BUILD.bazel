@@ -16,7 +16,7 @@ kt_jvm_proto_library(
 )
 
 kt_jvm_grpc_proto_library(
-    name = "certificates_service_kt_jvm_grpc_proto",
+    name = "certificates_service",
     srcs = ["@wfa_measurement_proto//src/main/proto/wfa/measurement/api/v2alpha:certificates_service_proto"],
 )
 
@@ -87,12 +87,12 @@ kt_jvm_proto_library(
 )
 
 kt_jvm_grpc_proto_library(
-    name = "exchange_steps_service_kt_jvm_grpc_proto",
+    name = "exchange_steps_service",
     srcs = ["@wfa_measurement_proto//src/main/proto/wfa/measurement/api/v2alpha:exchange_steps_service_proto"],
 )
 
 kt_jvm_grpc_proto_library(
-    name = "exchange_step_attempts_service_kt_jvm_grpc_proto",
+    name = "exchange_step_attempts_service",
     srcs = ["@wfa_measurement_proto//src/main/proto/wfa/measurement/api/v2alpha:exchange_step_attempts_service_proto"],
 )
 
@@ -102,6 +102,6 @@ java_proto_library(
 )
 
 kt_jvm_grpc_proto_library(
-    name = "exchanges_service_kt_jvm_grpc_proto",
+    name = "exchanges_service",
     srcs = ["@wfa_measurement_proto//src/main/proto/wfa/measurement/api/v2alpha:exchanges_service_proto"],
 )
