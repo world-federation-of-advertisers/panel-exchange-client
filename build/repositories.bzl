@@ -47,24 +47,24 @@ def panel_exchange_client_repositories():
 
     http_archive(
         name = "wfa_common_jvm",
-        sha256 = "116ef23bac19cdb3b6310c25ecc2718a843a9a3e6e2da981b3bd4b04ca1c6197",
-        strip_prefix = "common-jvm-0.27.0",
-        url = "https://github.com/world-federation-of-advertisers/common-jvm/archive/v0.27.0.tar.gz",
+        sha256 = "4ce5b9f86b5441a08c5d3442516fad882a3645144656449488017c4774b8daec",
+        strip_prefix = "common-jvm-0.28.1",
+        url = "https://github.com/world-federation-of-advertisers/common-jvm/archive/v0.28.1.tar.gz",
     )
 
     # TODO: remove dependencies on wfa_measurement_system
     http_archive(
         name = "wfa_measurement_system",
-        sha256 = "82d5084419bf97877e25c2a6960194083ffe094eb61384ddf69c79f8a44a2652",
-        strip_prefix = "cross-media-measurement-d2ac09f5d68052639a1e1181a80fc6b5fbb65050",
-        url = "https://github.com/world-federation-of-advertisers/cross-media-measurement/archive/d2ac09f5d68052639a1e1181a80fc6b5fbb65050.tar.gz",
+        sha256 = "b0b0841355c4329da693d3a2bdc4f7a62cf41c952b1ed25d0596c6b3f24ca069",
+        strip_prefix = "cross-media-measurement-42b50e6bd158bc920f2575aaa17db9b7cf83b4a6",
+        url = "https://github.com/world-federation-of-advertisers/cross-media-measurement/archive/42b50e6bd158bc920f2575aaa17db9b7cf83b4a6.tar.gz",
     )
 
     http_archive(
         name = "wfa_measurement_proto",
-        sha256 = "5c5b2d9e6422385c5efda3f5ea422e31900be4fd28052459a0f417c0f959aecf",
-        strip_prefix = "cross-media-measurement-api-0.15.4",
-        url = "https://github.com/world-federation-of-advertisers/cross-media-measurement-api/archive/v0.15.4.tar.gz",
+        sha256 = "6599d5c3ddab99a28065299a6e9cb5e11d42c31e0692a529bf5a32d36d81de15",
+        strip_prefix = "cross-media-measurement-api-0.15.6",
+        url = "https://github.com/world-federation-of-advertisers/cross-media-measurement-api/archive/v0.15.6.tar.gz",
     )
 
     http_archive(
@@ -72,6 +72,13 @@ def panel_exchange_client_repositories():
         sha256 = "34c15134d7293fc38df6ed254b55ee912c7479c396178b7f6499b7e5351aeeec",
         strip_prefix = "rules_swig-653d1bdcec85a9373df69920f35961150cf4b1b6",
         url = "https://github.com/world-federation-of-advertisers/rules_swig/archive/653d1bdcec85a9373df69920f35961150cf4b1b6.tar.gz",
+    )
+
+    http_archive(
+        name = "wfa_rules_cue",
+        sha256 = "62def6a4dc401fd1549e44e2a4e2ae73cf75e6870025329bc78a0150d9a2594a",
+        strip_prefix = "rules_cue-0.1.0",
+        url = "https://github.com/world-federation-of-advertisers/rules_cue/archive/v0.1.0.tar.gz",
     )
 
     http_archive(

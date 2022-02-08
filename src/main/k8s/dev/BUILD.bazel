@@ -1,6 +1,6 @@
 load("//build:variables.bzl", "EXAMPLE_DAEMON_CONFIG", "IMAGE_REPOSITORY_SETTINGS", "TEST_GOOGLE_CLOUD_SETTINGS")
 load("//src/main/docker:images.bzl", "ALL_GKE_IMAGES")
-load("@wfa_measurement_system//build/cue:defs.bzl", "cue_export")
+load("@wfa_rules_cue//cue:defs.bzl", "cue_export")
 
 cue_export(
     name = "example_daemon_from_cue_gke",
