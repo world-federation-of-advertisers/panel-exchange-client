@@ -94,10 +94,7 @@ private class GoogleCloudExampleDaemon : ExampleDaemon() {
 
   /** This can be customized per deployment. */
   private val defaults by lazy {
-    GcpKmsClient.register(
-      Optional.of(tinkFlags.tinkKeyUri),
-      Optional.empty()
-    )
+    GcpKmsClient.register(Optional.of(tinkFlags.tinkKeyUri), Optional.empty())
     DaemonStorageClientDefaults(rootStorageClient, tinkFlags.tinkKeyUri)
   }
 

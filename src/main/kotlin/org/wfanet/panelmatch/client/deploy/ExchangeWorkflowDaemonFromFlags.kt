@@ -66,11 +66,7 @@ abstract class ExchangeWorkflowDaemonFromFlags : ExchangeWorkflowDaemon() {
       )
 
     val channel =
-      buildMutualTlsChannel(
-          flags.exchangeApiTarget,
-          clientCerts,
-          flags.exchangeApiCertHost
-        )
+      buildMutualTlsChannel(flags.exchangeApiTarget, clientCerts, flags.exchangeApiCertHost)
         .withShutdownTimeout(flags.channelShutdownTimeout)
 
     val certificateService = CertificatesGrpcKt.CertificatesCoroutineStub(channel)
