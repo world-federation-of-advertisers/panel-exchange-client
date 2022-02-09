@@ -67,7 +67,7 @@ abstract class ExchangeWorkflowDaemonFromFlags : ExchangeWorkflowDaemon() {
 
     val channel =
       buildMutualTlsChannel(
-          flags.exchangeApiTarget.toString(),
+          flags.exchangeApiTarget,
           clientCerts,
           flags.exchangeApiCertHost
         )

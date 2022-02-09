@@ -81,10 +81,9 @@ class ExchangeWorkflowFlags {
     names = ["--exchange-api-target"],
     description =
       ["Address and port for servers hosting /ExchangeSteps and /ExchangeStepAttempts services"],
-    converter = [InetSocketAddressConverter::class],
     required = true
   )
-  lateinit var exchangeApiTarget: InetSocketAddress
+  lateinit var exchangeApiTarget: String
     private set
 
   @Option(

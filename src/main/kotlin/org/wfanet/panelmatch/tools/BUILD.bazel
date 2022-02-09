@@ -41,9 +41,21 @@ kt_jvm_library(
 )
 
 java_binary(
-    name = "deploy_panelmatch_dev_to_gke",
+    name = "deploy_edp_panelmatch_dev_to_gke",
     args = [
-        "--yaml-file=example_daemon_from_cue_gke.yaml",
+        "--yaml-file=edp_example_daemon_gke.yaml",
+        "--cluster-name=halo-panelmatch-demo-cluster",
+        "--environment=dev",
+    ],
+    main_class = "org.wfanet.panelmatch.tools.DeployToGkeKt",
+    tags = ["manual"],
+    runtime_deps = ["deploy_to_gke_impl"],
+)
+
+java_binary(
+    name = "deploy_mp_panelmatch_dev_to_gke",
+    args = [
+        "--yaml-file=mp_example_daemon_gke.yaml",
         "--cluster-name=halo-panelmatch-demo-cluster",
         "--environment=dev",
     ],
