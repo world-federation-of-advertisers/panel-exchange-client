@@ -21,9 +21,13 @@ import org.wfanet.measurement.gcloud.gcs.GcsFromFlags
 import org.wfanet.measurement.gcloud.gcs.GcsStorageClient
 import org.wfanet.measurement.storage.StorageClient
 import org.wfanet.panelmatch.client.deploy.CertificateAuthorityFlags
+import org.wfanet.panelmatch.client.deploy.DaemonStorageClientDefaults
 import org.wfanet.panelmatch.client.deploy.example.ExampleDaemon
+import org.wfanet.panelmatch.client.storage.StorageDetailsProvider
 import org.wfanet.panelmatch.common.certificates.gcloud.CertificateAuthority
 import org.wfanet.panelmatch.common.certificates.gcloud.PrivateCaClient
+import org.wfanet.panelmatch.common.secrets.MutableSecretMap
+import org.wfanet.panelmatch.common.secrets.SecretMap
 import picocli.CommandLine.Command
 import picocli.CommandLine.Mixin
 import picocli.CommandLine.Option
@@ -62,6 +66,16 @@ private class PrivateCaFlags {
     private set
 }
 
+private class TinkFlags {
+  @Option(names = ["--tink-key-uri"], description = ["KMS URI for Tink"], required = true)
+  lateinit var tinkKeyUri: String
+    private set
+
+  @Option(names = ["--tink-credential-path"], description = ["KMS URI for Tink"], required = true)
+  lateinit var tinkCredentialPath: String
+    private set
+}
+
 @Command(
   name = "GoogleCloudExampleDaemon",
   description = ["Example daemon to execute ExchangeWorkflows on Google Cloud"],
@@ -72,10 +86,40 @@ private class GoogleCloudExampleDaemon : ExampleDaemon() {
   @Mixin private lateinit var gcsFlags: GcsFromFlags.Flags
   @Mixin private lateinit var caFlags: CertificateAuthorityFlags
   @Mixin private lateinit var privateCaFlags: PrivateCaFlags
+  @Mixin private lateinit var tinkFlags: TinkFlags
 
   override val rootStorageClient: StorageClient by lazy {
     GcsStorageClient.fromFlags(GcsFromFlags(gcsFlags))
   }
+
+  /** This can be customized per deployment. */
+  private val defaults by lazy {
+    GcpKmsClient.register(
+      Optional.of(tinkFlags.tinkKeyUri),
+      Optional.empty()
+    )
+    DaemonStorageClientDefaults(rootStorageClient, tinkFlags.tinkKeyUri)
+  }
+
+  /** This can be customized per deployment. */
+  override val validExchangeWorkflows: SecretMap
+    get() = defaults.validExchangeWorkflows
+
+  /** This can be customized per deployment. */
+  override val privateKeys: MutableSecretMap
+    get() = defaults.privateKeys
+
+  /** This can be customized per deployment. */
+  override val rootCertificates: SecretMap
+    get() = defaults.rootCertificates
+
+  /** This can be customized per deployment. */
+  override val privateStorageInfo: StorageDetailsProvider
+    get() = defaults.privateStorageInfo
+
+  /** This can be customized per deployment. */
+  override val sharedStorageInfo: StorageDetailsProvider
+    get() = defaults.sharedStorageInfo
 
   override val certificateAuthority by lazy {
     CertificateAuthority(
@@ -86,12 +130,6 @@ private class GoogleCloudExampleDaemon : ExampleDaemon() {
       privateCaFlags.certificateAuthorityName,
       PrivateCaClient(),
     )
-  }
-
-  companion object {
-    init {
-      GcpKmsClient.register(Optional.empty(), Optional.empty())
-    }
   }
 }
 

@@ -69,6 +69,9 @@ objectSets: [ example_daemon_deployment ]
 		template: {
 			metadata: labels: app: _name + "-app"
 			spec: {
+				nodeSelector: {
+					"iam.gke.io/gke-metadata-server-enabled": "true"
+				}
 				containers: [{
 					name:  _name + "-container"
 					image: _image
