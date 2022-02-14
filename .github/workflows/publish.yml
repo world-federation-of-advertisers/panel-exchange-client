@@ -35,13 +35,13 @@ jobs:
           bazelisk run \
             --config=maven \
             --define "maven_repo=https://oss.sonatype.org/service/local/staging/deploy/maven2" \
-            --define "maven_user=${{ secrets.OSSRH_TOKEN }}" \
+            --define "maven_user=${{ secrets.OSSRH_USERNAME }}" \
             --define "maven_password=${{ secrets.OSSRH_TOKEN }}" \
             //src/main/kotlin/org/wfanet/panelmatch/client/deploy:maven.publish
           bazelisk run \
             --config=maven \
             --define "maven_repo=https://oss.sonatype.org/service/local/staging/deploy/maven2" \
-            --define "maven_user=${{ secrets.OSSRH_TOKEN }}" \
+            --define "maven_user=${{ secrets.OSSRH_USERNAME }}" \
             --define "maven_password=${{ secrets.OSSRH_TOKEN }}" \
             //src/main/kotlin/org/wfanet/panelmatch/client/testing:maven_testing.publish
         env:
