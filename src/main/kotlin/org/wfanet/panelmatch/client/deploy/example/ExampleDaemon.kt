@@ -42,7 +42,7 @@ abstract class ExampleDaemon : ExchangeWorkflowDaemonFromFlags() {
 
   /** This can be customized per deployment. */
   private val defaults by lazy {
-    DaemonStorageClientDefaults(rootStorageClient, tinkKeyUri, ::TinkKeyStorageProvider)
+    DaemonStorageClientDefaults(rootStorageClient, tinkKeyUri, TinkKeyStorageProvider())
   }
 
   /** This can be customized per deployment. */

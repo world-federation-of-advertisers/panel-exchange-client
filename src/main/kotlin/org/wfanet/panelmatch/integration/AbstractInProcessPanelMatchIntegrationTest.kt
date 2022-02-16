@@ -307,14 +307,14 @@ abstract class AbstractInProcessPanelMatchIntegrationTest {
       DaemonStorageClientDefaults(
         modelProviderRootStorageClient,
         tinkKeyUri,
-        ::FakeTinkKeyStorageProvider
+        FakeTinkKeyStorageProvider()
       )
     }
     val dataProviderDefaults by lazy {
       DaemonStorageClientDefaults(
         dataProviderRootStorageClient,
         tinkKeyUri,
-        ::FakeTinkKeyStorageProvider
+        FakeTinkKeyStorageProvider()
       )
     }
 

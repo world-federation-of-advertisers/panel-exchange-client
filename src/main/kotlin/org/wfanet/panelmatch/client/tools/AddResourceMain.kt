@@ -20,7 +20,6 @@ import com.google.protobuf.kotlin.toByteString
 import java.io.File
 import java.nio.file.Files
 import java.time.LocalDate
-import java.time.format.DateTimeFormatter
 import java.util.concurrent.Callable
 import kotlin.system.exitProcess
 import kotlinx.coroutines.runBlocking
@@ -45,9 +44,11 @@ import picocli.CommandLine.HelpCommand
 import picocli.CommandLine.Mixin
 import picocli.CommandLine.Option
 
-private val formatter: DateTimeFormatter = DateTimeFormatter.ofPattern("d/MM/yyyy")
-
-class AddResourceFlags {
+/**
+ * The following class should be customized per deployment. In can be used out-of-the-box if
+ * existing storage systems are mapped to the file system.
+ */
+class CustomStorageFlags {
   @Option(
     names = ["--private-storage-root"],
     description = ["Private storage root directory"],
@@ -62,15 +63,13 @@ class AddResourceFlags {
   )
   private lateinit var tinkKeyUri: String
 
-  /** This should be customized per deployment. */
   private val rootStorageClient: StorageClient by lazy {
     require(privateStorageRoot.exists() && privateStorageRoot.isDirectory)
     FileSystemStorageClient(privateStorageRoot)
   }
 
-  /** This should be customized per deployment. */
   private val defaults by lazy {
-    DaemonStorageClientDefaults(rootStorageClient, tinkKeyUri, ::TinkKeyStorageProvider)
+    DaemonStorageClientDefaults(rootStorageClient, tinkKeyUri, TinkKeyStorageProvider())
   }
 
   val addResource by lazy { AddResource(defaults) }
@@ -81,10 +80,10 @@ class AddResourceFlags {
     mapOf(PlatformCase.FILE to ::FileSystemStorageFactory)
 }
 
-@Command(name = "add_workflow", description = ["Creates a DataProvider"])
+@Command(name = "add_workflow", description = ["Adds an Exchange Workflow"])
 private class AddWorkflowCommand : Callable<Int> {
 
-  @Mixin private lateinit var flags: AddResourceFlags
+  @Mixin private lateinit var flags: CustomStorageFlags
 
   @Option(
     names = ["--recurring-exchange-id"],
@@ -95,19 +94,19 @@ private class AddWorkflowCommand : Callable<Int> {
 
   @Option(
     names = ["--exchange-workflow-file"],
-    description = ["Public API serialized ExchangeWorkflow"],
+    description = ["Public API textproto file of an ExchangeWorkflow"],
     required = true,
   )
   private lateinit var exchangeWorkflowFile: File
 
   @Option(
     names = ["--start-date"],
-    description = ["Date in format of d/MM/YYYY"],
+    description = ["Date in format of YYYY-MM-DD"],
     required = true,
   )
   private lateinit var startDate: String
 
-  private val firstExchange by lazy { LocalDate.parse(startDate, formatter) }
+  private val firstExchange by lazy { LocalDate.parse(startDate) }
 
   override fun call(): Int {
     val typeRegistry = TypeRegistry.newBuilder().add(Shared.Parameters.getDescriptor()).build()
@@ -123,11 +122,11 @@ private class AddWorkflowCommand : Callable<Int> {
 @Command(name = "add_root_certificate", description = ["Adds a Root Certificate for another party"])
 private class AddRootCertificateCommand : Callable<Int> {
 
-  @Mixin private lateinit var flags: AddResourceFlags
+  @Mixin private lateinit var flags: CustomStorageFlags
 
   @Option(
     names = ["--partner-id"],
-    description = ["API resource name of the recurring-exchange-id"],
+    description = ["API resource name of the recurring-exchange-id ResourceKey.toName()"],
     required = true,
   )
   private lateinit var partnerId: String
@@ -150,7 +149,7 @@ private class AddRootCertificateCommand : Callable<Int> {
 @Command(name = "add_private_storage_info", description = ["Adds Private Storage Info"])
 private class AddPrivateStorageInfoCommand : Callable<Int> {
 
-  @Mixin private lateinit var flags: AddResourceFlags
+  @Mixin private lateinit var flags: CustomStorageFlags
 
   @Option(
     names = ["--recurring-exchange-id"],
@@ -161,7 +160,7 @@ private class AddPrivateStorageInfoCommand : Callable<Int> {
 
   @Option(
     names = ["--private-storage-info-file"],
-    description = ["Private Storage Info"],
+    description = ["Private Storage textproto file"],
     required = true,
   )
   private lateinit var privateStorageInfo: File
@@ -179,7 +178,7 @@ private class AddPrivateStorageInfoCommand : Callable<Int> {
 @Command(name = "add_shared_storage_info", description = ["Adds Shared Storage Info"])
 private class AddSharedStorageInfoCommand : Callable<Int> {
 
-  @Mixin private lateinit var flags: AddResourceFlags
+  @Mixin private lateinit var flags: CustomStorageFlags
 
   @Option(
     names = ["--recurring-exchange-id"],
@@ -190,7 +189,7 @@ private class AddSharedStorageInfoCommand : Callable<Int> {
 
   @Option(
     names = ["--shared-storage-info-file"],
-    description = ["Shared Storage Info"],
+    description = ["Shared Storage textproto file"],
     required = true,
   )
   private lateinit var sharedStorageInfo: File
@@ -211,7 +210,7 @@ private class AddSharedStorageInfoCommand : Callable<Int> {
 )
 private class ProvideWorkflowInputCommand : Callable<Int> {
 
-  @Mixin private lateinit var flags: AddResourceFlags
+  @Mixin private lateinit var flags: CustomStorageFlags
 
   @Option(
     names = ["--recurring-exchange-id"],
@@ -222,7 +221,7 @@ private class ProvideWorkflowInputCommand : Callable<Int> {
 
   @Option(
     names = ["--exchange-date"],
-    description = ["Date in format of d/MM/YYYY"],
+    description = ["Date in format of YYYY-MM-DD"],
     required = true,
   )
   private lateinit var exchangeDate: String
@@ -241,7 +240,7 @@ private class ProvideWorkflowInputCommand : Callable<Int> {
     runBlocking {
       flags.addResource.provideWorkflowInput(
         recurringExchangeId,
-        LocalDate.parse(exchangeDate, formatter),
+        LocalDate.parse(exchangeDate),
         flags.privateStorageFactories,
         blobKey,
         blobContents.readBytes().toByteString()
@@ -252,7 +251,7 @@ private class ProvideWorkflowInputCommand : Callable<Int> {
 }
 
 @Command(
-  name = "create_resource",
+  name = "add_resource",
   description = ["Creates resources for panel client"],
   subcommands =
     [
@@ -264,7 +263,7 @@ private class ProvideWorkflowInputCommand : Callable<Int> {
       ProvideWorkflowInputCommand::class,
     ]
 )
-class CreateResource : Callable<Int> {
+class AddResourceMain : Callable<Int> {
   /** Return 0 for success -- all work happens in subcommands. */
   override fun call(): Int = 0
 }
@@ -275,10 +274,10 @@ class CreateResource : Callable<Int> {
  * Use the `help` command to see usage details:
  *
  * ```
- * $ bazel build //src/main/kotlin/org/wfanet/panelmatch/client/tools:create_resource
- * $ bazel-bin/src/main/kotlin/org/wfanet/panelmatch/client/tools/create_resource help
- * Usage: create_resource [COMMAND]
- * Creates resources for each client
+ * $ bazel build //src/main/kotlin/org/wfanet/panelmatch/client/tools:AddResourceMainKt
+ * $ bazel-bin/src/main/kotlin/org/wfanet/panelmatch/client/tools/AddResourceMainKt help
+ * Usage: AddResourceMainKt [COMMAND]
+ * Adds resources for each client
  * Commands:
  *  help                              Displays help information about the specified command
  *  add_workflow                      Adds a workflow
@@ -289,5 +288,5 @@ class CreateResource : Callable<Int> {
  * ```
  */
 fun main(args: Array<String>) {
-  exitProcess(CommandLine(CreateResource()).execute(*args))
+  exitProcess(CommandLine(AddResourceMain()).execute(*args))
 }

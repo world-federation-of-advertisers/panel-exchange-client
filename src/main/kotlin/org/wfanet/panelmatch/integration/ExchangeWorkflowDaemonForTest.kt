@@ -65,7 +65,6 @@ class ExchangeWorkflowDaemonForTest(
   pollingInterval: Duration = Duration.ofMillis(100),
   taskTimeoutDuration: Duration = Duration.ofMinutes(2)
 ) : ExchangeWorkflowDaemon() {
-  private val recurringExchangeId = exchangeDateKey.recurringExchangeId
 
   private val rootStorageClient: StorageClient by lazy {
     FileSystemStorageClient(privateDirectory.toFile())
@@ -75,7 +74,7 @@ class ExchangeWorkflowDaemonForTest(
 
   /** This can be customized per deployment. */
   private val defaults by lazy {
-    DaemonStorageClientDefaults(rootStorageClient, tinkKeyUri, ::FakeTinkKeyStorageProvider)
+    DaemonStorageClientDefaults(rootStorageClient, tinkKeyUri, FakeTinkKeyStorageProvider())
   }
 
   /** This can be customized per deployment. */
