@@ -64,7 +64,7 @@ import org.wfanet.panelmatch.client.storage.StorageDetails
 import org.wfanet.panelmatch.client.storage.StorageDetailsKt
 import org.wfanet.panelmatch.client.storage.StorageDetailsProvider
 import org.wfanet.panelmatch.client.storage.storageDetails
-import org.wfanet.panelmatch.client.tools.AddResource
+import org.wfanet.panelmatch.client.tools.ConfigureResource
 import org.wfanet.panelmatch.common.ExchangeDateKey
 import org.wfanet.panelmatch.common.certificates.testing.TestCertificateManager
 import org.wfanet.panelmatch.common.loggerFor
@@ -318,8 +318,8 @@ abstract class AbstractInProcessPanelMatchIntegrationTest {
       )
     }
 
-    val modelProviderAddResource = AddResource(modelProviderDefaults)
-    val dataProviderAddResource = AddResource(dataProviderDefaults)
+    val modelProviderAddResource = ConfigureResource(modelProviderDefaults)
+    val dataProviderAddResource = ConfigureResource(dataProviderDefaults)
 
     modelProviderAddResource.addWorkflow(workflow, recurringExchangeId)
     dataProviderAddResource.addWorkflow(workflow, recurringExchangeId)

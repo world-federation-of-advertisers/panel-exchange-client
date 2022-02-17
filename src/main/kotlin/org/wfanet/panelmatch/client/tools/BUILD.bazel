@@ -8,7 +8,7 @@ package(default_visibility = [
 
 kt_jvm_library(
     name = "tools",
-    srcs = ["AddResource.kt"],
+    srcs = ["ConfigureResource.kt"],
     deps = [
         "//src/main/kotlin/org/wfanet/panelmatch/client/deploy",
         "//src/main/kotlin/org/wfanet/panelmatch/client/storage",
@@ -20,8 +20,8 @@ kt_jvm_library(
 )
 
 kt_jvm_library(
-    name = "add_resource_impl",
-    srcs = ["AddResourceMain.kt"],
+    name = "add_resource",
+    srcs = ["AddResource.kt"],
     deps = [
         "//src/main/kotlin/org/wfanet/panelmatch/client/deploy",
         "//src/main/kotlin/org/wfanet/panelmatch/client/storage",
@@ -34,8 +34,8 @@ kt_jvm_library(
 )
 
 java_binary(
-    name = "AddResourceMainKt",
-    main_class = "org.wfanet.panelmatch.client.tools.AddResourceMainKt",
+    name = "AddResource",
+    main_class = "org.wfanet.panelmatch.client.tools.AddResourceKt",
     tags = ["manual"],
-    runtime_deps = [":add_resource_impl"],
+    runtime_deps = [":add_resource"],
 )
