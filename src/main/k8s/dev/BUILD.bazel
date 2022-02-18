@@ -6,13 +6,15 @@ cue_export(
     name = "edp_example_daemon_gke",
     srcs = ["edp_example_daemon_gke.cue"],
     cue_tags = {
-        "party_type": "DATA_PROVIDER",
         "daemon_id": EXAMPLE_DAEMON_CONFIG.daemon_id,
-        "container_registry": IMAGE_REPOSITORY_SETTINGS.container_registry,
+        "recurring_exchange_id": EXAMPLE_DAEMON_CONFIG.recurring_exchange_id,
+        "cloud_storage_bucket": TEST_GOOGLE_CLOUD_SETTINGS.cloud_storage_bucket,
+        "container_registry": "gcr.io",
         "image_repo_prefix": IMAGE_REPOSITORY_SETTINGS.repository_prefix,
         "secret_name": TEST_GOOGLE_CLOUD_SETTINGS.secret_name,
         "tink_key_uri": TEST_GOOGLE_CLOUD_SETTINGS.tink_key_uri,
-        "private_ca_name": "20220126-brx-hab",
+        "cloud_credentials_path": TEST_GOOGLE_CLOUD_SETTINGS.cloud_credentials_path,
+        "private_ca_name": "20220217-zm6-cbh",
         "private_ca_pool_id": "SomeCommonName",
         "private_ca_location": "us-central1",
     },
@@ -26,13 +28,15 @@ cue_export(
     name = "mp_example_daemon_gke",
     srcs = ["mp_example_daemon_gke.cue"],
     cue_tags = {
-        "party_type": "MODEL_PROVIDER",
         "daemon_id": EXAMPLE_DAEMON_CONFIG.daemon_id,
-        "container_registry": IMAGE_REPOSITORY_SETTINGS.container_registry,
+        "recurring_exchange_id": EXAMPLE_DAEMON_CONFIG.recurring_exchange_id,
+        "cloud_storage_bucket": TEST_GOOGLE_CLOUD_SETTINGS.cloud_storage_bucket,
+        "container_registry": "gcr.io",
         "image_repo_prefix": IMAGE_REPOSITORY_SETTINGS.repository_prefix,
         "secret_name": TEST_GOOGLE_CLOUD_SETTINGS.secret_name,
         "tink_key_uri": TEST_GOOGLE_CLOUD_SETTINGS.tink_key_uri,
-        "private_ca_name": "20220126-brx-hab",
+        "cloud_credentials_path": TEST_GOOGLE_CLOUD_SETTINGS.cloud_credentials_path,
+        "private_ca_name": "20220217-zm6-cbh",
         "private_ca_pool_id": "SomeCommonName",
         "private_ca_location": "us-central1",
     },
@@ -54,8 +58,16 @@ filegroup(
 )
 
 filegroup(
-    name = "k8s_deployment_config",
-    srcs = [":edp_example_daemon_gke.yaml"],
+    name = "edp_deployment_config",
+    srcs = [":edp_example_daemon_gke"],
+    data = [":all_archives"],
+    tags = ["manual"],
+    visibility = [":k8s_deployer"],
+)
+
+filegroup(
+    name = "mp_deployment_config",
+    srcs = [":mp_example_daemon_gke"],
     data = [":all_archives"],
     tags = ["manual"],
     visibility = [":k8s_deployer"],

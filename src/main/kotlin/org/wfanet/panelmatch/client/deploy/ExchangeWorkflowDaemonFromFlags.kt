@@ -114,19 +114,12 @@ abstract class ExchangeWorkflowDaemonFromFlags : ExchangeWorkflowDaemon() {
         privateKeyFile = flags.tlsFlags.privateKeyFile,
         trustedCertCollectionFile = flags.tlsFlags.certCollectionFile
       )
-
     val channel =
-      buildMutualTlsChannel(
-          flags.exchangeApiTarget.toString(),
-          clientCerts,
-          flags.exchangeApiCertHost
-        )
+      buildMutualTlsChannel(flags.exchangeApiTarget, clientCerts, flags.exchangeApiCertHost)
         .withShutdownTimeout(flags.channelShutdownTimeout)
 
     val exchangeStepsClient = ExchangeStepsCoroutineStub(channel)
-
     val exchangeStepAttemptsClient = ExchangeStepAttemptsCoroutineStub(channel)
-
     GrpcApiClient(identity, exchangeStepsClient, exchangeStepAttemptsClient, Clock.systemUTC())
   }
 

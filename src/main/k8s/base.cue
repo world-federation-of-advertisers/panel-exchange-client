@@ -26,7 +26,7 @@ listObject: {
 
 objects: [ for objectSet in objectSets for object in objectSet {object}]
 
-objectSets: [ example_daemon_deployment ]
+objectSets: [ example_daemon_deployment]
 
 #AppName: "panel-exchange"
 
@@ -45,17 +45,18 @@ objectSets: [ example_daemon_deployment ]
 }
 
 #Deployment: {
-	_name:                  string
-	_image:                 string
-	_args:                  [...string]
-	_ports:                 [{containerPort: 8443}] | *[]
-	_restartPolicy:         string | *"Always"
-	_imagePullPolicy:       string | *"Never"
-	_jvmFlags:              string | *""
-	_resourceConfig:        #ResourceConfig
-	_secretName:            string | *null
-	apiVersion:             "apps/v1"
-	kind:                   "Deployment"
+	_name:  string
+	_image: string
+	_args: [...string]
+	_ports:           [{containerPort: 8443}] | *[]
+	_restartPolicy:   string | *"Always"
+	_imagePullPolicy: string | *"Never"
+	_jvmFlags:        string | *""
+	_credentialsPath: string | *""
+	_resourceConfig:  #ResourceConfig
+	_secretName:      string | *null
+	apiVersion:       "apps/v1"
+	kind:             "Deployment"
 	metadata: {
 		name: _name + "-deployment"
 		labels: {
@@ -69,9 +70,6 @@ objectSets: [ example_daemon_deployment ]
 		template: {
 			metadata: labels: app: _name + "-app"
 			spec: {
-				nodeSelector: {
-					"iam.gke.io/gke-metadata-server-enabled": "true"
-				}
 				containers: [{
 					name:  _name + "-container"
 					image: _image
@@ -89,23 +87,27 @@ objectSets: [ example_daemon_deployment ]
 					env: [{
 						name:  "JAVA_TOOL_OPTIONS"
 						value: _jvmFlags
-					}]
+					},
+						{
+							name:  "GOOGLE_APPLICATION_CREDENTIALS"
+							value: _credentialsPath
+						}]
 					if _secretName != null {
-					volumeMounts: [{
-						name:      _name + "-files"
-						mountPath: "/var/run/secrets/files"
-						readOnly:  true
-					}]
-				}
-				}]
-				if _secretName != null {
-				volumes: [{
-					name: _name + "-files"
-					secret: {
-						secretName: _secretName
+						volumeMounts: [{
+							name:      _name + "-files"
+							mountPath: "/var/run/secrets/files"
+							readOnly:  true
+						}]
 					}
 				}]
-			}
+				if _secretName != null {
+					volumes: [{
+						name: _name + "-files"
+						secret: {
+							secretName: _secretName
+						}
+					}]
+				}
 				restartPolicy: _restartPolicy
 			}
 		}

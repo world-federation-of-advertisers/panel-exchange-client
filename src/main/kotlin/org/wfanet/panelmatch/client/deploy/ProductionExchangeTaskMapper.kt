@@ -202,9 +202,9 @@ open class ProductionExchangeTaskMapper(
     require(step.inputLabelsMap.isEmpty())
     val blobKey = step.outputLabelsMap.values.single()
     return InputTask(
-      storage = privateStorageSelector.getStorageClient(exchangeDateKey),
-      throttler = inputTaskThrottler,
       blobKey = blobKey,
+      throttler = inputTaskThrottler,
+      storage = privateStorageSelector.getStorageClient(exchangeDateKey),
     )
   }
 

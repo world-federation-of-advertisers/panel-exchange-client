@@ -88,12 +88,21 @@ private class GoogleCloudExampleDaemon : ExampleDaemon() {
   @Mixin private lateinit var privateCaFlags: PrivateCaFlags
   @Mixin private lateinit var tinkFlags: TinkFlags
 
+  @Option(
+    names = ["--recurring-exchange-id"],
+    description = ["Id of the recurring exchange"],
+    required = true
+  )
+  lateinit var recurringExchangeId: String
+    private set
+
   override val rootStorageClient: StorageClient by lazy {
     GcsStorageClient.fromFlags(GcsFromFlags(gcsFlags))
   }
 
   /** This can be customized per deployment. */
   private val defaults by lazy {
+    // Register GcpKmsClient before setting storage folders. Set GOOGLE_APPLICATION_CREDENTIALS.
     GcpKmsClient.register(Optional.of(tinkFlags.tinkKeyUri), Optional.empty())
     DaemonStorageClientDefaults(rootStorageClient, tinkFlags.tinkKeyUri)
   }

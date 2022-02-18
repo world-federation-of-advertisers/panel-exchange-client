@@ -29,9 +29,6 @@ kt_jvm_library(
 kt_jvm_library(
     name = "deploy_to_gke_impl",
     srcs = ["DeployToGke.kt"],
-    data = [
-        "//src/main/k8s/dev:k8s_deployment_config",
-    ],
     tags = ["manual"],
     deps = [
         ":run_subprocess",
@@ -44,8 +41,10 @@ java_binary(
     name = "deploy_edp_panelmatch_dev_to_gke",
     args = [
         "--yaml-file=edp_example_daemon_gke.yaml",
-        "--cluster-name=halo-panelmatch-demo-cluster",
         "--environment=dev",
+    ],
+    data = [
+        "//src/main/k8s/dev:edp_deployment_config",
     ],
     main_class = "org.wfanet.panelmatch.tools.DeployToGkeKt",
     tags = ["manual"],
@@ -56,8 +55,10 @@ java_binary(
     name = "deploy_mp_panelmatch_dev_to_gke",
     args = [
         "--yaml-file=mp_example_daemon_gke.yaml",
-        "--cluster-name=halo-panelmatch-demo-cluster",
         "--environment=dev",
+    ],
+    data = [
+        "//src/main/k8s/dev:mp_deployment_config",
     ],
     main_class = "org.wfanet.panelmatch.tools.DeployToGkeKt",
     tags = ["manual"],
