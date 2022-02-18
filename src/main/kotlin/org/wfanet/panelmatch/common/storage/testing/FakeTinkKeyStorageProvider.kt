@@ -20,6 +20,7 @@ import org.wfanet.measurement.common.crypto.tink.TinkPrivateKeyHandle
 import org.wfanet.measurement.storage.StorageClient
 import org.wfanet.measurement.storage.Store
 
+// TODO: Get rid of this class and use a fake KMS Client with its own Key URI prefix
 class FakeTinkKeyStorageProvider : KeyStorageProvider<TinkPrivateKeyHandle> {
   override fun makeKmsStorageClient(storageClient: StorageClient, keyUri: String): StorageClient {
     return storageClient
