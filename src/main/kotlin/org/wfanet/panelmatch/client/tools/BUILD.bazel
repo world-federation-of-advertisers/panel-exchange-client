@@ -20,7 +20,7 @@ kt_jvm_library(
 )
 
 kt_jvm_library(
-    name = "add_resource_impl",
+    name = "add_resource",
     srcs = ["AddResource.kt"],
     deps = [
         "//src/main/kotlin/org/wfanet/panelmatch/client/deploy",
@@ -37,5 +37,5 @@ java_binary(
     name = "AddResource",
     main_class = "org.wfanet.panelmatch.client.tools.AddResourceKt",
     tags = ["manual"],
-    runtime_deps = [":add_resource_impl"],
+    runtime_deps = [":add_resource"],
 )
