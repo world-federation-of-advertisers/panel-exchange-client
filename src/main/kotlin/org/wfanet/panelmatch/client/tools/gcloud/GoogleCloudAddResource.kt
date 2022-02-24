@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package org.wfanet.panelmatch.client.tools
+package org.wfanet.panelmatch.client.tools.gcloud
 
 import com.google.privatemembership.batch.Shared
 import com.google.protobuf.TypeRegistry
@@ -26,61 +26,19 @@ import kotlinx.coroutines.runBlocking
 import org.wfanet.measurement.api.v2alpha.copy
 import org.wfanet.measurement.api.v2alpha.exchangeWorkflow
 import org.wfanet.measurement.common.crypto.readCertificate
-import org.wfanet.measurement.common.crypto.tink.TinkKeyStorageProvider
 import org.wfanet.measurement.common.parseTextProto
 import org.wfanet.measurement.common.toProtoDate
-import org.wfanet.measurement.storage.StorageClient
-import org.wfanet.measurement.storage.filesystem.FileSystemStorageClient
-import org.wfanet.panelmatch.client.deploy.DaemonStorageClientDefaults
-import org.wfanet.panelmatch.client.storage.FileSystemStorageFactory
-import org.wfanet.panelmatch.client.storage.StorageDetails
-import org.wfanet.panelmatch.client.storage.StorageDetails.PlatformCase
 import org.wfanet.panelmatch.client.storage.storageDetails
-import org.wfanet.panelmatch.common.ExchangeDateKey
-import org.wfanet.panelmatch.common.storage.StorageFactory
 import picocli.CommandLine
 import picocli.CommandLine.Command
 import picocli.CommandLine.HelpCommand
 import picocli.CommandLine.Mixin
 import picocli.CommandLine.Option
 
-// TODO: Add flags to support other storage clients
-class CustomStorageFlags {
-  @Option(
-    names = ["--private-storage-root"],
-    description = ["Private storage root directory"],
-    required = true
-  )
-  private lateinit var privateStorageRoot: File
-
-  @Option(
-    names = ["--tink-key-uri"],
-    description = ["URI for tink"],
-    required = true,
-  )
-  private lateinit var tinkKeyUri: String
-
-  private val rootStorageClient: StorageClient by lazy {
-    require(privateStorageRoot.exists() && privateStorageRoot.isDirectory)
-    FileSystemStorageClient(privateStorageRoot)
-  }
-
-  private val defaults by lazy {
-    DaemonStorageClientDefaults(rootStorageClient, tinkKeyUri, TinkKeyStorageProvider())
-  }
-
-  val addResource by lazy { ConfigureResource(defaults) }
-
-  /** This should be customized per deployment. */
-  val privateStorageFactories:
-    Map<PlatformCase, (StorageDetails, ExchangeDateKey) -> StorageFactory> =
-    mapOf(PlatformCase.FILE to ::FileSystemStorageFactory)
-}
-
 @Command(name = "add_workflow", description = ["Adds an Exchange Workflow"])
 private class AddWorkflowCommand : Callable<Int> {
 
-  @Mixin private lateinit var flags: CustomStorageFlags
+  @Mixin private lateinit var flags: GoogleCloudStorageFlags
 
   @Option(
     names = ["--recurring-exchange-id"],
@@ -119,7 +77,7 @@ private class AddWorkflowCommand : Callable<Int> {
 @Command(name = "add_root_certificate", description = ["Adds a Root Certificate for another party"])
 private class AddRootCertificateCommand : Callable<Int> {
 
-  @Mixin private lateinit var flags: CustomStorageFlags
+  @Mixin private lateinit var flags: GoogleCloudStorageFlags
 
   @Option(
     names = ["--partner-resource-name"],
@@ -146,7 +104,7 @@ private class AddRootCertificateCommand : Callable<Int> {
 @Command(name = "add_private_storage_info", description = ["Adds Private Storage Info"])
 private class AddPrivateStorageInfoCommand : Callable<Int> {
 
-  @Mixin private lateinit var flags: CustomStorageFlags
+  @Mixin private lateinit var flags: GoogleCloudStorageFlags
 
   @Option(
     names = ["--recurring-exchange-id"],
@@ -175,7 +133,7 @@ private class AddPrivateStorageInfoCommand : Callable<Int> {
 @Command(name = "add_shared_storage_info", description = ["Adds Shared Storage Info"])
 private class AddSharedStorageInfoCommand : Callable<Int> {
 
-  @Mixin private lateinit var flags: CustomStorageFlags
+  @Mixin private lateinit var flags: GoogleCloudStorageFlags
 
   @Option(
     names = ["--recurring-exchange-id"],
@@ -207,7 +165,7 @@ private class AddSharedStorageInfoCommand : Callable<Int> {
 )
 private class ProvideWorkflowInputCommand : Callable<Int> {
 
-  @Mixin private lateinit var flags: CustomStorageFlags
+  @Mixin private lateinit var flags: GoogleCloudStorageFlags
 
   @Option(
     names = ["--recurring-exchange-id"],
@@ -260,20 +218,20 @@ private class ProvideWorkflowInputCommand : Callable<Int> {
       ProvideWorkflowInputCommand::class,
     ]
 )
-class AddResource : Callable<Int> {
+class GoogleCloudAddResource : Callable<Int> {
   /** Return 0 for success -- all work happens in subcommands. */
   override fun call(): Int = 0
 }
 
 /**
- * Creates resources for each client
+ * Creates resources for each client in Google Cloud
  *
  * Use the `help` command to see usage details:
  *
  * ```
- * $ bazel build //src/main/kotlin/org/wfanet/panelmatch/client/tools:AddResource
- * $ bazel-bin/src/main/kotlin/org/wfanet/panelmatch/client/tools/AddResource help
- * Usage: AddResource [COMMAND]
+ * $ bazel build //src/main/kotlin/org/wfanet/panelmatch/client/tools/gcloud:GoogleCloudAddResource
+ * $ bazel-bin/src/main/kotlin/org/wfanet/panelmatch/client/tools/gcloud/GoogleCloudAddResource help
+ * Usage: GoogleCloudAddResource [COMMAND]
  * Adds resources for each client
  * Commands:
  *  help                              Displays help information about the specified command
@@ -285,5 +243,5 @@ class AddResource : Callable<Int> {
  * ```
  */
 fun main(args: Array<String>) {
-  exitProcess(CommandLine(AddResource()).execute(*args))
+  exitProcess(CommandLine(GoogleCloudAddResource()).execute(*args))
 }
