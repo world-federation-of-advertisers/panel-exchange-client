@@ -71,10 +71,6 @@ private class TinkFlags {
   @Option(names = ["--tink-key-uri"], description = ["KMS URI for Tink"], required = true)
   lateinit var tinkKeyUri: String
     private set
-
-  @Option(names = ["--tink-credential-path"], description = ["KMS URI for Tink"], required = true)
-  lateinit var tinkCredentialPath: String
-    private set
 }
 
 @Command(
