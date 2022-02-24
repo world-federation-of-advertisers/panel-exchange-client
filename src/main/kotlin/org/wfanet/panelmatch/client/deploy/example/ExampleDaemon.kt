@@ -16,7 +16,6 @@ package org.wfanet.panelmatch.client.deploy.example
 
 import org.apache.beam.sdk.options.PipelineOptions
 import org.apache.beam.sdk.options.PipelineOptionsFactory
-import org.wfanet.measurement.common.crypto.tink.TinkKeyStorageProvider
 import org.wfanet.measurement.storage.StorageClient
 import org.wfanet.panelmatch.client.deploy.BlobSizeFlags
 import org.wfanet.panelmatch.client.deploy.ExchangeWorkflowDaemonFromFlags

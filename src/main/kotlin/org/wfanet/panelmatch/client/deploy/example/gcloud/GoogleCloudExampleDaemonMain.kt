@@ -17,6 +17,7 @@ package org.wfanet.panelmatch.client.deploy.example.gcloud
 import com.google.crypto.tink.integration.gcpkms.GcpKmsClient
 import java.util.Optional
 import org.wfanet.measurement.common.commandLineMain
+import org.wfanet.measurement.common.crypto.tink.TinkKeyStorageProvider
 import org.wfanet.measurement.gcloud.gcs.GcsFromFlags
 import org.wfanet.measurement.gcloud.gcs.GcsStorageClient
 import org.wfanet.measurement.storage.StorageClient
@@ -104,7 +105,7 @@ private class GoogleCloudExampleDaemon : ExampleDaemon() {
   private val defaults by lazy {
     // Register GcpKmsClient before setting storage folders. Set GOOGLE_APPLICATION_CREDENTIALS.
     GcpKmsClient.register(Optional.of(tinkFlags.tinkKeyUri), Optional.empty())
-    DaemonStorageClientDefaults(rootStorageClient, tinkFlags.tinkKeyUri)
+    DaemonStorageClientDefaults(rootStorageClient, tinkFlags.tinkKeyUri, TinkKeyStorageProvider())
   }
 
   /** This can be customized per deployment. */

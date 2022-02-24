@@ -16,6 +16,7 @@ package org.wfanet.panelmatch.client.deploy.example.filesystem
 
 import java.io.File
 import org.wfanet.measurement.common.commandLineMain
+import org.wfanet.measurement.common.crypto.tink.TinkKeyStorageProvider
 import org.wfanet.measurement.storage.StorageClient
 import org.wfanet.measurement.storage.filesystem.FileSystemStorageClient
 import org.wfanet.panelmatch.client.deploy.DaemonStorageClientDefaults
@@ -46,7 +47,9 @@ private class FileSystemExampleDaemon : ExampleDaemon() {
     get() = TODO("Not yet implemented")
 
   /** This can be customized per deployment. */
-  private val defaults by lazy { DaemonStorageClientDefaults(rootStorageClient, tinkKeyUri) }
+  private val defaults by lazy {
+    DaemonStorageClientDefaults(rootStorageClient, tinkKeyUri, TinkKeyStorageProvider())
+  }
 
   /** This can be customized per deployment. */
   override val validExchangeWorkflows: SecretMap
