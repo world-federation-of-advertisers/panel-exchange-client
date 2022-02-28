@@ -49,30 +49,21 @@ _TEST_RUNTIME_DEPS = [
     artifact("org.jetbrains.kotlin:kotlin-test", "maven_export"),
 ]
 
-_BEAM_VERSION = "2.34.0"
+_BEAM_VERSION = "2.36.0"
+_BEAM_GRPC_VERSION = "1.44.0"
+
+# Specific versions to avoid Beam dependency conflicts.
+_BEAM_DEP_ARTIFACTS = {
+    "io.grpc:grpc-api": _BEAM_GRPC_VERSION,
+    "io.grpc:grpc-core": _BEAM_GRPC_VERSION,
+    "io.grpc:grpc-netty": _BEAM_GRPC_VERSION,
+    "io.grpc:grpc-netty-shaded": _BEAM_GRPC_VERSION,
+}
 
 # TODO: this list can likely be minimized
-_ARTIFACTS = artifacts.dict_to_list({
-    "com.google.api:api-common": "2.1.1",
-    # Without this, we get java.lang.NoClassDefFoundError: com/google/api/gax/tracing/NoopApiTracer
-    "com.google.api:gax": "2.7.0",
-    "com.google.api:gax-grpc": "2.7.0",
-    "com.google.api.grpc:proto-google-cloud-security-private-ca-v1": "2.2.0",
-    "com.google.cloud:google-cloud-bigquery": "2.4.1",
-    "com.google.cloud:google-cloud-bigquerystorage": "2.6.3",
-    "com.google.cloud:google-cloud-core": "2.3.3",
-    "com.google.cloud:google-cloud-nio": "0.123.10",
-    "com.google.cloud:google-cloud-security-private-ca": "2.2.0",
-    "com.google.cloud:google-cloud-storage": "2.2.1",
-    "com.google.code.gson:gson": "2.8.9",
-    "com.google.crypto.tink:tink": "1.6.0",
-    "com.google.crypto.tink:tink-gcpkms": "1.6.0",
-    "com.google.guava:guava": "31.0.1-jre",
-    "com.google.http-client:google-http-client": "1.40.1",
-    "io.grpc:grpc-api": "1.42.1",
-    "io.grpc:grpc-core": "1.42.1",
-    "io.grpc:grpc-netty": "1.42.1",
-    "io.grpc:grpc-netty-shaded": "1.42.1",
+_ARTIFACTS = {
+    "com.google.cloud:google-cloud-security-private-ca": "2.2.3",
+    "com.google.cloud:google-cloud-storage": "2.4.2",
     "joda-time:joda-time": "2.10.13",
     "org.apache.beam:beam-runners-direct-java": _BEAM_VERSION,
     "org.apache.beam:beam-runners-google-cloud-dataflow-java": _BEAM_VERSION,
@@ -84,14 +75,24 @@ _ARTIFACTS = artifacts.dict_to_list({
     "org.hamcrest:hamcrest": "2.2",
     "org.slf4j:slf4j-simple": "1.7.32",
     "software.amazon.awssdk:utils": "2.17.100",
-})
+}
 
 _EXCLUDED_ARTIFACTS = [
     "org.apache.beam:beam-sdks-java-io-kafka",
 ]
 
 def panel_exchange_client_maven_artifacts():
-    return common_jvm_maven_artifacts() + _ARTIFACTS
+    common_jvm_artifacts = artifacts.list_to_dict(
+        # TODO(@SanjayVas): Fix common_jvm_maven_artifacts to return a dict like
+        # its documentation says.
+        common_jvm_maven_artifacts(),
+    )
+
+    artifacts_dict = {}
+    artifacts_dict.update(common_jvm_artifacts)
+    artifacts_dict.update(_ARTIFACTS)
+    artifacts_dict.update(_BEAM_DEP_ARTIFACTS)
+    return artifacts_dict
 
 def panel_exchange_client_maven_override_targets():
     return COMMON_JVM_MAVEN_OVERRIDE_TARGETS
