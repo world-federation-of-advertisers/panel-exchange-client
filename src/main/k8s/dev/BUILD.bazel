@@ -1,24 +1,43 @@
-load("//build:variables.bzl", "EXAMPLE_DAEMON_CONFIG", "IMAGE_REPOSITORY_SETTINGS", "TEST_GOOGLE_CLOUD_SETTINGS")
+load("//build:variables.bzl", "EXAMPLE_DAEMON_CONFIG")
 load("//src/main/docker:images.bzl", "ALL_GKE_IMAGES")
-load("@wfa_rules_cue//cue:defs.bzl", "cue_export")
+load("@wfa_rules_cue//cue:defs.bzl", "cue_export", "cue_library")
+
+cue_library(
+    name = "base_gke",
+    srcs = ["base_gke.cue"],
+    deps = ["//src/main/k8s:base"],
+)
+
+cue_library(
+    name = "example_daemon_gke",
+    srcs = ["example_daemon_gke.cue"],
+    deps = [":base_gke"],
+)
 
 cue_export(
-    name = "example_daemon_from_cue_gke",
-    srcs = ["example_daemon_gke.cue"],
+    name = "example_edp_daemon_gke",
+    srcs = ["example_edp_daemon_gke.cue"],
     cue_tags = {
-        "container_registry": IMAGE_REPOSITORY_SETTINGS.container_registry,
-        "image_repo_prefix": IMAGE_REPOSITORY_SETTINGS.repository_prefix,
-        "secret_name": TEST_GOOGLE_CLOUD_SETTINGS.secret_name,
-        "party_type": EXAMPLE_DAEMON_CONFIG.daemon_party_type,
-        "tink_key_uri": TEST_GOOGLE_CLOUD_SETTINGS.tink_key_uri,
-        "private_ca_name": "20220126-brx-hab",
-        "private_ca_pool_id": "SomeCommonName",
-        "private_ca_location": "us-central1",
+        "party_name": EXAMPLE_DAEMON_CONFIG.edp_name,
+        "secret_name": EXAMPLE_DAEMON_CONFIG.edp_secret_name,
     },
     expression = "listObject",
     filetype = "yaml",
     tags = ["manual"],
-    deps = ["//src/main/k8s:base"],
+    deps = [":example_daemon_gke"],
+)
+
+cue_export(
+    name = "example_mp_daemon_gke",
+    srcs = ["example_mp_daemon_gke.cue"],
+    cue_tags = {
+        "party_name": EXAMPLE_DAEMON_CONFIG.mp_name,
+        "secret_name": EXAMPLE_DAEMON_CONFIG.mp_secret_name,
+    },
+    expression = "listObject",
+    filetype = "yaml",
+    tags = ["manual"],
+    deps = [":example_daemon_gke"],
 )
 
 ALL_IMAGE_ARCHIVES = [

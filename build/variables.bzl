@@ -31,11 +31,12 @@ TEST_GOOGLE_CLOUD_SETTINGS = struct(
     secret_name = "$(k8s_secret_name)",
     cloud_storage_project = "$(cloud_storage_project)",
     cloud_storage_bucket = "$(cloud_storage_bucket)",
-    tink_key_uri = "$(tink_key_uri)",
 )
 
 # Config for Panel Exchange Client Example Daemon.
 EXAMPLE_DAEMON_CONFIG = struct(
-    daemon_id = "$(daemon_id)",
-    daemon_party_type = "$(daemon_party_type)",
+    edp_name = "$(edp_name)",
+    edp_secret_name = "$(edp_k8s_secret_name)",
+    mp_name = "$(mp_name)",
+    mp_secret_name = "$(mp_k8s_secret_name)",
 )

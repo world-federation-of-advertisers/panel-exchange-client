@@ -1,4 +1,4 @@
-// Copyright 2022 The Cross-Media Measurement Authors
+// Copyright 2020 The Cross-Media Measurement Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,9 +26,9 @@ listObject: {
 
 objects: [ for objectSet in objectSets for object in objectSet {object}]
 
-objectSets: [ example_daemon_deployment ]
+#AppName: "halo-panel-exchange"
 
-#AppName: "panel-exchange"
+#GrpcServicePort: 8443
 
 #Target: {
 	name:   string
@@ -36,75 +36,214 @@ objectSets: [ example_daemon_deployment ]
 	target: "$(" + _caps + "_SERVICE_HOST):$(" + _caps + "_SERVICE_PORT)"
 }
 
-#ResourceConfig: {
-	replicas:              int
-	resourceRequestCpu:    string
-	resourceLimitCpu:      string
-	resourceRequestMemory: string
-	resourceLimitMemory:   string
+#SecretMount: {
+	name:       string
+	secretName: string
+	mountPath:  string | *"/var/run/secrets/files"
 }
 
-#Deployment: {
-	_name:                  string
-	_image:                 string
-	_args:                  [...string]
-	_ports:                 [{containerPort: 8443}] | *[]
-	_restartPolicy:         string | *"Always"
-	_imagePullPolicy:       string | *"Never"
-	_jvmFlags:              string | *""
-	_resourceConfig:        #ResourceConfig
-	_secretName:            string | *null
-	apiVersion:             "apps/v1"
-	kind:                   "Deployment"
+#ConfigMapMount: {
+	name:          string
+	configMapName: string | *name
+	mountPath:     string | *"/etc/\(#AppName)/\(name)"
+}
+
+#ResourceQuantity: {
+	cpu?:    string
+	memory?: string
+}
+
+#ResourceRequirements: {
+	limits?:   #ResourceQuantity
+	requests?: #ResourceQuantity
+}
+
+#Container: {
+	_secretMounts: [...#SecretMount]
+	_configMapMounts: [...#ConfigMapMount]
+
+	image:           string
+	imagePullPolicy: "IfNotPresent" | "Never" | "Always"
+	args: [...string]
+	volumeMounts: [ for mount in _configMapMounts + _secretMounts {
+		name:      mount.name
+		mountPath: mount.mountPath
+		readOnly:  true
+	}]
+	resources?: #ResourceRequirements
+	readinessProbe?: {
+		exec: command: [...string]
+		periodSeconds: uint32
+	}
+	...
+}
+
+#PodSpec: PodSpec={
+	_secretMounts: [...#SecretMount]
+	_configMapMounts: [...#ConfigMapMount]
+	_container: #Container & {
+		_secretMounts:    PodSpec._secretMounts
+		_configMapMounts: PodSpec._configMapMounts
+	}
+
+	restartPolicy: "Always" | "Never" | "OnFailure"
+	containers: [_container]
+	volumes: [ for secretVolume in _secretMounts {
+		name: secretVolume.name
+		secret: secretName: secretVolume.secretName
+	}] + [ for configVolume in _configMapMounts {
+		name: configVolume.name
+		configMap: name: configVolume.configMapName
+	}]
+	serviceAccountName?: string
+	nodeSelector?: [_=string]: string
+	...
+}
+
+#Deployment: Deployment={
+	_name:       string
+	_secretName: string
+	_ports:      [{containerPort: #GrpcServicePort}] | *[]
+	_component:  string
+	_jvm_flags:  string | *""
+	_dependencies: [...string]
+	_configMapMounts: [...#ConfigMapMount]
+	_podSpec: #PodSpec & {
+		_secretMounts: [{
+			name:       _name + "-files"
+			secretName: _secretName
+		}]
+		_configMapMounts: Deployment._configMapMounts
+	}
+
+	apiVersion: "apps/v1"
+	kind:       "Deployment"
 	metadata: {
 		name: _name + "-deployment"
 		labels: {
-			app:                      _name + "-app"
-			"app.kubernetes.io/name": #AppName
+			app:                           _name + "-app"
+			"app.kubernetes.io/name":      _name
+			"app.kubernetes.io/part-of":   #AppName
+			"app.kubernetes.io/component": _component
 		}
 	}
 	spec: {
-		replicas: _resourceConfig.replicas
+		replicas: uint
 		selector: matchLabels: app: _name + "-app"
 		template: {
 			metadata: labels: app: _name + "-app"
-			spec: {
+			spec: _podSpec & {
 				containers: [{
 					name:  _name + "-container"
-					image: _image
-					resources: requests: {
-						memory: _resourceConfig.resourceRequestMemory
-						cpu:    _resourceConfig.resourceRequestCpu
-					}
-					resources: limits: {
-						memory: _resourceConfig.resourceLimitMemory
-						cpu:    _resourceConfig.resourceLimitCpu
-					}
-					imagePullPolicy: _imagePullPolicy
-					args:            _args
-					ports:           _ports
+					ports: _ports
 					env: [{
 						name:  "JAVA_TOOL_OPTIONS"
-						value: _jvmFlags
+						value: _jvm_flags
 					}]
-					if _secretName != null {
-					volumeMounts: [{
-						name:      _name + "-files"
-						mountPath: "/var/run/secrets/files"
-						readOnly:  true
-					}]
-				}
 				}]
-				if _secretName != null {
-				volumes: [{
-					name: _name + "-files"
-					secret: {
-						secretName: _secretName
-					}
+				initContainers: [ for ds in _dependencies {
+					name:  "init-\(ds)"
+					image: "gcr.io/google-containers/busybox:1.27"
+					command: ["sh", "-c", "until nslookup \(ds); do echo waiting for \(ds); sleep 2; done"]
 				}]
-			}
-				restartPolicy: _restartPolicy
 			}
 		}
 	}
 }
+
+#NetworkPolicyPort: {
+	port?:     uint32 | string
+	protocol?: "TCP" | "UDP" | "SCTP"
+}
+
+#EgressRule: {
+	to: [...]
+	ports: [...#NetworkPolicyPort]
+}
+
+#IngressRule: {
+	from: [...]
+	ports: [...#NetworkPolicyPort]
+}
+
+// NetworkPolicy allows for selectively enabling traffic between pods
+// https://kubernetes.io/docs/concepts/services-networking/network-policies/#networkpolicy-resource
+//
+// This structure allows configuring a NetworkPolicy that selects on a pod name and it
+// will allow all traffic from pods matching _sourceMatchLabels to pods matching _destinationMatchLabels
+//
+#NetworkPolicy: {
+	_name:      string
+	_app_label: string
+	_sourceMatchLabels: [...string]
+	_destinationMatchLabels: [...string]
+	_ingresses: [Name=_]: #IngressRule
+	_egresses: [Name=_]:  #EgressRule
+
+	_ingresses: {
+		if len(_sourceMatchLabels) > 0 {
+			pods: {
+				from: [ for appLabel in _sourceMatchLabels {
+					podSelector: matchLabels: app: appLabel
+				}]
+			}
+		}
+	}
+	_egresses: {
+		if len(_destinationMatchLabels) > 0 {
+			pods: {
+				to: [ for appLabel in _destinationMatchLabels {
+					podSelector: matchLabels: app: appLabel
+				}]
+				ports: [{
+					protocol: "TCP"
+					port:     #GrpcServicePort
+				}]
+			}
+		}
+		dns: {
+			to: [{
+				namespaceSelector: {} // Allow DNS only inside the cluster
+				podSelector: matchLabels: "k8s-app": "kube-dns"
+			}]
+			ports: [{
+				protocol: "UDP"
+				port:     53
+			}, {
+				protocol: "TCP"
+				port:     53
+			}]
+		}
+	}
+
+	apiVersion: "networking.k8s.io/v1"
+	kind:       "NetworkPolicy"
+	metadata: {
+		name: _name + "-network-policy"
+		labels: {
+			"app.kubernetes.io/part-of": #AppName
+		}
+	}
+	spec: {
+		podSelector: matchLabels: app: _app_label
+		policyTypes: ["Ingress", "Egress"]
+		ingress: [ for _, ingress in _ingresses {ingress}]
+		egress: [ for _, egress in _egresses {egress}]
+	}
+}
+
+// This policy will deny ingress and egress traffic at all unconfigured pods.
+default_deny_ingress_and_egress: [{
+	apiVersion: "networking.k8s.io/v1"
+	kind:       "NetworkPolicy"
+	metadata: {
+		name: "default-deny-ingress-and-egress"
+		labels: {
+			"app.kubernetes.io/part-of": #AppName
+		}
+	}
+	spec: {
+		podSelector: {}
+		policyTypes: ["Ingress", "Egress"]
+	}
+}]
