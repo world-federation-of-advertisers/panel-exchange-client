@@ -17,11 +17,11 @@
 
 package k8s
 
-_container_registry:     string @tag("container_registry")
-_image_repo_prefix:      string @tag("image_repo_prefix")
-_secret_name:            string @tag("secret_name")
-_daemon_id:              string @tag("daemon_id")
-_recurring_exchange_id:  string @tag("recurring_exchange_id")
+_container_registry:    string @tag("container_registry")
+_image_repo_prefix:     string @tag("image_repo_prefix")
+_secret_name:           string @tag("secret_name")
+_daemon_id:             string @tag("daemon_id")
+_recurring_exchange_id: string @tag("recurring_exchange_id")
 
 #GloudProject:            "halo-cmm-dev"
 #SpannerInstance:         "panelmatch-dev-instance"
@@ -43,7 +43,7 @@ _private_ca_flags: [
 ]
 
 _tink_key_uri_flags: [
-	"--tink-key-uri=gcp-kms://projects/halo-cmm-dev/locations/us-central1/keyRings/test-key-ring/cryptoKeys/test-aes-key"
+	"--tink-key-uri=gcp-kms://projects/halo-cmm-dev/locations/us-central1/keyRings/test-key-ring/cryptoKeys/test-aes-key",
 ]
 
 _exchange_api_flags: [
