@@ -14,12 +14,14 @@
 
 package org.wfanet.panelmatch.client.tools
 
+import com.google.crypto.tink.integration.gcpkms.GcpKmsClient
 import com.google.privatemembership.batch.Shared
 import com.google.protobuf.TypeRegistry
 import com.google.protobuf.kotlin.toByteString
 import java.io.File
 import java.nio.file.Files
 import java.time.LocalDate
+import java.util.Optional
 import java.util.concurrent.Callable
 import kotlin.system.exitProcess
 import kotlinx.coroutines.runBlocking
@@ -29,6 +31,8 @@ import org.wfanet.measurement.common.crypto.readCertificate
 import org.wfanet.measurement.common.crypto.tink.TinkKeyStorageProvider
 import org.wfanet.measurement.common.parseTextProto
 import org.wfanet.measurement.common.toProtoDate
+import org.wfanet.measurement.gcloud.gcs.GcsFromFlags
+import org.wfanet.measurement.gcloud.gcs.GcsStorageClient
 import org.wfanet.measurement.storage.StorageClient
 import org.wfanet.measurement.storage.filesystem.FileSystemStorageClient
 import org.wfanet.panelmatch.client.deploy.DaemonStorageClientDefaults
@@ -47,9 +51,16 @@ import picocli.CommandLine.Option
 // TODO: Add flags to support other storage clients
 class CustomStorageFlags {
   @Option(
+    names = ["--storage-type"],
+    description = ["Type of destination storage: \${COMPLETION-CANDIDATES}"],
+    required = true,
+  )
+  lateinit var storageType: PlatformCase
+    private set
+
+  @Option(
     names = ["--private-storage-root"],
     description = ["Private storage root directory"],
-    required = true
   )
   private lateinit var privateStorageRoot: File
 
@@ -60,13 +71,30 @@ class CustomStorageFlags {
   )
   private lateinit var tinkKeyUri: String
 
+  @CommandLine.Mixin private lateinit var gcsFlags: GcsFromFlags.Flags
+
   private val rootStorageClient: StorageClient by lazy {
-    require(privateStorageRoot.exists() && privateStorageRoot.isDirectory)
-    FileSystemStorageClient(privateStorageRoot)
+    when (storageType) {
+      PlatformCase.GCS -> GcsStorageClient.fromFlags(GcsFromFlags(gcsFlags))
+      PlatformCase.FILE -> {
+        require(privateStorageRoot.exists() && privateStorageRoot.isDirectory)
+        FileSystemStorageClient(privateStorageRoot)
+      }
+      else -> throw IllegalArgumentException("Unsupported storage type")
+    }
   }
 
   private val defaults by lazy {
-    DaemonStorageClientDefaults(rootStorageClient, tinkKeyUri, TinkKeyStorageProvider())
+    when (storageType) {
+      PlatformCase.GCS -> {
+        // Register GcpKmsClient before setting storage folders. Set GOOGLE_APPLICATION_CREDENTIALS.
+        GcpKmsClient.register(Optional.of(tinkKeyUri), Optional.empty())
+        DaemonStorageClientDefaults(rootStorageClient, tinkKeyUri, TinkKeyStorageProvider())
+      }
+      PlatformCase.FILE ->
+        DaemonStorageClientDefaults(rootStorageClient, tinkKeyUri, TinkKeyStorageProvider())
+      else -> throw IllegalArgumentException("Unsupported storage type")
+    }
   }
 
   val addResource by lazy { ConfigureResource(defaults) }
@@ -79,7 +107,6 @@ class CustomStorageFlags {
 
 @Command(name = "add_workflow", description = ["Adds an Exchange Workflow"])
 private class AddWorkflowCommand : Callable<Int> {
-
   @Mixin private lateinit var flags: CustomStorageFlags
 
   @Option(
@@ -118,7 +145,6 @@ private class AddWorkflowCommand : Callable<Int> {
 
 @Command(name = "add_root_certificate", description = ["Adds a Root Certificate for another party"])
 private class AddRootCertificateCommand : Callable<Int> {
-
   @Mixin private lateinit var flags: CustomStorageFlags
 
   @Option(
@@ -145,7 +171,6 @@ private class AddRootCertificateCommand : Callable<Int> {
 
 @Command(name = "add_private_storage_info", description = ["Adds Private Storage Info"])
 private class AddPrivateStorageInfoCommand : Callable<Int> {
-
   @Mixin private lateinit var flags: CustomStorageFlags
 
   @Option(
@@ -174,7 +199,6 @@ private class AddPrivateStorageInfoCommand : Callable<Int> {
 
 @Command(name = "add_shared_storage_info", description = ["Adds Shared Storage Info"])
 private class AddSharedStorageInfoCommand : Callable<Int> {
-
   @Mixin private lateinit var flags: CustomStorageFlags
 
   @Option(
@@ -206,7 +230,6 @@ private class AddSharedStorageInfoCommand : Callable<Int> {
   description = ["Will copy workflow input to private storage"]
 )
 private class ProvideWorkflowInputCommand : Callable<Int> {
-
   @Mixin private lateinit var flags: CustomStorageFlags
 
   @Option(
