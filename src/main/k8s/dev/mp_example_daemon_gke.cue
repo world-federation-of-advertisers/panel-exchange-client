@@ -19,15 +19,9 @@ package k8s
 
 _container_registry:     string @tag("container_registry")
 _image_repo_prefix:      string @tag("image_repo_prefix")
-_cloud_storage_bucket:   string @tag("cloud_storage_bucket")
-_tink_key_uri:           string @tag("tink_key_uri")
-_cloud_credentials_path: string @tag("cloud_credentials_path")
 _secret_name:            string @tag("secret_name")
 _daemon_id:              string @tag("daemon_id")
 _recurring_exchange_id:  string @tag("recurring_exchange_id")
-_private_ca_name:        string @tag("private_ca_name")
-_private_ca_pool_id:     string @tag("private_ca_pool_id")
-_private_ca_location:    string @tag("private_ca_location")
 
 #GloudProject:            "halo-cmm-dev"
 #SpannerInstance:         "panelmatch-dev-instance"
@@ -42,15 +36,14 @@ _private_ca_location:    string @tag("private_ca_location")
 }
 
 _private_ca_flags: [
-	"--privateca-ca-name=\(_private_ca_name)",
-	"--privateca-pool-id=\(_private_ca_pool_id)",
-	"--privateca-ca-location=\(_private_ca_location)",
+	"--privateca-ca-name=20220217-zm6-cbh",
+	"--privateca-pool-id=SomeCommonName",
+	"--privateca-ca-location=us-central1",
 	"--privateca-project-id=" + #GloudProject,
 ]
 
 _tink_key_uri_flags: [
-	"--tink-key-uri=\(_tink_key_uri)",
-	"--tink-credential-path=\(_cloud_credentials_path)",
+	"--tink-key-uri=gcp-kms://projects/halo-cmm-dev/locations/us-central1/keyRings/test-key-ring/cryptoKeys/test-aes-key"
 ]
 
 _exchange_api_flags: [
@@ -63,7 +56,7 @@ example_daemon_deployment: "example_daemon_deployment": #Deployment & {
 	_image:           #ContainerRegistryPrefix + "/example-panel-exchange-daemon"
 	_jvmFlags:        "-Xmx12g -Xms2g"
 	_imagePullPolicy: "Always"
-	_credentialsPath: _cloud_credentials_path
+	_credentialsPath: "/var/run/secrets/files/halo-cmm-dev-creds.json"
 	_resourceConfig:  #DefaultResourceConfig
 	_secretName:      _secret_name
 
@@ -81,7 +74,7 @@ example_daemon_deployment: "example_daemon_deployment": #Deployment & {
 			"--blob-size-limit-bytes=1000000000",
 			"--storage-signing-algorithm=EC",
 			"--task-timeout=24h",
-			"--google-cloud-storage-bucket=\(_cloud_storage_bucket)",
+			"--google-cloud-storage-bucket=halo-panel-mp-dev-bucket",
 			"--google-cloud-storage-project=" + #GloudProject,
 			"--channel-shutdown-timeout=3s",
 			"--polling-interval=1m",
