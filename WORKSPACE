@@ -32,7 +32,6 @@ load(
     "panel_exchange_client_maven_excluded_artifacts",
     "panel_exchange_client_maven_override_targets",
 )
-
 load("@rules_jvm_external//:repositories.bzl", "rules_jvm_external_deps")
 
 rules_jvm_external_deps()
@@ -41,10 +40,11 @@ load("@rules_jvm_external//:setup.bzl", "rules_jvm_external_setup")
 
 rules_jvm_external_setup()
 
+load("@wfa_common_jvm//build/maven:artifacts.bzl", "artifacts")
 load("@rules_jvm_external//:defs.bzl", "maven_install")
 
 maven_install(
-    artifacts = panel_exchange_client_maven_artifacts(),
+    artifacts = artifacts.dict_to_list(panel_exchange_client_maven_artifacts()),
     excluded_artifacts = panel_exchange_client_maven_excluded_artifacts(),
     fetch_sources = True,
     generate_compat_repositories = True,
