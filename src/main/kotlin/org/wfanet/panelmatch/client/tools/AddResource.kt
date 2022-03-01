@@ -107,6 +107,7 @@ class CustomStorageFlags {
 
 @Command(name = "add_workflow", description = ["Adds an Exchange Workflow"])
 private class AddWorkflowCommand : Callable<Int> {
+
   @Mixin private lateinit var flags: CustomStorageFlags
 
   @Option(
@@ -145,6 +146,7 @@ private class AddWorkflowCommand : Callable<Int> {
 
 @Command(name = "add_root_certificate", description = ["Adds a Root Certificate for another party"])
 private class AddRootCertificateCommand : Callable<Int> {
+
   @Mixin private lateinit var flags: CustomStorageFlags
 
   @Option(
@@ -171,6 +173,7 @@ private class AddRootCertificateCommand : Callable<Int> {
 
 @Command(name = "add_private_storage_info", description = ["Adds Private Storage Info"])
 private class AddPrivateStorageInfoCommand : Callable<Int> {
+
   @Mixin private lateinit var flags: CustomStorageFlags
 
   @Option(
@@ -199,6 +202,7 @@ private class AddPrivateStorageInfoCommand : Callable<Int> {
 
 @Command(name = "add_shared_storage_info", description = ["Adds Shared Storage Info"])
 private class AddSharedStorageInfoCommand : Callable<Int> {
+
   @Mixin private lateinit var flags: CustomStorageFlags
 
   @Option(
@@ -230,6 +234,7 @@ private class AddSharedStorageInfoCommand : Callable<Int> {
   description = ["Will copy workflow input to private storage"]
 )
 private class ProvideWorkflowInputCommand : Callable<Int> {
+
   @Mixin private lateinit var flags: CustomStorageFlags
 
   @Option(
