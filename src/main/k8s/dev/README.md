@@ -1,20 +1,25 @@
-# GKE Deployment
+# `dev` Kubernetes Environment
 
-## Deploy Panel Match
+K8s manifest generation for the `dev` environment, which is the `halo-cmm-dev`
+Google Cloud project. The matching configuration for the Cross-Media Measurement
+System is in
+https://github.com/world-federation-of-advertisers/cross-media-measurement/tree/main/src/main/k8s/dev.
 
-This is a daemon job that keeps pulling available jobs from Measurement 
-Coordinator and processes them.
-
-```shell
-bazel run src/main/docker/push_google_cloud_example_daemon_image \ 
-  --define=container_registry=gcr.io \
-  --define=image_repo_prefix=ads-open-measurement
-```
+## Push image
 
 ```shell
-bazel run src/main/kotlin/org/wfanet/panelmatch/tools:deploy_panelmatch_dev_to_gke \
-  --define=container_registry=gcr.io \
-  --define=image_repo_prefix=ads-open-measurement \ 
-  --define=k8s_secret_name=SomeSecretName \
-  --define=daemon_party_type=DATA_PROVIDER
+bazel run -c opt //src/main/docker:push_google_cloud_example_daemon_image \
+  --define=container_registry=gcr.io --define=image_repo_prefix=halo-cmm-dev
 ```
+
+## Create secret
+
+Use the
+[testing `secretfiles`](https://github.com/world-federation-of-advertisers/cross-media-measurement/tree/main/src/main/k8s/testing/secretfiles)
+from the cross-media-measurement repo.
+
+```shell
+kubectl apply -k <path-to-secretfiles>
+```
+
+Use the generated K8s secret name when building the `cue_export` targets.

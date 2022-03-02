@@ -12,71 +12,110 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// cue cmd dump src/main/k8s/example_daemon_from_cue.cue >
-// src/main/k8s/example_daemon_from_cue.yaml
-
 package k8s
 
-_container_registry:  string @tag("container_registry")
-_image_repo_prefix:   string @tag("image_repo_prefix")
-_secret_name:         string @tag("secret_name")
-_party_type:          string @tag("party_type")
-_tink_key_uri:        string @tag("tink_key_uri")
-_private_ca_name:     string @tag("private_ca_name")
-_private_ca_pool_id:  string @tag("private_ca_pool_id")
-_private_ca_location: string @tag("private_ca_location")
-
-_tink_key_uri_flag:        "--tink-key-uri=\(_tink_key_uri)"
-_party_type_flag:          "--party-type=\(_party_type)"
-_private_ca_name_flag:     "--privateca-ca-name=\(_private_ca_name)"
-_private_ca_pool_flag:     "--privateca-pool-id=\(_private_ca_pool_id)"
-_private_ca_location_flag: "--privateca-ca-location=\(_private_ca_location)"
-
-#GloudProject:            "ads-open-measurement"
+#GloudProject:            "halo-cmm-dev"
 #SpannerInstance:         "halo-panelmatch-demo-instance"
 #CloudStorageBucket:      "halo-panel-dev-bucket"
 #KingdomPublicApiTarget:  "public.kingdom.dev.halo-cmm.org:8443"
-#ContainerRegistryPrefix: _container_registry + "/" + _image_repo_prefix
+#ContainerRegistryPrefix: "gcr.io/" + #GloudProject
 #DefaultResourceConfig: {
-	replicas:              1
-	resourceRequestCpu:    "100m"
-	resourceLimitCpu:      "400m"
-	resourceRequestMemory: "256Mi"
-	resourceLimitMemory:   "512Mi"
+	replicas:  1
+	resources: #ResourceRequirements & {
+		requests: {
+			cpu:    "100m"
+			memory: "1Gi"
+		}
+		limits: {
+			cpu:    "400m"
+			memory: "4Gi"
+		}
+	}
 }
 
-example_daemon_deployment: "example_daemon_deployment": #Deployment & {
-	_name:            "example-panel-exchange-daemon"
-	_image:           #ContainerRegistryPrefix + "/example-panel-exchange-daemon"
-	_jvmFlags:        "-Xmx12g -Xms2g"
-	_imagePullPolicy: "Always"
-	_resourceConfig:  #DefaultResourceConfig
-	_secretName:      _secret_name // "certs-and-configs-cct246f859"
-	_args: [
-		_tink_key_uri_flag,
-		_party_type_flag,
-		_private_ca_name_flag,
-		_private_ca_pool_flag,
-		_private_ca_location_flag,
-		"--id=EDP",
-		"--tls-cert-file=/var/run/secrets/files/test_user.pem",
-		"--tls-key-file=/var/run/secrets/files/test_user.key",
-		"--cert-collection-file=/var/run/secrets/files/test_root.pem",
-		"--blob-size-limit-bytes=1000000000",
-		"--storage-signing-algorithm=EC",
-		"--task-timeout=24h",
-		"--exchange-api-target=" + #KingdomPublicApiTarget,
-		"--exchange-api-cert-host=localhost",
-		"--google-cloud-storage-bucket=" + #CloudStorageBucket,
-		"--google-cloud-storage-project=" + #GloudProject,
-		"--channel-shutdown-timeout=3s",
-		"--polling-interval=1m",
-		"--preprocessing-max-byte-size=1000000",
-		"--preprocessing-file-count=1000",
-		"--x509-common-name=SomeCommonName",
-		"--x509-organization=SomeOrganization",
-		"--x509-dns-name=example.com",
-		"--x509-valid-days=365",
-		"--privateca-project-id=" + #GloudProject,
+#ExchangeDaemonConfig: {
+	secretName:            string
+	partyType:             "DATA_PROVIDER" | "MODEL_PROVIDER"
+	partyName:             string
+	recurringExchangeName: string
+	clientTls: {
+		certFile: string
+		keyFile:  string
+	}
+	tinkKeyUri: string
+	privateCa: {
+		name:     string
+		poolId:   string
+		location: string
+	}
+
+	args: [
+		"--id=\(partyName)",
+		"--party-type=\(partyType)",
+		"--recurring-exchange-id=\(recurringExchangeName)",
+		"--tls-cert-file=\(clientTls.certFile)",
+		"--tls-key-file=\(clientTls.keyFile)",
+		"--tink-key-uri=\(tinkKeyUri)",
+		"--privateca-ca-name=\(privateCa.name)",
+		"--privateca-pool-id=\(privateCa.poolId)",
+		"--privateca-ca-location=\(privateCa.location)",
 	]
+}
+_exchangeDaemonConfig: #ExchangeDaemonConfig
+
+objectSets: [deployments, networkPolicies]
+
+deployments: [Name=_]: #Deployment & {
+	_name:      Name
+	_component: "workflow-daemon"
+	_podSpec: _container: resources: #DefaultResourceConfig.resources
+
+	spec: {
+		replicas: #DefaultResourceConfig.replicas
+	}
+}
+deployments: {
+	"example-panel-exchange-daemon": {
+		_jvmFlags:   "-Xmx3584m" // 4GiB - 512MiB overhead.
+		_secretName: _exchangeDaemonConfig.secretName
+		_podSpec: _container: {
+			image:           #ContainerRegistryPrefix + "/example-panel-exchange-daemon"
+			imagePullPolicy: "Always"
+			args:            _exchangeDaemonConfig.args + [
+						"--cert-collection-file=/var/run/secrets/files/all_root_certs.pem",
+						"--blob-size-limit-bytes=1000000000",
+						"--storage-signing-algorithm=EC",
+						"--task-timeout=24h",
+						"--exchange-api-target=" + #KingdomPublicApiTarget,
+						"--exchange-api-cert-host=localhost",
+						"--google-cloud-storage-bucket=" + #CloudStorageBucket,
+						"--google-cloud-storage-project=" + #GloudProject,
+						"--channel-shutdown-timeout=3s",
+						"--polling-interval=1m",
+						"--preprocessing-max-byte-size=1000000",
+						"--preprocessing-file-count=1000",
+						"--x509-common-name=SomeCommonName",
+						"--x509-organization=SomeOrganization",
+						"--x509-dns-name=example.com",
+						"--x509-valid-days=365",
+						"--privateca-project-id=" + #GloudProject,
+			]
+		}
+	}
+}
+
+networkPolicies: [Name=_]: #NetworkPolicy & {
+	_name:    Name
+	_appName: Name
+}
+networkPolicies: {
+	"example-panel-exchange-daemon": {
+		_ingresses: {
+			// No ingress.
+		}
+		_egresses: {
+			// Need to be able to send traffic to storage and Kingdom.
+			any: {}
+		}
+	}
 }
