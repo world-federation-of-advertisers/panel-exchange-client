@@ -32,10 +32,12 @@ TEST_GOOGLE_CLOUD_SETTINGS = struct(
     cloud_storage_project = "$(cloud_storage_project)",
     cloud_storage_bucket = "$(cloud_storage_bucket)",
     tink_key_uri = "$(tink_key_uri)",
+    cloud_credentials_path = "$(cloud_credentials_path)",
 )
 
 # Config for Panel Exchange Client Example Daemon.
 EXAMPLE_DAEMON_CONFIG = struct(
     daemon_id = "$(daemon_id)",
     daemon_party_type = "$(daemon_party_type)",
+    recurring_exchange_id = "$(recurring_exchange_id)",
 )

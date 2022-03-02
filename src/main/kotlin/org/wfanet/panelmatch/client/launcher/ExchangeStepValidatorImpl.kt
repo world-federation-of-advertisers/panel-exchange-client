@@ -34,6 +34,7 @@ class ExchangeStepValidatorImpl(
     val serializedExchangeWorkflow = exchangeStep.serializedExchangeWorkflow
     val recurringExchangeId =
       requireNotNull(ExchangeStepKey.fromName(exchangeStep.name)).recurringExchangeId
+
     if (validExchangeWorkflows.get(recurringExchangeId) != serializedExchangeWorkflow) {
       throw InvalidExchangeStepException(
         InvalidExchangeStepException.FailureType.PERMANENT,
