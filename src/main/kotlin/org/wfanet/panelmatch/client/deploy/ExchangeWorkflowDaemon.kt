@@ -18,6 +18,8 @@ import java.time.Clock
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
 import org.wfanet.measurement.common.logAndSuppressExceptionSuspend
 import org.wfanet.measurement.common.throttler.Throttler
 import org.wfanet.panelmatch.client.common.Identity
@@ -113,14 +115,18 @@ abstract class ExchangeWorkflowDaemon : Runnable {
         validator = ExchangeStepValidatorImpl(identity.party, validExchangeWorkflows, clock),
         jobLauncher = launcher
       )
-
-    scope.launch(CoroutineName("ExchangeWorkflowDaemon")) { runDaemon(exchangeStepLauncher) }
+    
+    runBlocking { runDaemon(exchangeStepLauncher) }
   }
 
   /** Runs [exchangeStepLauncher] in an infinite loop. */
   protected open suspend fun runDaemon(exchangeStepLauncher: ExchangeStepLauncher) {
-    throttler.loopOnReady {
-      logAndSuppressExceptionSuspend { exchangeStepLauncher.findAndRunExchangeStep() }
+    withContext(CoroutineName("ExchangeWorkflowDaemon")) {
+      throttler.loopOnReady {
+        // All errors thrown inside the loop should be suppressed such that the daemon doesn't
+        // crash.
+        logAndSuppressExceptionSuspend { exchangeStepLauncher.findAndRunExchangeStep() }
+      }
     }
   }
 }
