@@ -35,9 +35,6 @@ private class FileSystemExampleDaemon : ExampleDaemon() {
   )
   private lateinit var privateStorageRoot: File
 
-  @Option(names = ["--tink-key-uri"], description = ["Tink Key Uri"], required = true)
-  private lateinit var tinkKeyUri: String
-
   override val rootStorageClient: StorageClient by lazy {
     require(privateStorageRoot.exists() && privateStorageRoot.isDirectory)
     FileSystemStorageClient(privateStorageRoot)

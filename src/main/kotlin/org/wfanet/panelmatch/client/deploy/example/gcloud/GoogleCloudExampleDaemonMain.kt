@@ -67,12 +67,6 @@ private class PrivateCaFlags {
     private set
 }
 
-private class TinkFlags {
-  @Option(names = ["--tink-key-uri"], description = ["KMS URI for Tink"], required = true)
-  lateinit var tinkKeyUri: String
-    private set
-}
-
 @Command(
   name = "GoogleCloudExampleDaemon",
   description = ["Example daemon to execute ExchangeWorkflows on Google Cloud"],
@@ -83,7 +77,6 @@ private class GoogleCloudExampleDaemon : ExampleDaemon() {
   @Mixin private lateinit var gcsFlags: GcsFromFlags.Flags
   @Mixin private lateinit var caFlags: CertificateAuthorityFlags
   @Mixin private lateinit var privateCaFlags: PrivateCaFlags
-  @Mixin private lateinit var tinkFlags: TinkFlags
 
   @Option(
     names = ["--recurring-exchange-id"],
@@ -100,8 +93,8 @@ private class GoogleCloudExampleDaemon : ExampleDaemon() {
   /** This can be customized per deployment. */
   private val defaults by lazy {
     // Register GcpKmsClient before setting storage folders. Set GOOGLE_APPLICATION_CREDENTIALS.
-    GcpKmsClient.register(Optional.of(tinkFlags.tinkKeyUri), Optional.empty())
-    DaemonStorageClientDefaults(rootStorageClient, tinkFlags.tinkKeyUri, TinkKeyStorageProvider())
+    GcpKmsClient.register(Optional.of(tinkKeyUri), Optional.empty())
+    DaemonStorageClientDefaults(rootStorageClient, tinkKeyUri, TinkKeyStorageProvider())
   }
 
   /** This can be customized per deployment. */

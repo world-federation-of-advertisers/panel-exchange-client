@@ -20,9 +20,13 @@ import org.wfanet.measurement.storage.StorageClient
 import org.wfanet.panelmatch.client.deploy.BlobSizeFlags
 import org.wfanet.panelmatch.client.deploy.ExchangeWorkflowDaemonFromFlags
 import picocli.CommandLine.Mixin
+import picocli.CommandLine.Option
 
 /** Example base class for [ExchangeWorkflowDaemonFromFlags] implementations. */
 abstract class ExampleDaemon : ExchangeWorkflowDaemonFromFlags() {
+  @Option(names = ["--tink-key-uri"], description = ["KMS URI for Tink"], required = true)
+  protected lateinit var tinkKeyUri: String
+
   @Mixin private lateinit var blobSizeFlags: BlobSizeFlags
 
   /** This MUST be customized per deployment. */
