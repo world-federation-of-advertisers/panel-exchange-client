@@ -17,7 +17,6 @@ package org.wfanet.panelmatch.client.deploy
 import java.time.Clock
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import org.wfanet.measurement.common.logAndSuppressExceptionSuspend
@@ -115,7 +114,7 @@ abstract class ExchangeWorkflowDaemon : Runnable {
         validator = ExchangeStepValidatorImpl(identity.party, validExchangeWorkflows, clock),
         jobLauncher = launcher
       )
-    
+
     runBlocking { runDaemon(exchangeStepLauncher) }
   }
 
