@@ -20,7 +20,6 @@ cue_export(
     cue_tags = {
         "party_name": EXAMPLE_DAEMON_CONFIG.edp_name,
         "secret_name": EXAMPLE_DAEMON_CONFIG.edp_secret_name,
-        "recurring_exchange_name": EXAMPLE_DAEMON_CONFIG.recurring_exchange_name,
     },
     expression = "listObject",
     filetype = "yaml",
@@ -34,7 +33,6 @@ cue_export(
     cue_tags = {
         "party_name": EXAMPLE_DAEMON_CONFIG.mp_name,
         "secret_name": EXAMPLE_DAEMON_CONFIG.mp_secret_name,
-        "recurring_exchange_name": EXAMPLE_DAEMON_CONFIG.recurring_exchange_name,
     },
     expression = "listObject",
     filetype = "yaml",

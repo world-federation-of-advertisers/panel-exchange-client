@@ -14,12 +14,10 @@ bazel run -c opt //src/main/docker:push_google_cloud_example_daemon_image \
 
 ## Create secret
 
-Use the
-[testing `secretfiles`](https://github.com/world-federation-of-advertisers/cross-media-measurement/tree/main/src/main/k8s/testing/secretfiles)
-from the cross-media-measurement repo.
+Use [testing `secretfiles`](../testing/secretfiles).
 
 ```shell
-kubectl apply -k <path-to-secretfiles>
+bazel run //src/main/k8s/testing/secretfiles:apply_kustomization
 ```
 
 Use the generated K8s secret name when building the `cue_export` targets.

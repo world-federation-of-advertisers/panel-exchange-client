@@ -39,5 +39,4 @@ EXAMPLE_DAEMON_CONFIG = struct(
     edp_secret_name = "$(edp_k8s_secret_name)",
     mp_name = "$(mp_name)",
     mp_secret_name = "$(mp_k8s_secret_name)",
-    recurring_exchange_name = "$(recurring_exchange_name)",
 )
