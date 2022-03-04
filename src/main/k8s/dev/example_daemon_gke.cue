@@ -14,6 +14,8 @@
 
 package k8s
 
+import "strings"
+
 #GloudProject:            "halo-cmm-dev"
 #SpannerInstance:         "halo-panelmatch-demo-instance"
 #CloudStorageBucket:      "halo-panel-dev-bucket"
@@ -49,8 +51,10 @@ package k8s
 		location: string
 	}
 
+	_partyId: strings.SplitAfter(partyName, "/")[1]
+
 	args: [
-		"--id=\(partyName)",
+		"--id=\(_partyId)",
 		"--party-type=\(partyType)",
 		"--recurring-exchange-id=\(recurringExchangeName)",
 		"--tls-cert-file=\(clientTls.certFile)",
@@ -82,7 +86,7 @@ deployments: {
 			image:           #ContainerRegistryPrefix + "/example-panel-exchange-daemon"
 			imagePullPolicy: "Always"
 			args:            _exchangeDaemonConfig.args + [
-						"--cert-collection-file=/var/run/secrets/files/all_root_certs.pem",
+						"--cert-collection-file=/var/run/secrets/files/trusted_certs.pem",
 						"--blob-size-limit-bytes=1000000000",
 						"--storage-signing-algorithm=EC",
 						"--task-timeout=24h",

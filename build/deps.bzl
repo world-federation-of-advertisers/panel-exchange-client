@@ -22,6 +22,7 @@ load("@wfa_rules_cue//cue:repositories.bzl", "rules_cue_dependencies")
 load("@tink_base//:tink_base_deps.bzl", "tink_base_deps")
 load("@tink_cc//:tink_cc_deps.bzl", "tink_cc_deps")
 load("@private_membership//build:private_membership_repositories.bzl", "private_membership_repositories")
+load("@rules_pkg//:deps.bzl", "rules_pkg_dependencies")
 
 def panel_exchange_client_deps():
     """Installs transitive deps for panel_exchange_client."""
@@ -31,3 +32,4 @@ def panel_exchange_client_deps():
     tink_base_deps()
     tink_cc_deps()
     private_membership_repositories()
+    rules_pkg_dependencies()
