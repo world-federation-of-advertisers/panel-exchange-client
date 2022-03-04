@@ -1,0 +1,12 @@
+{
+  "type": "service_account",
+  "project_id": "halo-cmm-dev",
+  "private_key_id": "e07ca8a3512c83ac5e3eecd16d5c315e6293a3a5",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvwIBADANBgkqhkiG9w0BAQEFAASCBKkwggSlAgEAAoIBAQCkgGd9nWj4oo0g\nSDoQbOpWmqFTQC1QWoAqnzxgjXb0dUVxUsez6Rv36pavzvJRw+EoQxZWGti44vPL\n0xLwSLz4ZsxPSFTJrncMxg0FC3bXHYV7+IrrUaKNaXvXMFvoLjhAYK3A5b1/95jZ\nxyfwksK9C9X5u6XdpZJSuZdf76tmYQ24H+2jn91LQ23FqO2FWSZX9RGjI6n9GUX7\nnzDtYKlOdViRjoFhSuE17Zr2TVvNhuYfqwqk+JFgtosivxIvhzJnTS8r62M15taI\ndc0k5haMz/bTDSFYU/ir67bilphmgc2YWzkQ9aPMamJEgaDaqgxJ8YaBQyqhz1xX\nAxkmHTlBAgMBAAECggEAC0CAM7KoazddLVvbYuO8TLOzfLkLUG98TE4LiHQsspBx\n8Uwu/kKf59+LMpfWcdrS5Bjgpn+cGttlPygfJ8Hl8RzA9VxWdlwhZwWF/vYXiSPL\nDV2FDQ8OrhsMvj2fz7wXm2mxgNwGEAJ82Uqa1AUJ3nn4hyY7dHN+lHt+2/BOGkjF\ngfD269JkR/VdP+afxtFWJnkr7agR0+SKO52M3qklFBVcL/5NCtk5tPkQFfslGPxq\nDwlllBau6Nj8N9o8AIwWallL8DKrMIYrCqAj4m7kdRU0LHdAmmfk4WZFgkvOfhi7\nT0JguInHhzvUjrLe+ckZkdZKwWM636LD6JJ8y2CJZQKBgQDgopt3Tx9COrKeRhmD\n8zGGz8eumAupo6rmpl7HrpHVwEQyGrMewiHx23Kr+XVMZZChs8nOPipAxbh6OVW4\nkkyzO3MNsO8Mu9wEONz1Pgfve0PGHVXMJBOWCF5dIZsEgEw58zabtE4QDNN0/TRC\n8YaiAHVbkLPmpAYEY5qubifEXQKBgQC7eF9kkUaXtDMkURiPmAB6RAPYuUl1JrZz\nFVxAg/NKU53/HHETuAAzHWNUlHdfRzXBGtUFx1/h/GGsLtCCYyi1tn9ptTN0CIUk\nh4YVN5aPWUtbt3KoIT/BSuXb0CB3l/VzNVgDSjVxgvL7d9kSNJLMRfsVpHqFQkss\n9TocLK66NQKBgQDCcd7zCqk7MgYVXQaPIj73u/nUFsbZo9O2bcLTRDf2d8RQPq5X\n7KFncpazaG7xn2Tvo+oGvebjRIMoQWMDLph3+PjhnAuA0Uhk2zfgjT5fPSrwXco7\nt+rATyQnp4RBBDF3ZCEb7Jo56HBN7zOC0wDAUHdFuF8RQV/4AqQNY0rG/QKBgQCm\no84vp88XJG/dVVS+tz+dbv34VGNOhnXhgFg7ZM8K/57O2OpOu905kmLsGPivMa4/\nk2lNtLavO1da5VYkwJ28QJerUA2Hk9c97FWsYHgtvhL1WPDLMJrqZ3hA1xU1GVdt\n7Dnq2rj8yIjSLOtAeokOmRoiV80szQvjz6uyxakfDQKBgQCbm1/VcKmwEK9ig/Zg\nvwSYEx+u9FzckKhHAVmJuSDh79Pyq/Kjh1osdSl7f4EsUiBEQYJBkaIZhNHB31mj\ngYcahkiJOJ6PGbyhxawdPrtrR7vWDUEhPOfXUMX+Bjp49QgF0BtCiSKjwV5vTVKg\n/t99agSziNSGfNvA06Fj0moB6w==\n-----END PRIVATE KEY-----\n",
+  "client_email": "mp-test-service-account@halo-cmm-dev.iam.gserviceaccount.com",
+  "client_id": "115993689138618108753",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/mp-test-service-account%40halo-cmm-dev.iam.gserviceaccount.com"
+}

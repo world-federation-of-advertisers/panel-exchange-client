@@ -20,8 +20,8 @@ _exchangeDaemonConfig: {
 	partyType:  "MODEL_PROVIDER"
 	recurringExchangeName: string @tag("recurring_exchange_name")
 	clientTls: {
-		certFile: "/var/run/secrets/files/edp2_tls.pem"
-		keyFile:  "/var/run/secrets/files/edp2_tls.key"
+		certFile: "/var/run/secrets/files/mp1_tls.pem"
+		keyFile:  "/var/run/secrets/files/mp1_tls.key"
 	}
 	tinkKeyUri: "gcp-kms://projects/halo-cmm-dev/locations/us-central1/keyRings/test-key-ring/cryptoKeys/test-aes-key"
 	privateCa: {
