@@ -129,6 +129,4 @@ abstract class ExchangeWorkflowDaemonFromFlags : ExchangeWorkflowDaemon() {
   override val taskTimeout: Timeout by lazy { flags.taskTimeout.asTimeout() }
 
   override val identity: Identity by lazy { Identity(flags.id, flags.partyType) }
-
-  override val scope: CoroutineScope by lazy { CoroutineScope(Dispatchers.Default) }
 }

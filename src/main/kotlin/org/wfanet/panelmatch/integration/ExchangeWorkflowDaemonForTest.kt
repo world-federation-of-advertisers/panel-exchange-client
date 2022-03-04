@@ -59,7 +59,6 @@ class ExchangeWorkflowDaemonForTest(
   provider: ResourceKey,
   private val exchangeDateKey: ExchangeDateKey,
   privateDirectory: Path,
-  override val scope: CoroutineScope,
   override val clock: Clock = Clock.systemUTC(),
   pollingInterval: Duration = Duration.ofMillis(100),
   taskTimeoutDuration: Duration = Duration.ofMinutes(2)
