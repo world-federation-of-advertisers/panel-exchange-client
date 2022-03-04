@@ -15,18 +15,18 @@
 package k8s
 
 _exchangeDaemonConfig: {
-	secretName: string @tag("secret_name")
-	partyName:  string @tag("party_name")
-	partyType:  "DATA_PROVIDER"
-	recurringExchangeName: string @tag("recurring_exchange_name")
+	secretName:         string @tag("secret_name")
+	partyName:          string @tag("party_name")
+	partyType:          "DATA_PROVIDER"
+	cloudStorageBucket: "halo-edp-test-bucket"
 	clientTls: {
 		certFile: "/var/run/secrets/files/edp1_tls.pem"
 		keyFile:  "/var/run/secrets/files/edp1_tls.key"
 	}
-	tinkKeyUri: "gcp-kms://projects/halo-cmm-dev/locations/us-central1/keyRings/test-key-ring/cryptoKeys/test-aes-key"
+	tinkKeyUri: "gcp-kms://projects/halo-cmm-dev/locations/us-central1/keyRings/edp-test-key-ring/cryptoKeys/edp-test-key"
 	privateCa: {
-		name:     "20220217-zm6-cbh"
-		poolId:   "SomeCommonName"
+		name:     "20220302-51i-yj4"
+		poolId:   "EdpTestPool"
 		location: "us-central1"
 	}
 }
