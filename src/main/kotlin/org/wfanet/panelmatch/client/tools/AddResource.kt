@@ -39,6 +39,7 @@ import org.wfanet.panelmatch.client.deploy.DaemonStorageClientDefaults
 import org.wfanet.panelmatch.client.storage.FileSystemStorageFactory
 import org.wfanet.panelmatch.client.storage.StorageDetails
 import org.wfanet.panelmatch.client.storage.StorageDetails.PlatformCase
+import org.wfanet.panelmatch.client.storage.gcloud.gcs.GcsStorageFactory
 import org.wfanet.panelmatch.client.storage.storageDetails
 import org.wfanet.panelmatch.common.ExchangeDateKey
 import org.wfanet.panelmatch.common.storage.StorageFactory
@@ -85,24 +86,24 @@ class CustomStorageFlags {
   }
 
   private val defaults by lazy {
-    when (storageType) {
-      PlatformCase.GCS -> {
-        // Register GcpKmsClient before setting storage folders. Set GOOGLE_APPLICATION_CREDENTIALS.
-        GcpKmsClient.register(Optional.of(tinkKeyUri), Optional.empty())
-        DaemonStorageClientDefaults(rootStorageClient, tinkKeyUri, TinkKeyStorageProvider())
-      }
-      PlatformCase.FILE ->
-        DaemonStorageClientDefaults(rootStorageClient, tinkKeyUri, TinkKeyStorageProvider())
-      else -> throw IllegalArgumentException("Unsupported storage type")
+    if (storageType == PlatformCase.GCS) {
+      // Register GcpKmsClient before setting storage folders.
+      GcpKmsClient.register(Optional.of(tinkKeyUri), Optional.empty())
     }
+    DaemonStorageClientDefaults(rootStorageClient, tinkKeyUri, TinkKeyStorageProvider())
   }
 
   val addResource by lazy { ConfigureResource(defaults) }
 
   /** This should be customized per deployment. */
   val privateStorageFactories:
-    Map<PlatformCase, (StorageDetails, ExchangeDateKey) -> StorageFactory> =
-    mapOf(PlatformCase.FILE to ::FileSystemStorageFactory)
+    Map<PlatformCase, (StorageDetails, ExchangeDateKey) -> StorageFactory> by lazy {
+    when (storageType) {
+      PlatformCase.GCS -> mapOf(PlatformCase.GCS to ::GcsStorageFactory)
+      PlatformCase.FILE -> mapOf(PlatformCase.FILE to ::FileSystemStorageFactory)
+      else -> throw IllegalArgumentException("Unsupported storage type")
+    }
+  }
 }
 
 @Command(name = "add_workflow", description = ["Adds an Exchange Workflow"])
