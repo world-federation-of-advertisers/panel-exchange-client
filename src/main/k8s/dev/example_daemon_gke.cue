@@ -32,12 +32,14 @@ import "strings"
 		}
 	}
 }
+#DebugVerboseGrpcLogging: true
 
 #ExchangeDaemonConfig: {
 	secretName:         string
 	partyType:          "DATA_PROVIDER" | "MODEL_PROVIDER"
 	partyName:          string
 	cloudStorageBucket: string
+	serviceAccountName: string
 	clientTls: {
 		certFile: string
 		keyFile:  string
@@ -80,6 +82,10 @@ deployments: {
 	"example-panel-exchange-daemon": {
 		_jvmFlags:   "-Xmx3584m" // 4GiB - 512MiB overhead.
 		_secretName: _exchangeDaemonConfig.secretName
+		_podSpec: {
+			serviceAccountName: _exchangeDaemonConfig.serviceAccountName
+			nodeSelector: "iam.gke.io/gke-metadata-server-enabled": "true"
+		}
 		_podSpec: _container: {
 			image:           #ContainerRegistryPrefix + "/example-panel-exchange-daemon"
 			imagePullPolicy: "Always"
@@ -90,6 +96,7 @@ deployments: {
 						"--task-timeout=24h",
 						"--exchange-api-target=" + #KingdomPublicApiTarget,
 						"--exchange-api-cert-host=localhost",
+						"--debug-verbose-grpc-client-logging=\(#DebugVerboseGrpcLogging)",
 						"--google-cloud-storage-project=" + #GloudProject,
 						"--channel-shutdown-timeout=3s",
 						"--polling-interval=1m",

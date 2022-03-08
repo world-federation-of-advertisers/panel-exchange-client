@@ -19,6 +19,7 @@ _exchangeDaemonConfig: {
 	partyName:          string @tag("party_name")
 	partyType:          "DATA_PROVIDER"
 	cloudStorageBucket: "halo-edp-test-bucket"
+	serviceAccountName: "edp-workflow"
 	clientTls: {
 		certFile: "/var/run/secrets/files/edp1_tls.pem"
 		keyFile:  "/var/run/secrets/files/edp1_tls.key"
