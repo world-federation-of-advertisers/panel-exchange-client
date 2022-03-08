@@ -19,6 +19,7 @@ _exchangeDaemonConfig: {
 	partyName:          string @tag("party_name")
 	partyType:          "MODEL_PROVIDER"
 	cloudStorageBucket: "halo-mp-test-bucket"
+	serviceAccountName: "mp-workflow"
 	clientTls: {
 		certFile: "/var/run/secrets/files/mp1_tls.pem"
 		keyFile:  "/var/run/secrets/files/mp1_tls.key"
