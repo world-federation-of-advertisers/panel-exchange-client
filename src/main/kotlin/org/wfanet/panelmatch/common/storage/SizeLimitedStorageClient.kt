@@ -24,14 +24,12 @@ class SizeLimitedStorageClient(
   private val sizeLimitBytes: Long,
   private val delegate: StorageClient
 ) : StorageClient {
-  override val defaultBufferSizeBytes: Int
-    get() = delegate.defaultBufferSizeBytes
 
-  override suspend fun createBlob(blobKey: String, content: Flow<ByteString>): StorageClient.Blob {
-    return delegate.createBlob(blobKey, content.limitSize(sizeLimitBytes))
+  override suspend fun writeBlob(blobKey: String, content: Flow<ByteString>): StorageClient.Blob {
+    return delegate.writeBlob(blobKey, content.limitSize(sizeLimitBytes))
   }
 
-  override fun getBlob(blobKey: String): StorageClient.Blob? {
+  override suspend fun getBlob(blobKey: String): StorageClient.Blob? {
     val delegateBlob = delegate.getBlob(blobKey) ?: return null
     return Blob(this, sizeLimitBytes, delegateBlob)
   }
@@ -49,12 +47,10 @@ class SizeLimitedStorageClient(
       trueSize
     }
 
-    override fun delete() {
-      delegate.delete()
-    }
+    override suspend fun delete() = delegate.delete()
 
-    override fun read(bufferSizeBytes: Int): Flow<ByteString> {
-      return delegate.read(bufferSizeBytes).limitSize(sizeLimitBytes)
+    override fun read(): Flow<ByteString> {
+      return delegate.read().limitSize(sizeLimitBytes)
     }
   }
 }
