@@ -276,6 +276,7 @@ private class ProvideWorkflowInputCommand : Callable<Int> {
       AddPrivateStorageInfoCommand::class,
       AddSharedStorageInfoCommand::class,
       ProvideWorkflowInputCommand::class,
+      AddAllResources::class,
     ]
 )
 class AddResource : Callable<Int> {
@@ -300,6 +301,7 @@ class AddResource : Callable<Int> {
  *  add_shared_storage_info           Add shared storage info
  *  add_private_storage_info          Add private storage info
  *  provide_workflow_input            Adds a workflow
+ *  add_all_resources                 Adds all resources into GCS
  * ```
  */
 fun main(args: Array<String>) {
