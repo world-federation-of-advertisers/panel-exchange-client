@@ -23,6 +23,12 @@ kt_jvm_library(
     srcs = [
         "AddAllResources.kt",
         "AddResource.kt",
+        "AddWorkflow.kt",
+        "AddPrivateStorageInfo.kt",
+        "AddSharedStorageInfo.kt",
+        "AddRootCertificate.kt",
+        "CustomStorageFlags.kt",
+        "ProvideWorkflowInput.kt",
     ],
     deps = [
         "//src/main/kotlin/org/wfanet/panelmatch/client/deploy",
