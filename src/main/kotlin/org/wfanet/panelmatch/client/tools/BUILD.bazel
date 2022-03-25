@@ -33,8 +33,8 @@ kt_jvm_library(
     deps = [
         "//src/main/kotlin/org/wfanet/panelmatch/client/deploy",
         "//src/main/kotlin/org/wfanet/panelmatch/client/storage",
-        "//src/main/kotlin/org/wfanet/panelmatch/client/storage/gcloud/gcs",
         "//src/main/kotlin/org/wfanet/panelmatch/client/storage/aws/s3",
+        "//src/main/kotlin/org/wfanet/panelmatch/client/storage/gcloud/gcs",
         "//src/main/kotlin/org/wfanet/panelmatch/client/tools",
         "//src/main/proto/wfa/panelmatch/client/storage:storage_details_kt_jvm_proto",
         "@tink_java//src/main/java/com/google/crypto/tink/integration/gcpkms:gcp_kms_client",
