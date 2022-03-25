@@ -33,7 +33,7 @@ class AddWorkflow : Callable<Int> {
   private lateinit var recurringExchangeId: String
 
   @CommandLine.Option(
-    names = ["--exchange-workflow-file"],
+    names = ["--serialized-exchange-workflow-file"],
     description = ["Public API serialized ExchangeWorkflow"],
     required = true,
   )

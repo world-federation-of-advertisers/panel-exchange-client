@@ -25,6 +25,7 @@ import org.wfanet.measurement.storage.filesystem.FileSystemStorageClient
 import org.wfanet.panelmatch.client.deploy.DaemonStorageClientDefaults
 import org.wfanet.panelmatch.client.storage.FileSystemStorageFactory
 import org.wfanet.panelmatch.client.storage.StorageDetails
+import org.wfanet.panelmatch.client.storage.aws.s3.S3StorageFactory
 import org.wfanet.panelmatch.client.storage.gcloud.gcs.GcsStorageFactory
 import org.wfanet.panelmatch.common.ExchangeDateKey
 import org.wfanet.panelmatch.common.storage.StorageFactory
@@ -85,6 +86,8 @@ class CustomStorageFlags {
         mapOf(StorageDetails.PlatformCase.GCS to ::GcsStorageFactory)
       StorageDetails.PlatformCase.FILE ->
         mapOf(StorageDetails.PlatformCase.FILE to ::FileSystemStorageFactory)
+      StorageDetails.PlatformCase.AWS ->
+        mapOf(StorageDetails.PlatformCase.AWS to ::S3StorageFactory)
       else -> throw IllegalArgumentException("Unsupported storage type")
     }
   }
