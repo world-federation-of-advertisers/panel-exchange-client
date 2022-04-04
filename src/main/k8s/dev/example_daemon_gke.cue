@@ -40,15 +40,24 @@ import "strings"
 	partyName:          string
 	cloudStorageBucket: string
 	serviceAccountName: string
+
 	clientTls: {
 		certFile: string
 		keyFile:  string
 	}
+
 	tinkKeyUri: string
+
 	privateCa: {
 		name:     string
 		poolId:   string
 		location: string
+	}
+
+	dataflow: {
+		projectId:    #GcloudProject | string
+		region:       string
+		tempLocation: "\(cloudStorageBucket)/dataflow-temp" | string
 	}
 
 	_partyId: strings.SplitAfter(partyName, "/")[1]
@@ -63,6 +72,9 @@ import "strings"
 		"--privateca-ca-name=\(privateCa.name)",
 		"--privateca-pool-id=\(privateCa.poolId)",
 		"--privateca-ca-location=\(privateCa.location)",
+		"--dataflow-project-id=\(dataflow.projectId)",
+		"--dataflow-region=\(dataflow.region)",
+		"--dataflow-temp-location=\(dataflow.tempLocation)",
 	]
 }
 _exchangeDaemonConfig: #ExchangeDaemonConfig
