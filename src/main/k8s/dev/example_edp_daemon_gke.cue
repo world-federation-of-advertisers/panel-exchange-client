@@ -30,4 +30,8 @@ _exchangeDaemonConfig: {
 		poolId:   "EdpTestPool"
 		location: "us-central1"
 	}
+	dataflow: {
+		region:         "us-central1"
+		serviceAccount: "edp-test-service-account@halo-cmm-dev.iam.gserviceaccount.com"
+	}
 }
