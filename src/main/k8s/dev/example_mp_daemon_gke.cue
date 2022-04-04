@@ -30,4 +30,5 @@ _exchangeDaemonConfig: {
 		poolId:   "MpTestPool"
 		location: "us-central1"
 	}
+	dataflow: region: "us-central1"
 }
