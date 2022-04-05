@@ -30,4 +30,8 @@ _exchangeDaemonConfig: {
 		poolId:   "MpTestPool"
 		location: "us-central1"
 	}
+	dataflow: {
+		region:         "us-central1"
+		serviceAccount: "mp-test-service-account@halo-cmm-dev.iam.gserviceaccount.com"
+	}
 }
