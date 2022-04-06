@@ -55,10 +55,10 @@ import "strings"
 	}
 
 	dataflow: {
-		projectId:      #GCloudProject | string
+		projectId:      *#GCloudProject | string
 		region:         string
 		serviceAccount: string
-		tempLocation:   "gs://\(cloudStorageBucket)/dataflow-temp/" | string
+		tempLocation:   *"gs://\(cloudStorageBucket)/dataflow-temp/" | string
 	}
 
 	_partyId: strings.SplitAfter(partyName, "/")[1]
