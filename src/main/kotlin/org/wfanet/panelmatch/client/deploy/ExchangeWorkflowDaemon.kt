@@ -33,6 +33,7 @@ import org.wfanet.panelmatch.client.storage.StorageDetailsProvider
 import org.wfanet.panelmatch.common.ExchangeDateKey
 import org.wfanet.panelmatch.common.Timeout
 import org.wfanet.panelmatch.common.certificates.CertificateManager
+import org.wfanet.panelmatch.common.loggerFor
 import org.wfanet.panelmatch.common.secrets.SecretMap
 import org.wfanet.panelmatch.common.storage.StorageFactory
 
@@ -111,6 +112,7 @@ abstract class ExchangeWorkflowDaemon : Runnable {
         jobLauncher = launcher
       )
 
+    logger.info("Starting daemon loop")
     runDaemon(exchangeStepLauncher)
   }
 
@@ -120,5 +122,9 @@ abstract class ExchangeWorkflowDaemon : Runnable {
       // All errors thrown inside the loop should be suppressed such that the daemon doesn't crash.
       logAndSuppressExceptionSuspend { exchangeStepLauncher.findAndRunExchangeStep() }
     }
+  }
+
+  companion object {
+    private val logger by loggerFor()
   }
 }
