@@ -241,6 +241,10 @@ fun <T> PCollection<T>.toSingletonView(name: String = "ToView"): PCollectionView
   return apply(name, View.asSingleton())
 }
 
+fun <T> PCollection<T>.toListView(name: String = "ToListView"): PCollectionView<List<T>> {
+  return apply(name, View.asList())
+}
+
 fun <K, V> PCollection<KV<K, V>>.toMapView(name: String = "ToMapView"): PCollectionView<Map<K, V>> {
   return apply(name, View.asMap())
 }
