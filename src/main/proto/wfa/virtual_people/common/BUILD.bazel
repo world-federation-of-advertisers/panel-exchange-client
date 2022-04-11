@@ -1,0 +1,15 @@
+load("@rules_java//java:defs.bzl", "java_proto_library")
+load("@wfa_common_jvm//build/kt_jvm_proto:defs.bzl", "kt_jvm_proto_library")
+
+package(default_visibility = ["//visibility:public"])
+
+java_proto_library(
+    name = "event_java_proto",
+    deps = ["@wfa_virtual_people_common//src/main/proto/wfa/virtual_people/common:event_proto"],
+)
+
+kt_jvm_proto_library(
+    name = "event_kt_jvm_proto",
+    srcs = ["@wfa_virtual_people_common//src/main/proto/wfa/virtual_people/common:event_proto"],
+    deps = [":event_java_proto"],
+)
