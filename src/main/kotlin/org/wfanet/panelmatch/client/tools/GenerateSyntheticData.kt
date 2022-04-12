@@ -161,7 +161,7 @@ private fun writeCompressionParameters(brotliFile: File, outputFile: File) {
           this.brotli = brotliCompressionParameters {
             this.dictionary = brotliFile.readBytes().toString().toByteStringUtf8()
           }
-      }
+        }
     }
 
   outputFile.outputStream().use { outputStream ->
