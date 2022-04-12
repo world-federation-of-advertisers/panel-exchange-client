@@ -1,8 +1,7 @@
 # `dev` Kubernetes Environment
 
 K8s manifest generation for the `dev` environment, which is the `halo-cmm-dev`
-Google Cloud project. The matching configuration for the Cross-Media Measurement
-System is in
+Google Cloud project. The matching configuration for the Cross-Media Measurement System is in
 https://github.com/world-federation-of-advertisers/cross-media-measurement/tree/main/src/main/k8s/dev.
 
 ## Push image
