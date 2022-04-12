@@ -168,4 +168,3 @@ private fun writeCompressionParameters(brotliFile: File, outputFile: File) {
     outputStream.write(params.toDelimitedByteString().toByteArray())
   }
 }
-
