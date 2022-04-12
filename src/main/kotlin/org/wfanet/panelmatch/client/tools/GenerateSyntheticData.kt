@@ -156,12 +156,13 @@ private fun writeCompressionParameters(brotliFile: File, outputFile: File) {
   val params =
     when (brotliFile.name.isEmpty()) {
       true -> compressionParameters { this.uncompressed = noCompression {} }
-      false -> compressionParameters {
-        this.brotli = brotliCompressionParameters {
-          this.dictionary = brotliFile.readBytes().toString().toByteStringUtf8()
-        }
+      false ->
+        compressionParameters {
+          this.brotli = brotliCompressionParameters {
+            this.dictionary = brotliFile.readBytes().toString().toByteStringUtf8()
+          }
+      }
     }
-  }
 
   outputFile.outputStream().use { outputStream ->
     outputStream.write(params.toDelimitedByteString().toByteArray())
