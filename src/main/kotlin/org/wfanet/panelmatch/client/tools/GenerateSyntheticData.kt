@@ -102,7 +102,7 @@ private class GenerateSyntheticData : Runnable {
     return joinKeyAndId {
       this.joinKey = joinKey { key = id }
       this.joinKeyIdentifier = joinKeyIdentifier {
-        this.id = "${id}-join-key-id".toByteStringUtf8()
+        this.id = "$id-join-key-id".toByteStringUtf8()
       }
     }
   }
