@@ -101,9 +101,7 @@ private class GenerateSyntheticData : Runnable {
   fun UnprocessedEvent.toJoinKeyAndId(): JoinKeyAndId {
     return joinKeyAndId {
       this.joinKey = joinKey { key = id }
-      this.joinKeyIdentifier = joinKeyIdentifier {
-        this.id = "$id-join-key-id".toByteStringUtf8()
-      }
+      this.joinKeyIdentifier = joinKeyIdentifier { this.id = "$id-join-key-id".toByteStringUtf8() }
     }
   }
 
