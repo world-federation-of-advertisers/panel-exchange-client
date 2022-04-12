@@ -16,24 +16,24 @@ package org.wfanet.panelmatch.client.tools
 
 import com.google.protobuf.kotlin.toByteStringUtf8
 import java.io.File
-import kotlin.random.Random
 import kotlin.math.floor
+import kotlin.random.Random
 import org.wfanet.panelmatch.client.eventpreprocessing.UnprocessedEvent
-import wfa_virtual_people.dataProviderEvent
-import wfa_virtual_people.logEvent
-import wfa_virtual_people.labelerInput
 import org.wfanet.panelmatch.client.eventpreprocessing.unprocessedEvent
-import org.wfanet.panelmatch.client.exchangetasks.joinKeyAndIdCollection
-import org.wfanet.panelmatch.client.exchangetasks.joinKeyAndId
 import org.wfanet.panelmatch.client.exchangetasks.JoinKeyAndId
-import org.wfanet.panelmatch.client.exchangetasks.joinKeyIdentifier
 import org.wfanet.panelmatch.client.exchangetasks.joinKey
-import org.wfanet.panelmatch.common.compression.compressionParameters
-import org.wfanet.panelmatch.common.compression.CompressionParametersKt.noCompression
+import org.wfanet.panelmatch.client.exchangetasks.joinKeyAndId
+import org.wfanet.panelmatch.client.exchangetasks.joinKeyAndIdCollection
+import org.wfanet.panelmatch.client.exchangetasks.joinKeyIdentifier
 import org.wfanet.panelmatch.common.compression.CompressionParametersKt.brotliCompressionParameters
+import org.wfanet.panelmatch.common.compression.CompressionParametersKt.noCompression
+import org.wfanet.panelmatch.common.compression.compressionParameters
 import org.wfanet.panelmatch.common.toDelimitedByteString
-import picocli.CommandLine.Option
 import picocli.CommandLine.Command
+import picocli.CommandLine.Option
+import wfa_virtual_people.dataProviderEvent
+import wfa_virtual_people.labelerInput
+import wfa_virtual_people.logEvent
 
 @kotlin.io.path.ExperimentalPathApi
 @Command(name = "edp-event-data", description = ["Generates synthetic data for Panel Match."])
@@ -127,7 +127,9 @@ private class GenerateSyntheticData : Runnable {
     }
 
     joinKeysFile.outputStream().use { outputStream ->
-      outputStream.write(joinKeyAndIdCollection { joinKeyAndIds += joinKeyAndIdProtos }.toByteArray())
+      outputStream.write(
+        joinKeyAndIdCollection { joinKeyAndIds += joinKeyAndIdProtos }.toByteArray()
+      )
     }
 
     writeCompressionParameters(brotliInputFile, brotliOutputFile)
@@ -139,9 +141,7 @@ private class GenerateSyntheticData : Runnable {
 private fun generateSyntheticData(id: Int): UnprocessedEvent {
   val rawDataProviderEvent = dataProviderEvent {
     this.logEvent = logEvent {
-      this.labelerInput = labelerInput {
-        this.timestampUsec = floor(Math.random()).toLong()
-      }
+      this.labelerInput = labelerInput { this.timestampUsec = floor(Math.random()).toLong() }
     }
   }
   return unprocessedEvent {
@@ -153,12 +153,13 @@ private fun generateSyntheticData(id: Int): UnprocessedEvent {
 private fun writeCompressionParameters(brotliFile: File, outputFile: File) {
   if (outputFile.name.isEmpty()) return
 
-  val params = when (brotliFile.name.isEmpty()) {
-    true -> compressionParameters { this.uncompressed = noCompression {} }
-    false -> compressionParameters {
-      this.brotli = brotliCompressionParameters {
-        this.dictionary = brotliFile.readBytes().toString().toByteStringUtf8()
-      }
+  val params =
+    when (brotliFile.name.isEmpty()) {
+      true -> compressionParameters { this.uncompressed = noCompression {} }
+      false -> compressionParameters {
+        this.brotli = brotliCompressionParameters {
+          this.dictionary = brotliFile.readBytes().toString().toByteStringUtf8()
+        }
     }
   }
 
