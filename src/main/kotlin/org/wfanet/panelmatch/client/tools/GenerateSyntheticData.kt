@@ -123,11 +123,11 @@ private class GenerateSyntheticData : Runnable {
     }
 
     unprocessedEventsFile.outputStream().use { outputStream ->
-      events.forEach { outputStream.write(it.toDelimitedByteString().toByteArray())}
+      events.forEach { outputStream.write(it.toDelimitedByteString().toByteArray()) }
     }
 
     joinKeysFile.outputStream().use { outputStream ->
-      outputStream.write(joinKeyAndIdCollection {joinKeyAndIds += joinKeyAndIdProtos }.toByteArray())
+      outputStream.write(joinKeyAndIdCollection { joinKeyAndIds += joinKeyAndIdProtos }.toByteArray())
     }
 
     writeCompressionParameters(brotliInputFile, brotliOutputFile)
@@ -136,7 +136,7 @@ private class GenerateSyntheticData : Runnable {
   }
 }
 
-private fun generateSyntheticData(id: Int) : UnprocessedEvent {
+private fun generateSyntheticData(id: Int): UnprocessedEvent {
   val rawDataProviderEvent = dataProviderEvent {
     this.logEvent = logEvent {
       this.labelerInput = labelerInput {
@@ -153,9 +153,13 @@ private fun generateSyntheticData(id: Int) : UnprocessedEvent {
 private fun writeCompressionParameters(brotliFile: File, outputFile: File) {
   if (outputFile.name.isEmpty()) return
 
-  val params = when(brotliFile.name.isEmpty()) {
+  val params = when (brotliFile.name.isEmpty()) {
     true -> compressionParameters { this.uncompressed = noCompression {} }
-    false -> compressionParameters { this.brotli = brotliCompressionParameters { this.dictionary = brotliFile.readBytes().toString().toByteStringUtf8()} }
+    false -> compressionParameters {
+      this.brotli = brotliCompressionParameters {
+        this.dictionary = brotliFile.readBytes().toString().toByteStringUtf8()
+      }
+    }
   }
 
   outputFile.outputStream().use { outputStream ->
