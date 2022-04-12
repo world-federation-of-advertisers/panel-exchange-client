@@ -87,7 +87,7 @@ abstract class ExchangeWorkflowDaemonFromFlags : ExchangeWorkflowDaemon() {
   }
 
   override val throttler: Throttler by lazy {
-    MinimumIntervalThrottler(Clock.systemUTC(), flags.pollingInterval)
+    MinimumIntervalThrottler(clock, flags.pollingInterval)
   }
 
   private val taskContext: TaskParameters by lazy {
@@ -102,8 +102,9 @@ abstract class ExchangeWorkflowDaemonFromFlags : ExchangeWorkflowDaemon() {
   }
 
   override val exchangeTaskMapper: ExchangeTaskMapper by lazy {
+    val inputTaskThrottler = MinimumIntervalThrottler(clock, flags.pollingInterval)
     ProductionExchangeTaskMapper(
-      inputTaskThrottler = throttler,
+      inputTaskThrottler = inputTaskThrottler,
       privateStorageSelector = privateStorageSelector,
       sharedStorageSelector = sharedStorageSelector,
       certificateManager = certificateManager,
