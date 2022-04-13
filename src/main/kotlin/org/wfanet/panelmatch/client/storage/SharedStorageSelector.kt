@@ -23,7 +23,8 @@ import org.wfanet.panelmatch.common.ExchangeDateKey
 import org.wfanet.panelmatch.common.certificates.CertificateManager
 import org.wfanet.panelmatch.common.storage.StorageFactory
 
-private val EXPLICITLY_SUPPORTED_STORAGE_TYPES = setOf(PlatformCase.AWS, PlatformCase.GCS)
+private val EXPLICITLY_SUPPORTED_STORAGE_TYPES =
+  setOf(PlatformCase.AWS, PlatformCase.GCS, PlatformCase.CUSTOM)
 
 /**
  * Builds [VerifiedStorageClient]s for shared blobs within a particular Exchange.

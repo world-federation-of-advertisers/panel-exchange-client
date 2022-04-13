@@ -68,10 +68,11 @@ fun makeTestSharedStorageSelector(
 }
 
 private val WORKFLOW = exchangeWorkflow {
-  exchangeIdentifiers = exchangeIdentifiers {
-    modelProvider = "some-model-provider"
-    dataProvider = "some-data-provider"
-  }
+  exchangeIdentifiers =
+    exchangeIdentifiers {
+      modelProvider = "some-model-provider"
+      dataProvider = "some-data-provider"
+    }
   steps += step { party = ExchangeWorkflow.Party.DATA_PROVIDER }
 }
 
