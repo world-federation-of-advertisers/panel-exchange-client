@@ -14,8 +14,10 @@
 
 package org.wfanet.panelmatch.client.tools
 
+import com.google.protobuf.kotlin.toByteString
 import com.google.protobuf.kotlin.toByteStringUtf8
 import java.io.File
+import java.time.Instant
 import kotlin.math.floor
 import kotlin.random.Random
 import org.wfanet.panelmatch.client.eventpreprocessing.UnprocessedEvent
@@ -35,6 +37,11 @@ import wfa_virtual_people.dataProviderEvent
 import wfa_virtual_people.labelerInput
 import wfa_virtual_people.logEvent
 
+private val FROM_TIME =
+  (Instant.parse("2022-01-01T00:00:00Z").toString().toInt() * 1000000).toDouble()
+private val UNTIL_TIME =
+  (Instant.parse("2022-04-04T00:00:00Z").toString().toInt() * 1000000).toDouble()
+
 @kotlin.io.path.ExperimentalPathApi
 @Command(name = "edp-event-data", description = ["Generates synthetic data for Panel Match."])
 private class GenerateSyntheticData : Runnable {
@@ -46,7 +53,7 @@ private class GenerateSyntheticData : Runnable {
   private lateinit var numberOfEvents: String
 
   @Option(
-    names = ["--unprocessed_events_file_path"],
+    names = ["--unprocessed_events_output_path"],
     description = ["Path to the file where UnprocessedEvent protos will be written."],
     required = false,
     defaultValue = "edp-unprocessed-events"
@@ -54,10 +61,10 @@ private class GenerateSyntheticData : Runnable {
   private lateinit var unprocessedEventsFile: File
 
   @Option(
-    names = ["--join_keys_file_path"],
+    names = ["--join_keys_output_path"],
     description = ["Path to the file where JoinKeyAndIdCollection proto will be written."],
     required = false,
-    defaultValue = "edp-join-keys"
+    defaultValue = "mp-plaintext-join-keys"
   )
   private lateinit var joinKeysFile: File
 
@@ -77,31 +84,50 @@ private class GenerateSyntheticData : Runnable {
   private lateinit var brotliInputFile: File
 
   @Option(
-    names = ["--output_file_path"],
+    names = ["--compression_parameters_output_path"],
     description = ["Path to the file where the CompressionParameters proto will be written."],
     required = false
   )
   private lateinit var brotliOutputFile: File
 
   @Option(
-    names = ["--join_key_input_path"],
+    names = ["--previous_join_keys_input_path"],
     description = ["Path to the file where the previous day's join keys are stored."],
-    required = true,
+    required = false,
   )
   private lateinit var joinKeyInputFile: File
 
   @Option(
-    names = ["--join_key_output_path"],
+    names = ["--previous_join_keys_output_path"],
     description = ["Path to the file where previous day's join keys will be copied to."],
     required = false
   )
   private lateinit var joinKeyOutputFile: File
 
-  /** Creates a JoinKeyAndId proto from the given UnprocessedEvent proto. */
+  /** Creates a [JoinKeyAndId] proto from the given [UnprocessedEvent] proto. */
   fun UnprocessedEvent.toJoinKeyAndId(): JoinKeyAndId {
     return joinKeyAndId {
       this.joinKey = joinKey { key = id }
       this.joinKeyIdentifier = joinKeyIdentifier { this.id = "$id-join-key-id".toByteStringUtf8() }
+    }
+  }
+
+  fun writeCompressionParameters() {
+    if (brotliOutputFile.name.isEmpty()) return
+
+    val params =
+      if (brotliInputFile.name.isEmpty()) {
+        compressionParameters { this.uncompressed = noCompression {} }
+      } else {
+        compressionParameters {
+          this.brotli = brotliCompressionParameters {
+            this.dictionary = brotliInputFile.readBytes().toByteString()
+          }
+        }
+      }
+
+    brotliOutputFile.outputStream().use { outputStream ->
+      outputStream.write(params.toByteString().toByteArray())
     }
   }
 
@@ -130,7 +156,7 @@ private class GenerateSyntheticData : Runnable {
       )
     }
 
-    writeCompressionParameters(brotliInputFile, brotliOutputFile)
+    writeCompressionParameters()
 
     joinKeyInputFile.copyTo(joinKeyOutputFile)
   }
@@ -139,30 +165,13 @@ private class GenerateSyntheticData : Runnable {
 private fun generateSyntheticData(id: Int): UnprocessedEvent {
   val rawDataProviderEvent = dataProviderEvent {
     this.logEvent = logEvent {
-      this.labelerInput = labelerInput { this.timestampUsec = floor(Math.random()).toLong() }
+      this.labelerInput = labelerInput {
+        this.timestampUsec = floor(Random.nextDouble(FROM_TIME, UNTIL_TIME)).toLong()
+      }
     }
   }
   return unprocessedEvent {
     this.id = id.toString().toByteStringUtf8()
     this.data = rawDataProviderEvent.toByteString()
-  }
-}
-
-private fun writeCompressionParameters(brotliFile: File, outputFile: File) {
-  if (outputFile.name.isEmpty()) return
-
-  val params =
-    when (brotliFile.name.isEmpty()) {
-      true -> compressionParameters { this.uncompressed = noCompression {} }
-      false ->
-        compressionParameters {
-          this.brotli = brotliCompressionParameters {
-            this.dictionary = brotliFile.readBytes().toString().toByteStringUtf8()
-          }
-        }
-    }
-
-  outputFile.outputStream().use { outputStream ->
-    outputStream.write(params.toDelimitedByteString().toByteArray())
   }
 }
