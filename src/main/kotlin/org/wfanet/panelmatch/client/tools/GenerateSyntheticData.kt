@@ -19,6 +19,7 @@ import com.google.protobuf.kotlin.toByteStringUtf8
 import java.io.File
 import java.time.Instant
 import kotlin.math.floor
+import kotlin.properties.Delegates
 import kotlin.random.Random
 import org.wfanet.panelmatch.client.eventpreprocessing.UnprocessedEvent
 import org.wfanet.panelmatch.client.eventpreprocessing.unprocessedEvent
@@ -31,6 +32,7 @@ import org.wfanet.panelmatch.common.compression.CompressionParametersKt.brotliCo
 import org.wfanet.panelmatch.common.compression.CompressionParametersKt.noCompression
 import org.wfanet.panelmatch.common.compression.compressionParameters
 import org.wfanet.panelmatch.common.toDelimitedByteString
+import picocli.CommandLine
 import picocli.CommandLine.Command
 import picocli.CommandLine.Option
 import wfa_virtual_people.dataProviderEvent
@@ -45,12 +47,13 @@ private val UNTIL_TIME =
 @kotlin.io.path.ExperimentalPathApi
 @Command(name = "edp-event-data", description = ["Generates synthetic data for Panel Match."])
 private class GenerateSyntheticData : Runnable {
-  @Option(
+  @set:CommandLine.Option(
     names = ["--number_of_events"],
     description = ["Number of UnprocessedEvent protos to generate."],
     required = true,
   )
-  private lateinit var numberOfEvents: String
+  var numberOfEvents by Delegates.notNull<Int>()
+    private set
 
   @Option(
     names = ["--unprocessed_events_output_path"],
@@ -68,13 +71,14 @@ private class GenerateSyntheticData : Runnable {
   )
   private lateinit var joinKeysFile: File
 
-  @Option(
+  @set:CommandLine.Option(
     names = ["--join_key_sample_rate"],
     description = ["The sample rate [0, 1] used for selecting an UnprocessedEvent proto."],
     required = true,
     defaultValue = "0.0005"
   )
-  private lateinit var sampleRate: String
+  var sampleRate by Delegates.notNull<Double>()
+    private set
 
   @Option(
     names = ["--brotli_dictionary_path"],
@@ -135,10 +139,10 @@ private class GenerateSyntheticData : Runnable {
   override fun run() {
     val joinKeyAndIdProtos = mutableListOf<JoinKeyAndId>()
     val events = sequence {
-      (1..numberOfEvents.toInt()).forEach {
+      (1..numberOfEvents).forEach {
         val event = generateSyntheticData(it)
 
-        if (Random.nextDouble(1.0) < sampleRate.toDouble()) {
+        if (Random.nextDouble(1.0) < sampleRate) {
           joinKeyAndIdProtos.add(event.toJoinKeyAndId())
         }
 
