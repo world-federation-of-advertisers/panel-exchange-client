@@ -19,7 +19,6 @@ import com.google.protobuf.kotlin.toByteStringUtf8
 import java.io.File
 import java.time.Instant
 import java.util.concurrent.TimeUnit
-import kotlin.math.floor
 import kotlin.properties.Delegates
 import kotlin.random.Random
 import org.wfanet.panelmatch.client.eventpreprocessing.UnprocessedEvent
@@ -39,10 +38,9 @@ import wfa_virtual_people.dataProviderEvent
 import wfa_virtual_people.labelerInput
 import wfa_virtual_people.logEvent
 
-private val FROM_TIME =
-  TimeUnit.SECONDS.toMicros(Instant.parse("2022-01-01T00:00:00Z").epochSecond).toDouble()
+private val FROM_TIME = TimeUnit.SECONDS.toMicros(Instant.parse("2022-01-01T00:00:00Z").epochSecond)
 private val UNTIL_TIME =
-  TimeUnit.SECONDS.toMicros(Instant.parse("2022-04-04T00:00:00Z").epochSecond).toDouble()
+  TimeUnit.SECONDS.toMicros(Instant.parse("2022-04-04T00:00:00Z").epochSecond)
 
 @kotlin.io.path.ExperimentalPathApi
 @Command(
@@ -173,7 +171,7 @@ private fun generateSyntheticData(id: Int): UnprocessedEvent {
   val rawDataProviderEvent = dataProviderEvent {
     this.logEvent = logEvent {
       this.labelerInput = labelerInput {
-        this.timestampUsec = floor(Random.nextDouble(FROM_TIME, UNTIL_TIME)).toLong()
+        this.timestampUsec = Random.nextLong(FROM_TIME, UNTIL_TIME)
       }
     }
   }
