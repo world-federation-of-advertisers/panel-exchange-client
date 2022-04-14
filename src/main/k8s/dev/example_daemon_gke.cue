@@ -60,6 +60,7 @@ import "strings"
 		serviceAccount:    string
 		tempLocation:      *"gs://\(cloudStorageBucket)/dataflow-temp/" | string
 		workerMachineType: *"n1-standard-1" | string
+		diskSize:          *"30" | string
 	}
 
 	_partyId: strings.SplitAfter(partyName, "/")[1]
@@ -79,7 +80,7 @@ import "strings"
 		"--dataflow-service-account=\(dataflow.serviceAccount)",
 		"--dataflow-temp-location=\(dataflow.tempLocation)",
 		"--dataflow-worker-machine-type=\(dataflow.workerMachineType)",
-		"--dataflow-disk-size=30",
+		"--dataflow-disk-size=\(dataflow.diskSize)",
 	]
 }
 _exchangeDaemonConfig: #ExchangeDaemonConfig
