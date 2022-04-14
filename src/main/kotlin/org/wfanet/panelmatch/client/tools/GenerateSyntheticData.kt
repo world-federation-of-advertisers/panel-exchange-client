@@ -18,6 +18,7 @@ import com.google.protobuf.kotlin.toByteString
 import com.google.protobuf.kotlin.toByteStringUtf8
 import java.io.File
 import java.time.Instant
+import java.util.concurrent.TimeUnit
 import kotlin.math.floor
 import kotlin.properties.Delegates
 import kotlin.random.Random
@@ -32,7 +33,6 @@ import org.wfanet.panelmatch.common.compression.CompressionParametersKt.brotliCo
 import org.wfanet.panelmatch.common.compression.CompressionParametersKt.noCompression
 import org.wfanet.panelmatch.common.compression.compressionParameters
 import org.wfanet.panelmatch.common.toDelimitedByteString
-import picocli.CommandLine
 import picocli.CommandLine.Command
 import picocli.CommandLine.Option
 import wfa_virtual_people.dataProviderEvent
@@ -40,14 +40,17 @@ import wfa_virtual_people.labelerInput
 import wfa_virtual_people.logEvent
 
 private val FROM_TIME =
-  (Instant.parse("2022-01-01T00:00:00Z").toString().toInt() * 1000000).toDouble()
+  TimeUnit.SECONDS.toMicros(Instant.parse("2022-01-01T00:00:00Z").toString().toLong()).toDouble()
 private val UNTIL_TIME =
-  (Instant.parse("2022-04-04T00:00:00Z").toString().toInt() * 1000000).toDouble()
+  TimeUnit.SECONDS.toMicros(Instant.parse("2022-04-04T00:00:00Z").toString().toLong()).toDouble()
 
 @kotlin.io.path.ExperimentalPathApi
-@Command(name = "edp-event-data", description = ["Generates synthetic data for Panel Match."])
+@Command(
+  name = "generate-synthetic-data",
+  description = ["Generates synthetic data for Panel Match."]
+)
 private class GenerateSyntheticData : Runnable {
-  @set:CommandLine.Option(
+  @set:Option(
     names = ["--number_of_events"],
     description = ["Number of UnprocessedEvent protos to generate."],
     required = true,
@@ -71,7 +74,7 @@ private class GenerateSyntheticData : Runnable {
   )
   private lateinit var joinKeysFile: File
 
-  @set:CommandLine.Option(
+  @set:Option(
     names = ["--join_key_sample_rate"],
     description = ["The sample rate [0, 1] used for selecting an UnprocessedEvent proto."],
     required = true,
