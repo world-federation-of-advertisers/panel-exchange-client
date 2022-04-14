@@ -40,9 +40,9 @@ import wfa_virtual_people.labelerInput
 import wfa_virtual_people.logEvent
 
 private val FROM_TIME =
-  TimeUnit.SECONDS.toMicros(Instant.parse("2022-01-01T00:00:00Z").toString().toLong()).toDouble()
+  TimeUnit.SECONDS.toMicros(Instant.parse("2022-01-01T00:00:00Z").epochSecond).toDouble()
 private val UNTIL_TIME =
-  TimeUnit.SECONDS.toMicros(Instant.parse("2022-04-04T00:00:00Z").toString().toLong()).toDouble()
+  TimeUnit.SECONDS.toMicros(Instant.parse("2022-04-04T00:00:00Z").epochSecond).toDouble()
 
 @kotlin.io.path.ExperimentalPathApi
 @Command(
