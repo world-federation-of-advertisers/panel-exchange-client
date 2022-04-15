@@ -14,6 +14,7 @@
 
 package org.wfanet.panelmatch.common.beam
 
+import java.util.logging.Logger
 import org.apache.beam.sdk.coders.KvCoder
 import org.apache.beam.sdk.coders.ListCoder
 import org.apache.beam.sdk.coders.NullableCoder
@@ -34,6 +35,7 @@ import org.apache.beam.sdk.values.PCollection
 import org.apache.beam.sdk.values.PCollectionList
 import org.apache.beam.sdk.values.PCollectionView
 import org.apache.beam.sdk.values.TupleTag
+import org.wfanet.panelmatch.common.loggerFor
 import org.wfanet.panelmatch.common.singleOrNullIfEmpty
 
 /** Kotlin convenience helper for making [KV]s. */
@@ -175,8 +177,14 @@ inline fun <reified KeyT, reified LeftT, reified RightT> PCollection<KV<KeyT, Le
   right: PCollection<KV<KeyT, RightT>>,
   name: String = "One-to-One Join",
 ): PCollection<KV<LeftT?, RightT?>> {
-  return join<KeyT, LeftT, RightT, KV<LeftT?, RightT?>>(right, name) { _, lefts, rights ->
-      yield(kvOf(lefts.singleOrNullIfEmpty(), rights.singleOrNullIfEmpty()))
+  return join<KeyT, LeftT, RightT, KV<LeftT?, RightT?>>(right, name) { key, lefts, rights ->
+      val leftEmit = lefts.singleOrNullIfEmpty()
+      val rightEmit = rights.singleOrNullIfEmpty()
+      if (leftEmit == null || rightEmit == null) {
+        val logger: Logger by loggerFor()
+        logger.warning("Got null value for key $key.\nLeft: $leftEmit\nRight: $rightEmit")
+      }
+      yield(kvOf(leftEmit, rightEmit))
     }
     .setCoder(
       KvCoder.of(
