@@ -21,6 +21,7 @@ import java.time.Instant
 import java.util.concurrent.TimeUnit
 import kotlin.properties.Delegates
 import kotlin.random.Random
+import org.wfanet.measurement.common.commandLineMain
 import org.wfanet.panelmatch.client.eventpreprocessing.UnprocessedEvent
 import org.wfanet.panelmatch.client.eventpreprocessing.unprocessedEvent
 import org.wfanet.panelmatch.client.exchangetasks.JoinKeyAndId
@@ -42,12 +43,11 @@ private val FROM_TIME = TimeUnit.SECONDS.toMicros(Instant.parse("2022-01-01T00:0
 private val UNTIL_TIME =
   TimeUnit.SECONDS.toMicros(Instant.parse("2022-04-04T00:00:00Z").epochSecond)
 
-@kotlin.io.path.ExperimentalPathApi
 @Command(
   name = "generate-synthetic-data",
   description = ["Generates synthetic data for Panel Match."]
 )
-private class GenerateSyntheticData : Runnable {
+class GenerateSyntheticData : Runnable {
   @set:Option(
     names = ["--number_of_events"],
     description = ["Number of UnprocessedEvent protos to generate."],
@@ -117,6 +117,20 @@ private class GenerateSyntheticData : Runnable {
     }
   }
 
+  fun generateSyntheticData(id: Int): UnprocessedEvent {
+    val rawDataProviderEvent = dataProviderEvent {
+      this.logEvent = logEvent {
+        this.labelerInput = labelerInput {
+          this.timestampUsec = Random.nextLong(FROM_TIME, UNTIL_TIME)
+        }
+      }
+    }
+    return unprocessedEvent {
+      this.id = id.toString().toByteStringUtf8()
+      this.data = rawDataProviderEvent.toByteString()
+    }
+  }
+
   fun writeCompressionParameters() {
     if (brotliOutputFile.name.isEmpty()) return
 
@@ -167,16 +181,4 @@ private class GenerateSyntheticData : Runnable {
   }
 }
 
-private fun generateSyntheticData(id: Int): UnprocessedEvent {
-  val rawDataProviderEvent = dataProviderEvent {
-    this.logEvent = logEvent {
-      this.labelerInput = labelerInput {
-        this.timestampUsec = Random.nextLong(FROM_TIME, UNTIL_TIME)
-      }
-    }
-  }
-  return unprocessedEvent {
-    this.id = id.toString().toByteStringUtf8()
-    this.data = rawDataProviderEvent.toByteString()
-  }
-}
+fun main(args: Array<String>) = commandLineMain(GenerateSyntheticData(), args)
