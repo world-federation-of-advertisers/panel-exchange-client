@@ -33,6 +33,7 @@ import org.wfanet.panelmatch.common.ExchangeDateKey
 import org.wfanet.panelmatch.common.certificates.testing.TestCertificateManager
 import org.wfanet.panelmatch.common.secrets.MutableSecretMap
 import org.wfanet.panelmatch.common.storage.StorageFactory
+import org.wfanet.panelmatch.common.storage.testing.InMemoryStorageFactory
 
 private fun makeTestStorageFactoryMap(
   underlyingStorage: StorageFactory

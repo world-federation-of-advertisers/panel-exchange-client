@@ -16,6 +16,11 @@ package org.wfanet.panelmatch.client.deploy.example.gcloud
 
 import com.google.crypto.tink.integration.gcpkms.GcpKmsClient
 import java.util.Optional
+import kotlin.properties.Delegates
+import org.apache.beam.runners.dataflow.DataflowRunner
+import org.apache.beam.runners.dataflow.options.DataflowPipelineOptions
+import org.apache.beam.sdk.options.PipelineOptions
+import org.apache.beam.sdk.options.PipelineOptionsFactory
 import org.wfanet.measurement.common.commandLineMain
 import org.wfanet.measurement.common.crypto.tink.TinkKeyStorageProvider
 import org.wfanet.measurement.gcloud.gcs.GcsFromFlags
@@ -29,6 +34,7 @@ import org.wfanet.panelmatch.common.certificates.gcloud.CertificateAuthority
 import org.wfanet.panelmatch.common.certificates.gcloud.PrivateCaClient
 import org.wfanet.panelmatch.common.secrets.MutableSecretMap
 import org.wfanet.panelmatch.common.secrets.SecretMap
+import picocli.CommandLine
 import picocli.CommandLine.Command
 import picocli.CommandLine.Mixin
 import picocli.CommandLine.Option
@@ -77,6 +83,65 @@ private class GoogleCloudExampleDaemon : ExampleDaemon() {
   @Mixin private lateinit var gcsFlags: GcsFromFlags.Flags
   @Mixin private lateinit var caFlags: CertificateAuthorityFlags
   @Mixin private lateinit var privateCaFlags: PrivateCaFlags
+
+  @Option(
+    names = ["--dataflow-project-id"],
+    description = ["Google Cloud project name for Dataflow"],
+    required = true
+  )
+  lateinit var dataflowProjectId: String
+    private set
+
+  @Option(
+    names = ["--dataflow-region"],
+    description = ["Google Cloud region for Dataflow"],
+    required = true
+  )
+  lateinit var dataflowRegion: String
+    private set
+
+  @Option(
+    names = ["--dataflow-service-account"],
+    description = ["Service account for Dataflow"],
+    required = true
+  )
+  lateinit var dataflowServiceAccount: String
+    private set
+
+  @Option(
+    names = ["--dataflow-temp-location"],
+    description = ["Google Cloud temp location (GCS bucket) for Dataflow"],
+    required = true
+  )
+  lateinit var dataflowTempLocation: String
+    private set
+
+  @Option(
+    names = ["--dataflow-worker-machine-type"],
+    description = ["Dataflow worker machine type."],
+    defaultValue = "n1-standard-1",
+  )
+  lateinit var dataflowWorkerMachineType: String
+    private set
+
+  @set:CommandLine.Option(
+    names = ["--dataflow-disk-size"],
+    description = ["Dataflow disk size in GB."],
+    defaultValue = "30"
+  )
+  private var dataflowDiskSize by Delegates.notNull<Int>()
+
+  override fun makePipelineOptions(): PipelineOptions {
+    return PipelineOptionsFactory.`as`(DataflowPipelineOptions::class.java).apply {
+      runner = DataflowRunner::class.java
+      project = dataflowProjectId
+      region = dataflowRegion
+      tempLocation = dataflowTempLocation
+      serviceAccount = dataflowServiceAccount
+      workerMachineType = dataflowWorkerMachineType
+      diskSizeGb = dataflowDiskSize
+    }
+  }
 
   override val rootStorageClient: StorageClient by lazy {
     GcsStorageClient.fromFlags(GcsFromFlags(gcsFlags))

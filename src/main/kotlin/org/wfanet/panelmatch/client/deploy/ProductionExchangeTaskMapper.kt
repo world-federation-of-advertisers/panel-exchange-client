@@ -15,6 +15,7 @@
 package org.wfanet.panelmatch.client.deploy
 
 import com.google.protobuf.kotlin.toByteStringUtf8
+import java.time.format.DateTimeFormatter
 import org.apache.beam.sdk.Pipeline
 import org.apache.beam.sdk.options.PipelineOptions
 import org.wfanet.measurement.api.v2alpha.ExchangeWorkflow
@@ -60,12 +61,17 @@ import org.wfanet.panelmatch.common.certificates.CertificateManager
 import org.wfanet.panelmatch.common.crypto.JniDeterministicCommutativeCipher
 import org.wfanet.panelmatch.common.crypto.generateSecureRandomByteString
 
+/**
+ * Concrete [ExchangeTaskMapper] implementation.
+ *
+ * [makePipelineOptions] must return a different object on each invocation.
+ */
 open class ProductionExchangeTaskMapper(
   private val inputTaskThrottler: Throttler,
   private val privateStorageSelector: PrivateStorageSelector,
   private val sharedStorageSelector: SharedStorageSelector,
   private val certificateManager: CertificateManager,
-  private val pipelineOptions: PipelineOptions,
+  private val makePipelineOptions: () -> PipelineOptions,
   private val taskContext: TaskParameters,
 ) : ExchangeTaskMapper() {
   override suspend fun ExchangeContext.commutativeDeterministicEncrypt(): ExchangeTask {
@@ -278,6 +284,17 @@ open class ProductionExchangeTaskMapper(
     outputBlobs: List<String>,
     execute: suspend ApacheBeamContext.() -> Unit
   ): ApacheBeamTask {
+    val pipelineOptions = makePipelineOptions()
+    pipelineOptions.jobName =
+      listOf(
+          exchangeDateKey.recurringExchangeId,
+          exchangeDateKey.date.format(DateTimeFormatter.ofPattern("yyyyMMdd")),
+          step.stepId,
+          attemptKey.exchangeStepAttemptId
+        )
+        .joinToString("-")
+        .replace('_', '-')
+
     return ApacheBeamTask(
       Pipeline.create(pipelineOptions),
       privateStorageSelector.getStorageFactory(exchangeDateKey),

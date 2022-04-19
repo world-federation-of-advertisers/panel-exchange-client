@@ -16,9 +16,9 @@ package k8s
 
 import "strings"
 
-#GloudProject:            "halo-cmm-dev"
+#GCloudProject:           "halo-cmm-dev"
 #KingdomPublicApiTarget:  "public.kingdom.dev.halo-cmm.org:8443"
-#ContainerRegistryPrefix: "gcr.io/" + #GloudProject
+#ContainerRegistryPrefix: "gcr.io/" + #GCloudProject
 #DefaultResourceConfig: {
 	replicas:  1
 	resources: #ResourceRequirements & {
@@ -40,15 +40,27 @@ import "strings"
 	partyName:          string
 	cloudStorageBucket: string
 	serviceAccountName: string
+
 	clientTls: {
 		certFile: string
 		keyFile:  string
 	}
+
 	tinkKeyUri: string
+
 	privateCa: {
 		name:     string
 		poolId:   string
 		location: string
+	}
+
+	dataflow: {
+		projectId:         *#GCloudProject | string
+		region:            string
+		serviceAccount:    string
+		tempLocation:      *"gs://\(cloudStorageBucket)/dataflow-temp/" | string
+		workerMachineType: *"n1-standard-1" | string
+		diskSize:          *"30" | string
 	}
 
 	_partyId: strings.SplitAfter(partyName, "/")[1]
@@ -63,6 +75,12 @@ import "strings"
 		"--privateca-ca-name=\(privateCa.name)",
 		"--privateca-pool-id=\(privateCa.poolId)",
 		"--privateca-ca-location=\(privateCa.location)",
+		"--dataflow-project-id=\(dataflow.projectId)",
+		"--dataflow-region=\(dataflow.region)",
+		"--dataflow-service-account=\(dataflow.serviceAccount)",
+		"--dataflow-temp-location=\(dataflow.tempLocation)",
+		"--dataflow-worker-machine-type=\(dataflow.workerMachineType)",
+		"--dataflow-disk-size=\(dataflow.diskSize)",
 	]
 }
 _exchangeDaemonConfig: #ExchangeDaemonConfig
@@ -97,7 +115,7 @@ deployments: {
 						"--exchange-api-target=" + #KingdomPublicApiTarget,
 						"--exchange-api-cert-host=localhost",
 						"--debug-verbose-grpc-client-logging=\(#DebugVerboseGrpcLogging)",
-						"--google-cloud-storage-project=" + #GloudProject,
+						"--google-cloud-storage-project=" + #GCloudProject,
 						"--channel-shutdown-timeout=3s",
 						"--polling-interval=1m",
 						"--preprocessing-max-byte-size=1000000",
@@ -106,7 +124,7 @@ deployments: {
 						"--x509-organization=SomeOrganization",
 						"--x509-dns-name=example.com",
 						"--x509-valid-days=365",
-						"--privateca-project-id=" + #GloudProject,
+						"--privateca-project-id=" + #GCloudProject,
 			]
 		}
 	}
