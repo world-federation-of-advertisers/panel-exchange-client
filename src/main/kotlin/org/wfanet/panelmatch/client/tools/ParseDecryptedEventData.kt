@@ -50,10 +50,11 @@ class ParseDecryptedEventData : Runnable {
   private fun KeyedDecryptedEventDataSet.toDataProviderEventSetEntry(): DataProviderEventSet.Entry {
     return entry {
       joinKeyAndId = plaintextJoinKeyAndId
-      events += decryptedEventDataList.flatMap { plaintext ->
-        val combinedEvents = CombinedEvents.parseFrom(plaintext.payload)
-        combinedEvents.serializedEventsList.map { DataProviderEvent.parseFrom(it) }
-      }
+      events +=
+        decryptedEventDataList.flatMap { plaintext ->
+          val combinedEvents = CombinedEvents.parseFrom(plaintext.payload)
+          combinedEvents.serializedEventsList.map { DataProviderEvent.parseFrom(it) }
+        }
     }
   }
 
