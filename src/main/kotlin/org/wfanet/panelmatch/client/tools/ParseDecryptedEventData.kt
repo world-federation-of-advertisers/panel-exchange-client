@@ -16,6 +16,7 @@ package org.wfanet.panelmatch.client.tools
 
 import com.google.protobuf.Message
 import com.google.protobuf.Parser
+import java.io.BufferedInputStream
 import java.io.File
 import java.io.PrintWriter
 import org.wfanet.measurement.common.commandLineMain
@@ -27,6 +28,8 @@ import org.wfanet.panelmatch.common.ShardedFileName
 import picocli.CommandLine.Command
 import picocli.CommandLine.Option
 import wfa_virtual_people.Event.DataProviderEvent
+
+private const val BUFFER_SIZE_BYTES = 32 * 1024 * 1024 // 32MiB
 
 @Command(
   name = "parse-decrypted-event-data",
@@ -52,12 +55,11 @@ class ParseDecryptedEventData : Runnable {
     val fileSpec = manifestFile.readText().trim()
     val shardedFileName = ShardedFileName(fileSpec)
     val parsedShards = shardedFileName.parseAllShards(KeyedDecryptedEventDataSet.parser())
-    val dataProviderEventSet = dataProviderEventSet {
-      entries += parsedShards.map { it.toDataProviderEventSetEntry() }.toList()
-    }
 
-    outputFile.outputStream().use { outputStream ->
-      PrintWriter(outputStream).use { it.write(dataProviderEventSet.toJson()) }
+    PrintWriter(outputFile.outputStream()).use {
+      for (keyedDecryptedEventDataSet in parsedShards) {
+        it.println(keyedDecryptedEventDataSet.toDataProviderEventSetEntry().toJson())
+      }
     }
   }
 
@@ -76,7 +78,7 @@ class ParseDecryptedEventData : Runnable {
     return sequence {
       fileNames.forEach { fileName ->
         val shardFile = manifestFile.parentFile.resolve(fileName)
-        shardFile.inputStream().use {
+        BufferedInputStream(shardFile.inputStream(), BUFFER_SIZE_BYTES).use {
           while (true) {
             val message: T = parser.parseDelimitedFrom(it) ?: break
             yield(message)
