@@ -19,6 +19,7 @@ import com.google.protobuf.Parser
 import java.io.BufferedInputStream
 import java.io.File
 import java.io.PrintWriter
+import kotlin.properties.Delegates
 import org.wfanet.measurement.common.commandLineMain
 import org.wfanet.measurement.common.toJson
 import org.wfanet.panelmatch.client.eventpreprocessing.CombinedEvents
@@ -51,14 +52,22 @@ class ParseDecryptedEventData : Runnable {
   )
   private lateinit var outputFile: File
 
+  @set:Option(
+    names = ["--max-shards-to-parse"],
+    description = ["If specified, up to this many shards will be parsed."],
+    required = false,
+    defaultValue = "-1",
+  )
+  private var maxShardsToParse by Delegates.notNull<Int>()
+
   override fun run() {
     val fileSpec = manifestFile.readText().trim()
     val shardedFileName = ShardedFileName(fileSpec)
     val parsedShards = shardedFileName.parseAllShards(KeyedDecryptedEventDataSet.parser())
 
-    PrintWriter(outputFile.outputStream()).use {
+    PrintWriter(outputFile.outputStream()).use { printWriter ->
       for (keyedDecryptedEventDataSet in parsedShards) {
-        it.println(keyedDecryptedEventDataSet.toDataProviderEventSetEntry().toJson())
+        printWriter.println(keyedDecryptedEventDataSet.toDataProviderEventSetEntry().toJson())
       }
     }
   }
@@ -76,11 +85,15 @@ class ParseDecryptedEventData : Runnable {
 
   private fun <T : Message> ShardedFileName.parseAllShards(parser: Parser<T>): Sequence<T> {
     return sequence {
-      fileNames.forEach { fileName ->
+      fileNames.forEachIndexed { shardNum, fileName ->
+        if (maxShardsToParse in 0..shardNum) {
+          return@sequence
+        }
+
         val shardFile = manifestFile.parentFile.resolve(fileName)
-        BufferedInputStream(shardFile.inputStream(), BUFFER_SIZE_BYTES).use {
+        BufferedInputStream(shardFile.inputStream(), BUFFER_SIZE_BYTES).use { inputStream ->
           while (true) {
-            val message: T = parser.parseDelimitedFrom(it) ?: break
+            val message: T = parser.parseDelimitedFrom(inputStream) ?: break
             yield(message)
           }
         }
