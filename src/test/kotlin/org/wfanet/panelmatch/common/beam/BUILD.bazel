@@ -17,6 +17,19 @@ kt_jvm_test(
 )
 
 kt_jvm_test(
+    name = "BreakFusionTest",
+    timeout = "short",
+    srcs = ["BreakFusionTest.kt"],
+    test_class = "org.wfanet.panelmatch.common.beam.BreakFusionTest",
+    deps = [
+        "//imports/java/org/apache/beam:core",
+        "//src/main/kotlin/org/wfanet/panelmatch/common/beam",
+        "//src/main/kotlin/org/wfanet/panelmatch/common/beam/testing",
+        "@wfa_common_jvm//imports/java/org/junit",
+    ],
+)
+
+kt_jvm_test(
     name = "WriteShardedDataTest",
     timeout = "short",
     srcs = ["WriteShardedDataTest.kt"],
