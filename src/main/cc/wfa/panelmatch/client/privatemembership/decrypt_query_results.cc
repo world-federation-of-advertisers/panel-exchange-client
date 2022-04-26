@@ -115,6 +115,20 @@ absl::StatusOr<DecryptQueryResultsResponse> DecryptQueryResults(
   ASSIGN_OR_RETURN(ClientDecryptQueriesResponse client_decrypt_queries_response,
                    RemoveRlwe(request));
 
+  // If this is for a padding query, don't attempt to remove AES or decompress.
+  if (request.decrypted_join_key().key().empty()) {
+    DecryptQueryResultsResponse result;
+    for (const ClientDecryptedQueryResult& client_decrypted_query_result :
+         client_decrypt_queries_response.result()) {
+      DecryptedEventDataSet* decrypted_data_set = result.add_event_data_sets();
+      decrypted_data_set->mutable_query_id()->set_id(
+          client_decrypted_query_result.query_metadata().query_id());
+      decrypted_data_set->add_decrypted_event_data()->set_payload(
+          client_decrypted_query_result.result());
+    }
+    return result;
+  }
+
   // Step 2: Decrypt the encrypted event data
   ASSIGN_OR_RETURN(DecryptQueryResultsResponse result,
                    RemoveAes(request, client_decrypt_queries_response));

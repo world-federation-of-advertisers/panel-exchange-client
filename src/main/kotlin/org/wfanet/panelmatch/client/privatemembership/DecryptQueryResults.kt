@@ -33,6 +33,7 @@ import org.wfanet.panelmatch.client.common.joinKeyOf
 import org.wfanet.panelmatch.client.exchangetasks.JoinKey
 import org.wfanet.panelmatch.client.exchangetasks.JoinKeyAndId
 import org.wfanet.panelmatch.client.exchangetasks.JoinKeyIdentifier
+import org.wfanet.panelmatch.client.exchangetasks.joinKeyAndId
 import org.wfanet.panelmatch.common.beam.groupByKey
 import org.wfanet.panelmatch.common.beam.keyBy
 import org.wfanet.panelmatch.common.beam.kvOf
@@ -47,12 +48,9 @@ import org.wfanet.panelmatch.common.withTime
 /**
  * Decrypts and decompresses [encryptedQueryResults].
  *
- * There must be a bijection between [QueryId]s in [queryIdAndJoinKeys] and the queries present in
- * [encryptedQueryResults].
- *
  * @param encryptedQueryResults data to be decrypted and decompressed
- * @param plaintextJoinKeyAndId used to tie a decrypted result to its plaintext join key
- * @param decryptedJoinKeyAndId used to remove the final layer of encryption
+ * @param plaintextJoinKeyAndIds used to tie a decrypted result to its plaintext join key
+ * @param decryptedJoinKeyAndIds used to remove the final layer of encryption
  * @param queryIdAndIds a query id tied to its join key identifier
  * @param compressionParameters specifies how to decompress the decrypted event data
  * @param parameters parameters for decryption
@@ -86,7 +84,7 @@ fun decryptQueryResults(
     )
 }
 
-private class DecryptQueryResults(
+class DecryptQueryResults(
   private val parameters: Any,
   private val queryResultsDecryptor: QueryResultsDecryptor,
   private val hkdfPepper: ByteString,
@@ -102,10 +100,10 @@ private class DecryptQueryResults(
         ProtoCoder.of(JoinKeyIdentifier::class.java),
         ListCoder.of(ProtoCoder.of(Plaintext::class.java))
       )
-    val encryptedQueryResults = input[encryptedQueryResultsTag]
-    val queryIdAndIds = input[queryIdAndIdsTag]
-    val decryptedJoinKeyAndIds = input[decryptedJoinKeyAndIdsTag]
-    val plaintextJoinKeyAndIds = input[plaintextJoinKeyAndIdsTag]
+    val encryptedQueryResults: PCollection<EncryptedQueryResult> = input[encryptedQueryResultsTag]
+    val queryIdAndIds: PCollection<QueryIdAndId> = input[queryIdAndIdsTag]
+    val decryptedJoinKeyAndIds: PCollection<JoinKeyAndId> = input[decryptedJoinKeyAndIdsTag]
+    val plaintextJoinKeyAndIds: PCollection<JoinKeyAndId> = input[plaintextJoinKeyAndIdsTag]
 
     val keyedQueryIdAndIds: PCollection<KV<JoinKeyIdentifier, QueryIdAndId>> =
       queryIdAndIds.keyBy("Key QueryIds by Id") { it.joinKeyIdentifier }
@@ -158,14 +156,18 @@ private class DecryptQueryResults(
       plaintextJoinKeyAndIds.keyBy("Key PlaintextJoinKeys By JoinKeyIdentifier") {
         it.joinKeyIdentifier
       }
-    return groupedDecryptedResults.strictOneToOneJoin(
+    return groupedDecryptedResults.oneToOneJoin(
         keyedPlaintextJoinKeyAndIds,
         name = "Join Decrypted Result to Plaintext Joinkeys"
       )
       .map("Map to KeyedDecryptedEventDataSet") {
         keyedDecryptedEventDataSet {
-          plaintextJoinKeyAndId = it.value
-          decryptedEventData += it.key
+          plaintextJoinKeyAndId =
+            it.value ?: joinKeyAndId { joinKeyIdentifier = PADDING_QUERY_JOIN_KEY_IDENTIFIER }
+          decryptedEventData +=
+            requireNotNull(it.key) {
+              "Missing result for ${plaintextJoinKeyAndId.joinKeyIdentifier.id}"
+            }
         }
       }
   }
