@@ -39,6 +39,8 @@ class HybridEncryptTask : ExchangeTask {
   ): Map<String, Flow<ByteString>> {
     logger.addToTaskLog("Executing hybrid encrypt task")
 
+    // TODO: Use PrivateKeystore instead of loading the KeysetHandle directly from blob storage
+    // See https://github.com/world-federation-of-advertisers/panel-exchange-client/issues/322
     val inputData = input.getValue(PLAINTEXT_DATA_LABEL).toByteString()
     val publicKeyData = input.getValue(PUBLIC_KEY_LABEL).toByteString()
     val publicKeysetHandle = KeysetHandle.readNoSecret(publicKeyData.toByteArray())
