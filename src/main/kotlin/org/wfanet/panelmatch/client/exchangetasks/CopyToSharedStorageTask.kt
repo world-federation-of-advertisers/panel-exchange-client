@@ -14,60 +14,25 @@
 
 package org.wfanet.panelmatch.client.exchangetasks
 
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.flow.asFlow
-import kotlinx.coroutines.flow.collect
 import org.wfanet.measurement.api.v2alpha.ExchangeWorkflow.Step.CopyOptions
 import org.wfanet.measurement.api.v2alpha.ExchangeWorkflow.Step.CopyOptions.LabelType.BLOB
-import org.wfanet.measurement.api.v2alpha.ExchangeWorkflow.Step.CopyOptions.LabelType.MANIFEST
-import org.wfanet.measurement.common.mapConcurrently
 import org.wfanet.measurement.storage.StorageClient
 import org.wfanet.measurement.storage.StorageClient.Blob
-import org.wfanet.panelmatch.client.storage.VerifiedStorageClient
-import org.wfanet.panelmatch.common.ShardedFileName
-import org.wfanet.panelmatch.common.storage.toByteString
+import org.wfanet.panelmatch.client.storage.SigningStorageClient
 
-/** Implements CopyToSharedStorageStep. */
+/** Implements CopyToSharedStorageStep for regular (non-manifest) blobs. */
 class CopyToSharedStorageTask(
   private val source: StorageClient,
-  private val destination: VerifiedStorageClient,
+  private val destination: SigningStorageClient,
   private val copyOptions: CopyOptions,
   private val sourceBlobKey: String,
   private val destinationBlobKey: String,
-  private val maxParallelTransfers: Int = 16,
 ) : CustomIOExchangeTask() {
   override suspend fun execute() {
-    val blob = readBlob(sourceBlobKey)
+    require(copyOptions.labelType == BLOB) { "Unsupported CopyOptions: $copyOptions" }
 
-    when (copyOptions.labelType) {
-      BLOB -> blob.copyExternally(destinationBlobKey)
-      MANIFEST -> writeManifestOutputs(blob)
-      else -> error("Unrecognized CopyOptions: $copyOptions")
-    }
-  }
-
-  private suspend fun writeManifestOutputs(blob: Blob) {
-    val manifestBytes = blob.toByteString()
-    val shardedFileName = ShardedFileName(manifestBytes.toStringUtf8())
-
-    destination.writeBlob(destinationBlobKey, manifestBytes)
-
-    coroutineScope {
-      shardedFileName
-        .fileNames
-        .asFlow()
-        .mapConcurrently(this, maxParallelTransfers) { shardName ->
-          readBlob(shardName).copyExternally(shardName)
-        }
-        .collect()
-    }
-  }
-
-  private suspend fun readBlob(blobKey: String): Blob {
-    return requireNotNull(source.getBlob(blobKey)) { "Missing blob with key: $blobKey" }
-  }
-
-  private suspend fun Blob.copyExternally(destinationBlobKey: String) {
-    destination.writeBlob(destinationBlobKey, read())
+    val sourceBlob: Blob =
+      requireNotNull(source.getBlob(sourceBlobKey)) { "Missing blob with key: $sourceBlobKey" }
+    destination.writeBlob(destinationBlobKey, sourceBlob.read())
   }
 }
