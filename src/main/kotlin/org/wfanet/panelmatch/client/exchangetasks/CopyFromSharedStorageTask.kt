@@ -14,11 +14,18 @@
 
 package org.wfanet.panelmatch.client.exchangetasks
 
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.flow.asFlow
+import kotlinx.coroutines.flow.collect
 import org.wfanet.measurement.api.v2alpha.ExchangeWorkflow.Step.CopyOptions
 import org.wfanet.measurement.api.v2alpha.ExchangeWorkflow.Step.CopyOptions.LabelType.BLOB
+import org.wfanet.measurement.api.v2alpha.ExchangeWorkflow.Step.CopyOptions.LabelType.MANIFEST
+import org.wfanet.measurement.common.mapConcurrently
 import org.wfanet.measurement.storage.StorageClient
 import org.wfanet.panelmatch.client.storage.VerifyingStorageClient
+import org.wfanet.panelmatch.client.storage.VerifyingStorageClient.VerifiedBlob
 import org.wfanet.panelmatch.client.storage.signatureBlobKeyFor
+import org.wfanet.panelmatch.common.ShardedFileName
 
 /** Implements CopyFromSharedStorageStep. */
 class CopyFromSharedStorageTask(
@@ -27,12 +34,40 @@ class CopyFromSharedStorageTask(
   private val copyOptions: CopyOptions,
   private val sourceBlobKey: String,
   private val destinationBlobKey: String,
+  private val maxParallelTransfers: Int = 16,
 ) : CustomIOExchangeTask() {
   override suspend fun execute() {
-    require(copyOptions.labelType == BLOB) { "Unsupported CopyOptions: $copyOptions" }
+    val blob = source.getBlob(sourceBlobKey)
 
-    val sourceBlob = source.getBlob(sourceBlobKey)
-    destination.writeBlob(signatureBlobKeyFor(destinationBlobKey), sourceBlob.signature)
-    destination.writeBlob(destinationBlobKey, sourceBlob.read())
+    destination.writeBlob(signatureBlobKeyFor(destinationBlobKey), blob.signature)
+
+    when (copyOptions.labelType) {
+      BLOB -> blob.copyInternally(destinationBlobKey)
+      MANIFEST -> writeManifestOutputs(blob)
+      else -> error("Unrecognized CopyOptions: $copyOptions")
+    }
+  }
+
+  private suspend fun writeManifestOutputs(blob: VerifyingStorageClient.VerifiedBlob) {
+    val manifestBytes = blob.toByteString()
+    val shardedFileName = ShardedFileName(manifestBytes.toStringUtf8())
+
+    destination.writeBlob(destinationBlobKey, manifestBytes)
+
+    coroutineScope {
+      shardedFileName
+        .fileNames
+        .asFlow()
+        .mapConcurrently(this, maxParallelTransfers) { shardName ->
+          val shardBlob = source.getBlob(shardName)
+          destination.writeBlob(signatureBlobKeyFor(shardName), shardBlob.signature)
+          shardBlob.copyInternally(shardName)
+        }
+        .collect()
+    }
+  }
+
+  private suspend fun VerifiedBlob.copyInternally(destinationBlobKey: String) {
+    destination.writeBlob(destinationBlobKey, read())
   }
 }

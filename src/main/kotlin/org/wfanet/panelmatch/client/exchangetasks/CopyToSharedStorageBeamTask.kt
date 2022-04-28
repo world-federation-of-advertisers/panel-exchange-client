@@ -42,9 +42,7 @@ fun ApacheBeamContext.copyToSharedStorage(
   val manifestBytes: PCollection<ByteString> = readBlobAsPCollection(sourceManifestLabel)
 
   manifestBytes.map("Write Destination Manifest") { manifest ->
-    runBlocking(Dispatchers.IO) {
-      destination.writeBlob(destinationManifestBlobKey, manifest)
-    }
+    runBlocking(Dispatchers.IO) { destination.writeBlob(destinationManifestBlobKey, manifest) }
     manifest
   }
 

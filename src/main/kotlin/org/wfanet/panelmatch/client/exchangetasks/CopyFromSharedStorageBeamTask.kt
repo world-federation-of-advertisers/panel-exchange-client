@@ -54,9 +54,8 @@ fun ApacheBeamContext.copyFromSharedStorage(
   val shardNames: PCollection<String> =
     pipeline.apply("Generate Shard Names", Create.of(shardedFileName.fileNames.asIterable()))
 
-  shardNames.breakFusion("Break Fusion Before Copy").map(
-    "Copy Blobs From Shared Storage"
-  ) { shardName ->
+  shardNames.breakFusion("Break Fusion Before Copy").map("Copy Blobs From Shared Storage") {
+    shardName ->
     runBlocking(Dispatchers.IO) {
       val shard: VerifiedBlob = source.getBlob(shardName)
       val destination: StorageClient = destinationFactory.build()

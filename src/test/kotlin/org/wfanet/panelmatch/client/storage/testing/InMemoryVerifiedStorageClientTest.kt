@@ -14,16 +14,9 @@
 
 package org.wfanet.panelmatch.client.storage.testing
 
+import org.wfanet.measurement.storage.StorageClient
 import org.wfanet.measurement.storage.testing.InMemoryStorageClient
-import org.wfanet.panelmatch.client.storage.SigningStorageClient
-import org.wfanet.panelmatch.client.storage.VerifyingStorageClient
 
 class InMemoryVerifiedStorageClientTest : VerifiedStorageClientTest() {
-  override val verifyingStorage: VerifyingStorageClient by lazy {
-    makeTestVerifyingStorageClient(InMemoryStorageClient())
-  }
-
-  override val signingStorage: SigningStorageClient by lazy {
-    makeTestSigningStorageClient(InMemoryStorageClient())
-  }
+  override val underlyingClient: StorageClient by lazy { InMemoryStorageClient() }
 }

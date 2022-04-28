@@ -17,7 +17,9 @@ package org.wfanet.panelmatch.client.storage.testing
 import com.google.common.truth.Truth.assertThat
 import com.google.protobuf.kotlin.toByteStringUtf8
 import kotlin.test.assertFailsWith
+import org.junit.Before
 import org.junit.Test
+import org.wfanet.measurement.storage.StorageClient
 import org.wfanet.panelmatch.client.storage.BlobNotFoundException
 import org.wfanet.panelmatch.client.storage.SigningStorageClient
 import org.wfanet.panelmatch.client.storage.VerifyingStorageClient
@@ -27,8 +29,15 @@ private const val KEY = "some/arbitrary.key"
 private val VALUE = "<some-arbitrary-value>".toByteStringUtf8()
 
 abstract class VerifiedStorageClientTest {
-  abstract val verifyingStorage: VerifyingStorageClient
-  abstract val signingStorage: SigningStorageClient
+  private lateinit var verifyingStorage: VerifyingStorageClient
+  private lateinit var signingStorage: SigningStorageClient
+  abstract val underlyingClient: StorageClient
+
+  @Before
+  fun setUp() {
+    verifyingStorage = makeTestVerifyingStorageClient(underlyingClient)
+    signingStorage = makeTestSigningStorageClient(underlyingClient)
+  }
 
   @Test
   fun writeThenRead() = runBlockingTest {
