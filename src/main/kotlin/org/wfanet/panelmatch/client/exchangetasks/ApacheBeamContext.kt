@@ -42,11 +42,11 @@ import org.wfanet.panelmatch.common.storage.toStringUtf8
  */
 class ApacheBeamContext(
   val pipeline: Pipeline,
-  private val outputManifests: Map<String, ShardedFileName>,
+  val outputManifests: Map<String, ShardedFileName>,
   private val outputLabels: Map<String, String>,
   private val inputLabels: Map<String, String>,
   private val inputBlobs: Map<String, Blob>,
-  private val storageFactory: StorageFactory
+  val storageFactory: StorageFactory
 ) {
   suspend fun <T : Message> readShardedPCollection(
     manifestLabel: String,
@@ -76,9 +76,12 @@ class ApacheBeamContext(
     return inputBlobs.getValue(label).toByteString()
   }
 
-  fun <T : Message> PCollection<T>.writeShardedFiles(manifestLabel: String) {
+  inline fun <reified T : Message> PCollection<T>.writeShardedFiles(manifestLabel: String) {
     val shardedFileName = outputManifests.getValue(manifestLabel)
-    apply("Write ${shardedFileName.spec}", WriteShardedData(shardedFileName.spec, storageFactory))
+    apply(
+      "Write ${shardedFileName.spec}",
+      WriteShardedData(T::class.java, shardedFileName.spec, storageFactory)
+    )
   }
 
   fun <T : Message> PCollection<T>.writeSingleBlob(label: String) {

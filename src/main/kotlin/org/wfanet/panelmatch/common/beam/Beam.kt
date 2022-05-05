@@ -268,10 +268,8 @@ fun <T> PCollection<T>.combineIntoList(name: String = "CombineIntoList"): PColle
  * workers.
  */
 inline fun <reified T> PCollection<T>.breakFusion(name: String = "BreakFusion"): PCollection<T> {
-  return parDo<T, KV<String, T>>("$name/PairWithUUID") {
-      yield(kvOf(UUID.randomUUID().toString(), it))
-    }
+  return keyBy("$name/KeyByUUID") { UUID.randomUUID().toString() }
     .groupByKey("$name/GBK")
     .flatMap("$name/FlatMap") { it.value }
-    .setCoder(this.coder)
+    .setCoder(coder)
 }

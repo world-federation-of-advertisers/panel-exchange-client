@@ -21,8 +21,11 @@ import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.runBlocking
 import org.apache.beam.sdk.Pipeline
+import org.apache.beam.sdk.coders.IterableCoder
+import org.apache.beam.sdk.coders.KvCoder
+import org.apache.beam.sdk.coders.VarIntCoder
+import org.apache.beam.sdk.extensions.protobuf.ProtoCoder
 import org.apache.beam.sdk.transforms.DoFn
-import org.apache.beam.sdk.transforms.Flatten
 import org.apache.beam.sdk.transforms.GroupByKey
 import org.apache.beam.sdk.transforms.PTransform
 import org.apache.beam.sdk.transforms.ParDo
@@ -39,6 +42,7 @@ import org.wfanet.panelmatch.common.toDelimitedByteString
 
 /** Writes input messages into blobs. */
 class WriteShardedData<T : Message>(
+  private val clazz: Class<T>,
   private val fileSpec: String,
   private val storageFactory: StorageFactory
 ) : PTransform<PCollection<T>, WriteShardedData.WriteResult>() {
@@ -62,31 +66,82 @@ class WriteShardedData<T : Message>(
     }
   }
 
+  private fun addMissingFileGroups(
+    groupedData: PCollection<KV<Int, Iterable<T>>>,
+    minNumFileGroups: Int
+  ): PCollection<KV<Int, Iterable<T>>> {
+    val missingFileGroups =
+      groupedData
+        .keys("Present groupedData Keys")
+        .filter("Filter for missing groups of files") { it < minNumFileGroups }
+        .combineIntoList("Add Missing File Groups")
+        .parDo<List<Int>, KV<Int, Iterable<T>>>("Create Missing File Groups") {
+          val presentFileGroups: HashSet<Int> = it.toHashSet()
+          for (shardIndex in 0 until minNumFileGroups) {
+            if (shardIndex !in presentFileGroups) {
+              yield(kvOf(shardIndex, emptyList<T>().asIterable()))
+            }
+          }
+        }
+        .setCoder(KvCoder.of(VarIntCoder.of(), IterableCoder.of(ProtoCoder.of(clazz))))
+    return PCollectionList.of(groupedData)
+      .and(missingFileGroups)
+      .flatten("Flatten groupedData+missingFileGroups")
+  }
+
+  private fun addMissingFiles(
+    groupedData: PCollection<KV<Int, Iterable<T>>>,
+    shardCount: Int,
+    filesPerGroup: Int
+  ): PCollection<KV<Int, Iterable<T>>> {
+    val missingFiles =
+      groupedData
+        .keys("Present Keys to find missing files")
+        .keyBy("Key groups of files") { it % filesPerGroup }
+        .groupByKey("Group files")
+        .parDo<KV<Int, Iterable<Int>>, KV<Int, Iterable<T>>>("Create Missing Files") {
+          val presentFiles: HashSet<Int> = it.value.toHashSet()
+          var shardIndex: Int = requireNotNull(it.key)
+          while (shardIndex < shardCount) {
+            if (shardIndex !in presentFiles) {
+              yield(kvOf(shardIndex, emptyList<T>().asIterable()))
+            }
+            shardIndex += filesPerGroup
+          }
+        }
+        .setCoder(KvCoder.of(VarIntCoder.of(), IterableCoder.of(ProtoCoder.of(clazz))))
+    return PCollectionList.of(groupedData)
+      .and(missingFiles)
+      .flatten("Flatten groupedData+missingFiles")
+  }
+
   override fun expand(input: PCollection<T>): WriteResult {
     val shardedFileName = ShardedFileName(fileSpec)
     val shardCount = shardedFileName.shardCount
-
+    val filesPerGroup = 1000
     val groupedData: PCollection<KV<Int, Iterable<T>>> =
       input
         .keyBy("Key by Blob") { it.assignToShard(shardCount) }
         .apply("Group by Blob", GroupByKey.create())
 
-    val missingFiles: PCollection<KV<Int, Iterable<T>>> =
-      groupedData.keys("Present Keys").combineIntoList("Combine Present Keys").parDo {
-        val keySet = it.toHashSet()
-        for (i in 0 until shardCount) {
-          if (i !in keySet) {
-            yield(kvOf(i, emptyList<T>().asIterable()))
-          }
-        }
-      }
+    val withMissingFileGroups =
+      addMissingFileGroups(
+        groupedData = groupedData,
+        minNumFileGroups = minOf(shardCount, filesPerGroup)
+      )
 
-    missingFiles.coder = groupedData.coder
-
+    val withMissingFiles =
+      addMissingFiles(
+        groupedData = withMissingFileGroups,
+        shardCount = shardCount,
+        filesPerGroup = filesPerGroup
+      )
     val filesWritten =
-      PCollectionList.of(groupedData)
-        .and(missingFiles)
-        .apply("Flatten", Flatten.pCollections())
+      withMissingFiles
+        .keyBy("Prevent Write Fusion: Key") { it.key }
+        .groupByKey("Prevent Write Fusion/Group")
+        .map("Prevent Write Fusion/Unkey+Ungroup") { it.value.single() }
+        .setCoder(KvCoder.of(VarIntCoder.of(), IterableCoder.of(ProtoCoder.of(clazz))))
         .apply("Write $fileSpec", ParDo.of(WriteFilesFn(fileSpec, storageFactory)))
 
     return WriteResult(filesWritten)

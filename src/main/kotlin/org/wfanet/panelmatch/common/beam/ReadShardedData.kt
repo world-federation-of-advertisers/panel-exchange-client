@@ -46,9 +46,9 @@ class ReadShardedData<T : Message>(
 
     // GroupByKey prevents fusing `mapValues` since the previous ParDo has high fan-out.
     return fileNames
-      .keyBy("Prevent fusion: Key") { it }
-      .groupByKey("Prevent Fusion/Group")
-      .map("Prevent Fusion/Unkey+Ungroup") { it.value.single() }
+      .keyBy("Prevent Read Fusion: Key") { it }
+      .groupByKey("Prevent Read Fusion/Group")
+      .map("Prevent Read Fusion/Unkey+Ungroup") { it.value.single() }
       .apply("Read Each Blob", ParDo.of(ReadBlobFn(prototype, storageFactory)))
       .setCoder(ProtoCoder.of(prototype.javaClass))
   }
