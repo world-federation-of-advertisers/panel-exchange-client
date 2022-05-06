@@ -247,22 +247,29 @@ private class EncryptQueriesFn(
   @ProcessElement
   fun processElement(context: ProcessContext) {
     val unencryptedQueries = context.element().value.map { it.unencryptedQuery }
+    val keyPair = context.sideInput(keys)
 
-    val (encryptedQueries, time) =
-      withTime { cryptor.encryptQueries(unencryptedQueries, context.sideInput(keys)) }
+    for (chunk in unencryptedQueries.chunked(16)) {
+      context.output(encrypt(chunk, keyPair))
+    }
+  }
+
+  private fun encrypt(
+    unencryptedQueries: List<UnencryptedQuery>,
+    keyPair: AsymmetricKeyPair
+  ): EncryptedQueryBundle {
+    val (encryptedQueries, time) = withTime { cryptor.encryptQueries(unencryptedQueries, keyPair) }
 
     encryptionTimesDistribution.update(time.toNanos())
     encryptedQueriesSizeDistribution.update(encryptedQueries.size().toLong())
 
-    val shardId = unencryptedQueries.firstOrNull()?.shardId ?: return
+    val shardId = unencryptedQueries.first().shardId
 
-    val bundle = encryptedQueryBundle {
+    return encryptedQueryBundle {
       this.shardId = shardId
       queryIds += unencryptedQueries.map { it.queryId }
       serializedEncryptedQueries = encryptedQueries
     }
-
-    context.output(bundle)
   }
 }
 
