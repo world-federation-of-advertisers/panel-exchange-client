@@ -18,12 +18,7 @@ import com.google.protobuf.ByteString
 import com.google.protobuf.Message
 import com.google.protobuf.MessageLite
 import java.io.InputStream
-import java.io.SequenceInputStream
-import java.util.Collections
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.runBlocking
 import org.apache.beam.sdk.extensions.protobuf.ProtoCoder
 import org.apache.beam.sdk.metrics.Metrics
@@ -33,9 +28,11 @@ import org.apache.beam.sdk.transforms.PTransform
 import org.apache.beam.sdk.transforms.ParDo
 import org.apache.beam.sdk.values.PBegin
 import org.apache.beam.sdk.values.PCollection
+import org.wfanet.measurement.storage.StorageClient.Blob
 import org.wfanet.panelmatch.common.ShardedFileName
 import org.wfanet.panelmatch.common.parseDelimitedMessages
 import org.wfanet.panelmatch.common.storage.StorageFactory
+import org.wfanet.panelmatch.common.storage.toInputStream
 
 /** Reads each file mentioned in [fileSpec] as a [ByteString]. */
 class ReadShardedData<T : Message>(
@@ -70,13 +67,10 @@ private class ReadBlobFn<T : MessageLite>(
   @ProcessElement
   fun processElement(context: ProcessContext) =
     runBlocking(Dispatchers.IO) {
-      val bytes: Flow<ByteString> =
-        storageFactory.build().getBlob(context.element())?.read() ?: return@runBlocking
+      val blob: Blob = storageFactory.build().getBlob(context.element()) ?: return@runBlocking
+      val inputStream: InputStream = blob.toInputStream(this)
 
       var elements = 0L
-
-      val orderedInputStreams: List<InputStream> = bytes.map { it.newInput() }.toList()
-      val inputStream = SequenceInputStream(Collections.enumeration(orderedInputStreams))
 
       for (message in inputStream.parseDelimitedMessages(prototype)) {
         itemSizeDistribution.update(message.serializedSize.toLong())

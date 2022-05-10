@@ -20,18 +20,8 @@ import java.io.InputStream
 import java.time.Duration
 
 /** Reads length-delimited [T] messages from a [ByteString]. */
-fun <T : MessageLite> ByteString.parseDelimitedMessages(prototype: T): Iterable<T> = Iterable {
-  iterator {
-    newInput().use { inputStream ->
-      val parser = prototype.parserForType
-      while (true) {
-        @Suppress("UNCHECKED_CAST") // MessageLite::getParseForType guarantees this cast is safe.
-        val message = parser.parseDelimitedFrom(inputStream) as T? ?: break
-        yield(message)
-      }
-    }
-  }
-}
+fun <T : MessageLite> ByteString.parseDelimitedMessages(prototype: T): Iterable<T> =
+  newInput().parseDelimitedMessages(prototype)
 
 /** Reads length-delimited [T] messages from an [InputStream]. */
 fun <T : MessageLite> InputStream.parseDelimitedMessages(prototype: T): Iterable<T> = Iterable {
