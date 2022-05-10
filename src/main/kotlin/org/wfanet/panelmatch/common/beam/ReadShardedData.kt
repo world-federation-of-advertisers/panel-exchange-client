@@ -47,7 +47,6 @@ class ReadShardedData<T : Message>(
     // GroupByKey prevents fusing `mapValues` since the previous ParDo has high fan-out.
     return fileNames
       .breakFusion("Break Fusion Before ReadBlobFn")
-      // .apply(BreakFusion("Break Fusion Before ReadBlobFn"))
       .apply("Read Each Blob", ParDo.of(ReadBlobFn(prototype, storageFactory)))
       .setCoder(ProtoCoder.of(prototype.javaClass))
   }
