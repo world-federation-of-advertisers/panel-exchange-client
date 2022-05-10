@@ -16,7 +16,6 @@ package org.wfanet.panelmatch.common.beam
 
 import com.google.common.truth.Truth.assertThat
 import com.google.common.truth.Truth.assertWithMessage
-import com.google.protobuf.StringValue
 import com.google.protobuf.stringValue
 import java.io.File
 import org.junit.Rule
@@ -60,7 +59,7 @@ class WriteShardedDataTest : BeamTestBase() {
         }
       }
     val input = pcollectionOf("Input", stringValue { value = "some-input" })
-    input.apply(WriteShardedData(StringValue::class.java, shardedFileName.spec, storageFactory))
+    input.apply(WriteShardedData(shardedFileName.spec, storageFactory))
     pipeline.run()
 
     val client = storageFactory.build()

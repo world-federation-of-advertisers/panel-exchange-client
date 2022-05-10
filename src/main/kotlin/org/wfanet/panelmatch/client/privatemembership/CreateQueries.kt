@@ -37,14 +37,14 @@ import org.wfanet.panelmatch.client.common.shardIdOf
 import org.wfanet.panelmatch.client.common.unencryptedQueryOf
 import org.wfanet.panelmatch.client.exchangetasks.JoinKeyIdentifier
 import org.wfanet.panelmatch.common.beam.breakFusion
-import org.wfanet.panelmatch.common.beam.combineIntoList
+import org.wfanet.panelmatch.common.beam.createSequence
 import org.wfanet.panelmatch.common.beam.filter
 import org.wfanet.panelmatch.common.beam.flatten
 import org.wfanet.panelmatch.common.beam.groupByKey
-import org.wfanet.panelmatch.common.beam.keyBy
 import org.wfanet.panelmatch.common.beam.keys
 import org.wfanet.panelmatch.common.beam.kvOf
 import org.wfanet.panelmatch.common.beam.map
+import org.wfanet.panelmatch.common.beam.minus
 import org.wfanet.panelmatch.common.beam.parDo
 import org.wfanet.panelmatch.common.beam.values
 import org.wfanet.panelmatch.common.crypto.AsymmetricKeyPair
@@ -109,67 +109,6 @@ private class CreateQueries(
       .groupByKey("Group by Shard")
   }
 
-  private fun addMissingShardGroups(
-    shards: PCollection<KV<ShardId, Iterable<@JvmWildcard BucketQuery>>>,
-    minNumShardGroups: Int
-  ): PCollection<KV<ShardId, Iterable<@JvmWildcard BucketQuery>>> {
-    val missingShardGroups =
-      shards
-        .map("Map ShardId Ids") { it.key.id }
-        .filter("Filter for missing groups of shards") { it < minNumShardGroups }
-        .combineIntoList("Add Missing Shard Groups")
-        .parDo<List<Int>, KV<ShardId, Iterable<@JvmWildcard BucketQuery>>>(
-          "Create Missing Shard Groups"
-        ) {
-          val presentShardGroups: HashSet<Int> = it.toHashSet()
-          for (shardIndex in 0 until minNumShardGroups) {
-            if (shardIndex !in presentShardGroups) {
-              yield(kvOf(shardIdOf(shardIndex), emptyList()))
-            }
-          }
-        }
-        .setCoder(
-          KvCoder.of(
-            ProtoCoder.of(ShardId::class.java),
-            IterableCoder.of(SerializableCoder.of(BucketQuery::class.java))
-          )
-        )
-    return PCollectionList.of(shards)
-      .and(missingShardGroups)
-      .flatten("Flatten shards+missingShardGroups")
-  }
-
-  private fun addMissingShards(
-    shards: PCollection<KV<ShardId, Iterable<@JvmWildcard BucketQuery>>>,
-    numShards: Int,
-    shardsPerGroup: Int
-  ): PCollection<KV<ShardId, Iterable<@JvmWildcard BucketQuery>>> {
-    val missingShards =
-      shards
-        .keys("Present Keys to find missing shards")
-        .keyBy("Key groups of shards") { it.id % shardsPerGroup }
-        .groupByKey("Group Shards")
-        .parDo<KV<Int, Iterable<ShardId>>, KV<ShardId, Iterable<@JvmWildcard BucketQuery>>>(
-          "Create Missing Shards"
-        ) {
-          val presentShards: HashSet<Int> = it.value.map { it.id }.toHashSet()
-          var shardIndex: Int = requireNotNull(it.key)
-          while (shardIndex < numShards) {
-            if (shardIndex !in presentShards) {
-              yield(kvOf(shardIdOf(shardIndex), emptyList()))
-            }
-            shardIndex += shardsPerGroup
-          }
-        }
-        .setCoder(
-          KvCoder.of(
-            ProtoCoder.of(ShardId::class.java),
-            IterableCoder.of(SerializableCoder.of(BucketQuery::class.java))
-          )
-        )
-    return PCollectionList.of(shards).and(missingShards).flatten("Flatten shards+missingShards")
-  }
-
   /** Wrapper function to add in the necessary number of padded queries */
   private fun addPaddedQueries(
     queries: PCollection<KV<ShardId, Iterable<@JvmWildcard BucketQuery>>>
@@ -177,20 +116,22 @@ private class CreateQueries(
     if (!parameters.padQueries) return queries
     val totalQueriesPerShard = parameters.maxQueriesPerShard
     val paddingNonceBucket = bucketIdOf(parameters.numBucketsPerShard)
-    val shardsPerGroup = 1000
     val numShards = parameters.numShards
 
-    val withMissingShardGroups =
-      addMissingShardGroups(shards = queries, minNumShardGroups = minOf(numShards, shardsPerGroup))
+    val missingQueries =
+      queries
+        .pipeline
+        .createSequence(name = "Missing Queries Sequence", n = numShards, parallelism = 1000)
+        .minus(queries.map("Queries Map") { it.key.id }, name = "Missing Queries Minus")
+        .map<Int, KV<ShardId, Iterable<@JvmWildcard BucketQuery>>>("Missing Files Map") {
+          shardIndex: Int ->
+          kvOf(shardIdOf(shardIndex), emptyList())
+        }
+        .setCoder(queries.coder)
 
-    val withMissingShards =
-      addMissingShards(
-        shards = withMissingShardGroups,
-        numShards = numShards,
-        shardsPerGroup = shardsPerGroup
-      )
-
-    return withMissingShards
+    return PCollectionList.of(queries)
+      .and(missingQueries)
+      .flatten("Flatten queries+missingQueries")
       .breakFusion("Break fusion before EqualizeQueriesPerShardFn")
       .setCoder(
         KvCoder.of(

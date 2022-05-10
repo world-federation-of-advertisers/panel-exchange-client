@@ -14,11 +14,14 @@
 
 package org.wfanet.panelmatch.common.beam
 
+import kotlin.math.ceil
+import org.apache.beam.sdk.Pipeline
 import org.apache.beam.sdk.coders.KvCoder
 import org.apache.beam.sdk.coders.ListCoder
 import org.apache.beam.sdk.coders.NullableCoder
 import org.apache.beam.sdk.transforms.Combine
 import org.apache.beam.sdk.transforms.Count
+import org.apache.beam.sdk.transforms.Create
 import org.apache.beam.sdk.transforms.DoFn
 import org.apache.beam.sdk.transforms.Flatten
 import org.apache.beam.sdk.transforms.GroupByKey
@@ -259,6 +262,33 @@ fun <T> PCollection<T>.combineIntoList(name: String = "CombineIntoList"): PColle
 }
 
 /** Kotlin convenience helper for a fusion break on a PCollection. */
-inline fun <reified T> PCollection<T>.breakFusion(name: String = "BreakFusion"): PCollection<T> {
+fun <T> PCollection<T>.breakFusion(name: String = "BreakFusion"): PCollection<T> {
   return apply(name, BreakFusion(name)).setCoder(coder)
+}
+
+fun Pipeline.createSequence(
+  n: Int,
+  parallelism: Int = 1000,
+  name: String = "CreateSequence"
+): PCollection<Int> {
+  val numPerBatch: Int = ceil(n / parallelism.toFloat()).toInt()
+  return apply("$name/Create", Create.of((0..parallelism).toList())).parDo("$name/ParDo") {
+    val start = it * numPerBatch
+    val end = minOf(n - 1, start + numPerBatch - 1)
+    yieldAll((start..end).toList())
+  }
+}
+
+inline fun <reified T> PCollection<T>.minus(
+  other: PCollection<T>,
+  name: String = "Minus"
+): PCollection<T> {
+  return map("$name/MapLeft") { kvOf(it, 1) }
+    .join<T, Int, Int, T>(other.map("$name/MapRight") { kvOf(it, 2) }, "$name/join") {
+      key: T,
+      lefts: Iterable<Int>,
+      rights: Iterable<Int> ->
+      if (lefts.iterator().hasNext() && !rights.iterator().hasNext()) yield(key)
+    }
+    .setCoder(coder)
 }
