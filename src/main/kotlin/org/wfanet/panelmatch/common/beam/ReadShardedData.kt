@@ -17,8 +17,13 @@ package org.wfanet.panelmatch.common.beam
 import com.google.protobuf.ByteString
 import com.google.protobuf.Message
 import com.google.protobuf.MessageLite
+import java.io.InputStream
+import java.io.SequenceInputStream
+import java.util.Collections
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.runBlocking
 import org.apache.beam.sdk.extensions.protobuf.ProtoCoder
 import org.apache.beam.sdk.metrics.Metrics
@@ -28,7 +33,6 @@ import org.apache.beam.sdk.transforms.PTransform
 import org.apache.beam.sdk.transforms.ParDo
 import org.apache.beam.sdk.values.PBegin
 import org.apache.beam.sdk.values.PCollection
-import org.wfanet.panelmatch.common.ByteStringFlowInputStream
 import org.wfanet.panelmatch.common.ShardedFileName
 import org.wfanet.panelmatch.common.parseDelimitedMessages
 import org.wfanet.panelmatch.common.storage.StorageFactory
@@ -71,7 +75,8 @@ private class ReadBlobFn<T : MessageLite>(
 
       var elements = 0L
 
-      val inputStream = ByteStringFlowInputStream.of(bytes, this)
+      val orderedInputStreams: List<InputStream> = bytes.map { it.newInput() }.toList()
+      val inputStream = SequenceInputStream(Collections.enumeration(orderedInputStreams))
 
       for (message in inputStream.parseDelimitedMessages(prototype)) {
         itemSizeDistribution.update(message.serializedSize.toLong())
