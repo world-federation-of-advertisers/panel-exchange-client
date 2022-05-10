@@ -31,7 +31,7 @@ import org.apache.beam.sdk.values.PCollection
  * stage are materialized, allowing the heavy-processing stage to run with a different number of
  * workers.
  */
-class BreakFusion<T : Any>(
+class BreakFusion<T : Any?>(
   private val transformName: String,
 ) : PTransform<PCollection<T>, PCollection<T>>() {
 
