@@ -262,7 +262,7 @@ fun <T> PCollection<T>.combineIntoList(name: String = "CombineIntoList"): PColle
  *
  * This operation can be inserted between operations that have significantly different data sizes or
  * processing requirements to prevent Dataflow from fusing those operations together. Without this,
- * a heavy-processing stage that immediately follows a light-processing stage may be forced to
+  * a heavy-processing stage that immediately follows a light-processing stage may be forced to
  * compute on a single worker. By inserting a [BreakFusion], the results of the light-processing
  * stage are materialized, allowing the heavy-processing stage to run with a different number of
  * workers.

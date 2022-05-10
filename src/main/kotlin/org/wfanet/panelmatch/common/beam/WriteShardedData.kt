@@ -138,9 +138,7 @@ class WriteShardedData<T : Message>(
       )
     val filesWritten =
       withMissingFiles
-        .keyBy("Prevent Write Fusion: Key") { it.key }
-        .groupByKey("Prevent Write Fusion/Group")
-        .map("Prevent Write Fusion/Unkey+Ungroup") { it.value.single() }
+        .apply(BreakFusion("Break Fusion Before WriteFilesFn"))
         .setCoder(KvCoder.of(VarIntCoder.of(), IterableCoder.of(ProtoCoder.of(clazz))))
         .apply("Write $fileSpec", ParDo.of(WriteFilesFn(fileSpec, storageFactory)))
 
