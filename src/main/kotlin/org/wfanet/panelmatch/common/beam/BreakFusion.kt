@@ -30,17 +30,17 @@ import org.apache.beam.sdk.values.PCollection
  * compute on a single worker. By inserting a [BreakFusion], the results of the light-processing
  * stage are materialized, allowing the heavy-processing stage to run with a different number of
  * workers.
+ *
+ * Kept as a PTransform for Scala Compatibility
  */
-class BreakFusion<T : Any?>(
-  private val transformName: String,
-) : PTransform<PCollection<T>, PCollection<T>>() {
+class BreakFusion<T : Any?> : PTransform<PCollection<T>, PCollection<T>>() {
 
   override fun expand(input: PCollection<T>): PCollection<T> {
     return input
-      .keyBy("$transformName/KeyByUUID") { UUID.randomUUID().toString() }
-      .apply("$transformName/GBK", GroupByKey.create())
-      .apply("$transformName/Values", Values.create())
-      .apply("$transformName/Flatten.iterables", Flatten.iterables())
+      .keyBy("$name/KeyByUUID") { UUID.randomUUID().toString() }
+      .apply("$name/GBK", GroupByKey.create())
+      .apply("$name/Values", Values.create())
+      .apply("$name/Flatten.iterables", Flatten.iterables())
       .setCoder(input.coder)
   }
 }

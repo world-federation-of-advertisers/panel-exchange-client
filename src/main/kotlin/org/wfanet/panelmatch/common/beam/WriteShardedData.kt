@@ -69,11 +69,16 @@ class WriteShardedData<T : Message>(
         .keyBy("Key by Blob") { it.assignToShard(shardCount) }
         .apply("Group by Blob", GroupByKey.create())
 
+    val sequence =
+      groupedData.pipeline.createSequence(
+        name = "Missing Files Sequence",
+        n = shardCount,
+        parallelism = 1000
+      )
     val missingFiles =
-      groupedData
-        .pipeline
-        .createSequence(name = "Missing Files Sequence", n = shardCount, parallelism = 1000)
-        .minus(groupedData.keys("GroupedData Keys"), name = "Missing Files Minus")
+      PCollectionList.of(sequence)
+        .and(groupedData.map { it.key })
+        .apply("Subtract Existing Files", Minus())
         .map("Missing Files Map") { fileIndex -> kvOf(fileIndex, emptyList<T>().asIterable()) }
         .setCoder(groupedData.coder)
     val filesWritten =

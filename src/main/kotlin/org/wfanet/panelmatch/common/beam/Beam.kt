@@ -57,7 +57,7 @@ fun <KeyT, ValueT> PCollection<KV<KeyT, ValueT>>.values(
 }
 
 /** Kotlin convenience helper for [ParDo]. */
-inline fun <InT, reified OutT> PCollection<InT>.parDo(
+fun <InT, OutT> PCollection<InT>.parDo(
   doFn: DoFn<InT, OutT>,
   name: String = "ParDo"
 ): PCollection<OutT> {
@@ -65,7 +65,7 @@ inline fun <InT, reified OutT> PCollection<InT>.parDo(
 }
 
 /** Kotlin convenience helper for [ParDo]. */
-inline fun <InT, reified OutT> PCollection<InT>.parDo(
+inline fun <InT, OutT> PCollection<InT>.parDo(
   name: String = "ParDo",
   crossinline processElement: suspend SequenceScope<OutT>.(InT) -> Unit
 ): PCollection<OutT> {
@@ -138,8 +138,7 @@ fun <T> PCollection<T>.partition(
 }
 
 /** Kotlin convenience helper for a join between two [PCollection]s. */
-inline fun <reified KeyT, reified LeftT, reified RightT, reified OutT> PCollection<
-  KV<KeyT, LeftT>>.join(
+inline fun <KeyT, reified LeftT, reified RightT, OutT> PCollection<KV<KeyT, LeftT>>.join(
   right: PCollection<KV<KeyT, RightT>>,
   name: String = "Join",
   crossinline transform:
@@ -263,7 +262,7 @@ fun <T> PCollection<T>.combineIntoList(name: String = "CombineIntoList"): PColle
 
 /** Kotlin convenience helper for a fusion break on a PCollection. */
 fun <T> PCollection<T>.breakFusion(name: String = "BreakFusion"): PCollection<T> {
-  return apply(name, BreakFusion(name)).setCoder(coder)
+  return apply(name, BreakFusion()).setCoder(coder)
 }
 
 fun Pipeline.createSequence(
