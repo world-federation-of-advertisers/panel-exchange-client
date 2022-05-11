@@ -76,12 +76,9 @@ class ApacheBeamContext(
     return inputBlobs.getValue(label).toByteString()
   }
 
-  inline fun <reified T : Message> PCollection<T>.writeShardedFiles(manifestLabel: String) {
+  fun <T : Message> PCollection<T>.writeShardedFiles(manifestLabel: String) {
     val shardedFileName = outputManifests.getValue(manifestLabel)
-    apply(
-      "Write ${shardedFileName.spec}",
-      WriteShardedData(T::class.java, shardedFileName.spec, storageFactory)
-    )
+    apply("Write ${shardedFileName.spec}", WriteShardedData(shardedFileName.spec, storageFactory))
   }
 
   fun <T : Message> PCollection<T>.writeSingleBlob(label: String) {
