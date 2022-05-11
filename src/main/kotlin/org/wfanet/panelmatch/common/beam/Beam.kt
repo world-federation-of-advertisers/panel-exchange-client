@@ -278,16 +278,9 @@ fun Pipeline.createSequence(
   }
 }
 
-inline fun <reified T> PCollection<T>.minus(
+inline fun <reified T : Any> PCollection<T>.minus(
   other: PCollection<T>,
   name: String = "Minus"
 ): PCollection<T> {
-  return map("$name/MapLeft") { kvOf(it, 1) }
-    .join<T, Int, Int, T>(other.map("$name/MapRight") { kvOf(it, 2) }, "$name/join") {
-      key: T,
-      lefts: Iterable<Int>,
-      rights: Iterable<Int> ->
-      if (lefts.iterator().hasNext() && !rights.iterator().hasNext()) yield(key)
-    }
-    .setCoder(coder)
+  return PCollectionList.of(this).and(other).apply("$name/Subtract Other", Minus()).setCoder(coder)
 }

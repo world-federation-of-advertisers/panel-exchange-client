@@ -76,9 +76,8 @@ class WriteShardedData<T : Message>(
         parallelism = 1000
       )
     val missingFiles =
-      PCollectionList.of(sequence)
-        .and(groupedData.map { it.key })
-        .apply("Subtract Existing Files", Minus())
+      sequence
+        .minus(groupedData.map { it.key })
         .map("Missing Files Map") { fileIndex -> kvOf(fileIndex, emptyList<T>().asIterable()) }
         .setCoder(groupedData.coder)
     val filesWritten =
