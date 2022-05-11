@@ -15,7 +15,6 @@
 package org.wfanet.panelmatch.client.privatemembership
 
 import java.io.Serializable
-import org.apache.beam.sdk.coders.IterableCoder
 import org.apache.beam.sdk.coders.KvCoder
 import org.apache.beam.sdk.coders.ListCoder
 import org.apache.beam.sdk.coders.SerializableCoder
@@ -133,12 +132,7 @@ private class CreateQueries(
       .and(missingQueries)
       .flatten("Flatten queries+missingQueries")
       .breakFusion("Break fusion before EqualizeQueriesPerShardFn")
-      .setCoder(
-        KvCoder.of(
-          ProtoCoder.of(ShardId::class.java),
-          IterableCoder.of(SerializableCoder.of(BucketQuery::class.java))
-        )
-      )
+      .setCoder(queries.coder)
       .parDo(
         EqualizeQueriesPerShardFn(totalQueriesPerShard, paddingNonceBucket),
         name = "Equalize Queries per Shard"

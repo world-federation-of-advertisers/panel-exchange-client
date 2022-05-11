@@ -42,11 +42,11 @@ import org.wfanet.panelmatch.common.storage.toStringUtf8
  */
 class ApacheBeamContext(
   val pipeline: Pipeline,
-  val outputManifests: Map<String, ShardedFileName>,
+  private val outputManifests: Map<String, ShardedFileName>,
   private val outputLabels: Map<String, String>,
   private val inputLabels: Map<String, String>,
   private val inputBlobs: Map<String, Blob>,
-  val storageFactory: StorageFactory
+  private val storageFactory: StorageFactory
 ) {
   suspend fun <T : Message> readShardedPCollection(
     manifestLabel: String,
