@@ -27,7 +27,7 @@ class Minus<T : Any> : PTransform<PCollectionList<T>, PCollection<T>>() {
   override fun expand(input: PCollectionList<T>): PCollection<T> {
     val items: List<PCollection<T>> = input.all
     require(items.size == 2) {
-      "Minus Transform requires a PCollectionList with exactly 2 elements. Found ${items.size} elements."
+      "Found ${items.size} elements. Only PCollection with 2 elements is allowed."
     }
     val firstItems = items[0]
     val otherItems = items[1]
