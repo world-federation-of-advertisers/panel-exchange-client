@@ -17,12 +17,11 @@ Step 4 of configuring WORKSPACE: Maven.
 """
 
 load("@rules_jvm_external//:defs.bzl", "artifact")
-load("@wfa_common_jvm//build/maven:artifacts.bzl", "artifacts")
 load(
     "@wfa_common_jvm//build:common_jvm_maven.bzl",
     "COMMON_JVM_EXCLUDED_ARTIFACTS",
     "COMMON_JVM_MAVEN_OVERRIDE_TARGETS",
-    "common_jvm_maven_artifacts",
+    "common_jvm_maven_artifacts_dict",
 )
 
 _DEPLOY_ENV = [
@@ -49,21 +48,11 @@ _TEST_RUNTIME_DEPS = [
     artifact("org.jetbrains.kotlin:kotlin-test", "maven_export"),
 ]
 
-_BEAM_VERSION = "2.36.0"
-_BEAM_GRPC_VERSION = "1.44.0"
-
-# Specific versions to avoid Beam dependency conflicts.
-_BEAM_DEP_ARTIFACTS = {
-    "io.grpc:grpc-api": _BEAM_GRPC_VERSION,
-    "io.grpc:grpc-core": _BEAM_GRPC_VERSION,
-    "io.grpc:grpc-netty": _BEAM_GRPC_VERSION,
-    "io.grpc:grpc-netty-shaded": _BEAM_GRPC_VERSION,
-}
+_BEAM_VERSION = "2.38.0"
 
 # TODO: this list can likely be minimized
 _ARTIFACTS = {
-    "com.google.cloud:google-cloud-security-private-ca": "2.2.3",
-    "com.google.cloud:google-cloud-storage": "2.4.2",
+    "com.google.cloud:google-cloud-security-private-ca": "2.3.1",
     "joda-time:joda-time": "2.10.13",
     "org.apache.beam:beam-runners-direct-java": _BEAM_VERSION,
     "org.apache.beam:beam-runners-google-cloud-dataflow-java": _BEAM_VERSION,
@@ -87,16 +76,12 @@ def panel_exchange_client_maven_artifacts():
     Returns:
         A dict of Maven artifact name to version.
     """
-    common_jvm_artifacts = artifacts.list_to_dict(
-        # TODO(@SanjayVas): Fix common_jvm_maven_artifacts to return a dict like
-        # its documentation says.
-        common_jvm_maven_artifacts(),
-    )
+    common_jvm_artifacts = common_jvm_maven_artifacts_dict()
 
     artifacts_dict = {}
     artifacts_dict.update(common_jvm_artifacts)
     artifacts_dict.update(_ARTIFACTS)
-    artifacts_dict.update(_BEAM_DEP_ARTIFACTS)
+
     return artifacts_dict
 
 def panel_exchange_client_maven_override_targets():

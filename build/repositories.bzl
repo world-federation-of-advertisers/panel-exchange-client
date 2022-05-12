@@ -19,24 +19,17 @@ Step 1 of configuring WORKSPACE: adds direct deps.
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 load("//build/com_google_riegeli:repo.bzl", "com_google_riegeli_repo")
 
+_TINK = struct(
+    # TODO: Use version once there's a release that contains AesSivBoringSsl.
+    commit = "0f65dc5d079fb3107c71908734a082079e98ae45",
+    sha256 = "0b8bbaffee4903faea66dbad76f8eb6d0eea3f94367807bebc49180f9f417031",
+    url_template = "https://github.com/google/tink/archive/{commit}.tar.gz",
+)
+
 def panel_exchange_client_repositories():
     """Imports all direct dependencies for panel_exchange_client."""
 
     com_google_riegeli_repo()
-
-    # TODO: remove this dependency once downstream dependencies are fixed.
-    http_archive(
-        name = "io_bazel_rules_go",
-        sha256 = "2b1641428dff9018f9e85c0384f03ec6c10660d935b750e3fa1492a281a53b0f",
-        url = "https://github.com/bazelbuild/rules_go/releases/download/v0.29.0/rules_go-v0.29.0.zip",
-    )
-
-    # TODO: remove this dependency once downstream dependencies are fixed.
-    http_archive(
-        name = "bazel_gazelle",
-        sha256 = "de69a09dc70417580aabf20a28619bb3ef60d038470c7cf8442fafcf627c21cb",
-        url = "https://github.com/bazelbuild/bazel-gazelle/releases/download/v0.24.0/bazel-gazelle-v0.24.0.tar.gz",
-    )
 
     http_archive(
         name = "wfa_common_cpp",
@@ -47,24 +40,25 @@ def panel_exchange_client_repositories():
 
     http_archive(
         name = "wfa_common_jvm",
-        sha256 = "e4290e0e25c0b1e993e4d9deaa35582275e9e43e8b32dc59a4db2b6245e73df7",
-        strip_prefix = "common-jvm-0.32.2",
-        url = "https://github.com/world-federation-of-advertisers/common-jvm/archive/refs/tags/v0.32.2.tar.gz",
+        sha256 = "42066b67f54b2d4162dfab6dfd4a9747d9f86eb2a8710f678f37349b1005f3fc",
+        strip_prefix = "common-jvm-31e7100184ea500c31dca2e2aafb46b867830166",
+        # TODO(world-federation-of-advertisers/common-jvm#114): Use version.
+        url = "https://github.com/world-federation-of-advertisers/common-jvm/archive/31e7100184ea500c31dca2e2aafb46b867830166.tar.gz",
     )
 
     # TODO: remove dependencies on wfa_measurement_system
     http_archive(
         name = "wfa_measurement_system",
-        sha256 = "b0b0841355c4329da693d3a2bdc4f7a62cf41c952b1ed25d0596c6b3f24ca069",
-        strip_prefix = "cross-media-measurement-42b50e6bd158bc920f2575aaa17db9b7cf83b4a6",
-        url = "https://github.com/world-federation-of-advertisers/cross-media-measurement/archive/42b50e6bd158bc920f2575aaa17db9b7cf83b4a6.tar.gz",
+        sha256 = "a8e111f8fd68fc355da4d87405a5f09b2b2b470b471003ec50e531d62751d754",
+        strip_prefix = "cross-media-measurement-b1586f8bdd8435c8b259a5b25ccefd9bb333fba4",
+        url = "https://github.com/world-federation-of-advertisers/cross-media-measurement/archive/b1586f8bdd8435c8b259a5b25ccefd9bb333fba4.tar.gz",
     )
 
     http_archive(
         name = "wfa_measurement_proto",
-        sha256 = "6599d5c3ddab99a28065299a6e9cb5e11d42c31e0692a529bf5a32d36d81de15",
-        strip_prefix = "cross-media-measurement-api-0.15.6",
-        url = "https://github.com/world-federation-of-advertisers/cross-media-measurement-api/archive/v0.15.6.tar.gz",
+        sha256 = "da28ccac88a12b3b75b974b92604b8e332b8bc91cd276afab1ee41415fa320a3",
+        strip_prefix = "cross-media-measurement-api-0.22.2",
+        url = "https://github.com/world-federation-of-advertisers/cross-media-measurement-api/archive/v0.22.2.tar.gz",
     )
 
     http_archive(
@@ -83,9 +77,9 @@ def panel_exchange_client_repositories():
 
     http_archive(
         name = "wfa_consent_signaling_client",
-        sha256 = "6f92694715ec6d03a9cb5288db2ad167cc69d1a9331ca18fd7b7cf584e34b12c",
-        strip_prefix = "consent-signaling-client-0.11.0",
-        url = "https://github.com/world-federation-of-advertisers/consent-signaling-client/archive/v0.11.0.tar.gz",
+        sha256 = "b907c0dd4f6efbe4f6db3f34efeca0f1763d3cc674c37cbfebac1ee2a80c86f5",
+        strip_prefix = "consent-signaling-client-0.12.0",
+        url = "https://github.com/world-federation-of-advertisers/consent-signaling-client/archive/refs/tags/v0.12.0.tar.gz",
     )
 
     http_archive(
@@ -97,16 +91,23 @@ def panel_exchange_client_repositories():
 
     http_archive(
         name = "tink_base",
-        sha256 = "005e6c49b2b2df8a7dc670471ee45b6e09092bb05046eea358cd47f2703359c4",
-        strip_prefix = "tink-7c93a224b8fa6a3babfaf71c18c5610052dcbd61/",
-        url = "https://github.com/google/tink/archive/7c93a224b8fa6a3babfaf71c18c5610052dcbd61.zip",
+        sha256 = _TINK.sha256,
+        strip_prefix = "tink-{commit}".format(commit = _TINK.commit),
+        url = _TINK.url_template.format(commit = _TINK.commit),
     )
 
     http_archive(
         name = "tink_cc",
-        sha256 = "005e6c49b2b2df8a7dc670471ee45b6e09092bb05046eea358cd47f2703359c4",
-        strip_prefix = "tink-7c93a224b8fa6a3babfaf71c18c5610052dcbd61/cc",
-        url = "https://github.com/google/tink/archive/7c93a224b8fa6a3babfaf71c18c5610052dcbd61.zip",
+        sha256 = _TINK.sha256,
+        strip_prefix = "tink-{commit}/cc".format(commit = _TINK.commit),
+        url = _TINK.url_template.format(commit = _TINK.commit),
+    )
+
+    http_archive(
+        name = "tink_java",
+        sha256 = _TINK.sha256,
+        strip_prefix = "tink-{commit}/java_src".format(commit = _TINK.commit),
+        url = _TINK.url_template.format(commit = _TINK.commit),
     )
 
     http_archive(
