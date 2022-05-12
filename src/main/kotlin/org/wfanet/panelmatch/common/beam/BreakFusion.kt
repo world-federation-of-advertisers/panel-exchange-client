@@ -37,10 +37,10 @@ class BreakFusion<T : Any?> : PTransform<PCollection<T>, PCollection<T>>() {
 
   override fun expand(input: PCollection<T>): PCollection<T> {
     return input
-      .keyBy("$name/KeyByUUID") { UUID.randomUUID().toString() }
-      .apply("$name/GBK", GroupByKey.create())
-      .apply("$name/Values", Values.create())
-      .apply("$name/Flatten.iterables", Flatten.iterables())
+      .keyBy("KeyByUUID") { UUID.randomUUID().toString() }
+      .apply("GBK", GroupByKey.create())
+      .apply("Values", Values.create())
+      .apply("Flatten.iterables", Flatten.iterables())
       .setCoder(input.coder)
   }
 }

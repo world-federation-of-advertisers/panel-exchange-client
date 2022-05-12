@@ -265,22 +265,24 @@ fun <T> PCollection<T>.breakFusion(name: String = "BreakFusion"): PCollection<T>
   return apply(name, BreakFusion()).setCoder(coder)
 }
 
+/** Convenience function for creating a PCollection<Int> from 0 until n. */
 fun Pipeline.createSequence(
   n: Int,
   parallelism: Int = 1000,
   name: String = "CreateSequence"
 ): PCollection<Int> {
   val numPerBatch: Int = ceil(n / parallelism.toFloat()).toInt()
-  return apply("$name/Create", Create.of((0..parallelism).toList())).parDo("$name/ParDo") {
+  return apply("$name/Create", Create.of((0 until parallelism).toList())).parDo("$name/ParDo") {
     val start = it * numPerBatch
-    val end = minOf(n - 1, start + numPerBatch - 1)
-    yieldAll((start..end).toList())
+    val end = minOf(n, start + numPerBatch)
+    yieldAll((start until end).toList())
   }
 }
 
+/** Convenience function for using Minus PTransform. */
 inline fun <reified T : Any> PCollection<T>.minus(
   other: PCollection<T>,
   name: String = "Minus"
 ): PCollection<T> {
-  return PCollectionList.of(this).and(other).apply("$name/Subtract Other", Minus()).setCoder(coder)
+  return PCollectionList.of(this).and(other).apply(name, Minus()).setCoder(coder)
 }

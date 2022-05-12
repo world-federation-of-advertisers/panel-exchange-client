@@ -19,17 +19,21 @@ import org.apache.beam.sdk.values.PCollection
 import org.apache.beam.sdk.values.PCollectionList
 
 /**
- * Finds items in a PCollection which do not exist in another PCollection. Keep this as a PTranform
+ * Finds items in a PCollection which do not exist in another PCollection. Keep this as a PTransform
  * for Scala compatibility.
  */
 class Minus<T : Any> : PTransform<PCollectionList<T>, PCollection<T>>() {
 
   override fun expand(input: PCollectionList<T>): PCollection<T> {
-    val items = input.get(0)
-    val otherItems = input.get(1)
-    return items.map("$name/MapLeft") { kvOf(it, 1) }.join(
-        otherItems.map("$name/MapRight") { kvOf(it, 2) },
-        "$name/join"
+    val items: List<PCollection<T>> = input.all
+    require(items.size == 2) {
+      "Minus Transform requires a PCollectionList with exactly 2 elements. Found ${items.size} elements."
+    }
+    val firstItems = items[0]
+    val otherItems = items[1]
+    return firstItems.map("MapLeft") { kvOf(it, 1) }.join(
+        otherItems.map("MapRight") { kvOf(it, 2) },
+        "Join"
       ) { key: T, lefts: Iterable<Int>, rights: Iterable<Int> ->
       if (lefts.iterator().hasNext() && !rights.iterator().hasNext()) yield(key)
     }

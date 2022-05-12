@@ -132,7 +132,6 @@ private class CreateQueries(
       .and(missingQueries)
       .flatten("Flatten queries+missingQueries")
       .breakFusion("Break fusion before EqualizeQueriesPerShardFn")
-      .setCoder(queries.coder)
       .parDo(
         EqualizeQueriesPerShardFn(totalQueriesPerShard, paddingNonceBucket),
         name = "Equalize Queries per Shard"
