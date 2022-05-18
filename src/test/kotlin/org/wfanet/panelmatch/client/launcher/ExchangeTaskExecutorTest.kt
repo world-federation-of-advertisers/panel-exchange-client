@@ -15,20 +15,29 @@
 package org.wfanet.panelmatch.client.launcher
 
 import com.google.common.truth.Truth.assertThat
+import com.google.protobuf.ByteString
 import com.google.protobuf.kotlin.toByteStringUtf8
 import java.time.LocalDate
 import kotlin.test.assertFailsWith
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.flow.Flow
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
+import org.mockito.kotlin.any
+import org.mockito.kotlin.eq
 import org.mockito.kotlin.mock
+import org.mockito.kotlin.verify
+import org.wfanet.measurement.api.v2alpha.ExchangeStepAttempt.State
 import org.wfanet.measurement.api.v2alpha.ExchangeStepAttemptKey
 import org.wfanet.measurement.api.v2alpha.ExchangeWorkflowKt.StepKt.commutativeDeterministicEncryptStep
 import org.wfanet.measurement.api.v2alpha.ExchangeWorkflowKt.step
 import org.wfanet.measurement.api.v2alpha.exchangeWorkflow
 import org.wfanet.measurement.common.asBufferedFlow
+import org.wfanet.measurement.storage.StorageClient
+import org.wfanet.panelmatch.client.exchangetasks.ExchangeTask
+import org.wfanet.panelmatch.client.exchangetasks.ExchangeTaskFailedException
 import org.wfanet.panelmatch.client.exchangetasks.testing.FakeExchangeTaskMapper
 import org.wfanet.panelmatch.client.launcher.ExchangeStepValidator.ValidatedExchangeStep
 import org.wfanet.panelmatch.client.launcher.testing.FakeTimeout
@@ -103,4 +112,32 @@ class ExchangeTaskExecutorTest {
 
     assertThat(testPrivateStorageSelector.storageClient.getBlob("c")).isNull()
   }
+
+  @Test
+  fun `fails with attempt state from ExchangeTaskFailedException`() = runBlockingTest {
+    val blob = "some-blob".toByteStringUtf8()
+    testPrivateStorageSelector.storageClient.writeBlob("b", blob.asBufferedFlow(1024))
+
+    val exchangeTaskMapper = FakeExchangeTaskMapper(::ThrowingExchangeTask)
+    val exchangeTaskExecutor =
+      ExchangeTaskExecutor(
+        apiClient,
+        timeout,
+        testPrivateStorageSelector.selector,
+        exchangeTaskMapper
+      )
+
+    assertFailsWith<ExchangeTaskFailedException> {
+      exchangeTaskExecutor.execute(VALIDATED_EXCHANGE_STEP, ATTEMPT_KEY)
+    }
+
+    verify(apiClient).finishExchangeStepAttempt(eq(ATTEMPT_KEY), eq(State.FAILED_STEP), any())
+  }
+}
+
+private class ThrowingExchangeTask(taskName: String) : ExchangeTask {
+  override suspend fun execute(
+    input: Map<String, StorageClient.Blob>
+  ): Map<String, Flow<ByteString>> =
+    throw ExchangeTaskFailedException.ofPermanent(IllegalStateException())
 }
