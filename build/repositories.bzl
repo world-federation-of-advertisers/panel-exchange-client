@@ -24,47 +24,33 @@ def panel_exchange_client_repositories():
 
     com_google_riegeli_repo()
 
-    # TODO: remove this dependency once downstream dependencies are fixed.
-    http_archive(
-        name = "io_bazel_rules_go",
-        sha256 = "2b1641428dff9018f9e85c0384f03ec6c10660d935b750e3fa1492a281a53b0f",
-        url = "https://github.com/bazelbuild/rules_go/releases/download/v0.29.0/rules_go-v0.29.0.zip",
-    )
-
-    # TODO: remove this dependency once downstream dependencies are fixed.
-    http_archive(
-        name = "bazel_gazelle",
-        sha256 = "de69a09dc70417580aabf20a28619bb3ef60d038470c7cf8442fafcf627c21cb",
-        url = "https://github.com/bazelbuild/bazel-gazelle/releases/download/v0.24.0/bazel-gazelle-v0.24.0.tar.gz",
-    )
-
     http_archive(
         name = "wfa_common_cpp",
-        sha256 = "e8efc0c9f5950aff13a59f21f40ccc31c26fe40c800743f824f92df3a05588b2",
-        strip_prefix = "common-cpp-0.5.0",
-        url = "https://github.com/world-federation-of-advertisers/common-cpp/archive/v0.5.0.tar.gz",
+        sha256 = "60e9c808d55d14be65347cab008b8bd4f8e2dd8186141609995333bc75fc08ce",
+        strip_prefix = "common-cpp-0.8.0",
+        url = "https://github.com/world-federation-of-advertisers/common-cpp/archive/refs/tags/v0.8.0.tar.gz",
     )
 
     http_archive(
         name = "wfa_common_jvm",
-        sha256 = "e4290e0e25c0b1e993e4d9deaa35582275e9e43e8b32dc59a4db2b6245e73df7",
-        strip_prefix = "common-jvm-0.32.2",
-        url = "https://github.com/world-federation-of-advertisers/common-jvm/archive/refs/tags/v0.32.2.tar.gz",
+        sha256 = "9505024528afc9e7a9e126a297458fa4503a33ff21c55bac58e5184385f492e2",
+        strip_prefix = "common-jvm-0.35.0",
+        url = "https://github.com/world-federation-of-advertisers/common-jvm/archive/refs/tags/v0.35.0.tar.gz",
     )
 
     # TODO: remove dependencies on wfa_measurement_system
     http_archive(
         name = "wfa_measurement_system",
-        sha256 = "b0b0841355c4329da693d3a2bdc4f7a62cf41c952b1ed25d0596c6b3f24ca069",
-        strip_prefix = "cross-media-measurement-42b50e6bd158bc920f2575aaa17db9b7cf83b4a6",
-        url = "https://github.com/world-federation-of-advertisers/cross-media-measurement/archive/42b50e6bd158bc920f2575aaa17db9b7cf83b4a6.tar.gz",
+        sha256 = "c8e1f046d0d8809a143fbb03ef03573ebf8d540a9a20d3f015ad27844f015f7a",
+        strip_prefix = "cross-media-measurement-ba3ebc3c2c9e3f4febc446b94cc2c7516a8adcd8",
+        url = "https://github.com/world-federation-of-advertisers/cross-media-measurement/archive/ba3ebc3c2c9e3f4febc446b94cc2c7516a8adcd8.tar.gz",
     )
 
     http_archive(
         name = "wfa_measurement_proto",
-        sha256 = "6599d5c3ddab99a28065299a6e9cb5e11d42c31e0692a529bf5a32d36d81de15",
-        strip_prefix = "cross-media-measurement-api-0.15.6",
-        url = "https://github.com/world-federation-of-advertisers/cross-media-measurement-api/archive/v0.15.6.tar.gz",
+        sha256 = "da28ccac88a12b3b75b974b92604b8e332b8bc91cd276afab1ee41415fa320a3",
+        strip_prefix = "cross-media-measurement-api-0.22.2",
+        url = "https://github.com/world-federation-of-advertisers/cross-media-measurement-api/archive/v0.22.2.tar.gz",
     )
 
     http_archive(
@@ -83,9 +69,9 @@ def panel_exchange_client_repositories():
 
     http_archive(
         name = "wfa_consent_signaling_client",
-        sha256 = "6f92694715ec6d03a9cb5288db2ad167cc69d1a9331ca18fd7b7cf584e34b12c",
-        strip_prefix = "consent-signaling-client-0.11.0",
-        url = "https://github.com/world-federation-of-advertisers/consent-signaling-client/archive/v0.11.0.tar.gz",
+        sha256 = "b907c0dd4f6efbe4f6db3f34efeca0f1763d3cc674c37cbfebac1ee2a80c86f5",
+        strip_prefix = "consent-signaling-client-0.12.0",
+        url = "https://github.com/world-federation-of-advertisers/consent-signaling-client/archive/refs/tags/v0.12.0.tar.gz",
     )
 
     http_archive(
@@ -93,20 +79,6 @@ def panel_exchange_client_repositories():
         sha256 = "bcc79b67195e0f144d7b2f21788da4b9d43fb1c7cd129c76941ec81c9fb4ac5a",
         strip_prefix = "virtual-people-common-0.1.0",
         url = "https://github.com/world-federation-of-advertisers/virtual-people-common/archive/v0.1.0.tar.gz",
-    )
-
-    http_archive(
-        name = "tink_base",
-        sha256 = "005e6c49b2b2df8a7dc670471ee45b6e09092bb05046eea358cd47f2703359c4",
-        strip_prefix = "tink-7c93a224b8fa6a3babfaf71c18c5610052dcbd61/",
-        url = "https://github.com/google/tink/archive/7c93a224b8fa6a3babfaf71c18c5610052dcbd61.zip",
-    )
-
-    http_archive(
-        name = "tink_cc",
-        sha256 = "005e6c49b2b2df8a7dc670471ee45b6e09092bb05046eea358cd47f2703359c4",
-        strip_prefix = "tink-7c93a224b8fa6a3babfaf71c18c5610052dcbd61/cc",
-        url = "https://github.com/google/tink/archive/7c93a224b8fa6a3babfaf71c18c5610052dcbd61.zip",
     )
 
     http_archive(
