@@ -4,20 +4,6 @@ load("//build:repositories.bzl", "panel_exchange_client_repositories")
 
 panel_exchange_client_repositories()
 
-# TODO: it should not be necessary to run `switched_rules_by_language` here.
-# This is done by `common_jvm` set-up -- but apparently it happens too late
-# there.
-load("@wfa_common_jvm//build/com_google_googleapis:repo.bzl", "com_google_googleapis_repo")
-
-com_google_googleapis_repo()
-
-load("@com_google_googleapis//:repository_rules.bzl", "switched_rules_by_language")
-
-switched_rules_by_language(
-    name = "com_google_googleapis_imports",
-    java = True,
-)
-
 load("//build:deps.bzl", "panel_exchange_client_deps")
 
 panel_exchange_client_deps()
@@ -40,6 +26,11 @@ load("@rules_jvm_external//:setup.bzl", "rules_jvm_external_setup")
 
 rules_jvm_external_setup()
 
+load(
+    "@wfa_common_jvm//build:versions.bzl",
+    "GRPC_JAVA_VERSION",
+    "KOTLIN_RELEASE_VERSION",
+)
 load("@wfa_common_jvm//build/maven:artifacts.bzl", "artifacts")
 load("@rules_jvm_external//:defs.bzl", "maven_install")
 
@@ -54,19 +45,15 @@ maven_install(
     ],
 )
 
-GRPC_JAVA_VERSION = "1.43.2"
-
-KOTLIN_VERSION = "1.4.31"
-
 maven_install(
     name = "maven_export",
     artifacts = [
         "io.grpc:grpc-kotlin-stub:1.2.0",
         "io.grpc:grpc-netty:" + GRPC_JAVA_VERSION,
         "io.grpc:grpc-services:" + GRPC_JAVA_VERSION,
-        "org.jetbrains.kotlin:kotlin-reflect:" + KOTLIN_VERSION,
-        "org.jetbrains.kotlin:kotlin-stdlib-jdk7:" + KOTLIN_VERSION,
-        "org.jetbrains.kotlin:kotlin-test:" + KOTLIN_VERSION,
+        "org.jetbrains.kotlin:kotlin-reflect:" + KOTLIN_RELEASE_VERSION,
+        "org.jetbrains.kotlin:kotlin-stdlib-jdk7:" + KOTLIN_RELEASE_VERSION,
+        "org.jetbrains.kotlin:kotlin-test:" + KOTLIN_RELEASE_VERSION,
     ],
     excluded_artifacts = panel_exchange_client_maven_excluded_artifacts(),
     generate_compat_repositories = True,
