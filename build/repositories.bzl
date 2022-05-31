@@ -96,3 +96,24 @@ def panel_exchange_client_repositories():
         ],
         sha256 = "62eeb544ff1ef41d786e329e1536c1d541bb9bcad27ae984d57f18f314018e66",
     )
+
+    # Need to add apple deps for Bazel 5
+    http_archive(
+           name = "build_bazel_rules_apple",
+           sha256 = "12865e5944f09d16364aa78050366aca9dc35a32a018fa35f5950238b08bf744",
+           url = "https://github.com/bazelbuild/rules_apple/releases/download/0.34.2/rules_apple.0.34.2.tar.gz",
+    )
+
+    http_archive(
+           name = "build_bazel_apple_support",
+           sha256 = "5bbce1b2b9a3d4b03c0697687023ef5471578e76f994363c641c5f50ff0c7268",
+           url = "https://github.com/bazelbuild/apple_support/releases/download/0.13.0/apple_support.0.13.0.tar.gz",
+    )
+
+    http_archive(
+           name = "com_github_grpc_grpc",
+           sha256 = "67423a4cd706ce16a88d1549297023f0f9f0d695a96dd684adc21e67b021f9bc",
+           strip_prefix = "grpc-1.46.0",
+           urls = ["https://github.com/grpc/grpc/archive/v1.46.0.tar.gz"],
+    )
+

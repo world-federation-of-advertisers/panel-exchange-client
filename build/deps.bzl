@@ -22,6 +22,7 @@ load("@wfa_rules_cue//cue:repositories.bzl", "rules_cue_dependencies")
 load("@private_membership//build:private_membership_repositories.bzl", "private_membership_repositories")
 load("@rules_pkg//:deps.bzl", "rules_pkg_dependencies")
 load("//build/tink:repositories.bzl", "tink_cc")
+load("@com_github_grpc_grpc//bazel:grpc_deps.bzl", "grpc_deps")
 
 def panel_exchange_client_deps():
     """Installs transitive deps for panel_exchange_client."""
@@ -31,3 +32,4 @@ def panel_exchange_client_deps():
     rules_cue_dependencies()
     private_membership_repositories()
     rules_pkg_dependencies()
+    grpc_deps()
