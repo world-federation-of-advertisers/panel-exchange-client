@@ -34,23 +34,19 @@ import org.wfanet.panelmatch.common.compression.CompressionParametersKt.brotliCo
 import org.wfanet.panelmatch.common.compression.compressionParameters
 import org.wfanet.panelmatch.common.crypto.AsymmetricKeyPair
 
-private val FULL_ENCRYPTED_QUERY_RESULTS =
+private val ENCRYPTED_QUERY_RESULTS =
   listOf(
     encryptedQueryResultOf(1, "payload-1"),
     encryptedQueryResultOf(2, "payload-2"),
     encryptedQueryResultOf(3, "payload-3"),
   )
 
-private val FULL_QUERY_ID_AND_IDS: List<QueryIdAndId> =
+private val QUERY_ID_AND_IDS: List<QueryIdAndId> =
   listOf(
     queryIdAndIdOf(1, "some-id-1"),
     queryIdAndIdOf(2, "some-id-2"),
     queryIdAndIdOf(3, "some-id-3")
   )
-
-private val TRUNCATED_ENCRYPTED_QUERY_RESULTS = FULL_ENCRYPTED_QUERY_RESULTS.take(2)
-
-private val TRUNCATED_QUERY_ID_AND_IDS: List<QueryIdAndId> = FULL_QUERY_ID_AND_IDS.take(2)
 
 private val PLAINTEXT_JOIN_KEY_AND_IDS: List<JoinKeyAndId> =
   listOf(
@@ -81,9 +77,9 @@ class DecryptQueryResultsTest : BeamTestBase() {
   @Test
   fun success() {
     val encryptedQueryResults =
-      pcollectionOf("Create EncryptedQueryResults", FULL_ENCRYPTED_QUERY_RESULTS)
+      pcollectionOf("Create EncryptedQueryResults", ENCRYPTED_QUERY_RESULTS)
     val queryIdAndIds: PCollection<QueryIdAndId> =
-      pcollectionOf("Create QueryIdAndIds", FULL_QUERY_ID_AND_IDS)
+      pcollectionOf("Create QueryIdAndIds", QUERY_ID_AND_IDS)
     val plaintextJoinKeyAndIds: PCollection<JoinKeyAndId> =
       pcollectionOf("Create PlaintextJoinKeyAndIds", PLAINTEXT_JOIN_KEY_AND_IDS)
     val decryptedJoinKeyAndIds: PCollection<JoinKeyAndId> =
@@ -142,67 +138,6 @@ class DecryptQueryResultsTest : BeamTestBase() {
               ASYMMETRIC_KEYS.serializedPrivateKey,
               "payload-3".toByteStringUtf8()
             )
-        )
-
-      null
-    }
-  }
-
-  @Test
-  fun absentQueriesReturnEmptyResultsForAssociatedJoinKey() {
-    val encryptedQueryResults =
-      pcollectionOf("Create EncryptedQueryResults", TRUNCATED_ENCRYPTED_QUERY_RESULTS)
-    val queryIdAndIds: PCollection<QueryIdAndId> =
-      pcollectionOf("Create QueryIdAndIds", TRUNCATED_QUERY_ID_AND_IDS)
-    val plaintextJoinKeyAndIds: PCollection<JoinKeyAndId> =
-      pcollectionOf("Create PlaintextJoinKeyAndIds", PLAINTEXT_JOIN_KEY_AND_IDS)
-    val decryptedJoinKeyAndIds: PCollection<JoinKeyAndId> =
-      pcollectionOf("Create DecryptedJoinKeyAndIds", DECRYPTED_JOIN_KEY_AND_IDS)
-
-    val results =
-      decryptQueryResults(
-        encryptedQueryResults = encryptedQueryResults,
-        plaintextJoinKeyAndIds = plaintextJoinKeyAndIds,
-        decryptedJoinKeyAndIds = decryptedJoinKeyAndIds,
-        queryIdAndIds = queryIdAndIds,
-        compressionParameters =
-          pcollectionViewOf("CompressionParameters View", COMPRESSION_PARAMETERS),
-        privateMembershipKeys = pcollectionViewOf("Keys View", ASYMMETRIC_KEYS),
-        parameters = Any.pack(stringValue { value = PRIVATE_MEMBERSHIP_PARAMETERS }),
-        queryResultsDecryptor = TestQueryResultsDecryptor,
-        hkdfPepper = HKDF_PEPPER
-      )
-
-    assertThat(results).satisfies { keyedDecryptedEventDataSets ->
-      val deserializedResults: List<Pair<String, List<ByteString>>> =
-        keyedDecryptedEventDataSets.map {
-          it.plaintextJoinKeyAndId.joinKey.key.toStringUtf8() to
-            it.decryptedEventDataList.map { plaintext -> plaintext.payload }
-        }
-
-      assertThat(deserializedResults)
-        .containsExactly(
-          "some-plaintext-joinkey-1" to
-            listOf(
-              "some-decrypted-join-key-id-1".toByteStringUtf8(),
-              HKDF_PEPPER,
-              PRIVATE_MEMBERSHIP_PARAMETERS.toByteStringUtf8(),
-              COMPRESSION_PARAMETERS.toByteString(),
-              ASYMMETRIC_KEYS.serializedPublicKey,
-              ASYMMETRIC_KEYS.serializedPrivateKey,
-              "payload-1".toByteStringUtf8()
-            ),
-          "some-plaintext-joinkey-2" to
-            listOf(
-              "some-decrypted-join-key-id-2".toByteStringUtf8(),
-              HKDF_PEPPER,
-              PRIVATE_MEMBERSHIP_PARAMETERS.toByteStringUtf8(),
-              COMPRESSION_PARAMETERS.toByteString(),
-              ASYMMETRIC_KEYS.serializedPublicKey,
-              ASYMMETRIC_KEYS.serializedPrivateKey,
-              "payload-2".toByteStringUtf8()
-            ),
-          "some-plaintext-joinkey-3" to emptyList<ByteString>()
         )
 
       null
