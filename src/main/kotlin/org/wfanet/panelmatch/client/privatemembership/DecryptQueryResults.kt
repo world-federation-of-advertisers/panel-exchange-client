@@ -43,6 +43,7 @@ import org.wfanet.panelmatch.common.beam.kvOf
 import org.wfanet.panelmatch.common.beam.map
 import org.wfanet.panelmatch.common.beam.oneToOneJoin
 import org.wfanet.panelmatch.common.beam.parDo
+import org.wfanet.panelmatch.common.beam.strictOneToOneJoin
 import org.wfanet.panelmatch.common.beam.toPCollectionList
 import org.wfanet.panelmatch.common.compression.CompressionParameters
 import org.wfanet.panelmatch.common.crypto.AsymmetricKeyPair
@@ -118,13 +119,8 @@ class DecryptQueryResults(
 
     val decryptedJoinKeyKeyedByQueryId: PCollection<KV<QueryId, JoinKeyAndId>> =
       keyedQueryIdAndIds
-        .oneToOneJoin(keyedDecryptedJoinKeyAndIds, name = "Join QueryIds+DecryptedJoinKeys")
-        .filter("Filter Missing QueryIds") { it.key != null }
-        .map("Map to QueryId and JoinKey") {
-          val key = requireNotNull(it.key) { "QueryId is null" }
-          val value = requireNotNull(it.value) { "JoinKeyAndId is null" }
-          kvOf(key.queryId, value)
-        }
+        .strictOneToOneJoin(keyedDecryptedJoinKeyAndIds, name = "Join QueryIds+DecryptedJoinKeys")
+        .map("Map to QueryId and JoinKey") { kvOf(it.key.queryId, it.value) }
 
     val keyedEncryptedQueryResults: PCollection<KV<QueryId, EncryptedQueryResult>> =
       encryptedQueryResults.keyBy("Key EncryptedQueryResult by QueryId") {
@@ -179,16 +175,15 @@ class DecryptQueryResults(
         it.joinKeyIdentifier
       }
     val realKeyedDecryptedEventDataSets =
-      realQueryResults.oneToOneJoin(
+      realQueryResults
+        .strictOneToOneJoin(
           keyedPlaintextJoinKeyAndIds,
           name = "Join Decrypted Result to Plaintext Joinkeys"
         )
         .map("Map to KeyedDecryptedEventDataSet") {
-          val joinKeyAndId = requireNotNull(it.value) { "JoinKeyAndId is null" }
-          val queryResults = it.key ?: emptyList()
           keyedDecryptedEventDataSet {
-            plaintextJoinKeyAndId = joinKeyAndId
-            decryptedEventData += queryResults
+            plaintextJoinKeyAndId = it.value
+            decryptedEventData += it.key
           }
         }
 
@@ -213,7 +208,8 @@ private class BuildDecryptQueryResultsParametersFn(
 ) :
   DoFn<
     KV<JoinKeyAndId?, Iterable<@JvmWildcard EncryptedQueryResult>?>,
-    KV<JoinKeyIdentifier, DecryptQueryResultsParameters>>() {
+    KV<JoinKeyIdentifier, DecryptQueryResultsParameters>
+  >() {
   private val metricsNamespace = "DecryptQueryResults"
   private val noResults = Metrics.counter(metricsNamespace, "no-results")
   private val paddingQueries = Metrics.counter(metricsNamespace, "padding-queries")
@@ -259,7 +255,8 @@ private class BuildDecryptQueryResultsParametersFn(
 private class DecryptResultsFn(private val queryResultsDecryptor: QueryResultsDecryptor) :
   DoFn<
     KV<JoinKeyIdentifier, DecryptQueryResultsParameters>,
-    KV<JoinKeyIdentifier, List<@JvmWildcard Plaintext>>>() {
+    KV<JoinKeyIdentifier, List<@JvmWildcard Plaintext>>
+  >() {
   private val metricsNamespace = "DecryptQueryResults"
   private val decryptionTimes = Metrics.distribution(metricsNamespace, "decryption-times")
   private val outputCounts = Metrics.distribution(metricsNamespace, "output-counts")
