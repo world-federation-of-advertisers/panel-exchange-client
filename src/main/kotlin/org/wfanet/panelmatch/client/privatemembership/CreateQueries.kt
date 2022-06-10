@@ -277,6 +277,10 @@ private class EqualizeQueriesPerShardFn(
   DoFn<
     KV<ShardId, Iterable<@JvmWildcard BucketQuery>>,
     KV<ShardId, Iterable<@JvmWildcard BucketQuery>>>() {
+
+  /** Total number of discarded queries. */
+  private val discardedQueriesCounter = Metrics.counter(METRIC_NAMESPACE, "discarded-queries")
+
   /**
    * Number of discarded Queries. If unacceptably high, the totalQueriesPerShard parameter should be
    * increased.
@@ -298,6 +302,7 @@ private class EqualizeQueriesPerShardFn(
 
     if (queryCountDelta >= 0) {
       context.output(kvOf(kv.key, allQueries.take(totalQueriesPerShard)))
+      discardedQueriesCounter.inc(queryCountDelta.toLong())
       return
     }
 
