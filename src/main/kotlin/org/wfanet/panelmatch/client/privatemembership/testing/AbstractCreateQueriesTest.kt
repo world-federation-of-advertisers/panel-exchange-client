@@ -154,9 +154,14 @@ abstract class AbstractCreateQueriesTest : BeamTestBase() {
         maxQueriesPerShard = totalQueriesPerShard,
         padQueries = true
       )
-    val (queryIdAndJoinKeys, encryptedQueries) = runWorkflow(privateMembershipCryptor, parameters)
+    val (queryIdAndJoinKeys, encryptedQueries, discardedQueries) =
+      runWorkflow(privateMembershipCryptor, parameters)
     val decodedQueries =
       decodeEncryptedQueryBundle(privateMembershipCryptorHelper, encryptedQueries)
+    assertThat(discardedQueries).satisfies { it ->
+      assertThat(it.single().joinKeyIdentifiersList).isEmpty()
+      null
+    }
     assertThat(getPanelistQueries(decodedQueries, queryIdAndJoinKeys)).satisfies { panelistQueries
       ->
       val joinKeyIdentifiers = panelistQueries.map { it.value.joinKeyIdentifier.id.toStringUtf8() }
@@ -186,9 +191,13 @@ abstract class AbstractCreateQueriesTest : BeamTestBase() {
         padQueries = true
       )
 
-    val (_, encryptedResults) = runWorkflow(privateMembershipCryptor, parameters)
+    val (_, encryptedResults, discardedQueries) = runWorkflow(privateMembershipCryptor, parameters)
     val decodedQueries =
       decodeEncryptedQueryBundle(privateMembershipCryptorHelper, encryptedResults)
+    assertThat(discardedQueries).satisfies { it ->
+      assertThat(it.single().joinKeyIdentifiersList).hasSize(2)
+      null
+    }
     assertThat(decodedQueries.values()).satisfies { shardedQueries ->
       for (i in 0 until numShards) {
         assertThat(shardedQueries.count { it.shardId.id == i }).isEqualTo(totalQueriesPerShard)

@@ -50,6 +50,16 @@ import org.wfanet.panelmatch.common.crypto.AsymmetricKeyPair
 import org.wfanet.panelmatch.common.withTime
 
 /**
+ * Decrypted and Plaintext JoinKeyAndId inputs should have discardedQueries filtered out before
+ * decryption.
+ */
+fun List<JoinKeyAndId>.removeDiscardedQueries(
+  discardedQueries: List<JoinKeyIdentifier>
+): List<JoinKeyAndId> {
+  return filter { !discardedQueries.contains(it.joinKeyIdentifier) }
+}
+
+/**
  * Decrypts and decompresses [encryptedQueryResults].
  *
  * @param encryptedQueryResults data to be decrypted and decompressed
