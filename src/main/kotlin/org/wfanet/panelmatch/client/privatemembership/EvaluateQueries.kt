@@ -29,7 +29,6 @@ import org.apache.beam.sdk.values.PCollectionView
 import org.apache.beam.sdk.values.TupleTag
 import org.wfanet.panelmatch.client.common.bucketOf
 import org.wfanet.panelmatch.client.common.databaseShardOf
-import org.wfanet.panelmatch.common.beam.breakFusion
 import org.wfanet.panelmatch.common.beam.keyBy
 import org.wfanet.panelmatch.common.beam.kvOf
 import org.wfanet.panelmatch.common.beam.map
@@ -50,7 +49,6 @@ fun evaluateQueries(
       "Evaluate Queries",
       EvaluateQueries(parameters, queryEvaluator, serializedPublicKey, paddingNonces)
     )
-    .breakFusion("Break Fusion After Evaluate Queries")
 }
 
 private class EvaluateQueries(
@@ -151,9 +149,11 @@ private class EvaluateQueriesForShardFn(
     if (buckets.isEmpty() || queries.isEmpty()) return
 
     val combinedBuckets =
-      buckets.groupBy { it.bucketId }.map { (bucketId, buckets) ->
-        bucketOf(bucketId, buckets.flatMap { it.contents.itemsList })
-      }
+      buckets
+        .groupBy { it.bucketId }
+        .map { (bucketId, buckets) ->
+          bucketOf(bucketId, buckets.flatMap { it.contents.itemsList })
+        }
     val shard = databaseShardOf(context.element().key, combinedBuckets)
 
     val publicKey = context.sideInput(serializedPublicKey)
