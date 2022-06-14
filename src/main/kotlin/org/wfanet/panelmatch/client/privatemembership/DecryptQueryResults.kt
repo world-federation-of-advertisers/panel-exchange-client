@@ -42,7 +42,6 @@ import org.wfanet.panelmatch.common.beam.kvOf
 import org.wfanet.panelmatch.common.beam.map
 import org.wfanet.panelmatch.common.beam.oneToOneJoin
 import org.wfanet.panelmatch.common.beam.parDo
-import org.wfanet.panelmatch.common.beam.strictOneToOneJoin
 import org.wfanet.panelmatch.common.beam.toPCollectionList
 import org.wfanet.panelmatch.common.compression.CompressionParameters
 import org.wfanet.panelmatch.common.crypto.AsymmetricKeyPair
@@ -118,8 +117,13 @@ class DecryptQueryResults(
 
     val decryptedJoinKeyKeyedByQueryId: PCollection<KV<QueryId, JoinKeyAndId>> =
       keyedQueryIdAndIds
-        .strictOneToOneJoin(keyedDecryptedJoinKeyAndIds, name = "Join QueryIds+DecryptedJoinKeys")
-        .map("Map to QueryId and JoinKey") { kvOf(it.key.queryId, it.value) }
+        .oneToOneJoin(keyedDecryptedJoinKeyAndIds, name = "Join QueryIds+DecryptedJoinKeys")
+        .filter("Filter Missing QueryIds") { it.key != null }
+        .map("Map to QueryId and JoinKey") {
+          val key = requireNotNull(it.key) { "QueryId is null" }
+          val value = requireNotNull(it.value) { "JoinKeyAndId is null" }
+          kvOf(key.queryId, value)
+        }
 
     val keyedEncryptedQueryResults: PCollection<KV<QueryId, EncryptedQueryResult>> =
       encryptedQueryResults.keyBy("Key EncryptedQueryResult by QueryId") {
@@ -173,14 +177,16 @@ class DecryptQueryResults(
       }
     val realKeyedDecryptedEventDataSets =
       realQueryResults
-        .strictOneToOneJoin(
+        .oneToOneJoin(
           keyedPlaintextJoinKeyAndIds,
           name = "Join Decrypted Result to Plaintext Joinkeys"
         )
         .map("Map to KeyedDecryptedEventDataSet") {
+          val joinKeyAndId = requireNotNull(it.value) { "JoinKeyAndId is null" }
+          val queryResults = it.key ?: emptyList()
           keyedDecryptedEventDataSet {
-            plaintextJoinKeyAndId = it.value
-            decryptedEventData += it.key
+            plaintextJoinKeyAndId = joinKeyAndId
+            decryptedEventData += queryResults
           }
         }
 
