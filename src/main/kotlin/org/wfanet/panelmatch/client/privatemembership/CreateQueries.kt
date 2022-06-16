@@ -90,9 +90,9 @@ private class CreateQueries(
     val queriesByShard = shardLookupKeys(input)
     val allQueriesByShard = addPaddedQueries(queriesByShard)
     val withPaddedQueriesByShard =
-      allQueriesByShard.filter("Filter out discarded queries") { !it.key.discardStatus }.map(
-          "Map with padded queries"
-        ) { kvOf(it.key.shardId, it.value) }
+      allQueriesByShard
+        .filter("Filter out discarded queries") { !it.key.discardStatus }
+        .map("Map with padded queries") { kvOf(it.key.shardId, it.value) }
     val discardedQueriesByShard: PCollection<JoinKeyIdentifierCollection> =
       allQueriesByShard
         .filter("Only keep discarded queries") { it.key.discardStatus }
@@ -139,8 +139,7 @@ private class CreateQueries(
     val numShards = parameters.numShards
 
     val missingQueries =
-      queries
-        .pipeline
+      queries.pipeline
         .createSequence(name = "Missing Queries Sequence", n = numShards, parallelism = 1000)
         .minus(queries.map("Queries Map") { it.key.id }, name = "Missing Queries Minus")
         .map<Int, KV<ShardId, Iterable<@JvmWildcard BucketQuery>>>("Missing Files Map") {
@@ -309,7 +308,8 @@ private class EqualizeQueriesPerShardFn(
 ) :
   DoFn<
     KV<ShardId, Iterable<@JvmWildcard BucketQuery>>,
-    KV<ShardAndStatus, Iterable<@JvmWildcard BucketQuery>>>() {
+    KV<ShardAndStatus, Iterable<@JvmWildcard BucketQuery>>
+  >() {
   /**
    * Number of discarded Queries. If unacceptably high, the totalQueriesPerShard parameter should be
    * increased.

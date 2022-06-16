@@ -128,10 +128,8 @@ class DecryptQueryResults(
       }
 
     val decryptedJoinKeyKeyedByQueryId: PCollection<KV<QueryId, JoinKeyAndId>> =
-      keyedQueryIdAndIds.strictOneToOneJoin(
-          keyedDecryptedJoinKeyAndIds,
-          name = "Join QueryIds+DecryptedJoinKeys"
-        )
+      keyedQueryIdAndIds
+        .strictOneToOneJoin(keyedDecryptedJoinKeyAndIds, name = "Join QueryIds+DecryptedJoinKeys")
         .map("Map to QueryId and JoinKey") { kvOf(it.key.queryId, it.value) }
 
     val keyedEncryptedQueryResults: PCollection<KV<QueryId, EncryptedQueryResult>> =
@@ -187,7 +185,8 @@ class DecryptQueryResults(
         it.joinKeyIdentifier
       }
     val realKeyedDecryptedEventDataSets =
-      realQueryResults.strictOneToOneJoin(
+      realQueryResults
+        .strictOneToOneJoin(
           keyedPlaintextJoinKeyAndIds,
           name = "Join Decrypted Result to Plaintext Joinkeys"
         )
@@ -219,7 +218,8 @@ private class BuildDecryptQueryResultsParametersFn(
 ) :
   DoFn<
     KV<JoinKeyAndId?, Iterable<@JvmWildcard EncryptedQueryResult>?>,
-    KV<JoinKeyIdentifier, DecryptQueryResultsParameters>>() {
+    KV<JoinKeyIdentifier, DecryptQueryResultsParameters>
+  >() {
   private val metricsNamespace = "DecryptQueryResults"
   private val noResults = Metrics.counter(metricsNamespace, "no-results")
   private val paddingQueries = Metrics.counter(metricsNamespace, "padding-queries")
@@ -265,7 +265,8 @@ private class BuildDecryptQueryResultsParametersFn(
 private class DecryptResultsFn(private val queryResultsDecryptor: QueryResultsDecryptor) :
   DoFn<
     KV<JoinKeyIdentifier, DecryptQueryResultsParameters>,
-    KV<JoinKeyIdentifier, List<@JvmWildcard Plaintext>>>() {
+    KV<JoinKeyIdentifier, List<@JvmWildcard Plaintext>>
+  >() {
   private val metricsNamespace = "DecryptQueryResults"
   private val decryptionTimes = Metrics.distribution(metricsNamespace, "decryption-times")
   private val outputCounts = Metrics.distribution(metricsNamespace, "output-counts")
