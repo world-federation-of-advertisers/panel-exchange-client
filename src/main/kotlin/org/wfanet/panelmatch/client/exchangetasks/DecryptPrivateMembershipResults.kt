@@ -23,7 +23,7 @@ import org.wfanet.panelmatch.client.privatemembership.QueryResultsDecryptor
 import org.wfanet.panelmatch.client.privatemembership.decryptQueryResults
 import org.wfanet.panelmatch.client.privatemembership.encryptedQueryResult
 import org.wfanet.panelmatch.client.privatemembership.queryIdAndId
-import org.wfanet.panelmatch.client.privatemembership.removeDiscardedQueries
+import org.wfanet.panelmatch.client.privatemembership.removeDiscardedJoinKeys
 import org.wfanet.panelmatch.common.beam.flatMap
 import org.wfanet.panelmatch.common.beam.map
 import org.wfanet.panelmatch.common.beam.mapWithSideInput
@@ -40,19 +40,19 @@ suspend fun ApacheBeamContext.decryptPrivateMembershipResults(
     readShardedPCollection("encrypted-results", encryptedQueryResult {})
 
   val queryAndIds = readShardedPCollection("query-to-ids-map", queryIdAndId {})
-  val discardedQueries: List<JoinKeyIdentifier> =
-    JoinKeyIdentifierCollection.parseFrom(readBlob("discarded-queries")).joinKeyIdentifiersList
+  val discardedJoinKeys: List<JoinKeyIdentifier> =
+    JoinKeyIdentifierCollection.parseFrom(readBlob("discarded-join-keys")).joinKeyIdentifiersList
   val plaintextJoinKeyAndIds: PCollection<JoinKeyAndId> =
     readBlobAsPCollection("plaintext-join-keys-to-id-map").flatMap {
       JoinKeyAndIdCollection.parseFrom(it)
         .joinKeyAndIdsList
-        .removeDiscardedQueries(discardedQueries)
+        .removeDiscardedJoinKeys(discardedJoinKeys)
     }
   val decryptedJoinKeyAndIds: PCollection<JoinKeyAndId> =
     readBlobAsPCollection("decrypted-join-keys-to-id-map").flatMap {
       JoinKeyAndIdCollection.parseFrom(it)
         .joinKeyAndIdsList
-        .removeDiscardedQueries(discardedQueries)
+        .removeDiscardedJoinKeys(discardedJoinKeys)
     }
 
   val compressionParameters =

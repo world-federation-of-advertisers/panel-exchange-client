@@ -46,7 +46,7 @@ private val QUERY_ID_AND_IDS: List<QueryIdAndId> =
 private val QUERY_ID_AND_IDS_SOME_DISCARDED: List<QueryIdAndId> =
   listOf(queryIdAndIdOf(1, "some-id-1"), queryIdAndIdOf(3, "some-id-3"))
 
-private val DISCARDED_QUERIES: List<JoinKeyIdentifier> =
+private val DISCARDED_JOIN_KEYS: List<JoinKeyIdentifier> =
   listOf(
     joinKeyIdentifierOf("some-id-2".toByteStringUtf8()),
   )
@@ -154,7 +154,7 @@ class DecryptQueryResultsTest : BeamTestBase() {
   }
 
   @Test
-  fun successWithDiscardedQueries() {
+  fun successWithDiscardedJoinKeys() {
     val encryptedQueryResultsList =
       listOf(
         encryptedQueryResultOf(1, "payload-1"),
@@ -167,12 +167,12 @@ class DecryptQueryResultsTest : BeamTestBase() {
     val plaintextJoinKeyAndIds: PCollection<JoinKeyAndId> =
       pcollectionOf(
         "Create PlaintextJoinKeyAndIds",
-        PLAINTEXT_JOIN_KEY_AND_IDS.removeDiscardedQueries(DISCARDED_QUERIES)
+        PLAINTEXT_JOIN_KEY_AND_IDS.removeDiscardedJoinKeys(DISCARDED_JOIN_KEYS)
       )
     val decryptedJoinKeyAndIds: PCollection<JoinKeyAndId> =
       pcollectionOf(
         "Create DecryptedJoinKeyAndIds",
-        DECRYPTED_JOIN_KEY_AND_IDS.removeDiscardedQueries(DISCARDED_QUERIES)
+        DECRYPTED_JOIN_KEY_AND_IDS.removeDiscardedJoinKeys(DISCARDED_JOIN_KEYS)
       )
 
     val results =

@@ -154,11 +154,11 @@ abstract class AbstractCreateQueriesTest : BeamTestBase() {
         maxQueriesPerShard = totalQueriesPerShard,
         padQueries = true
       )
-    val (queryIdAndJoinKeys, encryptedQueries, discardedQueries) =
+    val (queryIdAndJoinKeys, encryptedQueries, discardedJoinKeys) =
       runWorkflow(privateMembershipCryptor, parameters)
     val decodedQueries =
       decodeEncryptedQueryBundle(privateMembershipCryptorHelper, encryptedQueries)
-    assertThat(discardedQueries).satisfies { it ->
+    assertThat(discardedJoinKeys).satisfies { it ->
       assertThat(it.single().joinKeyIdentifiersList).isEmpty()
       null
     }
@@ -191,10 +191,10 @@ abstract class AbstractCreateQueriesTest : BeamTestBase() {
         padQueries = true
       )
 
-    val (_, encryptedResults, discardedQueries) = runWorkflow(privateMembershipCryptor, parameters)
+    val (_, encryptedResults, discardedJoinKeys) = runWorkflow(privateMembershipCryptor, parameters)
     val decodedQueries =
       decodeEncryptedQueryBundle(privateMembershipCryptorHelper, encryptedResults)
-    assertThat(discardedQueries).satisfies { it ->
+    assertThat(discardedJoinKeys).satisfies { it ->
       assertThat(it.single().joinKeyIdentifiersList).hasSize(2)
       null
     }

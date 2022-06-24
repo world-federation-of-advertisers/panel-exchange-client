@@ -138,7 +138,7 @@ open class ProductionExchangeTaskMapper(
         padQueries = stepDetails.addPaddingQueries,
       )
 
-    return apacheBeamTaskFor(outputManifests, listOf("discarded-queries")) {
+    return apacheBeamTaskFor(outputManifests, listOf("discarded-join-keys")) {
       buildPrivateMembershipQueries(parameters, privateMembershipCryptor)
     }
   }

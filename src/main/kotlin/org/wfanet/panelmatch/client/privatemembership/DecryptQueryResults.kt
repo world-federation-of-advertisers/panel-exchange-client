@@ -50,13 +50,13 @@ import org.wfanet.panelmatch.common.crypto.AsymmetricKeyPair
 import org.wfanet.panelmatch.common.withTime
 
 /**
- * Decrypted and Plaintext JoinKeyAndId inputs should have discardedQueries filtered out before
+ * Decrypted and Plaintext JoinKeyAndId inputs should have discardedJoinKeys filtered out before
  * decryption.
  */
-fun List<JoinKeyAndId>.removeDiscardedQueries(
-  discardedQueries: List<JoinKeyIdentifier>
+fun List<JoinKeyAndId>.removeDiscardedJoinKeys(
+  discardedJoinKeys: List<JoinKeyIdentifier>
 ): List<JoinKeyAndId> {
-  return filter { !discardedQueries.contains(it.joinKeyIdentifier) }
+  return filter { !discardedJoinKeys.contains(it.joinKeyIdentifier) }
 }
 
 /**

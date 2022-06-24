@@ -70,14 +70,14 @@ fun createQueries(
   return CreateQueriesOutputs(
     queryIdMap = tuple[CreateQueries.queryIdAndIdTag],
     encryptedQueryBundles = tuple[CreateQueries.encryptedQueryBundlesTag],
-    discardedQueries = tuple[CreateQueries.discardedQueriesTag],
+    discardedJoinKeys = tuple[CreateQueries.discardedJoinKeysTag],
   )
 }
 
 data class CreateQueriesOutputs(
   val queryIdMap: PCollection<QueryIdAndId>,
   val encryptedQueryBundles: PCollection<EncryptedQueryBundle>,
-  val discardedQueries: PCollection<JoinKeyIdentifierCollection>
+  val discardedJoinKeys: PCollection<JoinKeyIdentifierCollection>
 )
 
 private class CreateQueries(
@@ -91,15 +91,15 @@ private class CreateQueries(
     val allQueriesByShard = addPaddedQueries(queriesByShard)
     val withPaddedQueriesByShard =
       allQueriesByShard
-        .filter("Filter out discarded queries") { !it.key.discardStatus }
+        .filter("Filter out discarded queries") { !it.key.isDiscarded }
         .map("Map with padded queries") { kvOf(it.key.shardId, it.value) }
-    val discardedQueriesByShard: PCollection<JoinKeyIdentifierCollection> =
+    val discardedJoinKeys: PCollection<JoinKeyIdentifierCollection> =
       allQueriesByShard
-        .filter("Only keep discarded queries") { it.key.discardStatus }
+        .filter("Only keep discarded queries") { it.key.isDiscarded }
         .flatMap("FlatMap padded queries") { it.value }
         .map("Map to JoinKeyIdentifier") { it.joinKeyIdentifier }
-        .combineIntoList("Make Discarded Queries Iterable")
-        .map("Map to Discarded Queries Collection") {
+        .combineIntoList("Make Discarded Join Keys Iterable")
+        .map("Map to Discarded Join Key Collection") {
           joinKeyIdentifierCollection { joinKeyIdentifiers += it }
         }
 
@@ -107,7 +107,7 @@ private class CreateQueries(
     val queryIdToIdsMapping = extractRealQueryIdAndId(unencryptedQueriesByShard)
     val encryptedQueryBundles = encryptQueries(unencryptedQueriesByShard, privateMembershipKeys)
     return PCollectionTuple.of(queryIdAndIdTag, queryIdToIdsMapping)
-      .and(discardedQueriesTag, discardedQueriesByShard)
+      .and(discardedJoinKeysTag, discardedJoinKeys)
       .and(encryptedQueryBundlesTag, encryptedQueryBundles)
   }
 
@@ -132,8 +132,9 @@ private class CreateQueries(
   private fun addPaddedQueries(
     queries: PCollection<KV<ShardId, Iterable<@JvmWildcard BucketQuery>>>
   ): PCollection<KV<ShardAndStatus, Iterable<@JvmWildcard BucketQuery>>> {
-    if (!parameters.padQueries)
+    if (!parameters.padQueries) {
       return queries.map("Map to not pad queries") { kvOf(ShardAndStatus(it.key, false), it.value) }
+    }
     val totalQueriesPerShard = parameters.maxQueriesPerShard
     val paddingNonceBucket = bucketIdOf(parameters.numBucketsPerShard)
     val numShards = parameters.numShards
@@ -236,7 +237,7 @@ private class CreateQueries(
 
   companion object {
     val queryIdAndIdTag = TupleTag<QueryIdAndId>()
-    val discardedQueriesTag = TupleTag<JoinKeyIdentifierCollection>()
+    val discardedJoinKeysTag = TupleTag<JoinKeyIdentifierCollection>()
     val encryptedQueryBundlesTag = TupleTag<EncryptedQueryBundle>()
   }
 }
@@ -295,7 +296,7 @@ private class EncryptQueriesFn(
 
 private data class ShardAndStatus(
   val shardId: ShardId,
-  val discardStatus: Boolean,
+  val isDiscarded: Boolean,
 ) : Serializable
 
 /**
@@ -314,7 +315,7 @@ private class EqualizeQueriesPerShardFn(
    * Number of discarded Queries. If unacceptably high, the totalQueriesPerShard parameter should be
    * increased.
    */
-  private val discardedQueriesDistribution =
+  private val discardedJoinKeysDistribution =
     Metrics.distribution(METRIC_NAMESPACE, "discarded-queries-per-shard")
 
   /** Number of padding queries added to each shard. */
@@ -327,7 +328,7 @@ private class EqualizeQueriesPerShardFn(
     val allQueries = kv.value.toList()
 
     val queryCountDelta = allQueries.size - totalQueriesPerShard
-    discardedQueriesDistribution.update(maxOf(0L, queryCountDelta.toLong()))
+    discardedJoinKeysDistribution.update(maxOf(0L, queryCountDelta.toLong()))
 
     if (queryCountDelta >= 0) {
       context.output(kvOf(ShardAndStatus(kv.key, false), allQueries.take(totalQueriesPerShard)))

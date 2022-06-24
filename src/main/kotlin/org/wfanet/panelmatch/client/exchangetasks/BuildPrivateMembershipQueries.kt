@@ -47,7 +47,7 @@ fun ApacheBeamContext.buildPrivateMembershipQueries(
   val outputs =
     createQueries(lookupKeyAndIds, privateKeysView, parameters, privateMembershipCryptor)
 
-  outputs.discardedQueries.writeSingleBlob("discarded-queries")
+  outputs.discardedJoinKeys.writeSingleBlob("discarded-join-keys")
 
   // TODO: consider using `writeSingleBlob` instead of writing a sharded blob for `query-to-ids-map`
   outputs.queryIdMap.writeShardedFiles("query-to-ids-map")
