@@ -34,7 +34,6 @@ import org.wfanet.panelmatch.client.exchangetasks.JoinKey
 import org.wfanet.panelmatch.client.exchangetasks.JoinKeyAndId
 import org.wfanet.panelmatch.client.exchangetasks.JoinKeyIdentifier
 import org.wfanet.panelmatch.client.exchangetasks.joinKeyAndId
-import org.wfanet.panelmatch.common.beam.breakFusion
 import org.wfanet.panelmatch.common.beam.filter
 import org.wfanet.panelmatch.common.beam.flatten
 import org.wfanet.panelmatch.common.beam.groupByKey
@@ -144,7 +143,6 @@ class DecryptQueryResults(
       PCollection<KV<JoinKeyIdentifier, List<@JvmWildcard Plaintext>>> =
       decryptedJoinKeyKeyedByQueryId
         .oneToOneJoin(groupedEncryptedQueryResults, name = "Join JoinKeys+QueryResults")
-        .breakFusion("BreakFusion before DecryptResultsFnRequests")
         .apply(
           "Make DecryptResultsFnRequests",
           ParDo.of(
@@ -157,7 +155,6 @@ class DecryptQueryResults(
             )
             .withSideInputs(privateMembershipKeys, compressionParameters)
         )
-        .breakFusion("BreakFusion before Decrypt")
         .parDo(DecryptResultsFn(queryResultsDecryptor), name = "Decrypt")
         .setCoder(plaintextListCoder)
 
