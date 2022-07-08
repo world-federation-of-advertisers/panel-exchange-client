@@ -55,7 +55,8 @@ import org.wfanet.panelmatch.common.withTime
 fun List<JoinKeyAndId>.removeDiscardedJoinKeys(
   discardedJoinKeys: List<JoinKeyIdentifier>
 ): List<JoinKeyAndId> {
-  return filter { !discardedJoinKeys.contains(it.joinKeyIdentifier) }
+  val discardedJoinKeySet = discardedJoinKeys.toSet()
+  return filter { !discardedJoinKeySet.contains(it.joinKeyIdentifier) }
 }
 
 /**

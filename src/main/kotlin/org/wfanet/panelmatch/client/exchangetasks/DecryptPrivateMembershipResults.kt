@@ -40,8 +40,13 @@ suspend fun ApacheBeamContext.decryptPrivateMembershipResults(
     readShardedPCollection("encrypted-results", encryptedQueryResult {})
 
   val queryAndIds = readShardedPCollection("query-to-ids-map", queryIdAndId {})
+  // For backwards compatibility for workflows without discarded-join-keys
   val discardedJoinKeys: List<JoinKeyIdentifier> =
-    JoinKeyIdentifierCollection.parseFrom(readBlob("discarded-join-keys")).joinKeyIdentifiersList
+    if ("discarded-join-keys" in inputLabels) {
+      JoinKeyIdentifierCollection.parseFrom(readBlob("discarded-join-keys")).joinKeyIdentifiersList
+    } else {
+      emptyList()
+    }
   val plaintextJoinKeyAndIds: PCollection<JoinKeyAndId> =
     readBlobAsPCollection("plaintext-join-keys-to-id-map").flatMap {
       JoinKeyAndIdCollection.parseFrom(it)

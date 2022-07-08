@@ -137,8 +137,14 @@ open class ProductionExchangeTaskMapper(
         maxQueriesPerShard = stepDetails.numQueriesPerShard,
         padQueries = stepDetails.addPaddingQueries,
       )
-
-    return apacheBeamTaskFor(outputManifests, listOf("discarded-join-keys")) {
+    // For backwards compatibility for workflows without discarded-join-keys
+    val outputLabels: List<String> =
+      if ("discarded-join-keys" in step.outputLabelsMap) {
+        listOf("discarded-join-keys")
+      } else {
+        emptyList()
+      }
+    return apacheBeamTaskFor(outputManifests, outputLabels) {
       buildPrivateMembershipQueries(parameters, privateMembershipCryptor)
     }
   }

@@ -21,7 +21,9 @@ import org.apache.beam.sdk.coders.ListCoder
 import org.apache.beam.sdk.coders.SerializableCoder
 import org.apache.beam.sdk.extensions.protobuf.ProtoCoder
 import org.apache.beam.sdk.metrics.Metrics
+import org.apache.beam.sdk.transforms.Create
 import org.apache.beam.sdk.transforms.DoFn
+import org.apache.beam.sdk.transforms.DoFn.MultiOutputReceiver
 import org.apache.beam.sdk.transforms.Flatten
 import org.apache.beam.sdk.transforms.PTransform
 import org.apache.beam.sdk.transforms.ParDo
@@ -31,6 +33,7 @@ import org.apache.beam.sdk.values.PCollectionList
 import org.apache.beam.sdk.values.PCollectionTuple
 import org.apache.beam.sdk.values.PCollectionView
 import org.apache.beam.sdk.values.TupleTag
+import org.apache.beam.sdk.values.TupleTagList
 import org.wfanet.panelmatch.client.common.bucketIdOf
 import org.wfanet.panelmatch.client.common.queryIdOf
 import org.wfanet.panelmatch.client.common.shardIdOf
@@ -39,14 +42,12 @@ import org.wfanet.panelmatch.client.exchangetasks.JoinKeyIdentifier
 import org.wfanet.panelmatch.common.beam.combineIntoList
 import org.wfanet.panelmatch.common.beam.createSequence
 import org.wfanet.panelmatch.common.beam.filter
-import org.wfanet.panelmatch.common.beam.flatMap
 import org.wfanet.panelmatch.common.beam.flatten
 import org.wfanet.panelmatch.common.beam.groupByKey
 import org.wfanet.panelmatch.common.beam.keys
 import org.wfanet.panelmatch.common.beam.kvOf
 import org.wfanet.panelmatch.common.beam.map
 import org.wfanet.panelmatch.common.beam.minus
-import org.wfanet.panelmatch.common.beam.parDo
 import org.wfanet.panelmatch.common.beam.values
 import org.wfanet.panelmatch.common.crypto.AsymmetricKeyPair
 import org.wfanet.panelmatch.common.withTime
@@ -61,7 +62,7 @@ fun createQueries(
   parameters: CreateQueriesParameters,
   privateMembershipCryptor: PrivateMembershipCryptor
 ): CreateQueriesOutputs {
-  val tuple =
+  val tuple: PCollectionTuple =
     lookupKeyAndIds.apply(
       "Create Queries",
       CreateQueries(privateMembershipKeys, parameters, privateMembershipCryptor)
@@ -69,14 +70,14 @@ fun createQueries(
   return CreateQueriesOutputs(
     queryIdMap = tuple[CreateQueries.queryIdAndIdTag],
     encryptedQueryBundles = tuple[CreateQueries.encryptedQueryBundlesTag],
-    discardedJoinKeys = tuple[CreateQueries.discardedJoinKeysTag],
+    discardedJoinKeyCollection = tuple[CreateQueries.discardedJoinKeyCollectionTag],
   )
 }
 
 data class CreateQueriesOutputs(
   val queryIdMap: PCollection<QueryIdAndId>,
   val encryptedQueryBundles: PCollection<EncryptedQueryBundle>,
-  val discardedJoinKeys: PCollection<JoinKeyIdentifierCollection>
+  val discardedJoinKeyCollection: PCollection<JoinKeyIdentifierCollection>
 )
 
 private class CreateQueries(
@@ -87,26 +88,19 @@ private class CreateQueries(
 
   override fun expand(input: PCollection<LookupKeyAndId>): PCollectionTuple {
     val queriesByShard = shardLookupKeys(input)
-    val allQueriesByShard = addPaddedQueries(queriesByShard)
-    val withPaddedQueriesByShard =
-      allQueriesByShard
-        .filter("Filter out discarded queries") { !it.key.isDiscarded }
-        .map("Map with padded queries") { kvOf(it.key.shardId, it.value) }
-    val discardedJoinKeys: PCollection<JoinKeyIdentifierCollection> =
-      allQueriesByShard
-        .filter("Only keep discarded queries") { it.key.isDiscarded }
-        .flatMap("FlatMap padded queries") { it.value }
-        .map("Map to JoinKeyIdentifier") { it.joinKeyIdentifier }
+    val withPaddedQueries = addPaddedQueries(queriesByShard)
+    val discardedJoinKeyCollection: PCollection<JoinKeyIdentifierCollection> =
+      withPaddedQueries[discardedJoinKeysTag]
         .combineIntoList("Make Discarded Join Keys Iterable")
-        .map("Map to Discarded Join Key Collection") {
-          joinKeyIdentifierCollection { joinKeyIdentifiers += it }
+        .map("Map to Discarded Join Key Collection") { joinKeyList ->
+          joinKeyIdentifierCollection { joinKeyIdentifiers += joinKeyList }
         }
 
-    val unencryptedQueriesByShard = buildUnencryptedQueries(withPaddedQueriesByShard)
+    val unencryptedQueriesByShard = buildUnencryptedQueries(withPaddedQueries[preservedQueriesTag])
     val queryIdToIdsMapping = extractRealQueryIdAndId(unencryptedQueriesByShard)
     val encryptedQueryBundles = encryptQueries(unencryptedQueriesByShard, privateMembershipKeys)
     return PCollectionTuple.of(queryIdAndIdTag, queryIdToIdsMapping)
-      .and(discardedJoinKeysTag, discardedJoinKeys)
+      .and(discardedJoinKeyCollectionTag, discardedJoinKeyCollection)
       .and(encryptedQueryBundlesTag, encryptedQueryBundles)
   }
 
@@ -130,9 +124,12 @@ private class CreateQueries(
   /** Wrapper function to add in the necessary number of padded queries */
   private fun addPaddedQueries(
     queries: PCollection<KV<ShardId, Iterable<@JvmWildcard BucketQuery>>>
-  ): PCollection<KV<ShardAndStatus, Iterable<@JvmWildcard BucketQuery>>> {
+  ): PCollectionTuple {
     if (!parameters.padQueries) {
-      return queries.map("Map to not pad queries") { kvOf(ShardAndStatus(it.key, false), it.value) }
+      val noDiscardedQueries =
+        queries.pipeline.apply(Create.empty(SerializableCoder.of(JoinKeyIdentifier::class.java)))
+      return PCollectionTuple.of(preservedQueriesTag, queries)
+        .and(discardedJoinKeysTag, noDiscardedQueries)
     }
     val totalQueriesPerShard = parameters.maxQueriesPerShard
     val paddingNonceBucket = bucketIdOf(parameters.numBucketsPerShard)
@@ -151,15 +148,15 @@ private class CreateQueries(
     return PCollectionList.of(queries)
       .and(missingQueries)
       .flatten("Flatten queries+missingQueries")
-      .parDo(
-        EqualizeQueriesPerShardFn(totalQueriesPerShard, paddingNonceBucket),
-        name = "Equalize Queries per Shard"
-      )
       .setCoder(
         KvCoder.of(
-          SerializableCoder.of(ShardAndStatus::class.java),
+          SerializableCoder.of(ShardId::class.java),
           IterableCoder.of(SerializableCoder.of(BucketQuery::class.java))
         )
+      )
+      .apply(
+        ParDo.of(EqualizeQueriesPerShardFn(totalQueriesPerShard, paddingNonceBucket))
+          .withOutputTags(preservedQueriesTag, TupleTagList.of(discardedJoinKeysTag))
       )
   }
 
@@ -231,9 +228,11 @@ private class CreateQueries(
   }
 
   companion object {
-    val queryIdAndIdTag = TupleTag<QueryIdAndId>()
-    val discardedJoinKeysTag = TupleTag<JoinKeyIdentifierCollection>()
-    val encryptedQueryBundlesTag = TupleTag<EncryptedQueryBundle>()
+    val queryIdAndIdTag = object : TupleTag<QueryIdAndId>() {}
+    val discardedJoinKeyCollectionTag = object : TupleTag<JoinKeyIdentifierCollection>() {}
+    val encryptedQueryBundlesTag = object : TupleTag<EncryptedQueryBundle>() {}
+    val discardedJoinKeysTag = object : TupleTag<JoinKeyIdentifier>() {}
+    val preservedQueriesTag = object : TupleTag<KV<ShardId, Iterable<BucketQuery>>>() {}
   }
 }
 
@@ -303,14 +302,13 @@ private class EqualizeQueriesPerShardFn(
   private val paddingNonceBucket: BucketId,
 ) :
   DoFn<
-    KV<ShardId, Iterable<@JvmWildcard BucketQuery>>,
-    KV<ShardAndStatus, Iterable<@JvmWildcard BucketQuery>>
+    KV<ShardId, Iterable<@JvmWildcard BucketQuery>>, KV<ShardId, Iterable<@JvmWildcard BucketQuery>>
   >() {
   /**
    * Number of discarded Queries. If unacceptably high, the totalQueriesPerShard parameter should be
    * increased.
    */
-  private val discardedJoinKeysDistribution =
+  private val discardedJoinKeyCollectionDistribution =
     Metrics.distribution(METRIC_NAMESPACE, "discarded-queries-per-shard")
 
   /** Number of padding queries added to each shard. */
@@ -318,17 +316,21 @@ private class EqualizeQueriesPerShardFn(
     Metrics.distribution(METRIC_NAMESPACE, "padding-queries-per-shard")
 
   @ProcessElement
-  fun processElement(context: ProcessContext) {
+  fun processElement(context: ProcessContext, out: MultiOutputReceiver) {
     val kv = context.element()
     val allQueries = kv.value.toList()
 
     val queryCountDelta = allQueries.size - totalQueriesPerShard
-    discardedJoinKeysDistribution.update(maxOf(0L, queryCountDelta.toLong()))
+    discardedJoinKeyCollectionDistribution.update(maxOf(0L, queryCountDelta.toLong()))
 
     if (queryCountDelta >= 0) {
-      context.output(kvOf(ShardAndStatus(kv.key, false), allQueries.take(totalQueriesPerShard)))
+      out
+        .get(CreateQueries.preservedQueriesTag)
+        .output(kvOf(kv.key, allQueries.take(totalQueriesPerShard)))
       if (queryCountDelta > 0) {
-        context.output(kvOf(ShardAndStatus(kv.key, true), allQueries.takeLast(queryCountDelta)))
+        allQueries.takeLast(queryCountDelta).forEach { bucketQuery ->
+          out.get(CreateQueries.discardedJoinKeysTag).output(bucketQuery.joinKeyIdentifier)
+        }
       }
       return
     }
@@ -339,6 +341,6 @@ private class EqualizeQueriesPerShardFn(
         BucketQuery(PADDING_QUERY_JOIN_KEY_IDENTIFIER, kv.key, paddingNonceBucket)
       }
 
-    context.output(kvOf(ShardAndStatus(kv.key, false), allQueries + paddingQueries))
+    out.get(CreateQueries.preservedQueriesTag).output(kvOf(kv.key, allQueries + paddingQueries))
   }
 }
