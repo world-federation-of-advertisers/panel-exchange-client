@@ -137,6 +137,7 @@ open class ProductionExchangeTaskMapper(
         maxQueriesPerShard = stepDetails.numQueriesPerShard,
         padQueries = stepDetails.addPaddingQueries,
       )
+    // TODO: remove this functionality v2.0.0
     // For backwards compatibility for workflows without discarded-join-keys
     val outputLabels: List<String> =
       if ("discarded-join-keys" in step.outputLabelsMap) {

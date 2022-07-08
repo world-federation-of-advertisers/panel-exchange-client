@@ -15,7 +15,6 @@
 package org.wfanet.panelmatch.client.privatemembership
 
 import java.io.Serializable
-import org.apache.beam.sdk.coders.IterableCoder
 import org.apache.beam.sdk.coders.KvCoder
 import org.apache.beam.sdk.coders.ListCoder
 import org.apache.beam.sdk.coders.SerializableCoder
@@ -148,12 +147,6 @@ private class CreateQueries(
     return PCollectionList.of(queries)
       .and(missingQueries)
       .flatten("Flatten queries+missingQueries")
-      .setCoder(
-        KvCoder.of(
-          SerializableCoder.of(ShardId::class.java),
-          IterableCoder.of(SerializableCoder.of(BucketQuery::class.java))
-        )
-      )
       .apply(
         ParDo.of(EqualizeQueriesPerShardFn(totalQueriesPerShard, paddingNonceBucket))
           .withOutputTags(preservedQueriesTag, TupleTagList.of(discardedJoinKeysTag))
@@ -303,7 +296,7 @@ private class EqualizeQueriesPerShardFn(
    * Number of discarded Queries. If unacceptably high, the totalQueriesPerShard parameter should be
    * increased.
    */
-  private val discardedJoinKeyCollectionDistribution =
+  private val discardedQueriesDistribution =
     Metrics.distribution(METRIC_NAMESPACE, "discarded-queries-per-shard")
 
   /** Number of padding queries added to each shard. */
@@ -316,15 +309,16 @@ private class EqualizeQueriesPerShardFn(
     val allQueries = kv.value.toList()
 
     val queryCountDelta = allQueries.size - totalQueriesPerShard
-    discardedJoinKeyCollectionDistribution.update(maxOf(0L, queryCountDelta.toLong()))
+    discardedQueriesDistribution.update(maxOf(0L, queryCountDelta.toLong()))
 
     if (queryCountDelta >= 0) {
       out
         .get(CreateQueries.preservedQueriesTag)
         .output(kvOf(kv.key, allQueries.take(totalQueriesPerShard)))
       if (queryCountDelta > 0) {
+        val discardedOut = out.get(CreateQueries.discardedJoinKeysTag)
         allQueries.takeLast(queryCountDelta).forEach { bucketQuery ->
-          out.get(CreateQueries.discardedJoinKeysTag).output(bucketQuery.joinKeyIdentifier)
+          discardedOut.output(bucketQuery.joinKeyIdentifier)
         }
       }
       return
