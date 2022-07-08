@@ -288,11 +288,6 @@ private class EncryptQueriesFn(
   }
 }
 
-private data class ShardAndStatus(
-  val shardId: ShardId,
-  val isDiscarded: Boolean,
-) : Serializable
-
 /**
  * Adds or deletes queries from sharded data until it is the desired size. We keep track of which
  * queries are fake in order to avoid attempting to decrypt them later.
