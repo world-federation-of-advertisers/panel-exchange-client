@@ -68,6 +68,7 @@ _ARTIFACTS = {
     "org.hamcrest:hamcrest": "2.2",
     "org.slf4j:slf4j-simple": "1.7.32",
     "software.amazon.awssdk:utils": "2.17.100",
+    "software.amazon.awssdk:sts": "2.17.100",
 }
 
 _EXCLUDED_ARTIFACTS = [
