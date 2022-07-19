@@ -14,6 +14,7 @@
 
 package org.wfanet.panelmatch.client.tools
 
+import com.google.crypto.tink.integration.awskms.AwsKmsClient
 import com.google.crypto.tink.integration.gcpkms.GcpKmsClient
 import com.google.protobuf.kotlin.toByteString
 import java.io.File
@@ -29,6 +30,7 @@ import org.wfanet.measurement.storage.StorageClient
 import org.wfanet.panelmatch.client.deploy.DaemonStorageClientDefaults
 import org.wfanet.panelmatch.client.storage.StorageDetails
 import org.wfanet.panelmatch.client.storage.StorageDetailsKt
+import org.wfanet.panelmatch.client.storage.aws.s3.S3StorageFactory
 import org.wfanet.panelmatch.client.storage.gcloud.gcs.GcsStorageFactory
 import org.wfanet.panelmatch.client.storage.storageDetails
 import org.wfanet.panelmatch.common.ExchangeDateKey
@@ -97,6 +99,14 @@ class AddAllResources : Callable<Int> {
   private lateinit var partnerCertificateFile: File
 
   @CommandLine.Option(
+    names = ["--storage-type"],
+    description = ["Type of destination storage: \${COMPLETION-CANDIDATES}"],
+    required = true,
+  )
+  lateinit var storageType: StorageDetails.PlatformCase
+    private set
+
+  @CommandLine.Option(
     names = ["--workflow-input-blob-key"],
     description = ["Blob Key in Private Storage"],
     required = true,
@@ -117,20 +127,36 @@ class AddAllResources : Callable<Int> {
   private val defaults by lazy {
     // Register GcpKmsClient before setting storage folders.
     GcpKmsClient.register(Optional.of(tinkKeyUri), Optional.empty())
+    if (storageType == StorageDetails.PlatformCase.GCS) {
+      // Register GcpKmsClient before setting storage folders.
+      GcpKmsClient.register(Optional.of(tinkKeyUri), Optional.empty())
+    } else if (storageType == StorageDetails.PlatformCase.AWS) {
+      // Register AwsKmsClient before setting storage folders.
+      AwsKmsClient.register(Optional.of(tinkKeyUri), Optional.empty())
+    }
     DaemonStorageClientDefaults(rootStorageClient, tinkKeyUri, TinkKeyStorageProvider())
   }
 
   private val addResource by lazy { ConfigureResource(defaults) }
 
   private val privateStorageDetails by lazy {
-    storageDetails {
-      gcs =
-        StorageDetailsKt.gcsStorage {
-          projectName = gcsFlags.projectName
-          bucket = gcsFlags.bucket
-          bucketType = StorageDetails.BucketType.STATIC_BUCKET
+    when (storageType) {
+      StorageDetails.PlatformCase.GCS ->
+        storageDetails {
+          gcs =
+            StorageDetailsKt.gcsStorage {
+              projectName = gcsFlags.projectName
+              bucket = gcsFlags.bucket
+              bucketType = StorageDetails.BucketType.STATIC_BUCKET
+            }
+          visibility = StorageDetails.Visibility.PRIVATE
         }
-      visibility = StorageDetails.Visibility.PRIVATE
+      StorageDetails.PlatformCase.AWS ->
+        storageDetails {
+          aws = StorageDetailsKt.awsStorage { bucket = gcsFlags.bucket }
+          visibility = StorageDetails.Visibility.PRIVATE
+        }
+      else -> throw IllegalArgumentException("Unsupported private storage type")
     }
   }
 
@@ -149,7 +175,10 @@ class AddAllResources : Callable<Int> {
   /** This should be customized per deployment. */
   private val privateStorageFactory:
     Map<StorageDetails.PlatformCase, (StorageDetails, ExchangeDateKey) -> StorageFactory> by lazy {
-    mapOf(StorageDetails.PlatformCase.GCS to ::GcsStorageFactory)
+    mapOf(
+      StorageDetails.PlatformCase.GCS to ::GcsStorageFactory,
+      StorageDetails.PlatformCase.AWS to ::S3StorageFactory
+    )
   }
 
   private val partnerCertificate by lazy { readCertificate(partnerCertificateFile) }
