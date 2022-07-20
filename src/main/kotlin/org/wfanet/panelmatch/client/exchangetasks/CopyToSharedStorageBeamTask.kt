@@ -17,6 +17,8 @@ package org.wfanet.panelmatch.client.exchangetasks
 import com.google.protobuf.ByteString
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
+import org.apache.beam.sdk.transforms.DoFn
+import org.apache.beam.sdk.transforms.ParDo
 import org.apache.beam.sdk.values.PCollection
 import org.wfanet.measurement.api.v2alpha.ExchangeWorkflow.Step.CopyOptions
 import org.wfanet.measurement.api.v2alpha.ExchangeWorkflow.Step.CopyOptions.LabelType.MANIFEST
@@ -45,17 +47,23 @@ fun ApacheBeamContext.copyToSharedStorage(
     runBlocking(Dispatchers.IO) { destination.writeBlob(destinationManifestBlobKey, manifest) }
     manifest
   }
-
+  val readFilesDoFn =
+    object : DoFn<String, String>() {
+      @ProcessElement
+      fun processElement(@Element element: String, context: ProcessContext) {
+        val shardName = element
+        val pipelineOptions = context.getPipelineOptions()
+        runBlocking(Dispatchers.IO) {
+          val source: StorageClient = sourceFactory.build(pipelineOptions)
+          val sourceBlob: Blob =
+            requireNotNull(source.getBlob(shardName)) { "Missing blob with key $shardName" }
+          destination.writeBlob(shardName, sourceBlob.read(), pipelineOptions)
+        }
+        context.output(shardName)
+      }
+    }
   manifestBytes
     .flatMap("Generate Shard Names") { ShardedFileName(it.toStringUtf8()).fileNames.asIterable() }
     .breakFusion("Break Fusion Before Copy")
-    .map("Copy Shards To Shared Storage") { shardName ->
-      runBlocking(Dispatchers.IO) {
-        val source: StorageClient = sourceFactory.build()
-        val sourceBlob: Blob =
-          requireNotNull(source.getBlob(shardName)) { "Missing blob with key $shardName" }
-        destination.writeBlob(shardName, sourceBlob.read())
-      }
-      shardName
-    }
+    .apply("Copy Shards To Shared Storage", ParDo.of(readFilesDoFn))
 }

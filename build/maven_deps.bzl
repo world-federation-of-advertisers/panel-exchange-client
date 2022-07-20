@@ -64,11 +64,13 @@ _ARTIFACTS = {
     "org.apache.beam:beam-sdks-java-extensions-google-cloud-platform-core": _BEAM_VERSION,
     "org.apache.beam:beam-sdks-java-extensions-protobuf": _BEAM_VERSION,
     "org.apache.beam:beam-sdks-java-io-google-cloud-platform": _BEAM_VERSION,
+    "org.apache.beam:beam-sdks-java-io-amazon-web-services": _BEAM_VERSION,
     "org.apache.beam:beam-vendor-guava-26_0-jre": "0.1",
     "org.hamcrest:hamcrest": "2.2",
     "org.slf4j:slf4j-simple": "1.7.32",
     "software.amazon.awssdk:utils": "2.17.100",
     "software.amazon.awssdk:sts": "2.17.100",
+    "software.amazon.awssdk:auth": "2.17.100",
 }
 
 _EXCLUDED_ARTIFACTS = [

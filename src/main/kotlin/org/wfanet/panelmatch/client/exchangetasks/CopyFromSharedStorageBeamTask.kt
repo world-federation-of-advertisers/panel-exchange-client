@@ -18,6 +18,8 @@ import com.google.protobuf.ByteString
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import org.apache.beam.sdk.transforms.Create
+import org.apache.beam.sdk.transforms.DoFn
+import org.apache.beam.sdk.transforms.ParDo
 import org.apache.beam.sdk.values.PCollection
 import org.wfanet.measurement.api.v2alpha.ExchangeWorkflow.Step.CopyOptions
 import org.wfanet.measurement.storage.StorageClient
@@ -26,7 +28,6 @@ import org.wfanet.panelmatch.client.storage.VerifyingStorageClient.VerifiedBlob
 import org.wfanet.panelmatch.client.storage.signatureBlobKeyFor
 import org.wfanet.panelmatch.common.ShardedFileName
 import org.wfanet.panelmatch.common.beam.breakFusion
-import org.wfanet.panelmatch.common.beam.map
 import org.wfanet.panelmatch.common.storage.StorageFactory
 
 /** Implementation of CopyFromSharedStorageStep for manifest blobs. */
@@ -40,7 +41,6 @@ fun ApacheBeamContext.copyFromSharedStorage(
   require(copyOptions.labelType == CopyOptions.LabelType.MANIFEST) {
     "Unsupported CopyOptions: $copyOptions"
   }
-
   // Copy the manifest first, to avoid spinning up a Beam job if the manifest is bad.
   val shardedFileName: ShardedFileName =
     runBlocking(Dispatchers.IO) {
@@ -53,22 +53,29 @@ fun ApacheBeamContext.copyFromSharedStorage(
 
   val shardNames: PCollection<String> =
     pipeline.apply("Generate Shard Names", Create.of(shardedFileName.fileNames.asIterable()))
-
-  shardNames.breakFusion("Break Fusion Before Copy").map("Copy Blobs From Shared Storage") {
-    shardName ->
-    runBlocking(Dispatchers.IO) {
-      val shard: VerifiedBlob = source.getBlob(shardName)
-      val destination: StorageClient = destinationFactory.build()
-      destination.copyInternally(shardName, shard)
+  val writeFilesDoFn =
+    object : DoFn<String, String>() {
+      @ProcessElement
+      fun processElement(@Element element: String, context: ProcessContext) {
+        val shardName = element
+        val pipelineOptions = context.getPipelineOptions()
+        runBlocking(Dispatchers.IO) {
+          val shard: VerifiedBlob = source.getBlob(shardName, pipelineOptions)
+          val destination: StorageClient = destinationFactory.build(pipelineOptions)
+          destination.copyInternally(shardName, shard)
+        }
+        context.output(shardName)
+      }
     }
-    shardName
-  }
+  shardNames
+    .breakFusion("Break Fusion Before Copy")
+    .apply("Copy Blobs From Shared Storage", ParDo.of(writeFilesDoFn))
 }
 
 private suspend fun StorageClient.copyInternally(
   blobKey: String,
   bytes: ByteString,
-  signature: ByteString
+  signature: ByteString,
 ) {
   writeBlob(signatureBlobKeyFor(blobKey), signature)
   writeBlob(blobKey, bytes)
