@@ -60,5 +60,9 @@ class SigningStorageClient(
     sharedStorage.writeBlob(signatureBlobKeyFor(blobKey), signature.toByteString())
   }
 
-  suspend fun writeBlob(blobKey: String, content: ByteString) = writeBlob(blobKey, flowOf(content))
+  suspend fun writeBlob(
+    blobKey: String,
+    content: ByteString,
+    pipelineOptions: PipelineOptions? = null
+  ) = writeBlob(blobKey, flowOf(content), pipelineOptions)
 }

@@ -28,6 +28,7 @@ import org.wfanet.panelmatch.client.storage.VerifyingStorageClient.VerifiedBlob
 import org.wfanet.panelmatch.client.storage.signatureBlobKeyFor
 import org.wfanet.panelmatch.common.ShardedFileName
 import org.wfanet.panelmatch.common.beam.breakFusion
+import org.wfanet.panelmatch.common.beam.flatMap
 import org.wfanet.panelmatch.common.storage.StorageFactory
 
 /** Implementation of CopyFromSharedStorageStep for manifest blobs. */
@@ -41,23 +42,39 @@ fun ApacheBeamContext.copyFromSharedStorage(
   require(copyOptions.labelType == CopyOptions.LabelType.MANIFEST) {
     "Unsupported CopyOptions: $copyOptions"
   }
-  // Copy the manifest first, to avoid spinning up a Beam job if the manifest is bad.
-  val shardedFileName: ShardedFileName =
-    runBlocking(Dispatchers.IO) {
-      val manifestBlob: VerifiedBlob = source.getBlob(sourceManifestBlobKey)
-      val manifestBytes: ByteString = manifestBlob.toByteString()
-      val destination: StorageClient = destinationFactory.build()
-      destination.copyInternally(destinationManifestBlobKey, manifestBytes, manifestBlob.signature)
-      ShardedFileName(manifestBytes.toStringUtf8())
-    }
 
+  val copyManifestDoFn =
+    object : DoFn<String, ShardedFileName>() {
+      @ProcessElement
+      fun processElement(@Element blobKey: String, context: ProcessContext) {
+        val pipelineOptions = context.getPipelineOptions()
+        runBlocking(Dispatchers.IO) {
+          val manifestBlob: VerifiedBlob = source.getBlob(blobKey, pipelineOptions)
+          val manifestBytes: ByteString = manifestBlob.toByteString()
+          val destination: StorageClient = destinationFactory.build(pipelineOptions)
+          destination.copyInternally(
+            destinationManifestBlobKey,
+            manifestBytes,
+            manifestBlob.signature
+          )
+          val shardedFileName = ShardedFileName(manifestBytes.toStringUtf8())
+          context.output(shardedFileName)
+        }
+      }
+    }
+  // Copy the manifest first, to avoid spinning up a Beam job if the manifest is bad.
   val shardNames: PCollection<String> =
-    pipeline.apply("Generate Shard Names", Create.of(shardedFileName.fileNames.asIterable()))
+    pipeline
+      .apply(
+        "Start Copy from Storage From Beam",
+        Create.of(listOf(sourceManifestBlobKey).asIterable())
+      )
+      .apply("Copy Manifest File", ParDo.of(copyManifestDoFn))
+      .flatMap("Generate Shard Names") { shardedFileName -> shardedFileName.fileNames.asIterable() }
   val writeFilesDoFn =
     object : DoFn<String, String>() {
       @ProcessElement
-      fun processElement(@Element element: String, context: ProcessContext) {
-        val shardName = element
+      fun processElement(@Element shardName: String, context: ProcessContext) {
         val pipelineOptions = context.getPipelineOptions()
         runBlocking(Dispatchers.IO) {
           val shard: VerifiedBlob = source.getBlob(shardName, pipelineOptions)

@@ -28,7 +28,6 @@ import org.wfanet.panelmatch.client.storage.SigningStorageClient
 import org.wfanet.panelmatch.common.ShardedFileName
 import org.wfanet.panelmatch.common.beam.breakFusion
 import org.wfanet.panelmatch.common.beam.flatMap
-import org.wfanet.panelmatch.common.beam.map
 import org.wfanet.panelmatch.common.storage.StorageFactory
 
 /** Implementation of CopyToSharedStorageStep for manifest blobs. */
@@ -43,15 +42,23 @@ fun ApacheBeamContext.copyToSharedStorage(
 
   val manifestBytes: PCollection<ByteString> = readBlobAsPCollection(sourceManifestLabel)
 
-  manifestBytes.map("Write Destination Manifest") { manifest ->
-    runBlocking(Dispatchers.IO) { destination.writeBlob(destinationManifestBlobKey, manifest) }
-    manifest
-  }
+  val copyManifestBytesDoFn =
+    object : DoFn<ByteString, ByteString>() {
+      @ProcessElement
+      fun processElement(@Element manifest: ByteString, context: ProcessContext) {
+        val pipelineOptions = context.getPipelineOptions()
+        runBlocking(Dispatchers.IO) {
+          runBlocking(Dispatchers.IO) {
+            destination.writeBlob(destinationManifestBlobKey, manifest, pipelineOptions)
+          }
+          context.output(manifest)
+        }
+      }
+    }
   val readFilesDoFn =
     object : DoFn<String, String>() {
       @ProcessElement
-      fun processElement(@Element element: String, context: ProcessContext) {
-        val shardName = element
+      fun processElement(@Element shardName: String, context: ProcessContext) {
         val pipelineOptions = context.getPipelineOptions()
         runBlocking(Dispatchers.IO) {
           val source: StorageClient = sourceFactory.build(pipelineOptions)
@@ -63,6 +70,7 @@ fun ApacheBeamContext.copyToSharedStorage(
       }
     }
   manifestBytes
+    .apply("Copy Manifest Bytes", ParDo.of(copyManifestBytesDoFn))
     .flatMap("Generate Shard Names") { ShardedFileName(it.toStringUtf8()).fileNames.asIterable() }
     .breakFusion("Break Fusion Before Copy")
     .apply("Copy Shards To Shared Storage", ParDo.of(readFilesDoFn))
