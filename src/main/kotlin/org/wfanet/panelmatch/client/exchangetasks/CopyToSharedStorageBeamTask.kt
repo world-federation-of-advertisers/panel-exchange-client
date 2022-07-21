@@ -48,11 +48,9 @@ fun ApacheBeamContext.copyToSharedStorage(
       fun processElement(@Element manifest: ByteString, context: ProcessContext) {
         val pipelineOptions = context.getPipelineOptions()
         runBlocking(Dispatchers.IO) {
-          runBlocking(Dispatchers.IO) {
-            destination.writeBlob(destinationManifestBlobKey, manifest, pipelineOptions)
-          }
-          context.output(manifest)
+          destination.writeBlob(destinationManifestBlobKey, manifest, pipelineOptions)
         }
+        context.output(manifest)
       }
     }
   val readFilesDoFn =
