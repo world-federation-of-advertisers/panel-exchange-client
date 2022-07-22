@@ -42,34 +42,45 @@ fun ApacheBeamContext.copyToSharedStorage(
 
   val manifestBytes: PCollection<ByteString> = readBlobAsPCollection(sourceManifestLabel)
 
-  val copyManifestBytesDoFn =
-    object : DoFn<ByteString, ByteString>() {
-      @ProcessElement
-      fun processElement(@Element manifest: ByteString, context: ProcessContext) {
-        val pipelineOptions = context.getPipelineOptions()
-        runBlocking(Dispatchers.IO) {
-          destination.writeBlob(destinationManifestBlobKey, manifest, pipelineOptions)
-        }
-        context.output(manifest)
-      }
-    }
-  val readFilesDoFn =
-    object : DoFn<String, String>() {
-      @ProcessElement
-      fun processElement(@Element shardName: String, context: ProcessContext) {
-        val pipelineOptions = context.getPipelineOptions()
-        runBlocking(Dispatchers.IO) {
-          val source: StorageClient = sourceFactory.build(pipelineOptions)
-          val sourceBlob: Blob =
-            requireNotNull(source.getBlob(shardName)) { "Missing blob with key $shardName" }
-          destination.writeBlob(shardName, sourceBlob.read(), pipelineOptions)
-        }
-        context.output(shardName)
-      }
-    }
   manifestBytes
-    .apply("Copy Manifest Bytes", ParDo.of(copyManifestBytesDoFn))
+    .apply(
+      "Copy Manifest Bytes",
+      ParDo.of(CopyManifestToSharedDoFn(destination, destinationManifestBlobKey))
+    )
     .flatMap("Generate Shard Names") { ShardedFileName(it.toStringUtf8()).fileNames.asIterable() }
     .breakFusion("Break Fusion Before Copy")
-    .apply("Copy Shards To Shared Storage", ParDo.of(readFilesDoFn))
+    .apply("Copy Shards To Shared Storage", ParDo.of(ReadFilesDoFn(sourceFactory, destination)))
+}
+
+private class CopyManifestToSharedDoFn(
+  private val destination: SigningStorageClient,
+  private val destinationManifestBlobKey: String,
+) : DoFn<ByteString, ByteString>() {
+
+  @DoFn.ProcessElement
+  fun processElement(@Element manifest: ByteString, context: ProcessContext) {
+    val pipelineOptions = context.getPipelineOptions()
+    runBlocking(Dispatchers.IO) {
+      destination.writeBlob(destinationManifestBlobKey, manifest, pipelineOptions)
+    }
+    context.output(manifest)
+  }
+}
+
+private class ReadFilesDoFn(
+  private val sourceFactory: StorageFactory,
+  private val destination: SigningStorageClient,
+) : DoFn<String, String>() {
+
+  @DoFn.ProcessElement
+  fun processElement(@Element shardName: String, context: ProcessContext) {
+    val pipelineOptions = context.getPipelineOptions()
+    runBlocking(Dispatchers.IO) {
+      val source: StorageClient = sourceFactory.build(pipelineOptions)
+      val sourceBlob: Blob =
+        requireNotNull(source.getBlob(shardName)) { "Missing blob with key $shardName" }
+      destination.writeBlob(shardName, sourceBlob.read(), pipelineOptions)
+    }
+    context.output(shardName)
+  }
 }

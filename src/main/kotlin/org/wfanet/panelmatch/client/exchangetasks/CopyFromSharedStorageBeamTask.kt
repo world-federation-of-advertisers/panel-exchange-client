@@ -43,25 +43,6 @@ fun ApacheBeamContext.copyFromSharedStorage(
     "Unsupported CopyOptions: $copyOptions"
   }
 
-  val copyManifestDoFn =
-    object : DoFn<String, ShardedFileName>() {
-      @ProcessElement
-      fun processElement(@Element blobKey: String, context: ProcessContext) {
-        val pipelineOptions = context.getPipelineOptions()
-        runBlocking(Dispatchers.IO) {
-          val manifestBlob: VerifiedBlob = source.getBlob(blobKey, pipelineOptions)
-          val manifestBytes: ByteString = manifestBlob.toByteString()
-          val destination: StorageClient = destinationFactory.build(pipelineOptions)
-          destination.copyInternally(
-            destinationManifestBlobKey,
-            manifestBytes,
-            manifestBlob.signature
-          )
-          val shardedFileName = ShardedFileName(manifestBytes.toStringUtf8())
-          context.output(shardedFileName)
-        }
-      }
-    }
   // Copy the manifest first, to avoid spinning up a Beam job if the manifest is bad.
   val shardNames: PCollection<String> =
     pipeline
@@ -69,24 +50,14 @@ fun ApacheBeamContext.copyFromSharedStorage(
         "Start Copy from Storage From Beam",
         Create.of(listOf(sourceManifestBlobKey).asIterable())
       )
-      .apply("Copy Manifest File", ParDo.of(copyManifestDoFn))
+      .apply(
+        "Copy Manifest File",
+        ParDo.of(CopyManifestFromSharedDoFn(source, destinationFactory, destinationManifestBlobKey))
+      )
       .flatMap("Generate Shard Names") { shardedFileName -> shardedFileName.fileNames.asIterable() }
-  val writeFilesDoFn =
-    object : DoFn<String, String>() {
-      @ProcessElement
-      fun processElement(@Element shardName: String, context: ProcessContext) {
-        val pipelineOptions = context.getPipelineOptions()
-        runBlocking(Dispatchers.IO) {
-          val shard: VerifiedBlob = source.getBlob(shardName, pipelineOptions)
-          val destination: StorageClient = destinationFactory.build(pipelineOptions)
-          destination.copyInternally(shardName, shard)
-        }
-        context.output(shardName)
-      }
-    }
   shardNames
     .breakFusion("Break Fusion Before Copy")
-    .apply("Copy Blobs From Shared Storage", ParDo.of(writeFilesDoFn))
+    .apply("Copy Blobs From Shared Storage", ParDo.of(WriteFilesDoFn(source, destinationFactory)))
 }
 
 private suspend fun StorageClient.copyInternally(
@@ -101,4 +72,41 @@ private suspend fun StorageClient.copyInternally(
 private suspend fun StorageClient.copyInternally(blobKey: String, blob: VerifiedBlob) {
   writeBlob(signatureBlobKeyFor(blobKey), blob.signature)
   writeBlob(blobKey, blob.read())
+}
+
+private class CopyManifestFromSharedDoFn(
+  private val source: VerifyingStorageClient,
+  private val destinationFactory: StorageFactory,
+  private val destinationManifestBlobKey: String,
+) : DoFn<String, ShardedFileName>() {
+
+  @DoFn.ProcessElement
+  fun processElement(@Element blobKey: String, context: ProcessContext) {
+    val pipelineOptions = context.getPipelineOptions()
+    runBlocking(Dispatchers.IO) {
+      val manifestBlob: VerifiedBlob = source.getBlob(blobKey, pipelineOptions)
+      val manifestBytes: ByteString = manifestBlob.toByteString()
+      val destination: StorageClient = destinationFactory.build(pipelineOptions)
+      destination.copyInternally(destinationManifestBlobKey, manifestBytes, manifestBlob.signature)
+      val shardedFileName = ShardedFileName(manifestBytes.toStringUtf8())
+      context.output(shardedFileName)
+    }
+  }
+}
+
+private class WriteFilesDoFn(
+  private val source: VerifyingStorageClient,
+  private val destinationFactory: StorageFactory,
+) : DoFn<String, String>() {
+
+  @DoFn.ProcessElement
+  fun processElement(@Element shardName: String, context: ProcessContext) {
+    val pipelineOptions = context.getPipelineOptions()
+    runBlocking(Dispatchers.IO) {
+      val shard: VerifiedBlob = source.getBlob(shardName, pipelineOptions)
+      val destination: StorageClient = destinationFactory.build(pipelineOptions)
+      destination.copyInternally(shardName, shard)
+    }
+    context.output(shardName)
+  }
 }
