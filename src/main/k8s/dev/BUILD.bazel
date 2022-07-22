@@ -65,6 +65,19 @@ cue_export(
     deps = [":example_daemon_aws"],
 )
 
+cue_export(
+    name = "example_mp_daemon_aws",
+    srcs = ["example_mp_daemon_aws.cue"],
+    cue_tags = {
+        "party_name": EXAMPLE_DAEMON_CONFIG.mp_name,
+        "secret_name": EXAMPLE_DAEMON_CONFIG.mp_secret_name,
+    },
+    expression = "listObject",
+    filetype = "yaml",
+    tags = ["manual"],
+    deps = [":example_daemon_aws"],
+)
+
 ALL_IMAGE_ARCHIVES = [
     image_spec.image + ".tar"
     for image_spec in ALL_GKE_IMAGES
