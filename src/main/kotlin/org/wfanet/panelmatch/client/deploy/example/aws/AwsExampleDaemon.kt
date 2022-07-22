@@ -95,7 +95,6 @@ private class AwsExampleDaemon : ExampleDaemon() {
       // sessionToken
       val awsCredentials =
         DefaultCredentialsProvider.create().resolveCredentials() as AwsSessionCredentials
-      // TODO: Encrypt using KMS or store in Secrets
       // Think about moving this logic to a CredentialsProvider
       baseOptions.apply {
         awsAccessKey = awsCredentials.accessKeyId()
