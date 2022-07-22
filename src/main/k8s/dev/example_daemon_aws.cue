@@ -16,7 +16,6 @@ package k8s
 
 import "strings"
 
-#GCloudProject:           "halo-cmm-dev"
 #KingdomPublicApiTarget:  "public.kingdom.dev.halo-cmm.org:8443"
 #ContainerRegistryPrefix: "{account_id}.dkr.ecr.{region}.amazonaws.com"
 #DefaultResourceConfig: {
@@ -76,6 +75,8 @@ import "strings"
 	containerPrefix: string
 }
 
+#JavaOptions: "-Xmx3584m" // 4GiB - 512MiB overhead.
+
 _exchangeDaemonConfig: #ExchangeDaemonConfig
 _defaultAwsConfig:     #DefaultAwsConfig
 
@@ -92,11 +93,10 @@ deployments: [Name=_]: #Deployment & {
 }
 deployments: {
 	"example-panel-exchange-daemon": {
-		_jvmFlags:   "-Xmx3584m" // 4GiB - 512MiB overhead.
+		// _jvmFlags:   "-Xmx3584m" // 4GiB - 512MiB overhead.
 		_secretName: _exchangeDaemonConfig.secretName
 		_podSpec: {
 			serviceAccountName: _exchangeDaemonConfig.serviceAccountName
-			// nodeSelector: "iam.gke.io/gke-metadata-server-enabled": "true"
 		}
 		_podSpec: _container: {
 			image:           _defaultAwsConfig.containerPrefix + "/example-panel-exchange-daemon"

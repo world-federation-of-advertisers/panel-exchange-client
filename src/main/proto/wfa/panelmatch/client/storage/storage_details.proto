@@ -58,6 +58,7 @@ message StorageDetails {
     string bucket = 1;
     string project_name = 2;
     BucketType bucket_type = 3;
+    string service_account_key_path = 4;
   }
 
   message FileStorage {
