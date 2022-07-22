@@ -58,9 +58,29 @@ objects: [ for objectSet in objectSets for object in objectSet {object}]
 	requests?: #ResourceQuantity
 }
 
+#EnvVar: {
+	name: string
+}
+
+#EnvVar: {
+	value: string
+} | {
+	valueFrom:
+		secretKeyRef: {
+			name: string
+			key:  string
+		}
+}
+
+#EnvVarMap: [Name=string]: #EnvVar & {
+	name: Name
+}
+
 #Container: {
 	_secretMounts: [...#SecretMount]
 	_configMapMounts: [...#ConfigMapMount]
+	_envVars: #EnvVarMap
+	_envVars: "JAVA_TOOL_OPTIONS": value: "-Xmx3584m"
 
 	image:           string
 	imagePullPolicy: "IfNotPresent" | "Never" | "Always"
@@ -75,6 +95,7 @@ objects: [ for objectSet in objectSets for object in objectSet {object}]
 		exec: command: [...string]
 		periodSeconds: uint32
 	}
+	env: [ for _, envVar in _envVars {envVar}]
 	...
 }
 
@@ -105,7 +126,6 @@ objects: [ for objectSet in objectSets for object in objectSet {object}]
 	_secretName: string
 	_ports:      [{containerPort: #GrpcServicePort}] | *[]
 	_component:  string
-	_jvmFlags:   string | *""
 	_dependencies: [...string]
 	_configMapMounts: [...#ConfigMapMount]
 	_podSpec: #PodSpec & {
@@ -137,10 +157,6 @@ objects: [ for objectSet in objectSets for object in objectSet {object}]
 				containers: [{
 					name:  _name + "-container"
 					ports: _ports
-					env: [{
-						name:  "JAVA_TOOL_OPTIONS"
-						value: _jvmFlags
-					}]
 				}]
 				initContainers: [ for ds in _dependencies {
 					name:  "init-\(ds)"

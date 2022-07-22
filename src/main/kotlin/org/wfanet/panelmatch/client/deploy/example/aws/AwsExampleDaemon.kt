@@ -91,11 +91,11 @@ private class AwsExampleDaemon : ExampleDaemon() {
     return if (!s3FromBeam) {
       baseOptions
     } else {
+      // TODO: Encrypt using KMS or store in Secrets.
       // aws-sdk-java-v2 casts responses to AwsSessionCredentials if its assumed you need a
       // sessionToken
       val awsCredentials =
         DefaultCredentialsProvider.create().resolveCredentials() as AwsSessionCredentials
-      // TODO: Encrypt using KMS or store in Secrets
       // Think about moving this logic to a CredentialsProvider
       baseOptions.apply {
         awsAccessKey = awsCredentials.accessKeyId()
