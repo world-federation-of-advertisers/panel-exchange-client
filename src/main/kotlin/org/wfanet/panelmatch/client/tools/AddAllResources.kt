@@ -47,6 +47,7 @@ class AddAllResources : Callable<Int> {
   )
   private lateinit var tinkKeyUri: String
 
+  // TODO(jmolle): Make the flags not required and make AWS an option for root and shared storage.
   @CommandLine.Mixin private lateinit var gcsFlags: GcsFromFlags.Flags
 
   @CommandLine.Option(
