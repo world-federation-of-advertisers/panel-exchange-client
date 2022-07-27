@@ -1,0 +1,222 @@
+#!/usr/bin/env bash
+
+# Copyright 2021 The Cross-Media Measurement Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+set -eEu -o pipefail
+
+readonly IMAGE="${IMAGE:-docker.io/wfameasurement/bazel@sha256:0568ae6e1fbc9e23822a649f6fe43618ad04371d76fb3bb47e63c54b8609f6eb}"
+readonly DOCKER="${DOCKER:-docker}"
+readonly DOCKER_HOST="${DOCKER_HOST:-unix:///var/run/docker.sock}"
+readonly CONTAINER_USER='builder'
+readonly CONTAINER_HOME="/${CONTAINER_USER}"
+readonly OUTPUT_BASE="${PWD}/bazel-container-output"
+readonly OUTPUT_USER_ROOT="${CONTAINER_HOME}/.cache/bazel/_bazel_${CONTAINER_USER}"
+readonly BAZELISK_HOME="${CONTAINER_HOME}/.cache/bazelisk"
+readonly GCLOUD_SDK_CONFIG="${CONTAINER_HOME}/.config/gcloud"
+
+check_bash_version() {
+  if [[ "${BASH_VERSINFO:-0}" -lt 5 ]]; then
+    echo "Bash version ${BASH_VERSION:-unknown} is too old" >&2
+    exit 1
+  fi
+}
+
+check_docker_is_podman() {
+  if [[ "$($DOCKER -v)" == *podman* ]]; then
+    echo 'Podman is not supported by TestContainers' >&2
+    exit 1
+  fi
+}
+
+get_docker_socket() {
+  if [[ "${DOCKER_HOST}" != 'unix://'* ]]; then
+    echo 'DOCKER_HOST is not a Unix socket' >&2
+    exit 1
+  fi
+
+  echo "${DOCKER_HOST##unix://}"
+}
+
+is_rootless() {
+  [[ "$($DOCKER info --format '{{.SecurityOptions}}')" == *rootless* ]] ||
+    [[ "$($DOCKER version --format '{{.Client.Os}}')" == 'darwin' ]]
+}
+
+hash_md5() {
+  if hash md5 2>/dev/null; then
+    md5 -s -q "$1"
+    return
+  fi
+
+  echo -n "$1" | md5sum | cut -d ' ' -f 1
+}
+
+get_output_volume() {
+  local wdir_hash
+  wdir_hash="$(hash_md5 "${PWD}")"
+  echo "bazel-output-${wdir_hash}"
+}
+
+# Outputs the host's Bazel output user root.
+# See https://docs.bazel.build/versions/4.2.1/output_directories.html
+get_host_output_user_root() {
+  local output_root
+  if [[ "${OSTYPE}" == 'darwin'* ]]; then
+    output_root='/private/var/tmp'
+  else
+    output_root="${HOME}/.cache/bazel"
+  fi
+  echo "${output_root}/_bazel_${USER}"
+}
+
+get_host_cache_dir() {
+  if [[ -v XDG_CACHE_HOME ]]; then
+    echo "${XDG_CACHE_HOME}"
+  elif [[ "${OSTYPE}" == 'darwin'* ]]; then
+    echo "${HOME}/Library/Caches"
+  else
+    echo "${HOME}/.cache"
+  fi
+}
+
+ensure_host_bazelisk_cache_dir() {
+  local host_cache_dir
+  host_cache_dir="$(get_host_cache_dir)"
+  readonly host_cache_dir
+
+  readonly bazelisk_cache_dir="${host_cache_dir}/bazelisk"
+  mkdir -p "${bazelisk_cache_dir}"
+  echo "${bazelisk_cache_dir}"
+}
+
+main() {
+  check_bash_version
+  check_docker_is_podman
+
+  local docker_socket
+  docker_socket="$(get_docker_socket)"
+  readonly docker_socket
+
+  local host_output_user_root
+  host_output_user_root="$(get_host_output_user_root)"
+  readonly host_output_user_root
+  mkdir -p "${host_output_user_root}"
+
+  local host_bazelisk_cache_dir
+  host_bazelisk_cache_dir="$(ensure_host_bazelisk_cache_dir)"
+  readonly host_bazelisk_cache_dir
+
+  mkdir -p "${OUTPUT_BASE}"
+
+  local -a docker_options=(
+    '-it'
+    '--rm'
+    '--network=host'
+    '--entrypoint=/usr/bin/bazel'
+    '--env'
+      "HOME=${CONTAINER_HOME}"
+    '--env'
+      "BAZELISK_HOME=${BAZELISK_HOME}"
+    '--env'
+      'TESTCONTAINERS_RYUK_DISABLED=true'
+    '--mount'
+      "type=bind,source=${PWD},target=${PWD},readonly"
+    '--mount'
+      "type=bind,source=${host_output_user_root},target=${OUTPUT_USER_ROOT}"
+    '--mount'
+      "type=bind,source=${host_bazelisk_cache_dir},target=${BAZELISK_HOME}"
+    '--mount'
+      "type=bind,source=${docker_socket},target=/var/run/docker.sock"
+    "--workdir=${PWD}"
+  )
+
+  if hash gcloud; then
+    local gcloud_config
+    gcloud_config="$(gcloud info --format='value(config.paths.global_config_dir)')"
+    docker_options+=(
+      '--mount'
+        "type=bind,source=${gcloud_config},target=${GCLOUD_SDK_CONFIG}"
+      '--env'
+        "CLOUDSDK_CONFIG=${GCLOUD_SDK_CONFIG}"
+    )
+  fi
+
+  if [[ -d "${HOME}/.docker" ]]; then
+    docker_options+=(
+      '--mount'
+        "type=bind,source=${HOME}/.docker,target=${CONTAINER_HOME}/.docker,readonly"
+    )
+  fi
+
+  if [[ "${OSTYPE}" == 'linux'* ]]; then
+    docker_options+=(
+      '--mount'
+        "type=bind,source=${OUTPUT_BASE},target=${OUTPUT_BASE}"
+    )
+  else
+    # Mount OUTPUT_BASE as a named volume to avoid potential filesystem
+    # incompatibilities.
+
+    local output_volume
+    output_volume="$(get_output_volume)"
+    readonly output_volume
+
+    docker_options+=(
+      '--mount'
+        "type=volume,source=${output_volume},target=${OUTPUT_BASE}"
+    )
+  fi
+
+  if ! is_rootless; then
+    local -r owner="${EUID}:${GROUPS[0]}"
+
+    docker_options+=(
+      "--user=${owner}"
+      "--env=USER=${CONTAINER_USER}"
+    )
+  fi
+
+  local -a startup_options=(
+    "--output_user_root=${OUTPUT_USER_ROOT}"
+    "--output_base=${OUTPUT_BASE}"
+  )
+  while [[ "$1" =~ [[:space:]]*-.* ]]; do
+    startup_options+=("$1")
+    shift 1
+  done
+
+  local command="$1"
+  shift 1
+
+  local container_id
+  container_id=$(
+    "${DOCKER}" create "${docker_options[@]}" \
+      "${IMAGE}" \
+      "${startup_options[@]}" \
+      "${command}" \
+      --config=container \
+      --experimental_convenience_symlinks=ignore \
+      "$@"
+  )
+
+  if [[ -e "$HOME/.bazelrc" ]]; then
+    "${DOCKER}" cp "$HOME/.bazelrc" "${container_id}:${CONTAINER_HOME}/"
+  fi
+
+  echo "Running in Bazel container: ${command} $*" >&2
+  exec "${DOCKER}" start --attach --interactive "${container_id}"
+}
+
+main "$@"
