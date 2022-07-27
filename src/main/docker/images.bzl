@@ -26,4 +26,9 @@ ALL_GKE_IMAGES = [
         image = "//src/main/kotlin/org/wfanet/panelmatch/client/deploy/example/gcloud:google_cloud_example_daemon_image",
         repository = _PREFIX + "/example-panel-exchange-daemon",
     ),
+    struct(
+        name = "aws_example_daemon_image",
+        image = "//src/main/kotlin/org/wfanet/panelmatch/client/deploy/example/aws:aws_example_daemon_image",
+        repository = "example-panel-exchange-daemon",
+    ),
 ]
