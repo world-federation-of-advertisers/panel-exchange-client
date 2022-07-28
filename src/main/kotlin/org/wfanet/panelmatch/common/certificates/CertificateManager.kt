@@ -14,12 +14,13 @@
 
 package org.wfanet.panelmatch.common.certificates
 
+import java.io.Serializable
 import java.security.PrivateKey
 import java.security.cert.X509Certificate
 import org.wfanet.panelmatch.common.ExchangeDateKey
 
 /** Manages X509 Certificates and private keys. */
-interface CertificateManager {
+interface CertificateManager : Serializable {
   data class KeyPair(
     val x509Certificate: X509Certificate,
     val privateKey: PrivateKey,

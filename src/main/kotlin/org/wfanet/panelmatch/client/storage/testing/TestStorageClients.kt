@@ -93,7 +93,12 @@ private val TEST_CONTEXT =
 fun makeTestVerifyingStorageClient(
   underlyingClient: StorageClient = InMemoryStorageClient()
 ): VerifyingStorageClient {
-  return VerifyingStorageClient({ underlyingClient }, TestCertificateManager.CERTIFICATE)
+  return VerifyingStorageClient(
+    { underlyingClient },
+    TestCertificateManager,
+    TEST_CONTEXT.exchangeDateKey,
+    TEST_CONTEXT.partnerName
+  )
 }
 
 fun makeTestSigningStorageClient(

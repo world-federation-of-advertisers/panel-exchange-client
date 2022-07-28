@@ -14,6 +14,7 @@
 
 package org.wfanet.panelmatch.client.common
 
+import java.io.Serializable
 import java.time.LocalDate
 import org.wfanet.measurement.api.v2alpha.ExchangeStepAttemptKey
 import org.wfanet.measurement.api.v2alpha.ExchangeWorkflow
@@ -25,7 +26,7 @@ data class ExchangeContext(
   val date: LocalDate,
   val workflow: ExchangeWorkflow,
   val step: ExchangeWorkflow.Step
-) {
+) : Serializable {
   val recurringExchangeId: String
     get() = attemptKey.recurringExchangeId
 

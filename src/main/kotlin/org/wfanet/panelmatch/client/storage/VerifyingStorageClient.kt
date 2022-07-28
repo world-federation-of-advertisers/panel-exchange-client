@@ -23,6 +23,8 @@ import org.wfanet.measurement.common.crypto.SignedBlob
 import org.wfanet.measurement.common.flatten
 import org.wfanet.measurement.storage.StorageClient
 import org.wfanet.measurement.storage.StorageClient.Blob
+import org.wfanet.panelmatch.common.ExchangeDateKey
+import org.wfanet.panelmatch.common.certificates.CertificateManager
 import org.wfanet.panelmatch.common.storage.StorageFactory
 import org.wfanet.panelmatch.protocol.NamedSignature
 
@@ -34,7 +36,9 @@ import org.wfanet.panelmatch.protocol.NamedSignature
  */
 class VerifyingStorageClient(
   private val sharedStorageFactory: StorageFactory,
-  private val x509: X509Certificate,
+  private val certificateManager: CertificateManager,
+  private val exchangeDateKey: ExchangeDateKey,
+  private val partnerName: String,
 ) : Serializable {
 
   /**
@@ -49,6 +53,12 @@ class VerifyingStorageClient(
     val sharedStorage: StorageClient = sharedStorageFactory.build(pipelineOptions)
     val sourceBlob: Blob = sharedStorage.getBlob(blobKey) ?: throw BlobNotFoundException(blobKey)
     val namedSignature: NamedSignature = sharedStorage.getBlobSignature(blobKey)
+    val x509 =
+      certificateManager.getCertificate(
+        exchangeDateKey,
+        partnerName,
+        namedSignature.certificateName
+      )
     return VerifiedBlob(SignedBlob(sourceBlob, namedSignature.signature), x509)
   }
 

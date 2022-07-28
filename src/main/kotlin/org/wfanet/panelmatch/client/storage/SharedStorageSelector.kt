@@ -14,6 +14,7 @@
 
 package org.wfanet.panelmatch.client.storage
 
+import java.io.Serializable
 import org.wfanet.measurement.api.v2alpha.ExchangeWorkflow.StorageType
 import org.wfanet.measurement.api.v2alpha.ExchangeWorkflow.StorageType.AMAZON_S3
 import org.wfanet.measurement.api.v2alpha.ExchangeWorkflow.StorageType.GOOGLE_CLOUD_STORAGE
@@ -39,7 +40,7 @@ class SharedStorageSelector(
   private val sharedStorageFactories:
     Map<PlatformCase, (StorageDetails, ExchangeDateKey) -> StorageFactory>,
   private val storageDetailsProvider: StorageDetailsProvider
-) {
+) : Serializable {
 
   /**
    * Builds and returns a new [VerifyingStorageClient] for reading blobs from shared storage and
@@ -47,23 +48,19 @@ class SharedStorageSelector(
    * used to verify [blobKey]. For manifest blobs, it can also be used to verify all blob shards.
    */
   suspend fun getVerifyingStorage(
-    blobKey: String,
     storageType: StorageType,
-    context: ExchangeContext
+    context: ExchangeContext,
   ): VerifyingStorageClient {
     val storageDetails = storageDetailsProvider.get(context.recurringExchangeId)
     validateStorageType(storageType, storageDetails)
 
     val storageFactory = getStorageFactory(storageDetails, context)
-    val storageClient = storageFactory.build()
-    val namedSignature = storageClient.getBlobSignature(blobKey)
-    val x509 =
-      certificateManager.getCertificate(
-        context.exchangeDateKey,
-        context.partnerName,
-        namedSignature.certificateName
-      )
-    return VerifyingStorageClient(storageFactory, x509)
+    return VerifyingStorageClient(
+      storageFactory,
+      certificateManager,
+      context.exchangeDateKey,
+      context.partnerName
+    )
   }
 
   /**

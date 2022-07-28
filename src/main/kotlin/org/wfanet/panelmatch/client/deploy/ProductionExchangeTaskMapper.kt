@@ -253,11 +253,7 @@ open class ProductionExchangeTaskMapper(
     val destinationBlobKey = step.outputLabelsMap.values.single()
     val sourceBlobKey = step.inputLabelsMap.values.single()
     val source =
-      sharedStorageSelector.getVerifyingStorage(
-        sourceBlobKey,
-        workflow.exchangeIdentifiers.storage,
-        this
-      )
+      sharedStorageSelector.getVerifyingStorage(workflow.exchangeIdentifiers.storage, this)
 
     return when (copyOptions.labelType) {
       BLOB -> {
