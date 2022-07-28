@@ -18,6 +18,8 @@ echo "  Files:" >> ${var.path_to_secrets}/kustomization.yaml
 echo "  - edp1_tls.pem" >> ${var.path_to_secrets}/kustomization.yaml
 echo "  - edp1_tls.key" >> ${var.path_to_secrets}/kustomization.yaml
 
+aws eks update-kubeconfig --region us-west-1 --name tftest-cluster
+
 kubectl apply -k ${var.path_to_secrets}
     EOF
   }
