@@ -3,5 +3,6 @@ module "aws_eks_cluster" {
 }
 
 module "docker_config" {
+  depends_on = [module.aws_eks_cluster]
   source = "./modules/docker"
 }
