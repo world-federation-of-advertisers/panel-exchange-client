@@ -71,6 +71,8 @@ _ARTIFACTS = {
     "software.amazon.awssdk:utils": "2.17.100",
     "software.amazon.awssdk:sts": "2.17.100",
     "software.amazon.awssdk:auth": "2.17.100",
+    "software.amazon.awssdk:acmpca": "2.17.100",
+    "software.amazon.awssdk:aws-core": "2.17.100",
 }
 
 _EXCLUDED_ARTIFACTS = [
