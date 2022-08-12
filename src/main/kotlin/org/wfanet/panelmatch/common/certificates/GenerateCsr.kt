@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package org.wfanet.panelmatch.common.certificates.aws
+package org.wfanet.panelmatch.common.certificates
 
 import java.io.ByteArrayOutputStream
 import java.security.PrivateKey

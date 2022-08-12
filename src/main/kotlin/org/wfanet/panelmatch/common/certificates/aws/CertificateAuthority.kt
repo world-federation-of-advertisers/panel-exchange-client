@@ -20,6 +20,7 @@ import java.security.cert.X509Certificate
 import org.wfanet.measurement.common.crypto.generateKeyPair
 import org.wfanet.measurement.common.crypto.readCertificate
 import org.wfanet.panelmatch.common.certificates.CertificateAuthority
+import org.wfanet.panelmatch.common.certificates.generateCsrFromPrivateKey
 import software.amazon.awssdk.core.SdkBytes
 import software.amazon.awssdk.services.acmpca.model.ASN1Subject
 import software.amazon.awssdk.services.acmpca.model.ApiPassthrough
@@ -41,6 +42,8 @@ import software.amazon.awssdk.services.acmpca.model.Validity
  */
 const val AWS_CERTIFICATE_TEMPLATE_ARN =
   "arn:aws:acm-pca:::template/BlankSubordinateCACertificate_PathLen0_APIPassthrough/V1"
+
+val AWS_CERTIFICATE_SIGNING_ALGORITHM = SigningAlgorithm.SHA256_WITHECDSA
 
 class CertificateAuthority(
   private val context: CertificateAuthority.Context,
@@ -94,7 +97,7 @@ class CertificateAuthority(
               .toByteArray()
           )
         )
-        .signingAlgorithm(SigningAlgorithm.SHA256_WITHECDSA)
+        .signingAlgorithm(AWS_CERTIFICATE_SIGNING_ALGORITHM)
         .validity(certificateLifetime)
         .build()
 

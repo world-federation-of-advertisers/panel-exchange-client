@@ -124,7 +124,7 @@ class CertificateAuthorityTest {
       Truth.assertThat(firstValue.templateArn()).isEqualTo(AWS_CERTIFICATE_TEMPLATE_ARN)
       Truth.assertThat(firstValue.apiPassthrough()).isEqualTo(expectedCertificateParams)
       Truth.assertThat(firstValue.certificateAuthorityArn()).isEqualTo(CERTIFICATE_AUTHORITY_ARN)
-      Truth.assertThat(firstValue.signingAlgorithm()).isEqualTo(SigningAlgorithm.SHA256_WITHECDSA)
+      Truth.assertThat(firstValue.signingAlgorithm()).isEqualTo(AWS_CERTIFICATE_SIGNING_ALGORITHM)
       Truth.assertThat(firstValue.validity()).isEqualTo(CERTIFICATE_LIFETIME)
     }
 
