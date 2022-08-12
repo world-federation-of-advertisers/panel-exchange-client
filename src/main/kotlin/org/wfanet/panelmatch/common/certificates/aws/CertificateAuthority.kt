@@ -59,8 +59,8 @@ class CertificateAuthority(
           .keyUsage(
             KeyUsage.builder()
               .digitalSignature(true)
-              .keyEncipherment(true)
               .keyCertSign(true)
+              .crlSign(true)
               .build()
           )
           .extendedKeyUsage(
