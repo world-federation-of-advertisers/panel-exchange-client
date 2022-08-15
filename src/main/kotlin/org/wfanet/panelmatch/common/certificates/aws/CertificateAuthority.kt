@@ -57,11 +57,7 @@ class CertificateAuthority(
       .extensions(
         Extensions.builder()
           .keyUsage(
-            KeyUsage.builder()
-              .digitalSignature(true)
-              .keyCertSign(true)
-              .crlSign(true)
-              .build()
+            KeyUsage.builder().digitalSignature(true).keyCertSign(true).crlSign(true).build()
           )
           .extendedKeyUsage(
             ExtendedKeyUsage.builder()
