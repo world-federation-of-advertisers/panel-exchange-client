@@ -55,12 +55,14 @@ import "strings"
 	}
 
 	dataflow: {
-		projectId:         *#GCloudProject | string
-		region:            string
-		serviceAccount:    string
-		tempLocation:      *"gs://\(cloudStorageBucket)/dataflow-temp/" | string
-		workerMachineType: *"n1-standard-1" | string
-		diskSize:          *"30" | string
+		projectId:                          *#GCloudProject | string
+		region:                             string
+		serviceAccount:                     string
+		tempLocation:                       *"gs://\(cloudStorageBucket)/dataflow-temp/" | string
+		workerMachineType:                  *"n1-standard-1" | string
+		diskSize:                           *"30" | string
+		dataflowWorkerLoggingOptionsLevel:  *"INFO" | string
+		sdkHarnessOptionsLogLevel:          *"INFO" | string
 	}
 
 	_partyId: strings.SplitAfter(partyName, "/")[1]
@@ -81,6 +83,8 @@ import "strings"
 		"--dataflow-temp-location=\(dataflow.tempLocation)",
 		"--dataflow-worker-machine-type=\(dataflow.workerMachineType)",
 		"--dataflow-disk-size=\(dataflow.diskSize)",
+		"--dataflow-worker-logging-options-level=\(dataflow.dataflowWorkerLoggingOptionsLevel)",
+		"--sdk-harness-options-log-level=\(dataflow.sdkHarnessOptionsLogLevel)",
 	]
 }
 _exchangeDaemonConfig: #ExchangeDaemonConfig
