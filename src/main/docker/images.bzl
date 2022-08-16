@@ -16,7 +16,7 @@
 
 load("//build:variables.bzl", "IMAGE_REPOSITORY_SETTINGS")
 
-_PREFIX = IMAGE_REPOSITORY_SETTINGS.repository_prefix + "/tf_test"
+_PREFIX = IMAGE_REPOSITORY_SETTINGS.repository_prefix
 
 # List of specs for all Docker containers to push to a container registry.
 # These are only used on GKE.
@@ -24,6 +24,11 @@ ALL_GKE_IMAGES = [
     struct(
         name = "google_cloud_example_daemon_image",
         image = "//src/main/kotlin/org/wfanet/panelmatch/client/deploy/example/gcloud:google_cloud_example_daemon_image",
-        repository = "tf-test-repo",
+        repository = _PREFIX + "/example-panel-exchange-daemon",
+    ),
+    struct(
+        name = "aws_example_daemon_image",
+        image = "//src/main/kotlin/org/wfanet/panelmatch/client/deploy/example/aws:aws_example_daemon_image",
+        repository = _PREFIX + "/example-panel-exchange-daemon-aws",
     ),
 ]

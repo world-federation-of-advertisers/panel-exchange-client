@@ -5,8 +5,7 @@ resource "null_resource" "create_k8s_secrets2" {
   #   command = "tools/bazel-container run //src/main/k8s/testing/secretfiles:apply_kustomization"
   # }
 
-  # apply secrets
-  # buildl the deployment and services manifest
+  # build the deployment and services manifest
   provisioner "local-exec" {
     command = <<EOF
 str=$(kubectl apply -k ../../../../TFTest/secrets)
