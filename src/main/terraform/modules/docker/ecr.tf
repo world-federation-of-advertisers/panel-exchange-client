@@ -13,6 +13,6 @@ resource "null_resource" "build_and_push_image" {
 
   provisioner "local-exec" {
     working_dir = "../../../"
-    command = "tools/bazel-container run src/main/docker/push_google_cloud_example_daemon_image -c opt"
+    command = "bazel run src/main/docker/push_google_cloud_example_daemon_image -c opt --define container_registry=010295286036.dkr.ecr.us-west-1.amazonaws.com"
   }
 }

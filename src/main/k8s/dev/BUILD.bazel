@@ -14,6 +14,12 @@ cue_library(
     deps = [":base_gke"],
 )
 
+cue_library(
+    name = "example_daemon_aws",
+    srcs = ["example_daemon_aws.cue"],
+    deps = [":base_gke"],
+)
+
 cue_export(
     name = "example_edp_daemon_gke",
     srcs = ["example_edp_daemon_gke.cue"],
@@ -38,6 +44,19 @@ cue_export(
     filetype = "yaml",
     tags = ["manual"],
     deps = [":example_daemon_gke"],
+)
+
+cue_export(
+    name = "example_edp_daemon_aws",
+    srcs = ["example_edp_daemon_aws.cue"],
+    cue_tags = {
+        "party_name": EXAMPLE_DAEMON_CONFIG.edp_name,
+        "secret_name": EXAMPLE_DAEMON_CONFIG.edp_secret_name,
+    },
+    expression = "listObject",
+    filetype = "yaml",
+    tags = ["manual"],
+    deps = [":example_daemon_aws"],
 )
 
 ALL_IMAGE_ARCHIVES = [
