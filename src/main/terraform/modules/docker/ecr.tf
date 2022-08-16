@@ -8,11 +8,11 @@ resource "null_resource" "build_and_push_image" {
   depends_on = [aws_ecr_repository.edp_image]
 
   provisioner "local-exec" {
-     command = "aws ecr get-login-password --region us-west-1 | docker login --username AWS --password-stdin 010295286036.dkr.ecr.us-west-1.amazonaws.com"
+     command = "aws ecr get-login-password --region ${data.aws_region.current.name} | docker login --username AWS --password-stdin ${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com"
   }
 
   provisioner "local-exec" {
     working_dir = "../../../"
-    command = "bazel run src/main/docker/push_google_cloud_example_daemon_image -c opt --define container_registry=010295286036.dkr.ecr.us-west-1.amazonaws.com"
+    command = "bazel run src/main/docker/${var.image_name} -c opt --define container_registry=${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com"
   }
 }

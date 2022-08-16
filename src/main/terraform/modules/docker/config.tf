@@ -14,9 +14,9 @@ regex="(certs-and-configs-\S*)"
 [[ $str =~ $regex ]]
 secret_name=$${BASH_REMATCH[0]}
 
-bazel build //src/main/k8s/dev:example_edp_daemon_gke --define=edp_name=dataProviders/c-8OD6eW4x8 --define=edp_k8s_secret_name=$secret_name
+bazel build //src/main/k8s/dev:${var.build_target_name} --define=edp_name=dataProviders/c-8OD6eW4x8 --define=edp_k8s_secret_name=$secret_name
 
-kubectl apply -f ../../../bazel-bin/src/main/k8s/dev/example_edp_daemon_aws.yaml
+kubectl apply -f ../../../bazel-bin/src/main/k8s/dev/${var.manifest_name}
     EOF
     interpreter = ["bash", "-c"]
   }
