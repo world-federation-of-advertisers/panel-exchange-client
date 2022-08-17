@@ -30,7 +30,6 @@ import org.wfanet.measurement.common.crypto.readCertificate
 import org.wfanet.measurement.common.crypto.readPrivateKey
 import org.wfanet.measurement.common.crypto.sign
 import org.wfanet.measurement.common.crypto.testing.FIXED_CA_CERT_PEM_FILE
-import org.wfanet.measurement.common.crypto.testing.FIXED_CA_KEY_FILE
 import org.wfanet.measurement.common.crypto.verifySignature
 import org.wfanet.panelmatch.common.certificates.CertificateAuthority
 import software.amazon.awssdk.services.acmpca.model.ASN1Subject
@@ -58,7 +57,7 @@ private const val CERTIFICATE_AUTHORITY_ARN = "some-ca-arn"
 private const val CERTIFICATE_ARN = "some-cert-arn"
 private val ROOT_X509 by lazy { readCertificate(FIXED_CA_CERT_PEM_FILE) }
 private val ROOT_PUBLIC_KEY by lazy { ROOT_X509.publicKey }
-private val ROOT_PRIVATE_KEY_FILE by lazy { FIXED_CA_KEY_FILE }
+private val ROOT_PRIVATE_KEY_FILE by lazy { FIXED_CA_CERT_PEM_FILE.resolveSibling("ca.key") }
 private val CERTIFICATE_LIFETIME =
   Validity.builder().value(CONTEXT.validDays.toLong()).type("DAYS").build()
 
