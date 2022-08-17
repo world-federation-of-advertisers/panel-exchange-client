@@ -1,3 +1,9 @@
+resource "null_resource" "configure_local_k8s_context" {
+  provisioner "local-exec" {
+    command = "aws eks update-kubeconfig --region ${data.aws_region.current.name} --name ${var.cluster_name}"
+  }
+}
+
 resource "null_resource" "collect_k8s_test_secrets" {
   count = var.use_test_secrets ? 1 : 0
   provisioner "local-exec" {
@@ -42,13 +48,13 @@ resource "null_resource" "configure_cluster" {
 
   # login to Docker on AWS
   provisioner "local-exec" {
-     command = "aws ecr get-login-password --region ${data.aws_region.current.name} | docker login --username AWS --password-stdin ${data.aws_caller_identity.current.account_id}.dkr.>"
+     command = "aws ecr get-login-password --region ${data.aws_region.current.name} | docker login --username AWS --password-stdin ${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com"
   }
 
   # build and push the Docker image to ECR
   provisioner "local-exec" {
     working_dir = "../../../"
-    command = "bazel run src/main/docker/${var.image_name} -c opt --define container_registry=${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.a>"
+    command = "bazel run src/main/docker/${var.image_name} -c opt --define container_registry=${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com"
   }
 
   # create a k8s service account
@@ -59,7 +65,13 @@ resource "null_resource" "configure_cluster" {
   # build and apply secrets
   provisioner "local-exec" {
     command = <<EOF
-str=$(kubectl apply -k ${var.path_to_secrets})
+if [[ var.use_test_secrets -eq 1 ]]
+then
+  str=$(kubectl apply -k ${var.path_to_secrets})
+else
+  str=$(bazel run //src/main/k8s/testing/secretfiles:apply_kustomization)
+fi
+
 regex="(certs-and-configs-\S*)"
 [[ $str =~ $regex ]]
 secret_name=$${BASH_REMATCH[0]}

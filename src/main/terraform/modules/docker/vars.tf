@@ -34,3 +34,7 @@ variable "path_to_secrets" {
 variable "k8s_account_service_name" {
   type = string
 }
+
+variable "cluster_name" {
+  type = string
+}
