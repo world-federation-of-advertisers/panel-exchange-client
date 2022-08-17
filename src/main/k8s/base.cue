@@ -30,6 +30,8 @@ objects: [ for objectSet in objectSets for object in objectSet {object}]
 
 #GrpcServicePort: 8443
 
+#HealthPort: 8080
+
 #Target: {
 	name:   string
 	_caps:  strings.Replace(strings.ToUpper(name), "-", "_", -1)
@@ -72,7 +74,8 @@ objects: [ for objectSet in objectSets for object in objectSet {object}]
 	}]
 	resources?: #ResourceRequirements
 	readinessProbe?: {
-		exec: command: [...string]
+		grpc:
+			port: #HealthPort
 		periodSeconds: uint32
 	}
 	...
