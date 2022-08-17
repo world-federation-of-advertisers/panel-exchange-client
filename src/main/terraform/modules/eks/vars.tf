@@ -1,5 +1,13 @@
+data "aws_region" "current" {}
+
 data "aws_availability_zones" "available" {
   state = "available"
+}
+
+variable "use_test_secrets" {
+  description = "Whether or not to use the test secrets. They should not be used outside of testing purposes."
+  type = bool
+  default = false
 }
 
 variable "availability_zones_count" {
@@ -26,12 +34,6 @@ variable "subnet_cidr_bits" {
   default = 8
 }
 
-variable "path_to_cmm" {
-  type = string
-  default = "../../../../cross-media-measurement"
-}
-
 variable "path_to_secrets" {
   type = string
-  default = "~/TFTest/secrets"
 }

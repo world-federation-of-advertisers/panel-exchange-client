@@ -15,3 +15,8 @@ variable "manifest_name" {
   description = "The name of the manifest to apply."
   type = string
 }
+
+variable "repository_name" {
+  description = "The name of the respository you want to create."
+  type = string
+}
