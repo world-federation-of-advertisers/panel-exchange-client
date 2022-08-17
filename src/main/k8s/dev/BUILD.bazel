@@ -9,6 +9,12 @@ cue_library(
 )
 
 cue_library(
+    name = "base_aws",
+    srcs = ["base_aws.cue"],
+    deps = ["//src/main/k8s:base"],
+)
+
+cue_library(
     name = "example_daemon_gke",
     srcs = ["example_daemon_gke.cue"],
     deps = [":base_gke"],
@@ -17,7 +23,7 @@ cue_library(
 cue_library(
     name = "example_daemon_aws",
     srcs = ["example_daemon_aws.cue"],
-    deps = [":base_gke"],
+    deps = [":base_aws"],
 )
 
 cue_export(
