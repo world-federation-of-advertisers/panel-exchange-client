@@ -48,7 +48,6 @@ private class AcmPrivateCaFlags {
   @Option(
     names = ["--privateca-project-id"],
     description = ["Google Cloud PrivateCA project id"],
-    required = true
   )
   lateinit var projectId: String
     private set
@@ -56,7 +55,6 @@ private class AcmPrivateCaFlags {
   @Option(
     names = ["--privateca-ca-location"],
     description = ["Google Cloud PrivateCA CA location"],
-    required = true
   )
   lateinit var caLocation: String
     private set
@@ -64,7 +62,6 @@ private class AcmPrivateCaFlags {
   @Option(
     names = ["--privateca-pool-id"],
     description = ["Google Cloud PrivateCA pool id"],
-    required = true
   )
   lateinit var poolId: String
     private set
@@ -72,7 +69,6 @@ private class AcmPrivateCaFlags {
   @Option(
     names = ["--privateca-ca-name"],
     description = ["Google Cloud PrivateCA CA name"],
-    required = true
   )
   lateinit var certificateAuthorityName: String
     private set
@@ -92,7 +88,6 @@ private class AwsExampleDaemon : ExampleDaemon() {
   @Option(
     names = ["--dataflow-project-id"],
     description = ["Google Cloud project name for Dataflow"],
-    required = true
   )
   lateinit var dataflowProjectId: String
     private set
@@ -100,7 +95,6 @@ private class AwsExampleDaemon : ExampleDaemon() {
   @Option(
     names = ["--dataflow-region"],
     description = ["Google Cloud region for Dataflow"],
-    required = true
   )
   lateinit var dataflowRegion: String
     private set
@@ -108,7 +102,6 @@ private class AwsExampleDaemon : ExampleDaemon() {
   @Option(
     names = ["--dataflow-service-account"],
     description = ["Service account for Dataflow"],
-    required = true
   )
   lateinit var dataflowServiceAccount: String
     private set
@@ -116,7 +109,6 @@ private class AwsExampleDaemon : ExampleDaemon() {
   @Option(
     names = ["--dataflow-temp-location"],
     description = ["Google Cloud temp location (GCS bucket) for Dataflow"],
-    required = true
   )
   lateinit var dataflowTempLocation: String
     private set
@@ -164,7 +156,7 @@ private class AwsExampleDaemon : ExampleDaemon() {
   )
   private var s3FromBeam by Delegates.notNull<Boolean>()
 
-  private var s3Client = S3Client.builder().region(Region.of(s3Region)).build()
+//  private var s3Client = S3Client.builder().region(Region.of(s3Region)).build()
 
   override fun makePipelineOptions(): PipelineOptions {
     val baseOptions =
@@ -197,7 +189,7 @@ private class AwsExampleDaemon : ExampleDaemon() {
     }
   }
 
-  override val rootStorageClient: StorageClient by lazy { S3StorageClient(s3Client, s3Bucket) }
+  override val rootStorageClient: StorageClient by lazy { S3StorageClient(S3Client.builder().region(Region.of(s3Region)).build(), s3Bucket) }
 
   /** This can be customized per deployment. */
   private val defaults by lazy {
