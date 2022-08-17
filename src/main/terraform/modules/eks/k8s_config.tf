@@ -1,14 +1,21 @@
+resource "null_resource" "collect_k8s_test_secrets" {
+  count = var.use_test_secrets ? 1 : 0
+  provisioner "local-exec" {
+    working_dir = "../../../"
+    command = "bazel run //src/main/k8s/testing/secretfiles:apply_kustomization"
+  }
+}
+
 resource "null_resource" "collect_k8s_secrets" {
+  count = var.use_test_secrets ? 0 : 1
   provisioner "local-exec" {
     command = <<EOF
-cp -r ${var.path_to_cmm}/src/main/k8s/testing/secretfiles ${var.path_to_secrets}
+cp -r ../k8s/testing/secretfiles ${var.path_to_secrets}
 
 cat ${var.path_to_secrets}/*_root.pem > ${var.path_to_secrets}/all_root_certs.pem
     EOF
   }
-}
 
-resource "null_resource" "create_k8s_secrets" {
   provisioner "local-exec" {
     command = <<EOF
 echo "secretGenerator:" > ${var.path_to_secrets}/kustomization.yaml
