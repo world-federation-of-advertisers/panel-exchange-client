@@ -16,6 +16,7 @@ package k8s
 
 import "strings"
 
+#GCloudProject:           "halo-cmm-dev"
 #KingdomPublicApiTarget:  "public.kingdom.dev.halo-cmm.org:8443"
 #ContainerRegistryPrefix: "010295286036.dkr.ecr.us-west-1.amazonaws.com"
 #DefaultResourceConfig: {
@@ -58,7 +59,7 @@ import "strings"
 	args: [
 		"--id=\(_partyId)",
 		"--party-type=\(partyType)",
-		"--google-cloud-storage-bucket=\(cloudStorageBucket)",
+//		"--google-cloud-storage-bucket=\(cloudStorageBucket)",
 		"--tls-cert-file=\(clientTls.certFile)",
 		"--tls-key-file=\(clientTls.keyFile)",
 		"--tink-key-uri=\(tinkKeyUri)",
@@ -89,7 +90,7 @@ deployments: {
 			// nodeSelector: "iam.gke.io/gke-metadata-server-enabled": "true"
 		}
 		_podSpec: _container: {
-			image:           #ContainerRegistryPrefix + "/tf-test-repo"
+			image:           #ContainerRegistryPrefix + "/example-panel-exchange-daemon"
 			imagePullPolicy: "Always"
 			args:            _exchangeDaemonConfig.args + [
 						"--cert-collection-file=/var/run/secrets/files/trusted_certs.pem",
@@ -107,7 +108,9 @@ deployments: {
 						"--x509-organization=SomeOrganization",
 						"--x509-dns-name=example.com",
 						"--x509-valid-days=365",
-//						"--privateca-project-id=" + #GCloudProject,
+						"--privateca-project-id=" + #GCloudProject,
+						"--s3-region=us-west-1",
+						"--s3-storage-bucket=tf-ocmm-test-bucket",
 			]
 		}
 	}

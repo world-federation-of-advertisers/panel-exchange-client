@@ -24,7 +24,7 @@ _exchangeDaemonConfig: {
 		certFile: "/var/run/secrets/files/edp1_tls.pem"
 		keyFile:  "/var/run/secrets/files/edp1_tls.key"
 	}
-	tinkKeyUri: "gcp-kms://projects/halo-cmm-dev/locations/us-central1/keyRings/edp-test-key-ring/cryptoKeys/edp-test-key"
+	tinkKeyUri: "aws-kms://arn:aws:kms:us-west-1:010295286036:key/899b60d7-53a1-4059-918e-92fffff11f24"
 	privateCa: {
 		name:     "20220302-51i-yj4"
 		poolId:   "EdpTestPool"

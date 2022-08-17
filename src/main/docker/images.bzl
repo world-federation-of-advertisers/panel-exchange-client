@@ -17,6 +17,7 @@
 load("//build:variables.bzl", "IMAGE_REPOSITORY_SETTINGS")
 
 _PREFIX = IMAGE_REPOSITORY_SETTINGS.repository_prefix
+_REGISTRY = IMAGE_REPOSITORY_SETTINGS.container_registry
 
 # List of specs for all Docker containers to push to a container registry.
 # These are only used on GKE.
@@ -29,6 +30,6 @@ ALL_GKE_IMAGES = [
     struct(
         name = "aws_example_daemon_image",
         image = "//src/main/kotlin/org/wfanet/panelmatch/client/deploy/example/aws:aws_example_daemon_image",
-        repository = _PREFIX + "/example-panel-exchange-daemon-aws",
+        repository = "example-panel-exchange-daemon",
     ),
 ]
