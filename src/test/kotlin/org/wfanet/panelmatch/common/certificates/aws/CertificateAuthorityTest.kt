@@ -58,7 +58,7 @@ private const val CERTIFICATE_AUTHORITY_ARN = "some-ca-arn"
 private const val CERTIFICATE_ARN = "some-cert-arn"
 private val ROOT_X509 by lazy { readCertificate(FIXED_CA_CERT_PEM_FILE) }
 private val ROOT_PUBLIC_KEY by lazy { ROOT_X509.publicKey }
-private val ROOT_PRIVATE_KEY_FILE by lazy { FIXED_CA_KEY_FILE.resolve("ca.key") }
+private val ROOT_PRIVATE_KEY_FILE by lazy { FIXED_CA_KEY_FILE }
 private val CERTIFICATE_LIFETIME =
   Validity.builder().value(CONTEXT.validDays.toLong()).type("DAYS").build()
 
