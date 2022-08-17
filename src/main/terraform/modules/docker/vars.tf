@@ -1,6 +1,12 @@
 data "aws_caller_identity" "current" {}
 data "aws_region" "current" {}
 
+variable "use_test_secrets" {
+  description = "Whether or not to use the test secrets. They should not be used outside of testing purposes."
+  type = bool
+  default = false
+}
+
 variable "image_name" {
   description = "The name of the image to build, push, and deploy."
   type = string
@@ -18,5 +24,13 @@ variable "manifest_name" {
 
 variable "repository_name" {
   description = "The name of the respository you want to create."
+  type = string
+}
+
+variable "path_to_secrets" {
+  type = string
+}
+
+variable "k8s_account_service_name" {
   type = string
 }

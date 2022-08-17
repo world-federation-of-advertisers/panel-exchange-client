@@ -4,12 +4,6 @@ data "aws_availability_zones" "available" {
   state = "available"
 }
 
-variable "use_test_secrets" {
-  description = "Whether or not to use the test secrets. They should not be used outside of testing purposes."
-  type = bool
-  default = false
-}
-
 variable "availability_zones_count" {
   description = "The number of AZs."
   type = number
@@ -32,8 +26,4 @@ variable "subnet_cidr_bits" {
   description = "The number of subnet bits for the CIDR."
   type = number
   default = 8
-}
-
-variable "path_to_secrets" {
-  type = string
 }
