@@ -4,14 +4,6 @@ resource "null_resource" "configure_local_k8s_context" {
   }
 }
 
-resource "null_resource" "collect_k8s_test_secrets" {
-  count = var.use_test_secrets ? 1 : 0
-  provisioner "local-exec" {
-    working_dir = "../../../"
-    command = "bazel run //src/main/k8s/testing/secretfiles:apply_kustomization"
-  }
-}
-
 resource "null_resource" "collect_k8s_secrets" {
   count = var.use_test_secrets ? 0 : 1
   provisioner "local-exec" {
@@ -42,7 +34,6 @@ kubectl apply -k ${var.path_to_secrets}
 resource "null_resource" "configure_cluster" {
   depends_on = [
     aws_ecr_repository.edp_image,
-    null_resource.collect_k8s_test_secrets,
     null_resource.collect_k8s_secrets
   ]
 
