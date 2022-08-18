@@ -17,7 +17,6 @@
 load("//build:variables.bzl", "IMAGE_REPOSITORY_SETTINGS")
 
 _PREFIX = IMAGE_REPOSITORY_SETTINGS.repository_prefix
-_REGISTRY = IMAGE_REPOSITORY_SETTINGS.container_registry
 
 # List of specs for all Docker containers to push to a container registry.
 # These are only used on GKE.

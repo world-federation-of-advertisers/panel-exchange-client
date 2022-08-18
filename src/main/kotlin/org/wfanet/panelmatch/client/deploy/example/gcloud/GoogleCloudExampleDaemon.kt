@@ -148,22 +148,6 @@ private class GoogleCloudExampleDaemon : ExampleDaemon() {
   )
   private var s3FromBeam by Delegates.notNull<Boolean>()
 
-  @Option(
-    names = ["--dataflow-worker-logging-options-level"],
-    description = ["Dataflow Worker Logging Options Level"],
-    defaultValue = "INFO",
-  )
-  lateinit var dataflowWorkerLoggingOptionsLevel: DataflowWorkerLoggingOptions.Level
-    private set
-
-  @Option(
-    names = ["--sdk-harness-options-log-level"],
-    description = ["Sdk Harness Options Log Level"],
-    defaultValue = "INFO",
-  )
-  lateinit var sdkHarnessOptionsLogLevel: SdkHarnessOptions.LogLevel
-    private set
-
   override fun makePipelineOptions(): PipelineOptions {
     val baseOptions =
       PipelineOptionsFactory.`as`(BeamOptions::class.java).apply {
@@ -175,8 +159,6 @@ private class GoogleCloudExampleDaemon : ExampleDaemon() {
         workerMachineType = dataflowWorkerMachineType
         maxNumWorkers = dataflowMaxNumWorkers
         diskSizeGb = dataflowDiskSize
-        defaultWorkerLogLevel = dataflowWorkerLoggingOptionsLevel
-        defaultSdkHarnessLogLevel = sdkHarnessOptionsLogLevel
       }
     return if (!s3FromBeam) {
       baseOptions
