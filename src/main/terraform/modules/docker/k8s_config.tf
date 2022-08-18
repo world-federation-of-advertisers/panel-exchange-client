@@ -42,6 +42,13 @@ resource "null_resource" "configure_cluster" {
      command = "aws ecr get-login-password --region ${data.aws_region.current.name} | docker login --username AWS --password-stdin ${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com"
   }
 
+  # update the CUE file to have the right AWS KMS key
+  provisioner "local-exec" {
+    command = <<EOF
+sed -i s/tinkKeyUri: ""/tinkKeyUri: "${var.kms_key_id}" ${var.path_to_edp_cue}
+    EOF
+  }
+
   # build and push the Docker image to ECR
   provisioner "local-exec" {
     working_dir = "../../../"

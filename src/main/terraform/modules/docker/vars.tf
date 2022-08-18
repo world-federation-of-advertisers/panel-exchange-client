@@ -38,3 +38,12 @@ variable "k8s_account_service_name" {
 variable "cluster_name" {
   type = string
 }
+
+variable "kms_key_id" {
+  type = string
+}
+
+variable "path_to_edp_cue" {
+  type = string
+  default = "../k8s/dev/example_edp_daemon_aws.cue"
+}

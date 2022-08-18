@@ -30,4 +30,5 @@ module "docker_config" {
   path_to_secrets = "../k8s/testing/secretfiles"
   k8s_account_service_name = "edp-workflow"
   cluster_name = module.aws_eks_cluster.cluster_name
+  kms_key_id = module.other_resources.kms_key_id
 }
