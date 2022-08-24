@@ -15,6 +15,8 @@
 package org.wfanet.panelmatch.client.storage.gcloud.gcs
 
 import com.google.cloud.storage.StorageOptions
+import com.google.protobuf.ByteString
+import com.google.protobuf.kotlin.plus
 import com.google.protobuf.kotlin.toByteString
 import java.security.MessageDigest
 import org.wfanet.measurement.common.HexString
@@ -40,7 +42,7 @@ class GcsStorageFactory(
             fingerprint("${gcs.bucket}-${gcs.projectName}-${storageDetails.visibility.name}")
           val exchangeFingerprint = fingerprint(exchangeDateKey.path)
           // Maximum bucket size is 63 characters. 512 bits in hex is 32 characters, so we drop one.
-          storageDetailsFingerprint + exchangeFingerprint.take(31)
+          HexString(storageDetailsFingerprint + exchangeFingerprint).value.lowercase().take(63)
         }
         BucketType.UNKNOWN_TYPE,
         BucketType.UNRECOGNIZED -> error("Invalid bucket_type: $bucketType")
@@ -53,7 +55,8 @@ class GcsStorageFactory(
   }
 }
 
-private fun fingerprint(data: String): String {
-  val digest = MessageDigest.getInstance("SHA-512").digest(data.toByteArray(Charsets.UTF_8))
-  return HexString(digest.toByteString()).value.toLowerCase()
+private fun fingerprint(data: String): ByteString {
+  return MessageDigest.getInstance("SHA-512")
+    .digest(data.toByteArray(Charsets.UTF_8))
+    .toByteString()
 }
