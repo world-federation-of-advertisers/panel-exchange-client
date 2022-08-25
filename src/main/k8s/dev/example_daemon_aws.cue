@@ -63,9 +63,6 @@ import "strings"
 		"--tls-cert-file=\(clientTls.certFile)",
 		"--tls-key-file=\(clientTls.keyFile)",
 		"--tink-key-uri=\(tinkKeyUri)",
-		"--privateca-ca-name=\(privateCa.name)",
-		"--privateca-pool-id=\(privateCa.poolId)",
-		"--privateca-ca-location=\(privateCa.location)",
 	]
 }
 _exchangeDaemonConfig: #ExchangeDaemonConfig
@@ -108,9 +105,9 @@ deployments: {
 						"--x509-organization=SomeOrganization",
 						"--x509-dns-name=example.com",
 						"--x509-valid-days=365",
-						"--privateca-project-id=" + #GCloudProject,
 						"--s3-region=us-west-1",
 						"--s3-storage-bucket=tf-ocmm-test-bucket",
+						"--certificate-authority-arn=",
 			]
 		}
 	}
