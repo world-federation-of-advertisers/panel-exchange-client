@@ -61,3 +61,12 @@ variable "path_to_edp_cue" {
   type = string
   default = "../k8s/dev/example_edp_daemon_aws.cue"
 }
+
+variable "path_to_edp_cue_base" {
+  type = string
+  default = "../k8s/dev/example_daemon_aws.cue"
+}
+
+variable "ca_arn" {
+  type = string
+}

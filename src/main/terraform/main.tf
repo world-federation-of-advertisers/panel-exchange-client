@@ -40,4 +40,5 @@ module "docker_config" {
   k8s_account_service_name = "edp-workflow"
   cluster_name = module.aws_eks_cluster.cluster_name
   kms_key_id = module.other_resources.kms_key_id
+  ca_arn = module.other_resources.ca_sub_arn
 }
