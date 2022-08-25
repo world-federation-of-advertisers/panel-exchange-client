@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+data "aws_partition" "current" {}
+
 variable "bucket_name" {
   description = "The name of the S3 bucket."
   type = string
