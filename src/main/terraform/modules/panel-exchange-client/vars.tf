@@ -14,12 +14,30 @@
 
 data "aws_partition" "current" {}
 
-variable "bucket_name" {
-  description = "The name of the S3 bucket."
-  type = string
+variable "cluster_config" {
+  type = object({
+    availability_zones_count = number
+    project = string
+    vpc_cidr = string
+    subnet_cidr_bits = number
+  })
 }
 
-variable "kms_alias_name" {
-  description = "The name of the alias for the KMS key."
-  type = string
+variable "resource_config" {
+  type = object({
+    bucket_name = string
+    kms_alias_name = string
+  })
+}
+
+variable "k8s_config" {
+  type = object({
+    use_test_secrets = bool
+    image_name = string
+    build_target_name = string
+    manifest_name = string
+    repository_name = string
+    path_to_secrets = string
+    k8s_account_service_name = string
+  })
 }
