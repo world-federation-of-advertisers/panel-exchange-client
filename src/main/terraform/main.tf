@@ -12,33 +12,28 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-module "aws_eks_cluster" {
-  source = "./modules/eks"
+module "panel_exchange_client" {
+  source = "./modules/panel-exchange-client"
 
-  availability_zones_count = 2
-  project = "tftest"
-  vpc_cidr = "10.0.0.0/16"
-  subnet_cidr_bits = 8
-}
+  cluster_config = {
+    availability_zones_count = 2
+    project = "tftest"
+    vpc_cidr = "10.0.0.0/16"
+    subnet_cidr_bits = 8
+  }
 
-module "other_resources" {
-  source = "./modules/other"
+  resource_config = {
+    bucket_name = "tf-test-blob-storage"
+    kms_alias_name = "my-key-alias"
+  }
 
-  bucket_name = "tf-test-blob-storage"
-  kms_alias_name = "my-key-alias"
-}
-
-module "docker_config" {
-  source = "./modules/docker"
-
-  use_test_secrets = true
-  image_name = "push_aws_example_daemon_image"
-  build_target_name = "example_edp_daemon_aws"
-  manifest_name = "example_edp_daemon_aws.yaml"
-  repository_name = "example-panel-exchange-daemon"
-  path_to_secrets = "../k8s/testing/secretfiles"
-  k8s_account_service_name = "edp-workflow"
-  cluster_name = module.aws_eks_cluster.cluster_name
-  kms_key_id = module.other_resources.kms_key_id
-  ca_arn = module.other_resources.ca_sub_arn
+  k8s_config = {
+    use_test_secrets = true
+    image_name = "push_aws_example_daemon_image"
+    build_target_name = "example_edp_daemon_aws"
+    manifest_name = "example_edp_daemon_aws.yaml"
+    repository_name = "example-panel-exchange-daemon"
+    path_to_secrets = "../k8s/testing/secretfiles"
+    k8s_account_service_name = "edp-workflow"
+  }
 }

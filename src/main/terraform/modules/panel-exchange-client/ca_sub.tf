@@ -13,8 +13,8 @@ resource "aws_acmpca_certificate" "subordinate" {
   template_arn = "arn:${data.aws_partition.current.partition}:acm-pca:::template/SubordinateCACertificate_PathLen0/V1"
 
   validity {
-    type  = "YEARS"
-    value = 1
+    type  = "DAYS"
+    value = 364
   }
 }
 
