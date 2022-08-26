@@ -13,8 +13,8 @@ resource "aws_acmpca_certificate" "root_certificate" {
   template_arn = "arn:${data.aws_partition.current.partition}:acm-pca:::template/RootCACertificate/V1"
 
   validity {
-    type  = "YEARS"
-    value = 1
+    type  = "DAYS"
+    value = 365
   }
 }
 

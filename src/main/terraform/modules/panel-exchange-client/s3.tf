@@ -12,11 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-output "kms_key_id" {
-  value = aws_kms_key.k8s_key.key_id
+resource "aws_s3_bucket" "blob_storage" {
+  bucket = var.resource_config.bucket_name
 }
-
-output "ca_sub_arn" {
-  value = aws_acmpca_certificate_authority.subordinate.arn
-}
-
