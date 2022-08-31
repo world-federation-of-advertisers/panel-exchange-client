@@ -27,6 +27,8 @@ variable "resource_config" {
   type = object({
     bucket_name = string
     kms_alias_name = string
+    ca_org_name = string
+    ca_common_name = string
   })
 }
 

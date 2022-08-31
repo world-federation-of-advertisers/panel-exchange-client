@@ -22,11 +22,13 @@ resource "aws_acmpca_certificate_authority" "subordinate" {
   type = "SUBORDINATE"
 
   certificate_authority_configuration {
-    key_algorithm     = "EC_prime256v1"
+    key_algorithm     = "RSA_2048"
     signing_algorithm = "SHA256WITHECDSA"
 
     subject {
-      common_name = "sub.example.com"
+      organization = var.resource_config.ca_org_name
+      common_name = var.resource_config.ca_common_name
+      # can add other parameters later
     }
   }
 }
