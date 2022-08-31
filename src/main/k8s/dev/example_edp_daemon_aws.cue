@@ -24,7 +24,7 @@ _exchangeDaemonConfig: {
 		certFile: "/var/run/secrets/files/edp1_tls.pem"
 		keyFile:  "/var/run/secrets/files/edp1_tls.key"
 	}
-	tinkKeyUri: "aws-kms://arn:aws:kms:us-west-1:010295286036:key/739af3ea-8265-4609-bd82-2bf20885885c"
+	tinkKeyUri: ""
 	privateCa: {
 		name:     "20220302-51i-yj4"
 		poolId:   "EdpTestPool"

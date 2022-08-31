@@ -59,6 +59,7 @@ resource "null_resource" "configure_cluster" {
   # update the CUE file to have the right AWS KMS key and CA arn
   provisioner "local-exec" {
     command = <<EOF
+sed -i 's|#ContainerRegistryPrefix: "{account_id}.dkr.ecr.{region}.amazonaws.com"|#ContainerRegistryPrefix: "${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com"|' ${var.path_to_edp_cue_base}
 sed -i 's|tinkKeyUri: ""|tinkKeyUri: "aws-kms://arn:aws:kms:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:key/${var.kms_key_id}"|' ${var.path_to_edp_cue}
 sed -i 's|"--certificate-authority-arn="|"--certificate-authority-arn=${var.ca_arn}"|' ${var.path_to_edp_cue_base}
     EOF

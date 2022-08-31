@@ -18,7 +18,7 @@ import "strings"
 
 #GCloudProject:           "halo-cmm-dev"
 #KingdomPublicApiTarget:  "public.kingdom.dev.halo-cmm.org:8443"
-#ContainerRegistryPrefix: "010295286036.dkr.ecr.us-west-1.amazonaws.com"
+#ContainerRegistryPrefix: "{account_id}.dkr.ecr.{region}.amazonaws.com"
 #DefaultResourceConfig: {
 	replicas:  1
 	resources: #ResourceRequirements & {

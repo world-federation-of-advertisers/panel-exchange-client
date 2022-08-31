@@ -25,6 +25,8 @@ module "panel_exchange_client" {
   resource_config = {
     bucket_name = "tf-test-blob-storage"
     kms_alias_name = "my-key-alias"
+    ca_org_name = "WFA"
+    ca_common_name = "WFA AWS MP CA"
   }
 
   k8s_config = {
