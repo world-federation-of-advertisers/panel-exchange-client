@@ -8,7 +8,7 @@ resource "aws_acmpca_certificate_authority_certificate" "root_ca_certificate" {
 resource "aws_acmpca_certificate" "root_certificate" {
   certificate_authority_arn   = aws_acmpca_certificate_authority.root_ca.arn
   certificate_signing_request = aws_acmpca_certificate_authority.root_ca.certificate_signing_request
-  signing_algorithm           = "SHA256WITHECDSA"
+  signing_algorithm           = "SHA256WITHRSA"
 
   template_arn = "arn:${data.aws_partition.current.partition}:acm-pca:::template/RootCACertificate/V1"
 
@@ -23,7 +23,7 @@ resource "aws_acmpca_certificate_authority" "root_ca" {
 
   certificate_authority_configuration {
     key_algorithm     = "RSA_2048"
-    signing_algorithm = "SHA256WITHECDSA"
+    signing_algorithm = "SHA256WITHRSA"
 
     subject {
       organization = var.resource_config.ca_org_name
