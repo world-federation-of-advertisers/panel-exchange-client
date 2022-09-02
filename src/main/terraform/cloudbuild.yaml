@@ -1,0 +1,13 @@
+steps:
+  - id: 'Build'
+    name: 'gcr.io/halo-cmm-dev/bazel'
+    entrypoint: /bin/sh
+    args:
+    - '-c'
+    - |
+      cd Repos/panel-exchange-client && \
+      git pull
+      bazel run src/main/docker/push_google_cloud_example_daemon_image -c opt --define container_registry=gcr.io --define image_repo_prefix=halo-cmm-dev/tf_test
+timeout: 3600s
+options:
+  machineType: 'E2_HIGHCPU_32'
