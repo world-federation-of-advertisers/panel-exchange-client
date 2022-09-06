@@ -14,7 +14,7 @@ resource "aws_acmpca_certificate" "subordinate" {
 
   validity {
     type  = "DAYS"
-    value = 364
+    value = 1826 # 5 years minus 1 day to not get a validation error based on the root
   }
 }
 

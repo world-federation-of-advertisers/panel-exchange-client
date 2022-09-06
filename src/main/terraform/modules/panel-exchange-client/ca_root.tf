@@ -14,7 +14,7 @@ resource "aws_acmpca_certificate" "root_certificate" {
 
   validity {
     type  = "DAYS"
-    value = 365
+    value = 1827 # 5 years rounded up
   }
 }
 
