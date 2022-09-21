@@ -14,13 +14,13 @@
 
 terraform {
   backend "s3" {
-    bucket = "tf-panel-exchange-test-bucket"
+    bucket = "tf-panel-exchange-test-bucket2"
     key = "panel-exchange.tfstate"
-    region = "us-west-1"
+    region = "us-west-2"
     encrypt = true
   }
 }
 
 provider "aws" {
-  region = "us-west-1"
+  region = "us-west-2"
 }

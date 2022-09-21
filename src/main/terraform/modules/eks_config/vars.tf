@@ -57,16 +57,27 @@ variable "kms_key_id" {
   type = string
 }
 
-variable "path_to_edp_cue" {
+variable "path_to_cue" {
   type = string
-  default = "../k8s/dev/example_edp_daemon_aws.cue"
-}
-
-variable "path_to_edp_cue_base" {
-  type = string
-  default = "../k8s/dev/example_daemon_aws.cue"
+  default = "../k8s/dev/example_mp_daemon_aws.cue"
 }
 
 variable "ca_arn" {
+  type = string
+}
+
+variable "ca_common_name" {
+  type = string
+}
+
+variable "ca_org_name" {
+  type = string
+}
+
+variable "ca_dns" {
+  type = string
+}
+
+variable "kingdom_endpoint" {
   type = string
 }

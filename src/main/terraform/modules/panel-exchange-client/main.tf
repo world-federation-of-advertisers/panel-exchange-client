@@ -34,4 +34,8 @@ module "docker_config" {
   cluster_name = module.aws_eks_cluster.cluster_name
   kms_key_id = aws_kms_key.k8s_key.key_id
   ca_arn = aws_acmpca_certificate_authority.subordinate.arn
+  ca_dns = "example.com"
+  ca_common_name = var.resource_config.ca_common_name
+  ca_org_name = var.resource_config.ca_org_name
+  kingdom_endpoint = "public.kingdom.dev.halo-cmm.org:8443"
 }

@@ -16,9 +16,6 @@ package k8s
 
 import "strings"
 
-#GCloudProject:           "halo-cmm-dev"
-#KingdomPublicApiTarget:  "public.kingdom.dev.halo-cmm.org:8443"
-#ContainerRegistryPrefix: "{account_id}.dkr.ecr.{region}.amazonaws.com"
 #DefaultResourceConfig: {
 	replicas:  1
 	resources: #ResourceRequirements & {
@@ -48,24 +45,30 @@ import "strings"
 
 	tinkKeyUri: string
 
-	privateCa: {
-		name:     string
-		poolId:   string
-		location: string
-	}
-
 	_partyId: strings.SplitAfter(partyName, "/")[1]
 
 	args: [
 		"--id=\(_partyId)",
 		"--party-type=\(partyType)",
-//		"--google-cloud-storage-bucket=\(cloudStorageBucket)",
 		"--tls-cert-file=\(clientTls.certFile)",
 		"--tls-key-file=\(clientTls.keyFile)",
 		"--tink-key-uri=\(tinkKeyUri)",
 	]
 }
+
+#DefaultAwsConfig: {
+	region:			string
+	storageBucket:		string
+	certArn:		string
+	kingdomApi:		string
+	commonName:		string
+	orgName:		string
+	dns:			string
+	containerPrefix:	string
+}
+
 _exchangeDaemonConfig: #ExchangeDaemonConfig
+_defaultAwsConfig: #DefaultAwsConfig
 
 objectSets: [deployments, networkPolicies]
 
@@ -87,27 +90,27 @@ deployments: {
 			// nodeSelector: "iam.gke.io/gke-metadata-server-enabled": "true"
 		}
 		_podSpec: _container: {
-			image:           #ContainerRegistryPrefix + "/example-panel-exchange-daemon"
+			image:           _defaultAwsConfig.containerPrefix + "/example-panel-exchange-daemon"
 			imagePullPolicy: "Always"
 			args:            _exchangeDaemonConfig.args + [
 						"--cert-collection-file=/var/run/secrets/files/trusted_certs.pem",
 						"--blob-size-limit-bytes=1000000000",
 						"--storage-signing-algorithm=EC",
 						"--task-timeout=24h",
-						"--exchange-api-target=" + #KingdomPublicApiTarget,
+						"--exchange-api-target=" + _defaultAwsConfig.kingdomApi,
 						"--exchange-api-cert-host=localhost",
 						"--debug-verbose-grpc-client-logging=\(#DebugVerboseGrpcLogging)",
 						"--channel-shutdown-timeout=3s",
 						"--polling-interval=1m",
 						"--preprocessing-max-byte-size=1000000",
 						"--preprocessing-file-count=1000",
-						"--x509-common-name=SomeCommonName",
-						"--x509-organization=SomeOrganization",
-						"--x509-dns-name=example.com",
+						"--x509-common-name=" + _defaultAwsConfig.commonName,
+						"--x509-organization=" + _defaultAwsConfig.orgName,
+						"--x509-dns-name=" + _defaultAwsConfig.dns,
 						"--x509-valid-days=365",
-						"--s3-region=us-west-1",
-						"--s3-storage-bucket=tf-ocmm-test-bucket",
-						"--certificate-authority-arn=",
+						"--s3-region=" + _defaultAwsConfig.region,
+						"--s3-storage-bucket=" + _defaultAwsConfig.storageBucket,
+						"--certificate-authority-arn=" + _defaultAwsConfig.certArn,
 			]
 		}
 	}

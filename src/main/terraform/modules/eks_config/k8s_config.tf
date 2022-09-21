@@ -59,9 +59,15 @@ resource "null_resource" "configure_cluster" {
   # update the CUE file to have the right AWS KMS key and CA arn
   provisioner "local-exec" {
     command = <<EOF
-sed -i 's|#ContainerRegistryPrefix: "{account_id}.dkr.ecr.{region}.amazonaws.com"|#ContainerRegistryPrefix: "${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com"|' ${var.path_to_edp_cue_base}
-sed -i 's|tinkKeyUri: ""|tinkKeyUri: "aws-kms://arn:aws:kms:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:key/${var.kms_key_id}"|' ${var.path_to_edp_cue}
-sed -i 's|"--certificate-authority-arn="|"--certificate-authority-arn=${var.ca_arn}"|' ${var.path_to_edp_cue_base}
+sed -i -E 's/containerPrefix: “.*”/containerPrefix: "${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com"/' ${var.path_to_cue}
+sed -i -E 's/tinkKeyUri: ".*"/tinkKeyUri: "aws-kms://arn:aws:kms:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:key/${var.kms_key_id}"/' ${var.path_to_cue}
+sed -i -E 's/region: ".*"/region: "${data.aws_region.current.name}"/' ${var.path_to_cue}
+sed -i -E 's/storageBucket: ".*"/storageBucket: "hello-storage"/' ${var.path_to_cue}
+sed -i -E 's/kingdomApi: ".*"/kingdomApi: "${var.kingdom_endpoint}"/' ${var.path_to_cue}
+sed -i -E 's/certArn: ".*"/certArn: "${var.ca_arn}"/' ${var.path_to_cue}
+sed -i -E 's/commonName: ".*"/commonName: "${var.ca_common_name}"/' ${var.path_to_cue}
+sed -i -E 's/orgName: ".*"/orgName: "${var.ca_org_name}"/' ${var.path_to_cue}
+sed -i -E 's/dns: ".*"/dns: "${var.ca_dns}"/' ${var.path_to_cue}
     EOF
   }
 

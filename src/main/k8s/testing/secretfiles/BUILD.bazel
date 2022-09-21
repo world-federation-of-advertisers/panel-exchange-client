@@ -14,6 +14,8 @@ genrule(
 )
 
 SECRET_FILES = [
+    "mp2_tls.key",
+    "mp2_tls.pem",
     "edp1_tls.key",
     "edp1_tls.pem",
     "health_probe_tls.key",
