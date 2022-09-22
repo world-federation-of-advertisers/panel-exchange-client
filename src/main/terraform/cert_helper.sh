@@ -1,13 +1,22 @@
 #!/bin/bash
 set -e
 
-mp_id="Wt5MH8egH4w"
-passphrase="1234"
+# These get auto-populated from Terraform
+# If they get modified outside of the initial terraform apply, then you may have to manually update these
+cert_arn=""
+path_to_cue_file_wext=""
+path_to_secrets=""
 
-cert_arn="arn:aws:acm-pca:us-west-2:010295286036:certificate-authority/4513aa7e-ab74-4ab3-aa27-4caaa3ae5f3a"
-identifier="mpx"
-path_to_cue_file="src/main/k8s/dev/example_mp_daemon_aws"
-path_to_secrets="src/main/k8s/testing/secretfiles"
+path_to_cue_file=${path_to_cue_file_wext%.*}
+
+echo "Enter a unique identifier for your panel exchange certs:"
+read identifier
+
+echo "Enter the id assigned to you by Kingdom:"
+read mp_id
+
+echo "Enter a passphrase for generating certificates:"
+read -s passphrase
 
 # request certificate
 echo "||| Generate certificate request"
@@ -43,7 +52,7 @@ aws acm export-certificate \
 
 # Change private key format
 echo "||| Reformat private key to pkcs8"
-openssl pkcs8 -in $path_to_secrets/${identifier}_tls.enc.key -out $path_to_secrets/${identifier}_tls.key
+openssl pkcs8 -in $path_to_secrets/${identifier}_tls.enc.key -out $path_to_secrets/${identifier}_tls.key -passin pass:$passphrase
 
 # Update BUILD file
 echo "||| Update BUILD file"
@@ -80,7 +89,7 @@ kubectl apply -k $path_to_secrets
 
 # Apply Kustomization
 echo "||| Apply kustomization"
-str=$(bazel run $path_to_secrets:apply_kustomization)
+str=$(bazel run $path_to_secrets/apply_kustomization)
 regex="(certs-and-configs-\S*)"
 [[ $str =~ $regex ]]
 secret_name=${BASH_REMATCH[0]}
@@ -90,8 +99,14 @@ echo "||| Rebuild the manifest"
 bazel build //src/main/k8s/dev:example_mp_daemon_aws --define=mp_name=modelProviders/$mp_id --define=mp_k8s_secret_name=$secret_name
 
 # Apply the manifest to K8S
-kubectl apply -f bazel-bin/$path_to_cue_file.yaml
+# Fix the path since it's likely relative:
+#   https://stackoverflow.com/questions/16109353/strip-double-dots-from-path-in-bash
+echo "||| Apply the manifest to K8s"
+bazel_cue_path=$(sed -e 's|/\./|/|g' -e ':a' -e 's|\.\./\.\./|../..../|g' -e 's|^[^/]*/\.\.\/||' -e 't a' -e 's|/[^/]*/\.\.\/|/|' -e 't a' -e 's|\.\.\.\./|../|g' -e 't a' <<< \
+  "bazel-bin/src/main/terraform/$path_to_cue_file.yaml")
+kubectl apply -f ../../../$bazel_cue_path
 
 # Redploy the cluster
+echo "||| Redploying the cluster"
 kubectl rollout restart deployment example-panel-exchange-daemon-deployment
 

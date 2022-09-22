@@ -38,5 +38,6 @@ module "panel_exchange_client" {
     path_to_secrets = "../k8s/testing/secretfiles"
     path_to_cue = "../k8s/dev/example_mp_daemon_aws.cue"
     k8s_account_service_name = "mp-workflow"
+    kingdom_endpoint = "public.kingdom.dev.halo-cmm.org:8443"
   }
 }

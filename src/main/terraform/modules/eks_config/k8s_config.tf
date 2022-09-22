@@ -14,7 +14,10 @@
 
 resource "null_resource" "configure_local_k8s_context" {
   provisioner "local-exec" {
-    command = "aws eks update-kubeconfig --region ${data.aws_region.current.name} --name ${var.cluster_name}"
+    command = <<EOF
+aws eks update-kubeconfig --region ${data.aws_region.current.name} --name ${var.cluster_name}
+sleep 15
+    EOF
   }
 }
 
@@ -31,8 +34,6 @@ echo "secretGenerator:" > ${var.path_to_secrets}/kustomization.yaml
 echo "- name: certs-and-configs" >> ${var.path_to_secrets}/kustomization.yaml
 echo "  Files:" >> ${var.path_to_secrets}/kustomization.yaml
 echo "  - trusted_certs.pem" >> ${var.path_to_secrets}/kustomization.yaml
-echo "  - edp1_tls.pem" >> ${var.path_to_secrets}/kustomization.yaml
-echo "  - edp1_tls.key" >> ${var.path_to_secrets}/kustomization.yaml
     EOF
   }
 }
@@ -45,7 +46,10 @@ resource "null_resource" "configure_cluster" {
 
   # login to Docker on AWS
   provisioner "local-exec" {
-     command = "aws ecr get-login-password --region ${data.aws_region.current.name} | docker login --username AWS --password-stdin ${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.curren>
+    command = <<EOF
+aws ecr get-login-password --region ${data.aws_region.current.name} | \
+  docker login --username AWS --password-stdin ${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com
+    EOF
   }
 
   # update the CUE file to have the right AWS KMS key and CA arn
@@ -60,6 +64,15 @@ sed -i -E 's|certArn: ".*"|certArn: "${var.ca_arn}"|' ${var.path_to_cue}
 sed -i -E 's|commonName: ".*"|commonName: "${var.ca_common_name}"|' ${var.path_to_cue}
 sed -i -E 's|orgName: ".*"|orgName: "${var.ca_org_name}"|' ${var.path_to_cue}
 sed -i -E 's|dns: ".*"|dns: "${var.ca_dns}"|' ${var.path_to_cue}
+    EOF
+  }
+
+  # update re-config script
+  provisioner "local-exec" {
+    command = <<EOF
+sed -i -E 's|cert_arn=".*"|cert_arn="${var.ca_arn}"|' cert_helper.sh
+sed -i -E 's|path_to_cue_file_wext=".*"|path_to_cue_file_wext="${var.path_to_cue}"|' cert_helper.sh
+sed -i -E 's|path_to_secrets=".*"|path_to_secrets="${var.path_to_secrets}"|' cert_helper.sh
     EOF
   }
 
