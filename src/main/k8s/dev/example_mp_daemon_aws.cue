@@ -15,25 +15,25 @@
 package k8s
 
 _exchangeDaemonConfig: {
-	secretName:         string @tag("secret_name")
-	partyName:          string @tag("party_name")
-	partyType:          "MODEL_PROVIDER"
-	cloudStorageBucket: "halo-edp-test-bucket"
-	serviceAccountName: "mp-workflow"
-	clientTls: {
-		certFile: "/var/run/secrets/files/mp2_tls.pem"
-		keyFile:  "/var/run/secrets/files/mp2_tls.key"
-	}
-	tinkKeyUri: "aws-kms://arn:aws:kms:us-west-1:010295286036:key/3c682a91-26aa-41e4-85b1-192cd2d4504b"
+        secretName:         string @tag("secret_name")
+        partyName:          string @tag("party_name")
+        partyType:          "MODEL_PROVIDER"
+        cloudStorageBucket: "halo-edp-test-bucket"
+        serviceAccountName: "mp-workflow"
+        clientTls: {
+                certFile: ""
+                keyFile: ""
+        }
+        tinkKeyUri: ""
 }
 
 _defaultAwsConfig: {
-	containerPrefix: "hello container"
-	region: "hello region"
-	storageBucket: "my-bucket"
-	kingdomApi: "my kingdom api"
-	certArn: "my-cert-arn"
-        commonName: "SomeCommonName"
-        orgName: "SomeOrganization"
-        dns: "example.com"
+        containerPrefix: ""
+        region: ""
+        storageBucket: ""
+        kingdomApi: ""
+        certArn: ""
+        commonName: ""
+        orgName: ""
+        dns: ""
 }

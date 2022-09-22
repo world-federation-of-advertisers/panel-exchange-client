@@ -40,6 +40,7 @@ variable "k8s_config" {
     manifest_name = string
     repository_name = string
     path_to_secrets = string
+    path_to_cue = string
     k8s_account_service_name = string
   })
 }

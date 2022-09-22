@@ -17,7 +17,7 @@ module "panel_exchange_client" {
 
   cluster_config = {
     availability_zones_count = 2
-    project = "tftest"
+    project = "tftest2"
     vpc_cidr = "10.0.0.0/16"
     subnet_cidr_bits = 8
   }
@@ -32,10 +32,11 @@ module "panel_exchange_client" {
   k8s_config = {
     use_test_secrets = true
     image_name = "push_aws_example_daemon_image"
-    build_target_name = "example_edp_daemon_aws"
-    manifest_name = "example_edp_daemon_aws.yaml"
+    build_target_name = "example_mp_daemon_aws"
+    manifest_name = "example_mp_daemon_aws.yaml"
     repository_name = "example-panel-exchange-daemon"
     path_to_secrets = "../k8s/testing/secretfiles"
-    k8s_account_service_name = "edp-workflow"
+    path_to_cue = "../k8s/dev/example_mp_daemon_aws.cue"
+    k8s_account_service_name = "mp-workflow"
   }
 }

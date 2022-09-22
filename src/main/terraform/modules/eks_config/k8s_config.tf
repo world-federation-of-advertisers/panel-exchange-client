@@ -4,7 +4,7 @@
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
-#      http://www.apache.org/licenses/LICENSE-2.0
+#                     http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -19,12 +19,9 @@ resource "null_resource" "configure_local_k8s_context" {
 }
 
 resource "null_resource" "collect_k8s_secrets" {
-  count = var.use_test_secrets ? 0 : 1
   provisioner "local-exec" {
     command = <<EOF
-cp -r ../k8s/testing/secretfiles ${var.path_to_secrets}
-
-cat ${var.path_to_secrets}/*_root.pem > ${var.path_to_secrets}/all_root_certs.pem
+cat ${var.path_to_secrets}/*_root.pem > ${var.path_to_secrets}/trusted_certs.pem
     EOF
   }
 
@@ -36,14 +33,9 @@ echo "  Files:" >> ${var.path_to_secrets}/kustomization.yaml
 echo "  - trusted_certs.pem" >> ${var.path_to_secrets}/kustomization.yaml
 echo "  - edp1_tls.pem" >> ${var.path_to_secrets}/kustomization.yaml
 echo "  - edp1_tls.key" >> ${var.path_to_secrets}/kustomization.yaml
-
-aws eks update-kubeconfig --region ${data.aws_region.current.name} --name tftest-cluster
-
-kubectl apply -k ${var.path_to_secrets}
     EOF
   }
 }
-
 
 resource "null_resource" "configure_cluster" {
   depends_on = [
@@ -53,21 +45,21 @@ resource "null_resource" "configure_cluster" {
 
   # login to Docker on AWS
   provisioner "local-exec" {
-     command = "aws ecr get-login-password --region ${data.aws_region.current.name} | docker login --username AWS --password-stdin ${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com"
+     command = "aws ecr get-login-password --region ${data.aws_region.current.name} | docker login --username AWS --password-stdin ${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.curren>
   }
 
   # update the CUE file to have the right AWS KMS key and CA arn
   provisioner "local-exec" {
     command = <<EOF
-sed -i -E 's/containerPrefix: “.*”/containerPrefix: "${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com"/' ${var.path_to_cue}
-sed -i -E 's/tinkKeyUri: ".*"/tinkKeyUri: "aws-kms://arn:aws:kms:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:key/${var.kms_key_id}"/' ${var.path_to_cue}
-sed -i -E 's/region: ".*"/region: "${data.aws_region.current.name}"/' ${var.path_to_cue}
-sed -i -E 's/storageBucket: ".*"/storageBucket: "hello-storage"/' ${var.path_to_cue}
-sed -i -E 's/kingdomApi: ".*"/kingdomApi: "${var.kingdom_endpoint}"/' ${var.path_to_cue}
-sed -i -E 's/certArn: ".*"/certArn: "${var.ca_arn}"/' ${var.path_to_cue}
-sed -i -E 's/commonName: ".*"/commonName: "${var.ca_common_name}"/' ${var.path_to_cue}
-sed -i -E 's/orgName: ".*"/orgName: "${var.ca_org_name}"/' ${var.path_to_cue}
-sed -i -E 's/dns: ".*"/dns: "${var.ca_dns}"/' ${var.path_to_cue}
+sed -i -E 's|containerPrefix: ".*"|containerPrefix: "${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com"|' ${var.path_to_cue}
+sed -i -E 's|tinkKeyUri: ".*"|tinkKeyUri: "aws-kms://arn:aws:kms:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:key/${var.kms_key_id}"|' ${var.path_to_cue}
+sed -i -E 's|region: ".*"|region: "${data.aws_region.current.name}"|' ${var.path_to_cue}
+sed -i -E 's|storageBucket: ".*"|storageBucket: "hello-storage"|' ${var.path_to_cue}
+sed -i -E 's|kingdomApi: ".*"|kingdomApi: "${var.kingdom_endpoint}"|' ${var.path_to_cue}
+sed -i -E 's|certArn: ".*"|certArn: "${var.ca_arn}"|' ${var.path_to_cue}
+sed -i -E 's|commonName: ".*"|commonName: "${var.ca_common_name}"|' ${var.path_to_cue}
+sed -i -E 's|orgName: ".*"|orgName: "${var.ca_org_name}"|' ${var.path_to_cue}
+sed -i -E 's|dns: ".*"|dns: "${var.ca_dns}"|' ${var.path_to_cue}
     EOF
   }
 
@@ -85,21 +77,17 @@ sed -i -E 's/dns: ".*"/dns: "${var.ca_dns}"/' ${var.path_to_cue}
   # build and apply secrets
   provisioner "local-exec" {
     command = <<EOF
-if [[ var.use_test_secrets -eq 1 ]]
-then
-  str=$(kubectl apply -k ${var.path_to_secrets})
-else
-  str=$(bazel run //src/main/k8s/testing/secretfiles:apply_kustomization)
-fi
+str=$(kubectl apply -k ${var.path_to_secrets})
 
 regex="(certs-and-configs-\S*)"
 [[ $str =~ $regex ]]
 secret_name=$${BASH_REMATCH[0]}
 
-bazel build //src/main/k8s/dev:${var.build_target_name} --define=edp_name=dataProviders/c-8OD6eW4x8 --define=edp_k8s_secret_name=$secret_name
+bazel build //src/main/k8s/dev:${var.build_target_name} --define=mp_name=dataProviders/c-8OD6eW4x8 --define=mp_k8s_secret_name=$secret_name
 
 kubectl apply -f ../../../bazel-bin/src/main/k8s/dev/${var.manifest_name}
     EOF
     interpreter = ["bash", "-c"]
   }
 }
+
