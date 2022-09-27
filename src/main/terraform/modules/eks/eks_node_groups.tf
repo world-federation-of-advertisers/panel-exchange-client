@@ -55,6 +55,11 @@ resource "aws_iam_role" "node_role" {
 POLICY
 }
 
+resource "aws_iam_role_policy_attachment" "node_AmazonCloudWatchPolicy" {
+  policy_arn = "arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy"
+  role = aws_iam_role.node_role.name
+}
+
 resource "aws_iam_role_policy_attachment" "node_AmazonEKSWorkerNodePolicy" {
   policy_arn = "arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy"
   role = aws_iam_role.node_role.name
