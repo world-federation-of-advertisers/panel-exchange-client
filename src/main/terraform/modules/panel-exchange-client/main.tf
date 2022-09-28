@@ -38,4 +38,5 @@ module "docker_config" {
   ca_common_name = var.resource_config.ca_common_name
   ca_org_name = var.resource_config.ca_org_name
   kingdom_endpoint = var.k8s_config.kingdom_endpoint
+  create_metrics = var.k8s_config.create_metrics
 }

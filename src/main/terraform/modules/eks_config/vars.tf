@@ -81,3 +81,8 @@ variable "ca_dns" {
 variable "kingdom_endpoint" {
   type = string
 }
+
+variable "create_metrics" {
+  type = bool
+  default = false
+}
