@@ -1,0 +1,24 @@
+version: 0.2
+
+phases:
+#  install:
+#    commands:
+#      - curl -s -qL -o terraform_install.zip https://releases.hashicorp.com/terraform/0.11.13/terraform_0.11.13_linux_amd64.zip
+#      - unzip terraform_install.zip -d /usr/bin/
+#      - chmod +x /usr/bin/terraform
+#    finally:
+#      - terraform --version
+#  pre_build:
+#    commands:
+#      - echo Entered the pre_build phase...
+#    finally:
+#      - echo This always runs even if the login command fails
+  build:
+    commands:
+      - echo Entered the build phase...
+      - bazel build //src/main/k8s/dev:example_mp_daemon_aws --define=mp_name=modelProviders/abcxyz --define=mp_k8s_secret_name=certs-and-configs-abc1234
+    finally:
+      - echo This always runs even if the install command fails
+#  post_build:
+#    commands:
+#      - echo Entered the post_build phase...
