@@ -71,7 +71,7 @@ sed -i -E 's|dns: ".*"|dns: "${var.ca_dns}"|' ${var.path_to_cue}
   # update re-config script
   provisioner "local-exec" {
     command = <<EOF
-sed -i -E 's|cert_arn=".*"|cert_arn="${var.ca_arn}"|' cert_helper.sh
+sed -i -E 's|cert_arn=".*"|cert_arn="${aws_acmpca_certificate_authority.root_ca.arn}"|' cert_helper.sh
 sed -i -E 's|path_to_cue_file_wext=".*"|path_to_cue_file_wext="${var.path_to_cue}"|' cert_helper.sh
 sed -i -E 's|path_to_secrets=".*"|path_to_secrets="${var.path_to_secrets}"|' cert_helper.sh
     EOF
