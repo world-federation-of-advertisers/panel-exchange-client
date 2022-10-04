@@ -55,7 +55,7 @@ aws ecr get-login-password --region ${data.aws_region.current.name} | \
   # update the CUE file to have the right AWS KMS key and CA arn
   provisioner "local-exec" {
     command = <<EOF
-sed -i -E 's|serviceAccountName: ".*"|serviceAccountName: "${var.service_account_name}"|' ${var.path_to_cue}
+sed -i -E 's|serviceAccountName: ".*"|serviceAccountName: "${var.k8s_account_service_name}"|' ${var.path_to_cue}
 sed -i -E 's|containerPrefix: ".*"|containerPrefix: "${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com"|' ${var.path_to_cue}
 sed -i -E 's|tinkKeyUri: ".*"|tinkKeyUri: "${aws_kms_key.k8s_key.arn}"|' ${var.path_to_cue}
 sed -i -E 's|region: ".*"|region: "${data.aws_region.current.name}"|' ${var.path_to_cue}
