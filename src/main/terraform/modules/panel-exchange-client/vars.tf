@@ -79,14 +79,9 @@ variable "k8s_account_service_name" {
   type = string
 }
 
-
 variable "path_to_cue" {
   type = string
   default = "../k8s/dev/example_mp_daemon_aws.cue"
-}
-
-variable "ca_arn" {
-  type = string
 }
 
 variable "ca_common_name" {
