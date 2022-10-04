@@ -18,6 +18,9 @@ data "aws_availability_zones" "available" {
   state = "available"
 }
 
+data "aws_caller_identity" "current" {}
+
+data "aws_partition" "current" {}
 
 # EKS vars
 variable "availability_zones_count" {
