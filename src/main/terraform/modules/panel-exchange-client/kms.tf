@@ -18,6 +18,6 @@ resource "aws_kms_key" "k8s_key" {
 }
 
 resource "aws_kms_alias" "k8s_key_alias" {
-  name          = "alias/${var.resource_config.kms_alias_name}"
+  name          = "alias/${var.kms_alias_name}"
   target_key_id = aws_kms_key.k8s_key.key_id
 }

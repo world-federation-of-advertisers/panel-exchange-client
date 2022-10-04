@@ -13,5 +13,5 @@
 # limitations under the License.
 
 resource "aws_s3_bucket" "blob_storage" {
-  bucket = var.resource_config.bucket_name
+  bucket = var.bucket_name
 }

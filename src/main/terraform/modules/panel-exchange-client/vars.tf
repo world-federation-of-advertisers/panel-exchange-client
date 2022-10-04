@@ -12,36 +12,104 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-data "aws_partition" "current" {}
+data "aws_region" "current" {}
 
-variable "cluster_config" {
-  type = object({
-    availability_zones_count = number
-    project = string
-    vpc_cidr = string
-    subnet_cidr_bits = number
-  })
+data "aws_availability_zones" "available" {
+  state = "available"
 }
 
-variable "resource_config" {
-  type = object({
-    bucket_name = string
-    kms_alias_name = string
-    ca_org_name = string
-    ca_common_name = string
-  })
+
+# EKS vars
+variable "availability_zones_count" {
+  description = "The number of AZs."
+  type = number
+  default = 2
 }
 
-variable "k8s_config" {
-  type = object({
-    use_test_secrets = bool
-    image_name = string
-    build_target_name = string
-    manifest_name = string
-    repository_name = string
-    path_to_secrets = string
-    path_to_cue = string
-    k8s_account_service_name = string
-    kingdom_endpoint = string
-  })
+variable "project" {
+  description = "Name to be used on all the resources asan identifier."
+  type = string
+  default = "tftest"
+}
+
+variable "vpc_cidr" {
+  description = "The CIDR block for the VPC. Default is valid, but should be overridden."
+  type = string
+  default = "10.0.0.0/16"
+}
+
+variable "subnet_cidr_bits" {
+  description = "The number of subnet bits for the CIDR."
+  type = number
+  default = 8
+}
+
+# EKS config vars
+variable "use_test_secrets" {
+  description = "Whether or not to use the test secrets. They should not be used outside of testing purposes."
+  type = bool
+  default = false
+}
+
+variable "image_name" {
+  description = "The name of the image to build, push, and deploy."
+  type = string
+}
+
+variable "build_target_name" {
+  description = "The name of the bazel target to run."
+  type = string
+}
+
+variable "manifest_name" {
+  description = "The name of the manifest to apply."
+  type = string
+}
+
+variable "repository_name" {
+  description = "The name of the respository you want to create."
+  type = string
+}
+
+variable "path_to_secrets" {
+  type = string
+}
+
+variable "k8s_account_service_name" {
+  type = string
+}
+
+
+variable "path_to_cue" {
+  type = string
+  default = "../k8s/dev/example_mp_daemon_aws.cue"
+}
+
+variable "ca_arn" {
+  type = string
+}
+
+variable "ca_common_name" {
+  type = string
+}
+
+variable "ca_org_name" {
+  type = string
+}
+
+variable "ca_dns" {
+  type = string
+}
+
+variable "kingdom_endpoint" {
+  type = string
+}
+
+# Other vars
+variable "bucket_name" {
+  type = string
+}
+
+variable "kms_alias_name" {
+  type = string
 }

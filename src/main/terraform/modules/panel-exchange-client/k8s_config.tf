@@ -15,7 +15,7 @@
 resource "null_resource" "configure_local_k8s_context" {
   provisioner "local-exec" {
     command = <<EOF
-aws eks update-kubeconfig --region ${data.aws_region.current.name} --name ${var.cluster_name}
+aws eks update-kubeconfig --region ${data.aws_region.current.name} --name ${aws_eks_cluster.cluster.name}
 sleep 15
     EOF
   }
@@ -55,12 +55,13 @@ aws ecr get-login-password --region ${data.aws_region.current.name} | \
   # update the CUE file to have the right AWS KMS key and CA arn
   provisioner "local-exec" {
     command = <<EOF
+sed -i -E 's|serviceAccountName: ".*"|serviceAccountName: "${var.service_account_name}"|' ${var.path_to_cue}
 sed -i -E 's|containerPrefix: ".*"|containerPrefix: "${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com"|' ${var.path_to_cue}
-sed -i -E 's|tinkKeyUri: ".*"|tinkKeyUri: "aws-kms://arn:aws:kms:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:key/${var.kms_key_id}"|' ${var.path_to_cue}
+sed -i -E 's|tinkKeyUri: ".*"|tinkKeyUri: "${aws_kms_key.k8s_key.arn}"|' ${var.path_to_cue}
 sed -i -E 's|region: ".*"|region: "${data.aws_region.current.name}"|' ${var.path_to_cue}
 sed -i -E 's|storageBucket: ".*"|storageBucket: "hello-storage"|' ${var.path_to_cue}
 sed -i -E 's|kingdomApi: ".*"|kingdomApi: "${var.kingdom_endpoint}"|' ${var.path_to_cue}
-sed -i -E 's|certArn: ".*"|certArn: "${var.ca_arn}"|' ${var.path_to_cue}
+sed -i -E 's|certArn: ".*"|certArn: "${aws_acmpca_certificate_authority.root_ca.arn}"|' ${var.path_to_cue}
 sed -i -E 's|commonName: ".*"|commonName: "${var.ca_common_name}"|' ${var.path_to_cue}
 sed -i -E 's|orgName: ".*"|orgName: "${var.ca_org_name}"|' ${var.path_to_cue}
 sed -i -E 's|dns: ".*"|dns: "${var.ca_dns}"|' ${var.path_to_cue}
