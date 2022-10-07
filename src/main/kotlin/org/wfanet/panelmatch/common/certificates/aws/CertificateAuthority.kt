@@ -43,7 +43,7 @@ import software.amazon.awssdk.services.acmpca.model.Validity
 const val AWS_CERTIFICATE_TEMPLATE_ARN =
   "arn:aws:acm-pca:::template/BlankSubordinateCACertificate_PathLen0_APIPassthrough/V1"
 
-val AWS_CERTIFICATE_SIGNING_ALGORITHM = SigningAlgorithm.SHA256_WITHECDSA
+val AWS_CERTIFICATE_SIGNING_ALGORITHM = SigningAlgorithm.SHA512_WITHRSA
 
 class CertificateAuthority(
   private val context: CertificateAuthority.Context,
