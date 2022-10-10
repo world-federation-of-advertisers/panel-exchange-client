@@ -184,14 +184,23 @@ class DecryptQueryResults(
       }
     val realKeyedDecryptedEventDataSets =
       realQueryResults
-        .strictOneToOneJoin(
+        .oneToOneJoin(
           keyedPlaintextJoinKeyAndIds,
           name = "Join Decrypted Result to Plaintext Joinkeys"
         )
         .map("Map to KeyedDecryptedEventDataSet") {
-          keyedDecryptedEventDataSet {
-            plaintextJoinKeyAndId = it.value
-            decryptedEventData += it.key
+          if (it.value != null && it.key != null) {
+            keyedDecryptedEventDataSet {
+              plaintextJoinKeyAndId = it.value!!
+              decryptedEventData += it.key!!
+            }
+          } else {
+            keyedDecryptedEventDataSet {
+              plaintextJoinKeyAndId = joinKeyAndId { 
+                joinKeyIdentifier = makePaddingQueryJoinKeyIdentifier()
+                joinKey = joinKeyOf(ByteString.EMPTY)
+              }
+            }
           }
         }
 
