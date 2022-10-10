@@ -225,8 +225,13 @@ private class BuildDecryptQueryResultsParametersFn(
   @ProcessElement
   fun processElement(context: ProcessContext) {
     val decryptedJoinKeyAndId: JoinKeyAndId? = context.element().key // Null for padding queries
-    val encryptedQueryResultsList: List<EncryptedQueryResult> =
-      requireNotNull(context.element().value).toList()
+    if (context.element().value == null) {
+      noResults.inc()
+      return
+    }
+
+    val encryptedQueryResultsList: List<EncryptedQueryResult> = 
+      context.element().value!!.toList()
 
     if (encryptedQueryResultsList.isEmpty()) {
       noResults.inc()
