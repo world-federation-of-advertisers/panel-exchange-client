@@ -39,13 +39,13 @@ class DaemonStorageClientDefaults(
   /** This can be customized per deployment. */
   val privateStorageInfo: StorageDetailsProvider by lazy {
     val storageClient = rootStorageClient.withPrefix("private-storage-info")
-    StorageDetailsProvider(StorageClientSecretMap(storageClient))
+    StorageDetailsProvider(StorageClientSecretMap(storageClient, "Private"))
   }
 
   /** This can be customized per deployment. */
   val sharedStorageInfo: StorageDetailsProvider by lazy {
     val storageClient = rootStorageClient.withPrefix("shared-storage-info")
-    StorageDetailsProvider(StorageClientSecretMap(storageClient))
+    StorageDetailsProvider(StorageClientSecretMap(storageClient, "Shared"))
   }
 
   val privateKeys: MutableSecretMap by lazy {
