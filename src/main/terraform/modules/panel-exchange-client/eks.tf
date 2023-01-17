@@ -27,8 +27,14 @@ resource "aws_eks_cluster" "cluster" {
   }
 
   depends_on = [
-    aws_iam_role_policy_attachment.cluster_AmazonEKSClusterPolicy
+    aws_iam_role_policy_attachment.cluster_AmazonEKSClusterPolicy,
+    aws_cloudwatch_log_group.aws_eks_cluster
   ]
+}
+
+resource "aws_cloudwatch_log_group" "aws_eks_cluster" {
+  name = "/aws/eks/${var.project}-cluster/cluster"
+  retention_in_days = 14
 }
 
 resource "aws_security_group" "eks_cluster" {
