@@ -17,15 +17,15 @@ module "panel_exchange_client" {
 
   # EKS vars
   availability_zones_count = 2
-  project = "tftest2"
+  project = "tftest"
   vpc_cidr = "10.0.0.0/16"
   subnet_cidr_bits = 8
 
   # General MP vars
-  bucket_name = "tf-test-blob-storage2"
-  kms_alias_name = "my-key-alias2"
-  ca_org_name = "WFA2"
-  ca_common_name = "WFA AWS MP CA2"
+  bucket_name = "tf-test-blob-storage"
+  kms_alias_name = "my-key-alias"
+  ca_org_name = "WFA"
+  ca_common_name = "WFA AWS MP CA"
   ca_dns = "example.com"
 
   # EKS Config vars

@@ -27,6 +27,8 @@ _exchangeDaemonConfig: {
 	tinkKeyUri: ""
 }
 
+// Blank strings are populated by the Terraform-backed deployment supporting
+// the AWS daemon.
 _defaultAwsConfig: {
 	containerPrefix: ""
 	region:          ""
