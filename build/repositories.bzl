@@ -41,16 +41,16 @@ def panel_exchange_client_repositories():
     # TODO: remove dependencies on wfa_measurement_system
     http_archive(
         name = "wfa_measurement_system",
-        sha256 = "c8e1f046d0d8809a143fbb03ef03573ebf8d540a9a20d3f015ad27844f015f7a",
-        strip_prefix = "cross-media-measurement-ba3ebc3c2c9e3f4febc446b94cc2c7516a8adcd8",
-        url = "https://github.com/world-federation-of-advertisers/cross-media-measurement/archive/ba3ebc3c2c9e3f4febc446b94cc2c7516a8adcd8.tar.gz",
+        sha256 = "21bb52836db72ee23a6c8caca4970b8f1e24108b7734f5c18d36c22526449d2a",
+        strip_prefix = "cross-media-measurement-bc97937a40037fe9c5320850de7b100e96de807b",
+        url = "https://github.com/world-federation-of-advertisers/cross-media-measurement/archive/bc97937a40037fe9c5320850de7b100e96de807b.tar.gz",
     )
 
     http_archive(
         name = "wfa_measurement_proto",
-        sha256 = "da28ccac88a12b3b75b974b92604b8e332b8bc91cd276afab1ee41415fa320a3",
-        strip_prefix = "cross-media-measurement-api-0.22.2",
-        url = "https://github.com/world-federation-of-advertisers/cross-media-measurement-api/archive/v0.22.2.tar.gz",
+        sha256 = "333ec3153cfe20d9f0ceeb9c73b0d11daa9f0b61382596de76d7090511bc591a",
+        strip_prefix = "cross-media-measurement-api-0.28.1",
+        url = "https://github.com/world-federation-of-advertisers/cross-media-measurement-api/archive/v0.28.1.tar.gz",
     )
 
     http_archive(
@@ -62,23 +62,23 @@ def panel_exchange_client_repositories():
 
     http_archive(
         name = "wfa_rules_cue",
-        sha256 = "62def6a4dc401fd1549e44e2a4e2ae73cf75e6870025329bc78a0150d9a2594a",
-        strip_prefix = "rules_cue-0.1.0",
-        url = "https://github.com/world-federation-of-advertisers/rules_cue/archive/v0.1.0.tar.gz",
+        sha256 = "652379dec5174ed7fa8fe4223d0adf9a1d610ff0aa02e1bd1e74f79834b526a6",
+        strip_prefix = "rules_cue-0.2.0",
+        url = "https://github.com/world-federation-of-advertisers/rules_cue/archive/v0.2.0.tar.gz",
     )
 
     http_archive(
         name = "wfa_consent_signaling_client",
-        sha256 = "b907c0dd4f6efbe4f6db3f34efeca0f1763d3cc674c37cbfebac1ee2a80c86f5",
-        strip_prefix = "consent-signaling-client-0.12.0",
-        url = "https://github.com/world-federation-of-advertisers/consent-signaling-client/archive/refs/tags/v0.12.0.tar.gz",
+        sha256 = "99fde5608b79ff12a2a466cdd213e1535c62f80a96035006433ae9ba5a4a4d21",
+        strip_prefix = "consent-signaling-client-0.15.0",
+        url = "https://github.com/world-federation-of-advertisers/consent-signaling-client/archive/refs/tags/v0.15.0.tar.gz",
     )
 
     http_archive(
         name = "wfa_virtual_people_common",
-        sha256 = "bcc79b67195e0f144d7b2f21788da4b9d43fb1c7cd129c76941ec81c9fb4ac5a",
-        strip_prefix = "virtual-people-common-0.1.0",
-        url = "https://github.com/world-federation-of-advertisers/virtual-people-common/archive/v0.1.0.tar.gz",
+        sha256 = "0302c92075d991e89ed29a19c946abb3abc634430bb3cde9b77774b49079354e",
+        strip_prefix = "virtual-people-common-0.2.2",
+        url = "https://github.com/world-federation-of-advertisers/virtual-people-common/archive/v0.2.2.tar.gz",
     )
 
     http_archive(
