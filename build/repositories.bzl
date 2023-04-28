@@ -42,7 +42,7 @@ def panel_exchange_client_repositories():
     http_archive(
         name = "wfa_measurement_system",
         sha256 = "b7fec8fa6cecfdd149364f4cd923cbfb324d46b2a4b0dbf4639fd109c2f7322d",
-        strip_prefix = "cross-media-measurement-ba3ebc3c2c9e3f4febc446b94cc2c7516a8adcd8",
+        strip_prefix = "cross-media-measurement-10c44b1af7c13481258eb8d9e5c1df4178b4be62",
         url = "https://github.com/world-federation-of-advertisers/cross-media-measurement/archive/10c44b1af7c13481258eb8d9e5c1df4178b4be62.tar.gz",
     )
 
