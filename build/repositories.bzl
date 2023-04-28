@@ -26,31 +26,36 @@ def panel_exchange_client_repositories():
 
     http_archive(
         name = "wfa_common_cpp",
-        sha256 = "60e9c808d55d14be65347cab008b8bd4f8e2dd8186141609995333bc75fc08ce",
-        strip_prefix = "common-cpp-0.8.0",
-        url = "https://github.com/world-federation-of-advertisers/common-cpp/archive/refs/tags/v0.8.0.tar.gz",
+        sha256 = "be7564a574c60176dc63e48daba6135263779deb301baacb77d2328bdaf38d3d",
+        strip_prefix = "common-cpp-0.9.0",
+        url = "https://github.com/world-federation-of-advertisers/common-cpp/archive/refs/tags/v0.9.0.tar.gz",
     )
 
     http_archive(
         name = "wfa_common_jvm",
-        sha256 = "9505024528afc9e7a9e126a297458fa4503a33ff21c55bac58e5184385f492e2",
-        strip_prefix = "common-jvm-0.35.0",
-        url = "https://github.com/world-federation-of-advertisers/common-jvm/archive/refs/tags/v0.35.0.tar.gz",
+        sha256 = "0b4a8eb501f0abca95d994bd199cda845a9238f57b34be74e7e54220ec66a48b",
+        strip_prefix = "common-jvm-0.54.0",
+        url = "https://github.com/world-federation-of-advertisers/common-jvm/archive/refs/tags/v0.54.0.tar.gz",
     )
 
     # TODO: remove dependencies on wfa_measurement_system
-    http_archive(
-        name = "wfa_measurement_system",
-        sha256 = "c8e1f046d0d8809a143fbb03ef03573ebf8d540a9a20d3f015ad27844f015f7a",
-        strip_prefix = "cross-media-measurement-ba3ebc3c2c9e3f4febc446b94cc2c7516a8adcd8",
-        url = "https://github.com/world-federation-of-advertisers/cross-media-measurement/archive/ba3ebc3c2c9e3f4febc446b94cc2c7516a8adcd8.tar.gz",
+    #http_archive(
+    #    name = "wfa_measurement_system",
+    #    sha256 = "c8e1f046d0d8809a143fbb03ef03573ebf8d540a9a20d3f015ad27844f015f7a",
+    #    strip_prefix = "cross-media-measurement-ba3ebc3c2c9e3f4febc446b94cc2c7516a8adcd8",
+    #    url = "https://github.com/world-federation-of-advertisers/cross-media-measurement/archive/ba3ebc3c2c9e3f4febc446b94cc2c7516a8adcd8.tar.gz",
+    #)
+
+    native.local_repository(
+      name = "wfa_measurement_system",
+      path = "/home/marcopremier/XMM/cross-media-measurement"
     )
 
     http_archive(
         name = "wfa_measurement_proto",
-        sha256 = "da28ccac88a12b3b75b974b92604b8e332b8bc91cd276afab1ee41415fa320a3",
-        strip_prefix = "cross-media-measurement-api-0.22.2",
-        url = "https://github.com/world-federation-of-advertisers/cross-media-measurement-api/archive/v0.22.2.tar.gz",
+        sha256 = "333ec3153cfe20d9f0ceeb9c73b0d11daa9f0b61382596de76d7090511bc591a",
+        strip_prefix = "cross-media-measurement-api-0.28.1",
+        url = "https://github.com/world-federation-of-advertisers/cross-media-measurement-api/archive/v0.28.1.tar.gz",
     )
 
     http_archive(
@@ -62,16 +67,16 @@ def panel_exchange_client_repositories():
 
     http_archive(
         name = "wfa_rules_cue",
-        sha256 = "62def6a4dc401fd1549e44e2a4e2ae73cf75e6870025329bc78a0150d9a2594a",
-        strip_prefix = "rules_cue-0.1.0",
-        url = "https://github.com/world-federation-of-advertisers/rules_cue/archive/v0.1.0.tar.gz",
+        sha256 = "652379dec5174ed7fa8fe4223d0adf9a1d610ff0aa02e1bd1e74f79834b526a6",
+        strip_prefix = "rules_cue-0.2.0",
+        url = "https://github.com/world-federation-of-advertisers/rules_cue/archive/v0.2.0.tar.gz",
     )
 
     http_archive(
         name = "wfa_consent_signaling_client",
-        sha256 = "b907c0dd4f6efbe4f6db3f34efeca0f1763d3cc674c37cbfebac1ee2a80c86f5",
-        strip_prefix = "consent-signaling-client-0.12.0",
-        url = "https://github.com/world-federation-of-advertisers/consent-signaling-client/archive/refs/tags/v0.12.0.tar.gz",
+        sha256 = "99fde5608b79ff12a2a466cdd213e1535c62f80a96035006433ae9ba5a4a4d21",
+        strip_prefix = "consent-signaling-client-0.15.0",
+        url = "https://github.com/world-federation-of-advertisers/consent-signaling-client/archive/refs/tags/v0.15.0.tar.gz",
     )
 
     http_archive(

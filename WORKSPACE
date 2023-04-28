@@ -26,9 +26,13 @@ load("@rules_jvm_external//:setup.bzl", "rules_jvm_external_setup")
 
 rules_jvm_external_setup()
 
+load("//build:repo.bzl", "grpc_health_probe")
+
+grpc_health_probe()
+
 load(
     "@wfa_common_jvm//build:versions.bzl",
-    "GRPC_JAVA_VERSION",
+    "GRPC_JAVA",
     "KOTLIN_RELEASE_VERSION",
 )
 load("@wfa_common_jvm//build/maven:artifacts.bzl", "artifacts")
@@ -49,8 +53,8 @@ maven_install(
     name = "maven_export",
     artifacts = [
         "io.grpc:grpc-kotlin-stub:1.2.0",
-        "io.grpc:grpc-netty:" + GRPC_JAVA_VERSION,
-        "io.grpc:grpc-services:" + GRPC_JAVA_VERSION,
+        "io.grpc:grpc-netty:" + GRPC_JAVA.version,
+        "io.grpc:grpc-services:" + GRPC_JAVA.version,
         "org.jetbrains.kotlin:kotlin-reflect:" + KOTLIN_RELEASE_VERSION,
         "org.jetbrains.kotlin:kotlin-stdlib-jdk7:" + KOTLIN_RELEASE_VERSION,
         "org.jetbrains.kotlin:kotlin-test:" + KOTLIN_RELEASE_VERSION,
