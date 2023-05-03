@@ -54,7 +54,9 @@ private val CA_POOL_NAME = CaPoolName.of("some-project-id", "some-ca-location", 
 private const val CERTIFICATE_AUTHORITY_NAME = "some-certificate-authority-name"
 private val ROOT_X509 by lazy { readCertificate(TestData.FIXED_CA_CERT_PEM_FILE) }
 private val ROOT_PUBLIC_KEY by lazy { ROOT_X509.publicKey }
-private val ROOT_PRIVATE_KEY_FILE by lazy { TestData.FIXED_CA_CERT_PEM_FILE.resolveSibling("ca.key") }
+private val ROOT_PRIVATE_KEY_FILE by lazy {
+  TestData.FIXED_CA_CERT_PEM_FILE.resolveSibling("ca.key")
+}
 private val CERTIFICATE_LIFETIME = Duration.ofDays(CONTEXT.validDays.toLong())
 private val CLOUD_PUBLIC_KEY: CloudPublicKey = ROOT_PUBLIC_KEY.toGCloudPublicKey()
 
@@ -97,7 +99,9 @@ class CertificateAuthorityTest {
 
     whenever(mockCreateCertificateClient.createCertificate(any()))
       .thenReturn(
-        Certificate.newBuilder().setPemCertificate(TestData.FIXED_CA_CERT_PEM_FILE.readText()).build()
+        Certificate.newBuilder()
+          .setPemCertificate(TestData.FIXED_CA_CERT_PEM_FILE.readText())
+          .build()
       )
 
     val certificateAuthority =

@@ -50,11 +50,12 @@ import org.wfanet.panelmatch.common.testing.runBlockingTest
 
 private const val LOCAL_NAME = "dataProviders/someDataProviderId"
 private const val PARTNER_NAME = "modelProviders/someModelProviderId"
-private const val KEY_ALGORITHM = "EC"
 
 private val ROOT_CERTIFICATE by lazy { readCertificate(TestData.FIXED_CA_CERT_PEM_FILE) }
 private val CERTIFICATE by lazy { readCertificate(TestData.FIXED_SERVER_CERT_PEM_FILE) }
-private val PRIVATE_KEY by lazy { readPrivateKey(TestData.FIXED_SERVER_KEY_FILE, KEY_ALGORITHM) }
+private val PRIVATE_KEY by lazy {
+  readPrivateKey(TestData.FIXED_SERVER_KEY_FILE, CERTIFICATE.publicKey.algorithm)
+}
 
 private val DATE = LocalDate.now()
 private const val RECURRING_EXCHANGE_ID = "some-recurring-exchange-id"

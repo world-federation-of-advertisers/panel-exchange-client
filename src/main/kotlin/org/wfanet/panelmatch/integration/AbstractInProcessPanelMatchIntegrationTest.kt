@@ -44,12 +44,12 @@ import org.wfanet.measurement.api.v2alpha.ExchangeWorkflow
 import org.wfanet.measurement.api.v2alpha.ExchangesGrpcKt.ExchangesCoroutineStub
 import org.wfanet.measurement.api.v2alpha.ListExchangeStepsRequestKt.filter
 import org.wfanet.measurement.api.v2alpha.ModelProviderKey
-import org.wfanet.measurement.common.api.ResourceKey
 import org.wfanet.measurement.api.v2alpha.copy
-import org.wfanet.measurement.api.v2alpha.EncryptionPublicKey
+import org.wfanet.measurement.api.v2alpha.encryptionPublicKey
 import org.wfanet.measurement.api.v2alpha.exchangeWorkflow
 import org.wfanet.measurement.api.v2alpha.getExchangeRequest
 import org.wfanet.measurement.api.v2alpha.listExchangeStepsRequest
+import org.wfanet.measurement.common.api.ResourceKey
 import org.wfanet.measurement.common.crypto.SigningKeyHandle
 import org.wfanet.measurement.common.identity.withPrincipalName
 import org.wfanet.measurement.common.parseTextProto
@@ -265,8 +265,10 @@ abstract class AbstractInProcessPanelMatchIntegrationTest {
         EXCHANGE_DATE.toProtoDate(),
         EntityContent(
           displayName = "edp1",
-          encryptionPublicKey = EncryptionPublicKey.newBuilder().apply { data = ByteString.copyFromUtf8("testMCPublicKey") }.build(),
-          signingKey = SigningKeyHandle(TestCertificateManager.CERTIFICATE, TestCertificateManager.PRIVATE_KEY)
+          encryptionPublicKey =
+            encryptionPublicKey { data = ByteString.copyFromUtf8("testMCPublicKey") },
+          signingKey =
+            SigningKeyHandle(TestCertificateManager.CERTIFICATE, TestCertificateManager.PRIVATE_KEY)
         )
       )
     exchangesClient = makeExchangesServiceClient(keys.modelProviderKey.toName())

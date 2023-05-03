@@ -57,7 +57,9 @@ private const val CERTIFICATE_AUTHORITY_ARN = "some-ca-arn"
 private const val CERTIFICATE_ARN = "some-cert-arn"
 private val ROOT_X509 by lazy { readCertificate(TestData.FIXED_CA_CERT_PEM_FILE) }
 private val ROOT_PUBLIC_KEY by lazy { ROOT_X509.publicKey }
-private val ROOT_PRIVATE_KEY_FILE by lazy { TestData.FIXED_CA_CERT_PEM_FILE.resolveSibling("ca.key") }
+private val ROOT_PRIVATE_KEY_FILE by lazy {
+  TestData.FIXED_CA_CERT_PEM_FILE.resolveSibling("ca.key")
+}
 private val CERTIFICATE_LIFETIME =
   Validity.builder().value(CONTEXT.validDays.toLong()).type("DAYS").build()
 
@@ -105,7 +107,9 @@ class CertificateAuthorityTest {
 
     whenever(mockCreateCertificateClient.getCertificate(any()))
       .thenReturn(
-        GetCertificateResponse.builder().certificate(TestData.FIXED_CA_CERT_PEM_FILE.readText()).build()
+        GetCertificateResponse.builder()
+          .certificate(TestData.FIXED_CA_CERT_PEM_FILE.readText())
+          .build()
       )
 
     val certificateAuthority =

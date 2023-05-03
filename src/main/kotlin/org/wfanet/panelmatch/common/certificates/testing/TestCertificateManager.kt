@@ -52,5 +52,7 @@ object TestCertificateManager : CertificateManager {
 
   const val RESOURCE_NAME = "some-resource-name"
   val CERTIFICATE: X509Certificate by lazy { readCertificate(TestData.FIXED_SERVER_CERT_PEM_FILE) }
-  val PRIVATE_KEY: PrivateKey by lazy { readPrivateKey(TestData.FIXED_SERVER_KEY_FILE, KEY_ALGORITHM) }
+  val PRIVATE_KEY: PrivateKey by lazy {
+    readPrivateKey(TestData.FIXED_SERVER_KEY_FILE, KEY_ALGORITHM)
+  }
 }
