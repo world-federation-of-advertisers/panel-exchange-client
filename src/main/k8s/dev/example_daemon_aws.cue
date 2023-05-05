@@ -58,9 +58,10 @@ import "strings"
 	args: [
 		"--id=\(_partyId)",
 		"--party-type=\(partyType)",
+		"--storage-signing-algorithm=RSA",
+		"--tink-key-uri=\(tinkKeyUri)",
 		"--tls-cert-file=\(clientTls.certFile)",
 		"--tls-key-file=\(clientTls.keyFile)",
-		"--tink-key-uri=\(tinkKeyUri)",
 	]
 }
 
