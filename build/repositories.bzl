@@ -76,9 +76,9 @@ def panel_exchange_client_repositories():
 
     http_archive(
         name = "wfa_virtual_people_common",
-        sha256 = "bcc79b67195e0f144d7b2f21788da4b9d43fb1c7cd129c76941ec81c9fb4ac5a",
-        strip_prefix = "virtual-people-common-0.1.0",
-        url = "https://github.com/world-federation-of-advertisers/virtual-people-common/archive/v0.1.0.tar.gz",
+        sha256 = "0a663e5517f50052ecc5e5745564935a3c15ebce2e9550b11dda451e341ea624",
+        strip_prefix = "virtual-people-common-0.2.3",
+        url = "https://github.com/world-federation-of-advertisers/virtual-people-common/archive/v0.2.3.tar.gz",
     )
 
     http_archive(
