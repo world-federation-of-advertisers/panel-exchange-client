@@ -5,13 +5,13 @@ load("@wfa_rules_cue//cue:defs.bzl", "cue_export", "cue_library")
 cue_library(
     name = "base_gke",
     srcs = ["base_gke.cue"],
-    deps = ["//src/main/k8s:base"],
+    deps = ["//src/main/k8s/panelmatch:base"],
 )
 
 cue_library(
     name = "base_aws",
     srcs = ["base_aws.cue"],
-    deps = ["//src/main/k8s:base"],
+    deps = ["//src/main/k8s/panelmatch:base"],
 )
 
 cue_library(

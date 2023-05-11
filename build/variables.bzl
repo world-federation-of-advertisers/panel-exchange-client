@@ -31,11 +31,26 @@ IMAGE_REPOSITORY_SETTINGS = struct(
     image_tag = "$(image_tag)",
 )
 
-# Settings for deploying tests to Google Cloud.
-TEST_GOOGLE_CLOUD_SETTINGS = struct(
-    secret_name = "$(k8s_secret_name)",
-    cloud_storage_project = "$(cloud_storage_project)",
-    cloud_storage_bucket = "$(cloud_storage_bucket)",
+# Settings for test Kubernetes deployments.
+TEST_K8S_SETTINGS = struct(
+    # Resource name of the aggregator Duchy's Certificate.
+    aggregator_cert_name = "$(aggregator_cert_name)",
+    # Resource name of the 1st worker Duchy's Certificate.
+    worker1_cert_name = "$(worker1_cert_name)",
+    # Resource name of the 2nd worker Duchy's Certificate.
+    worker2_cert_name = "$(worker2_cert_name)",
+    mc_name = "$(mc_name)",
+    mc_api_key = "$(mc_api_key)",
+    mc_cert_name = "$(mc_cert_name)",
+    edp1_name = "$(edp1_name)",
+    edp2_name = "$(edp2_name)",
+    edp3_name = "$(edp3_name)",
+    edp4_name = "$(edp4_name)",
+    edp5_name = "$(edp5_name)",
+    edp6_name = "$(edp6_name)",
+    db_secret_name = "$(k8s_db_secret_name)",
+    mc_config_secret_name = "$(k8s_mc_config_secret_name)",
+    grafana_secret_name = "$(k8s_grafana_secret_name)",
 )
 
 GCLOUD_SETTINGS = struct(
@@ -71,26 +86,9 @@ SIMULATOR_K8S_SETTINGS = struct(
     edp6_name = "$(edp6_name)",
 )
 
-# Settings for test Kubernetes deployments.
-TEST_K8S_SETTINGS = struct(
-    # Resource name of the aggregator Duchy's Certificate.
-    aggregator_cert_name = "$(aggregator_cert_name)",
-    # Resource name of the 1st worker Duchy's Certificate.
-    worker1_cert_name = "$(worker1_cert_name)",
-    # Resource name of the 2nd worker Duchy's Certificate.
-    worker2_cert_name = "$(worker2_cert_name)",
-    mc_name = "$(mc_name)",
-    mc_api_key = "$(mc_api_key)",
-    mc_cert_name = "$(mc_cert_name)",
-    edp1_name = "$(edp1_name)",
-    edp2_name = "$(edp2_name)",
-    edp3_name = "$(edp3_name)",
-    edp4_name = "$(edp4_name)",
-    edp5_name = "$(edp5_name)",
-    edp6_name = "$(edp6_name)",
-    db_secret_name = "$(k8s_db_secret_name)",
-    mc_config_secret_name = "$(k8s_mc_config_secret_name)",
-    grafana_secret_name = "$(k8s_grafana_secret_name)",
+# Settings for Grafana Kubernetes deployments.
+GRAFANA_K8S_SETTINGS = struct(
+    secret_name = "$(k8s_grafana_secret_name)",
 )
 
 # Config for Panel Exchange Client Example Daemon.
@@ -101,7 +99,9 @@ EXAMPLE_DAEMON_CONFIG = struct(
     mp_secret_name = "$(mp_k8s_secret_name)",
 )
 
-# Settings for Grafana Kubernetes deployments.
-GRAFANA_K8S_SETTINGS = struct(
-    secret_name = "$(k8s_grafana_secret_name)",
+# Settings for deploying tests to Google Cloud.
+TEST_GOOGLE_CLOUD_SETTINGS = struct(
+    secret_name = "$(k8s_secret_name)",
+    cloud_storage_project = "$(cloud_storage_project)",
+    cloud_storage_bucket = "$(cloud_storage_bucket)",
 )

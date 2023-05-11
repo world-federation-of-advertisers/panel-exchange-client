@@ -20,6 +20,8 @@ load("//build/wfa:repositories.bzl", "wfa_repo_archive")
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 load("//build/com_google_riegeli:repo.bzl", "com_google_riegeli_repo")
 
+MEASUREMENT_SYSTEM_REPO = "https://github.com/world-federation-of-advertisers/cross-media-measurement"
+
 def wfa_measurement_system_repositories():
     """Imports all direct dependencies for wfa_measurement_system."""
 
@@ -37,14 +39,6 @@ def wfa_measurement_system_repositories():
         repo = "common-cpp",
         sha256 = "be7564a574c60176dc63e48daba6135263779deb301baacb77d2328bdaf38d3d",
         version = "0.9.0",
-    )
-
-    # TODO: remove dependencies on wfa_measurement_system
-    http_archive(
-        name = "wfa_measurement_system",
-        sha256 = "b7fec8fa6cecfdd149364f4cd923cbfb324d46b2a4b0dbf4639fd109c2f7322d",
-        strip_prefix = "cross-media-measurement-10c44b1af7c13481258eb8d9e5c1df4178b4be62",
-        url = "https://github.com/world-federation-of-advertisers/cross-media-measurement/archive/10c44b1af7c13481258eb8d9e5c1df4178b4be62.tar.gz",
     )
 
     wfa_repo_archive(
@@ -110,4 +104,12 @@ def wfa_measurement_system_repositories():
             "https://github.com/bazelbuild/rules_pkg/releases/download/0.6.0/rules_pkg-0.6.0.tar.gz",
         ],
         sha256 = "62eeb544ff1ef41d786e329e1536c1d541bb9bcad27ae984d57f18f314018e66",
+    )
+
+    # TODO: remove dependencies on wfa_measurement_system
+    http_archive(
+        name = "wfa_measurement_system",
+        sha256 = "b7fec8fa6cecfdd149364f4cd923cbfb324d46b2a4b0dbf4639fd109c2f7322d",
+        strip_prefix = "cross-media-measurement-10c44b1af7c13481258eb8d9e5c1df4178b4be62",
+        url = "https://github.com/world-federation-of-advertisers/cross-media-measurement/archive/10c44b1af7c13481258eb8d9e5c1df4178b4be62.tar.gz",
     )

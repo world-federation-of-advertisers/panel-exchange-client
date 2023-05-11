@@ -28,10 +28,6 @@ load("//build:deps.bzl", "panel_exchange_client_deps")
 
 panel_exchange_client_deps()
 
-load("//build:extra_deps.bzl", "panel_exchange_client_extra_deps")
-
-panel_exchange_client_extra_deps()
-
 load(
     "//build:panel_exchange_client_maven_deps.bzl",
     "panel_exchange_client_maven_artifacts",
