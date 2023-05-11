@@ -1,8 +1,28 @@
 workspace(name = "panel_exchange_client")
 
-load("//build:repositories.bzl", "panel_exchange_client_repositories")
+load("//build:repositories.bzl", "wfa_measurement_system_repositories")
 
-panel_exchange_client_repositories()
+wfa_measurement_system_repositories()
+
+load("@wfa_rules_cue//cue:repositories.bzl", "rules_cue_dependencies")
+
+rules_cue_dependencies()
+
+load("@wfa_common_jvm//build:common_jvm_repositories.bzl", "common_jvm_repositories")
+
+common_jvm_repositories()
+
+load("@wfa_common_jvm//build:common_jvm_deps.bzl", "common_jvm_deps")
+
+common_jvm_deps()
+
+load("@wfa_common_cpp//build:common_cpp_repositories.bzl", "common_cpp_repositories")
+
+common_cpp_repositories()
+
+load("@wfa_common_cpp//build:common_cpp_deps.bzl", "common_cpp_deps")
+
+common_cpp_deps()
 
 load("//build:deps.bzl", "panel_exchange_client_deps")
 
@@ -13,10 +33,9 @@ load("//build:extra_deps.bzl", "panel_exchange_client_extra_deps")
 panel_exchange_client_extra_deps()
 
 load(
-    "//build:maven_deps.bzl",
+    "//build:panel_exchange_client_maven_deps.bzl",
     "panel_exchange_client_maven_artifacts",
     "panel_exchange_client_maven_excluded_artifacts",
-    "panel_exchange_client_maven_override_targets",
 )
 load("@rules_jvm_external//:repositories.bzl", "rules_jvm_external_deps")
 
@@ -37,15 +56,34 @@ load(
     "GRPC_KOTLIN",
     "KOTLIN_RELEASE_VERSION",
 )
+
+# Maven
+load(
+    "@wfa_common_jvm//build:common_jvm_maven.bzl",
+    "COMMON_JVM_EXCLUDED_ARTIFACTS",
+    "COMMON_JVM_MAVEN_OVERRIDE_TARGETS",
+    "common_jvm_maven_artifacts_dict",
+)
 load("@wfa_common_jvm//build/maven:artifacts.bzl", "artifacts")
 load("@rules_jvm_external//:defs.bzl", "maven_install")
 
+MAVEN_ARTIFACTS_DICT = dict(common_jvm_maven_artifacts_dict().items() + {
+    "software.aws.rds:aws-postgresql-jdbc": "0.1.0",
+    "org.projectnessie.cel:cel-core": "0.3.11",
+    "io.opentelemetry:opentelemetry-api": "1.19.0",
+    "io.opentelemetry:opentelemetry-sdk": "1.19.0",
+    "io.opentelemetry:opentelemetry-exporter-otlp": "1.19.0",
+    "io.opentelemetry:opentelemetry-semconv": "1.19.0-alpha",
+    "io.kubernetes:client-java": "16.0.0",
+    "io.kubernetes:client-java-extended": "16.0.0",
+}.items() + panel_exchange_client_maven_artifacts().items())
+
 maven_install(
-    artifacts = artifacts.dict_to_list(panel_exchange_client_maven_artifacts()),
+    artifacts = artifacts.dict_to_list(MAVEN_ARTIFACTS_DICT),
     excluded_artifacts = panel_exchange_client_maven_excluded_artifacts(),
     fetch_sources = True,
     generate_compat_repositories = True,
-    override_targets = panel_exchange_client_maven_override_targets(),
+    override_targets = COMMON_JVM_MAVEN_OVERRIDE_TARGETS,
     repositories = [
         "https://repo.maven.apache.org/maven2/",
     ],

@@ -80,21 +80,7 @@ _EXCLUDED_ARTIFACTS = [
 ]
 
 def panel_exchange_client_maven_artifacts():
-    """Collects the Maven artifacts for panel-exchange-client.
-
-    Returns:
-        A dict of Maven artifact name to version.
-    """
-    common_jvm_artifacts = common_jvm_maven_artifacts_dict()
-
-    artifacts_dict = {}
-    artifacts_dict.update(common_jvm_artifacts)
-    artifacts_dict.update(_ARTIFACTS)
-
-    return artifacts_dict
-
-def panel_exchange_client_maven_override_targets():
-    return COMMON_JVM_MAVEN_OVERRIDE_TARGETS
+    return _ARTIFACTS
 
 def panel_exchange_client_maven_excluded_artifacts():
     # TODO(@efoxepstein): why does org.slf4j:slf4j-log4j12 cause build failures?
