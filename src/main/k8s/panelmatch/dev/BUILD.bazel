@@ -1,5 +1,5 @@
-load("//build:variables.bzl", "EXAMPLE_DAEMON_CONFIG")
-load("//src/main/docker:images.bzl", "ALL_GKE_IMAGES")
+load("//build:variables.bzl", "EXAMPLE_PANEL_EXCHANGE_CLIENT_DAEMON_CONFIG")
+load("//src/main/docker/panel_exchange_client:images.bzl", "ALL_GKE_IMAGES")
 load("@wfa_rules_cue//cue:defs.bzl", "cue_export", "cue_library")
 
 cue_library(
@@ -30,8 +30,8 @@ cue_export(
     name = "example_edp_daemon_gke",
     srcs = ["example_edp_daemon_gke.cue"],
     cue_tags = {
-        "party_name": EXAMPLE_DAEMON_CONFIG.edp_name,
-        "secret_name": EXAMPLE_DAEMON_CONFIG.edp_secret_name,
+        "party_name": EXAMPLE_PANEL_EXCHANGE_CLIENT_DAEMON_CONFIG.edp_name,
+        "secret_name": EXAMPLE_PANEL_EXCHANGE_CLIENT_DAEMON_CONFIG.edp_secret_name,
     },
     expression = "listObject",
     filetype = "yaml",
@@ -43,8 +43,8 @@ cue_export(
     name = "example_mp_daemon_gke",
     srcs = ["example_mp_daemon_gke.cue"],
     cue_tags = {
-        "party_name": EXAMPLE_DAEMON_CONFIG.mp_name,
-        "secret_name": EXAMPLE_DAEMON_CONFIG.mp_secret_name,
+        "party_name": EXAMPLE_PANEL_EXCHANGE_CLIENT_DAEMON_CONFIG.mp_name,
+        "secret_name": EXAMPLE_PANEL_EXCHANGE_CLIENT_DAEMON_CONFIG.mp_secret_name,
     },
     expression = "listObject",
     filetype = "yaml",
@@ -56,8 +56,8 @@ cue_export(
     name = "example_edp_daemon_aws",
     srcs = ["example_edp_daemon_aws.cue"],
     cue_tags = {
-        "party_name": EXAMPLE_DAEMON_CONFIG.edp_name,
-        "secret_name": EXAMPLE_DAEMON_CONFIG.edp_secret_name,
+        "party_name": EXAMPLE_PANEL_EXCHANGE_CLIENT_DAEMON_CONFIG.edp_name,
+        "secret_name": EXAMPLE_PANEL_EXCHANGE_CLIENT_DAEMON_CONFIG.edp_secret_name,
     },
     expression = "listObject",
     filetype = "yaml",
@@ -69,8 +69,8 @@ cue_export(
     name = "example_mp_daemon_aws",
     srcs = ["example_mp_daemon_aws.cue"],
     cue_tags = {
-        "party_name": EXAMPLE_DAEMON_CONFIG.mp_name,
-        "secret_name": EXAMPLE_DAEMON_CONFIG.mp_secret_name,
+        "party_name": EXAMPLE_PANEL_EXCHANGE_CLIENT_DAEMON_CONFIG.mp_name,
+        "secret_name": EXAMPLE_PANEL_EXCHANGE_CLIENT_DAEMON_CONFIG.mp_secret_name,
     },
     expression = "listObject",
     filetype = "yaml",
