@@ -19,7 +19,6 @@ Adds external repos necessary for wfa_measurement_system.
 load("//build/wfa:repositories.bzl", "wfa_repo_archive")
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 load("//build/com_google_riegeli:repo.bzl", "com_google_riegeli_repo")
-load("@bazel_tools//tools/build_defs/repo:utils.bzl", "maybe")
 
 MEASUREMENT_SYSTEM_REPO = "https://github.com/world-federation-of-advertisers/cross-media-measurement"
 
@@ -98,15 +97,6 @@ def wfa_measurement_system_repositories():
         url = "https://github.com/google/private-membership/archive/84e45669f7357bffcdafbc1b0cc26e72512808ce.zip",
     )
 
-    http_archive(
-        name = "rules_pkg",
-        urls = [
-            "https://mirror.bazel.build/github.com/bazelbuild/rules_pkg/releases/download/0.6.0/rules_pkg-0.6.0.tar.gz",
-            "https://github.com/bazelbuild/rules_pkg/releases/download/0.6.0/rules_pkg-0.6.0.tar.gz",
-        ],
-        sha256 = "62eeb544ff1ef41d786e329e1536c1d541bb9bcad27ae984d57f18f314018e66",
-    )
-
     # TODO: remove dependencies on wfa_measurement_system
     http_archive(
         name = "wfa_measurement_system",
@@ -114,23 +104,3 @@ def wfa_measurement_system_repositories():
         strip_prefix = "cross-media-measurement-10c44b1af7c13481258eb8d9e5c1df4178b4be62",
         url = "https://github.com/world-federation-of-advertisers/cross-media-measurement/archive/10c44b1af7c13481258eb8d9e5c1df4178b4be62.tar.gz",
     )
-
-def wfa_measurement_system_tink_repository(tink_commit):
-
-    _tink_sha256 = "0b8bbaffee4903faea66dbad76f8eb6d0eea3f94367807bebc49180f9f417031"
-    _tink_url = "https://github.com/google/tink/archive/{commit}.tar.gz".format(
-        commit = tink_commit,
-    )
-
-    maybe(
-            http_archive,
-            name = "tink_cc",
-            sha256 = _tink_sha256,
-            strip_prefix = "tink-{commit}/cc".format(commit = tink_commit),
-            url = _tink_url,
-            repo_mapping = {
-                # TODO(bazelbuild/rules_proto#121): Remove this once
-                # protobuf_workspace is fixed.
-                "@com_google_protobuf": "@com_github_protocolbuffers_protobuf",
-            },
-        )

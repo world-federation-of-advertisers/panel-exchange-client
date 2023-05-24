@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// TODO(@MarcoPremier): Merge this with base.cue in cross-media-measurement repo
+
 package k8s
 
 import (
