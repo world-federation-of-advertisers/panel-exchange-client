@@ -9,6 +9,14 @@ load("//build/tink:repositories.bzl", "tink_cc")
 
 tink_cc(TINK_COMMIT)
 
+load("@wfa_common_cpp//build:common_cpp_repositories.bzl", "common_cpp_repositories")
+
+common_cpp_repositories()
+
+load("@wfa_common_cpp//build:common_cpp_deps.bzl", "common_cpp_deps")
+
+common_cpp_deps()
+
 load("@wfa_rules_cue//cue:repositories.bzl", "rules_cue_dependencies")
 
 rules_cue_dependencies()
@@ -20,14 +28,6 @@ common_jvm_repositories()
 load("@wfa_common_jvm//build:common_jvm_deps.bzl", "common_jvm_deps")
 
 common_jvm_deps()
-
-load("@wfa_common_cpp//build:common_cpp_repositories.bzl", "common_cpp_repositories")
-
-common_cpp_repositories()
-
-load("@wfa_common_cpp//build:common_cpp_deps.bzl", "common_cpp_deps")
-
-common_cpp_deps()
 
 load("@private_membership//build:private_membership_repositories.bzl", "private_membership_repositories")
 
