@@ -1,9 +1,7 @@
 load(
     "@io_bazel_rules_docker//container:container.bzl",
-    "container_bundle",
     "container_push",
 )
-load("@io_bazel_rules_docker//contrib:push-all.bzl", "docker_push")
 load("//build:variables.bzl", "IMAGE_REPOSITORY_SETTINGS")
 load("//src/main/docker/panel_exchange_client:images.bzl", "ALL_GKE_IMAGES")
 
