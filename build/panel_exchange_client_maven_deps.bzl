@@ -17,12 +17,6 @@ Step 4 of configuring WORKSPACE: Maven.
 """
 
 load("@rules_jvm_external//:defs.bzl", "artifact")
-load(
-    "@wfa_common_jvm//build:common_jvm_maven.bzl",
-    "COMMON_JVM_EXCLUDED_ARTIFACTS",
-    "COMMON_JVM_MAVEN_OVERRIDE_TARGETS",
-    "common_jvm_maven_artifacts_dict",
-)
 
 _DEPLOY_ENV = [
     "@com_github_grpc_grpc_kotlin//stub/src/main/java/io/grpc/kotlin:stub",
@@ -75,31 +69,8 @@ _ARTIFACTS = {
     "software.amazon.awssdk:aws-core": "2.17.100",
 }
 
-_EXCLUDED_ARTIFACTS = [
-    "org.apache.beam:beam-sdks-java-io-kafka",
-]
-
 def panel_exchange_client_maven_artifacts():
-    """Collects the Maven artifacts for panel-exchange-client.
-
-    Returns:
-        A dict of Maven artifact name to version.
-    """
-    common_jvm_artifacts = common_jvm_maven_artifacts_dict()
-
-    artifacts_dict = {}
-    artifacts_dict.update(common_jvm_artifacts)
-    artifacts_dict.update(_ARTIFACTS)
-
-    return artifacts_dict
-
-def panel_exchange_client_maven_override_targets():
-    return COMMON_JVM_MAVEN_OVERRIDE_TARGETS
-
-def panel_exchange_client_maven_excluded_artifacts():
-    # TODO(@efoxepstein): why does org.slf4j:slf4j-log4j12 cause build failures?
-    common_jvm_exclusions = [x for x in COMMON_JVM_EXCLUDED_ARTIFACTS if x != "org.slf4j:slf4j-log4j12"]
-    return _EXCLUDED_ARTIFACTS + common_jvm_exclusions
+    return _ARTIFACTS
 
 def panel_exchange_client_maven_deploy_env():
     return _DEPLOY_ENV

@@ -20,6 +20,7 @@ _PREFIX = IMAGE_REPOSITORY_SETTINGS.repository_prefix
 
 # List of specs for all Docker containers to push to a container registry.
 # These are only used on GKE.
+# TODO(@MarcoPremier): Merge this with images.bzl in cross-media-measurement repo
 ALL_GKE_IMAGES = [
     struct(
         name = "google_cloud_example_daemon_image",

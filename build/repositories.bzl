@@ -13,72 +13,81 @@
 # limitations under the License.
 
 """
-Step 1 of configuring WORKSPACE: adds direct deps.
+Adds external repos necessary for wfa_measurement_system.
 """
 
+load("//build/wfa:repositories.bzl", "wfa_repo_archive")
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 load("//build/com_google_riegeli:repo.bzl", "com_google_riegeli_repo")
 
-def panel_exchange_client_repositories():
-    """Imports all direct dependencies for panel_exchange_client."""
+MEASUREMENT_SYSTEM_REPO = "https://github.com/world-federation-of-advertisers/cross-media-measurement"
+
+def wfa_measurement_system_repositories():
+    """Imports all direct dependencies for wfa_measurement_system."""
 
     com_google_riegeli_repo()
 
-    http_archive(
-        name = "wfa_common_cpp",
-        sha256 = "be7564a574c60176dc63e48daba6135263779deb301baacb77d2328bdaf38d3d",
-        strip_prefix = "common-cpp-0.9.0",
-        url = "https://github.com/world-federation-of-advertisers/common-cpp/archive/refs/tags/v0.9.0.tar.gz",
-    )
-
-    http_archive(
+    wfa_repo_archive(
         name = "wfa_common_jvm",
-        sha256 = "0b4a8eb501f0abca95d994bd199cda845a9238f57b34be74e7e54220ec66a48b",
-        strip_prefix = "common-jvm-0.54.0",
-        url = "https://github.com/world-federation-of-advertisers/common-jvm/archive/refs/tags/v0.54.0.tar.gz",
+        repo = "common-jvm",
+        sha256 = "06ab7259708f490c052bd6ada0b9f193a99e9d621abd5428649d67378530a977",
+        version = "0.55.0",
     )
 
-    # TODO: remove dependencies on wfa_measurement_system
-    http_archive(
-        name = "wfa_measurement_system",
-        sha256 = "b7fec8fa6cecfdd149364f4cd923cbfb324d46b2a4b0dbf4639fd109c2f7322d",
-        strip_prefix = "cross-media-measurement-10c44b1af7c13481258eb8d9e5c1df4178b4be62",
-        url = "https://github.com/world-federation-of-advertisers/cross-media-measurement/archive/10c44b1af7c13481258eb8d9e5c1df4178b4be62.tar.gz",
+    wfa_repo_archive(
+        name = "wfa_common_cpp",
+        repo = "common-cpp",
+        sha256 = "be7564a574c60176dc63e48daba6135263779deb301baacb77d2328bdaf38d3d",
+        version = "0.9.0",
     )
 
-    http_archive(
+    wfa_repo_archive(
         name = "wfa_measurement_proto",
-        sha256 = "333ec3153cfe20d9f0ceeb9c73b0d11daa9f0b61382596de76d7090511bc591a",
-        strip_prefix = "cross-media-measurement-api-0.28.1",
-        url = "https://github.com/world-federation-of-advertisers/cross-media-measurement-api/archive/v0.28.1.tar.gz",
+        repo = "cross-media-measurement-api",
+        sha256 = "4ae6664c57496632dd75d9731b82aaaa7a6e3134ab81b2d70def3f6a07028683",
+        version = "0.30.0",
     )
 
-    http_archive(
+    wfa_repo_archive(
         name = "wfa_rules_swig",
+        commit = "653d1bdcec85a9373df69920f35961150cf4b1b6",
+        repo = "rules_swig",
         sha256 = "34c15134d7293fc38df6ed254b55ee912c7479c396178b7f6499b7e5351aeeec",
-        strip_prefix = "rules_swig-653d1bdcec85a9373df69920f35961150cf4b1b6",
-        url = "https://github.com/world-federation-of-advertisers/rules_swig/archive/653d1bdcec85a9373df69920f35961150cf4b1b6.tar.gz",
     )
 
-    http_archive(
+    wfa_repo_archive(
+        name = "any_sketch",
+        repo = "any-sketch",
+        sha256 = "fa7ff63e181692b9060c50fedd519b7ea7e9a6683bf4d5ba9d19213b6cb6dac4",
+        version = "0.4.2",
+    )
+
+    wfa_repo_archive(
+        name = "any_sketch_java",
+        repo = "any-sketch-java",
+        sha256 = "117642633c1b0a6a539f75b21d396146fcb7c51ae60f8c63859b0e9cce490e77",
+        version = "0.4.0",
+    )
+
+    wfa_repo_archive(
         name = "wfa_rules_cue",
-        sha256 = "652379dec5174ed7fa8fe4223d0adf9a1d610ff0aa02e1bd1e74f79834b526a6",
-        strip_prefix = "rules_cue-0.2.0",
-        url = "https://github.com/world-federation-of-advertisers/rules_cue/archive/v0.2.0.tar.gz",
+        repo = "rules_cue",
+        sha256 = "0261b7797fa9083183536667958b1094fc732725fc48fca5cb68e6f731cdce2f",
+        version = "0.3.0",
     )
 
-    http_archive(
+    wfa_repo_archive(
         name = "wfa_consent_signaling_client",
+        repo = "consent-signaling-client",
         sha256 = "99fde5608b79ff12a2a466cdd213e1535c62f80a96035006433ae9ba5a4a4d21",
-        strip_prefix = "consent-signaling-client-0.15.0",
-        url = "https://github.com/world-federation-of-advertisers/consent-signaling-client/archive/refs/tags/v0.15.0.tar.gz",
+        version = "0.15.0",
     )
 
-    http_archive(
+    wfa_repo_archive(
         name = "wfa_virtual_people_common",
+        repo = "virtual-people-common",
         sha256 = "0a663e5517f50052ecc5e5745564935a3c15ebce2e9550b11dda451e341ea624",
-        strip_prefix = "virtual-people-common-0.2.3",
-        url = "https://github.com/world-federation-of-advertisers/virtual-people-common/archive/v0.2.3.tar.gz",
+        version = "0.2.3",
     )
 
     http_archive(
@@ -88,11 +97,10 @@ def panel_exchange_client_repositories():
         url = "https://github.com/google/private-membership/archive/84e45669f7357bffcdafbc1b0cc26e72512808ce.zip",
     )
 
+    # TODO: remove dependencies on wfa_measurement_system
     http_archive(
-        name = "rules_pkg",
-        urls = [
-            "https://mirror.bazel.build/github.com/bazelbuild/rules_pkg/releases/download/0.6.0/rules_pkg-0.6.0.tar.gz",
-            "https://github.com/bazelbuild/rules_pkg/releases/download/0.6.0/rules_pkg-0.6.0.tar.gz",
-        ],
-        sha256 = "62eeb544ff1ef41d786e329e1536c1d541bb9bcad27ae984d57f18f314018e66",
+        name = "wfa_measurement_system",
+        sha256 = "b7fec8fa6cecfdd149364f4cd923cbfb324d46b2a4b0dbf4639fd109c2f7322d",
+        strip_prefix = "cross-media-measurement-10c44b1af7c13481258eb8d9e5c1df4178b4be62",
+        url = "https://github.com/world-federation-of-advertisers/cross-media-measurement/archive/10c44b1af7c13481258eb8d9e5c1df4178b4be62.tar.gz",
     )

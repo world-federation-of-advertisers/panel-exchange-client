@@ -55,14 +55,14 @@ import "strings"
 	}
 
 	dataflow: {
-		projectId:                          *#GCloudProject | string
-		region:                             string
-		serviceAccount:                     string
-		tempLocation:                       *"gs://\(cloudStorageBucket)/dataflow-temp/" | string
-		workerMachineType:                  *"n1-standard-1" | string
-		diskSize:                           *"30" | string
-		dataflowWorkerLoggingOptionsLevel:  *"INFO" | string
-		sdkHarnessOptionsLogLevel:          *"INFO" | string
+		projectId:                         *#GCloudProject | string
+		region:                            string
+		serviceAccount:                    string
+		tempLocation:                      *"gs://\(cloudStorageBucket)/dataflow-temp/" | string
+		workerMachineType:                 *"n1-standard-1" | string
+		diskSize:                          *"30" | string
+		dataflowWorkerLoggingOptionsLevel: *"INFO" | string
+		sdkHarnessOptionsLogLevel:         *"INFO" | string
 	}
 
 	_partyId: strings.SplitAfter(partyName, "/")[1]
