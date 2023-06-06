@@ -43,30 +43,23 @@ _TEST_RUNTIME_DEPS = [
 ]
 
 # Version compatibility info:
+# * https://cloud.google.com/dataflow/docs/guides/installing-beam-sdk
 # * https://cloud.google.com/dataflow/docs/support/sdk-version-support-status#apache-beam-2.x-sdks
 # * https://beam.apache.org/documentation/runners/flink/#flink-version-compatibility
 # * https://docs.aws.amazon.com/kinesisanalytics/latest/java/earlier.html
 _BEAM_VERSION = "2.38.0"
 
-# TODO: this list can likely be minimized
+_AWS_SDK_VERSION = "2.17.100"
+
 _ARTIFACTS = {
     "com.google.cloud:google-cloud-security-private-ca": "2.3.1",
-    "joda-time:joda-time": "2.10.13",
     "org.apache.beam:beam-runners-direct-java": _BEAM_VERSION,
     "org.apache.beam:beam-runners-google-cloud-dataflow-java": _BEAM_VERSION,
-    "org.apache.beam:beam-sdks-java-core": _BEAM_VERSION,
-    "org.apache.beam:beam-sdks-java-extensions-google-cloud-platform-core": _BEAM_VERSION,
-    "org.apache.beam:beam-sdks-java-extensions-protobuf": _BEAM_VERSION,
     "org.apache.beam:beam-sdks-java-io-google-cloud-platform": _BEAM_VERSION,
-    "org.apache.beam:beam-sdks-java-io-amazon-web-services": _BEAM_VERSION,
-    "org.apache.beam:beam-vendor-guava-26_0-jre": "0.1",
-    "org.hamcrest:hamcrest": "2.2",
     "org.slf4j:slf4j-simple": "1.7.32",
-    "software.amazon.awssdk:utils": "2.17.100",
-    "software.amazon.awssdk:sts": "2.17.100",
-    "software.amazon.awssdk:auth": "2.17.100",
-    "software.amazon.awssdk:acmpca": "2.17.100",
-    "software.amazon.awssdk:aws-core": "2.17.100",
+    "software.amazon.awssdk:sts": _AWS_SDK_VERSION,
+    "software.amazon.awssdk:auth": _AWS_SDK_VERSION,
+    "software.amazon.awssdk:acmpca": _AWS_SDK_VERSION,
 }
 
 def panel_exchange_client_maven_artifacts():
