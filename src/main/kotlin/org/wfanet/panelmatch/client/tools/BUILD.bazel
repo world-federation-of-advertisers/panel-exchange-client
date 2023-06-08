@@ -121,3 +121,22 @@ java_binary(
         ":generate_synthetic_data",
     ],
 )
+
+kt_jvm_library(
+    name = "generate_unique_join_key_ids",
+    srcs = ["GenerateUniqueJoinKeyIds.kt"],
+    deps = [
+        "//src/main/kotlin/org/wfanet/panelmatch/common",
+        "//src/main/proto/wfa/panelmatch/client/exchangetasks:join_key_exchange_kt_jvm_proto",
+        "@wfa_common_jvm//imports/java/picocli",
+    ],
+)
+
+java_binary(
+    name = "GenerateUniqueJoinKeyIds",
+    main_class = "org.wfanet.panelmatch.client.tools.GenerateUniqueJoinKeyIdsKt",
+    tags = ["manual"],
+    runtime_deps = [
+        ":generate_unique_join_key_ids",
+    ],
+)
